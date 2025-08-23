@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misiones Arrienda - Plataforma de Arriendos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <i class="fas fa-home text-blue-600 text-2xl mr-3"></i>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Misiones Arrienda</h1>
+                </div>
+                <nav class="flex space-x-8">
+                    <a href="#inicio" class="text-gray-700 dark:text-gray-300 hover:text-blue-600">Inicio</a>
+                    <a href="#propiedades" class="text-gray-700 dark:text-gray-300 hover:text-blue-600">Propiedades</a>
+                    <a href="#contacto" class="text-gray-700 dark:text-gray-300 hover:text-blue-600">Contacto</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-5xl font-bold mb-4">Encuentra tu hogar ideal</h2>
+            <p class="text-xl mb-8">La mejor plataforma de arriendos en Misiones</p>
+            <button class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                Explorar Propiedades
+            </button>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-16 bg-white dark:bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div>
+                    <div class="text-4xl font-bold text-blue-600 mb-2">500+</div>
+                    <div class="text-gray-600 dark:text-gray-300">Propiedades disponibles</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-green-600 mb-2">1000+</div>
+                    <div class="text-gray-600 dark:text-gray-300">Clientes satisfechos</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-purple-600 mb-2">50+</div>
+                    <div class="text-gray-600 dark:text-gray-300">Ciudades cubiertas</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Section -->
+    <section class="py-16 bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">Filtrar Propiedades</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <select class="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-600">
+                    <option>Tipo de propiedad</option>
+                    <option>Casa</option>
+                    <option>Departamento</option>
+                    <option>Habitación</option>
+                </select>
+                <select class="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-600">
+                    <option>Precio</option>
+                    <option>$0 - $500</option>
+                    <option>$500 - $1000</option>
+                    <option>$1000+</option>
+                </select>
+                <select class="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-600">
+                    <option>Ciudad</option>
+                    <option>Posadas</option>
+                    <option>Apóstoles</option>
+                    <option>Eldorado</option>
+                </select>
+                <button class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition">
+                    Buscar
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Properties Grid -->
+    <section class="py-16 bg-white dark:bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">Propiedades Destacadas</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Property Card 1 -->
+                <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400" alt="Casa" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Casa en Posadas</h4>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">3 habitaciones • 2 baños • 120m²</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-blue-600">$800/mes</span>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                                Ver más
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Property Card 2 -->
+                <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400" alt="Departamento" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Depto en Centro</h4>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">2 habitaciones • 1 baño • 80m²</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-blue-600">$600/mes</span>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                                Ver más
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Property Card 3 -->
+                <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400" alt="Habitación" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h4 class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Habitación Amoblada</h4>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">1 habitación • 1 baño • Compartido</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-blue-600">$300/mes</span>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                                Ver más
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h5 class="text-lg font-semibold mb-4">Misiones Arrienda</h5>
+                    <p class="text-gray-400">Tu mejor opción para encontrar el hogar ideal en Misiones.</p>
+                </div>
+                <div>
+                    <h5 class="text-lg font-semibold mb-4">Contacto</h5>
+                    <p class="text-gray-400">Email: info@misionesarrienda.com</p>
+                    <p class="text-gray-400">Tel: +54 3764 123456</p>
+                </div>
+                <div>
+                    <h5 class="text-lg font-semibold mb-4">Síguenos</h5>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Dark mode toggle
+        const toggleDarkMode = () => {
+            document.body.classList.toggle('dark');
+        };
+    </script>
+</body>
+</html>
