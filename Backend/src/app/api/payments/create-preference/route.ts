@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPaymentPreference } from '@/lib/mercadopago';
+import { createPaymentPreference } from '@/lib/payments';
+
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,9 +18,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(preference);
   } catch (error) {
-    console.error('Error creating payment preference:', error);
+    console.error('Error creating plan preference:', error);
     return NextResponse.json(
-      { error: 'Error al crear la preferencia de pago' },
+      { error: 'Error al crear la preferencia del plan' },
       { status: 500 }
     );
   }

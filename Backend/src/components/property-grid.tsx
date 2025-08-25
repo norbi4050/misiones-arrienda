@@ -44,6 +44,7 @@ export function PropertyGrid() {
           province: "Misiones",
           postalCode: "3300",
           propertyType: "APARTMENT",
+          listingType: "RENT",
           status: "AVAILABLE",
           images: ["/placeholder-apartment-1.jpg"],
           amenities: [],
