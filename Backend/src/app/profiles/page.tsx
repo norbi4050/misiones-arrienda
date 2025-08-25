@@ -18,52 +18,7 @@ interface UserProfile {
 }
 
 export default function ProfilesPage() {
-  const [users] = useState<UserProfile[]>([
-    {
-      id: "1",
-      name: "Carlos Mendoza",
-      occupation: "Desarrollador de Software",
-      age: 28,
-      verified: true,
-      rating: 4.8,
-      reviewCount: 12,
-      avatar: "/users/carlos-mendoza.jpg",
-      bio: "Profesional de sistemas, trabajador responsable y cuidadoso con las propiedades."
-    },
-    {
-      id: "2",
-      name: "Ana García",
-      occupation: "Profesora Universitaria",
-      age: 32,
-      verified: true,
-      rating: 4.9,
-      reviewCount: 8,
-      avatar: "/users/ana-garcia.jpg",
-      bio: "Docente universitaria, muy ordenada y respetuosa."
-    },
-    {
-      id: "3",
-      name: "Miguel Torres",
-      occupation: "Estudiante de Medicina",
-      age: 24,
-      verified: false,
-      rating: 4.5,
-      reviewCount: 3,
-      avatar: "/users/miguel-torres.jpg",
-      bio: "Estudiante de medicina, responsable y tranquilo."
-    },
-    {
-      id: "4",
-      name: "Laura Fernández",
-      occupation: "Contadora Pública",
-      age: 29,
-      verified: true,
-      rating: 4.7,
-      reviewCount: 15,
-      avatar: "/users/laura-fernandez.jpg",
-      bio: "Contadora pública, muy organizada y puntual con los pagos."
-    }
-  ])
+  const [users] = useState<UserProfile[]>([])
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -113,68 +68,100 @@ export default function ProfilesPage() {
         </div>
       </div>
 
-      {/* Grid de perfiles */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {users.map((user) => (
-          <div key={user.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="text-center mb-4">
-              <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center">
-                {user.avatar ? (
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name} 
-                    className="w-20 h-20 rounded-full object-cover" 
-                  />
-                ) : (
-                  <span className="text-xl font-bold text-gray-600">
-                    {user.name.split(' ').map(n => n[0]).join('')}
+      {/* Grid de perfiles o estado vacío */}
+      {users.length > 0 ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {users.map((user) => (
+            <div key={user.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+              <div className="text-center mb-4">
+                <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center">
+                  {user.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user.name} 
+                      className="w-20 h-20 rounded-full object-cover" 
+                    />
+                  ) : (
+                    <span className="text-xl font-bold text-gray-600">
+                      {user.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
+                  {user.verified && (
+                    <Badge className="bg-green-100 text-green-800 text-xs">
+                      ✓ Verificado
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-center space-x-1 mb-2">
+                  {renderStars(Math.floor(user.rating))}
+                  <span className="ml-1 text-sm font-semibold text-gray-900">
+                    {user.rating.toFixed(1)}
                   </span>
+                  <span className="text-xs text-gray-600">
+                    ({user.reviewCount} reseñas)
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2 text-sm text-gray-600 mb-4">
+                {user.occupation && (
+                  <p><strong>Ocupación:</strong> {user.occupation}</p>
+                )}
+                {user.age && (
+                  <p><strong>Edad:</strong> {user.age} años</p>
                 )}
               </div>
               
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
-                {user.verified && (
-                  <Badge className="bg-green-100 text-green-800 text-xs">
-                    ✓ Verificado
-                  </Badge>
-                )}
-              </div>
+              {user.bio && (
+                <p className="text-sm text-gray-700 mb-4 line-clamp-3">
+                  {user.bio}
+                </p>
+              )}
               
-              <div className="flex items-center justify-center space-x-1 mb-2">
-                {renderStars(Math.floor(user.rating))}
-                <span className="ml-1 text-sm font-semibold text-gray-900">
-                  {user.rating.toFixed(1)}
-                </span>
-                <span className="text-xs text-gray-600">
-                  ({user.reviewCount} reseñas)
-                </span>
-              </div>
+              <Link href={`/profile/${user.id}`}>
+                <Button className="w-full" variant="outline">
+                  Ver Perfil Completo
+                </Button>
+              </Link>
             </div>
-            
-            <div className="space-y-2 text-sm text-gray-600 mb-4">
-              {user.occupation && (
-                <p><strong>Ocupación:</strong> {user.occupation}</p>
-              )}
-              {user.age && (
-                <p><strong>Edad:</strong> {user.age} años</p>
-              )}
-            </div>
-            
-            {user.bio && (
-              <p className="text-sm text-gray-700 mb-4 line-clamp-3">
-                {user.bio}
-              </p>
-            )}
-            
-            <Link href={`/profile/${user.id}`}>
-              <Button className="w-full" variant="outline">
-                Ver Perfil Completo
+          ))}
+        </div>
+      ) : (
+        /* Estado vacío */
+        <div className="text-center py-16">
+          <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">
+            ¡Sé el primer usuario verificado!
+          </h3>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Aún no hay perfiles de usuarios registrados. Únete a nuestra comunidad y construye tu reputación como inquilino confiable.
+          </p>
+          <div className="space-x-4">
+            <Link href="/register">
+              <Button>
+                Crear mi Perfil
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button variant="outline">
+                Iniciar Sesión
               </Button>
             </Link>
           </div>
-        ))}
-      </div>
+          <p className="text-sm text-gray-500 mt-4">
+            Es gratis y te ayudará a conseguir mejores propiedades
+          </p>
+        </div>
+      )}
 
       {/* Call to action */}
       <div className="text-center mt-12 bg-gray-50 rounded-lg p-8">

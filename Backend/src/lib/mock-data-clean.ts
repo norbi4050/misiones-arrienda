@@ -1,4 +1,6 @@
-// Mock data limpio - Sin propiedades de ejemplo para usuarios reales
+// Mock data limpio - Sin propiedades de ejemplo
+// La plataforma está lista para usuarios reales
+
 export const mockProperties: any[] = [];
 
 export const mockAgents: any[] = [];

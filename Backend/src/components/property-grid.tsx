@@ -28,39 +28,8 @@ export function PropertyGrid() {
     } catch (err) {
       setError('Error al cargar las propiedades')
       console.error('Error fetching properties:', err)
-      // Fallback to mock data if API fails
-      setProperties([
-        {
-          id: "1",
-          title: "Hermoso departamento en el centro",
-          description: "Departamento moderno en el centro de la ciudad",
-          price: 85000,
-          bedrooms: 2,
-          bathrooms: 1,
-          garages: 0,
-          area: 75,
-          address: "Av. Corrientes 1234",
-          city: "Posadas",
-          province: "Misiones",
-          postalCode: "3300",
-          propertyType: "APARTMENT",
-          listingType: "RENT",
-          status: "AVAILABLE",
-          images: ["/placeholder-apartment-1.jpg"],
-          amenities: [],
-          features: [],
-          featured: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          agent: {
-            id: "1",
-            name: "Juan Pérez",
-            email: "juan@example.com",
-            phone: "+54 376 123456",
-            rating: 4.5
-          }
-        }
-      ])
+      // No fallback data - show empty state
+      setProperties([])
     } finally {
       setLoading(false)
     }
@@ -98,7 +67,7 @@ export function PropertyGrid() {
       
       {error && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-          {error} - Mostrando datos de ejemplo
+          {error}
         </div>
       )}
       
@@ -121,8 +90,34 @@ export function PropertyGrid() {
       </div>
       
       {properties.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No se encontraron propiedades con los filtros seleccionados.</p>
+        <div className="text-center py-16">
+          <div className="max-w-md mx-auto">
+            <div className="mb-6">
+              <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              ¡Sé el primero en publicar!
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Aún no hay propiedades publicadas. ¿Tienes una propiedad para alquilar o vender en Misiones?
+            </p>
+            <div className="space-y-3">
+              <a
+                href="/publicar"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              >
+                <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Publicar mi propiedad
+              </a>
+              <div className="text-sm text-gray-400">
+                Es gratis y toma solo unos minutos
+              </div>
+            </div>
+          </div>
         </div>
       )}
       
