@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPropertyById, mockProperties } from '@/lib/mock-data';
+import { getPropertyById, mockProperties } from '@/lib/mock-data-clean';
 
 export async function GET(
   request: NextRequest,
