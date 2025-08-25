@@ -1,6 +1,0 @@
-[35mBackend/REPORTE-FINAL-MODELO-NEGOCIO.md[m[36m:[m[32m43[m[36m:[m  - `src/lib/[1;31mmercadopago[m.ts` - Integración con MercadoPago
-[35mBackend/package-lock.json[m[36m:[m[32m19[m[36m:[m        "[1;31mmercadopago[m": "^2.8.0",
-[35mBackend/package-lock.json[m[36m:[m[32m4580[m[36m:[m    "node_modules/[1;31mmercadopago[m": {
-[35mBackend/package-lock.json[m[36m:[m[32m4582[m[36m:[m      "resolved": "https://registry.npmjs.org/[1;31mmercadopago[m/-/[1;31mmercadopago[m-2.8.0.tgz",
-[35mBackend/src/lib/mercadopago.ts[m[36m:[m[32m81[m[36m:[m      notification_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhooks/[1;31mmercadopago[m`,
-[35mBackend/src/lib/mercadopago.ts[m[36m:[m[32m87[m[36m:[m    const response = await fetch('https://api.[1;31mmercadopago[m.com/checkout/preferences', {
