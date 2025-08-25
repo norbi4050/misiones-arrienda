@@ -1,24 +1,12 @@
 {
   "version": 2,
-  "framework": "nextjs",
-  "buildCommand": "cd Backend && npm run build",
-  "installCommand": "cd Backend && npm install",
-  "outputDirectory": "Backend/.next",
   "env": {
     "SKIP_ENV_VALIDATION": "1",
-    "NODE_ENV": "production",
-    "DATABASE_URL": "file:./dev.db",
     "NEXT_TELEMETRY_DISABLED": "1"
   },
   "build": {
     "env": {
-      "NEXT_TELEMETRY_DISABLED": "1",
-      "DATABASE_URL": "file:./dev.db"
-    }
-  },
-  "functions": {
-    "Backend/src/app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
+      "NEXT_TELEMETRY_DISABLED": "1"
     }
   },
   "headers": [
