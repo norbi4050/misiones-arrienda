@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Search, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -154,10 +154,6 @@ export function SearchHistory({
     }
   };
 
-  // Exponer la función saveSearch para uso externo
-  React.useImperativeHandle(React.forwardRef(() => null), () => ({
-    saveSearch
-  }));
 
   if (!user) {
     return null;

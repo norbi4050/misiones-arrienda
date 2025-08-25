@@ -1,180 +1,147 @@
-# Misiones Arrienda
+# Misiones Arrienda - Plataforma de Alquileres
 
-Una plataforma moderna de alquiler de propiedades desarrollada con Next.js 14, TypeScript, Prisma y PostgreSQL.
+🏠 **Plataforma completa de alquileres para la provincia de Misiones, Argentina**
 
-## 🚀 Características
+## 🚀 Características Principales
 
-- **Búsqueda Inteligente**: Sistema de filtros avanzados para propiedades
-- **Gestión de Usuarios**: Perfiles de inquilinos y propietarios
-- **Sistema de Pagos**: Integración con MercadoPago
-- **Chatbot IA**: Asistente virtual para consultas
-- **Responsive Design**: Optimizado para todos los dispositivos
-- **Dashboard Completo**: Panel de administración y estadísticas
+- ✅ **Sistema de Autenticación Completo** - Registro, login, verificación de email
+- ✅ **Dashboard Personalizado** - Panel de usuario con favoritos e historial
+- ✅ **Búsqueda Avanzada** - Filtros por ubicación, precio, tipo de propiedad
+- ✅ **Integración MercadoPago** - Pagos seguros y webhooks
+- ✅ **Responsive Design** - Optimizado para móviles y desktop
+- ✅ **SEO Optimizado** - Sitemap, robots.txt, meta tags
+- ✅ **Base de Datos Robusta** - Prisma + SQLite/PostgreSQL
 
 ## 🛠️ Tecnologías
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS, Radix UI
-- **Backend**: Next.js API Routes
-- **Base de Datos**: PostgreSQL con Prisma ORM
-- **Autenticación**: NextAuth.js
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Base de Datos**: SQLite (desarrollo) / PostgreSQL (producción)
+- **Autenticación**: JWT, bcryptjs
 - **Pagos**: MercadoPago API
 - **Email**: Nodemailer
 - **Deployment**: Vercel
 
-## 📋 Requisitos Previos
+## 🏃‍♂️ Inicio Rápido
 
-- Node.js 18+ 
-- PostgreSQL
+### Prerrequisitos
+- Node.js 18+
 - npm o yarn
 
-## 🔧 Instalación
+### Instalación
 
 1. **Clonar el repositorio**
-   ```bash
-   git clone <repository-url>
-   cd Backend
-   ```
+```bash
+git clone https://github.com/tu-usuario/Misiones-arrienda.git
+cd Misiones-arrienda
+```
 
 2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 3. **Configurar variables de entorno**
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Editar `.env.local` con tus valores:
-   ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/misiones_arrienda"
-   MERCADOPAGO_ACCESS_TOKEN="your_token"
-   NEXTAUTH_SECRET="your_secret"
-   ```
+```bash
+cp .env.example .env.local
+```
+
+Editar `.env.local` con tus configuraciones:
+```env
+DATABASE_URL="file:./dev.db"
+JWT_SECRET="tu-jwt-secret-super-seguro"
+MERCADOPAGO_ACCESS_TOKEN="tu-token-de-mercadopago"
+EMAIL_USER="tu-email@gmail.com"
+EMAIL_PASS="tu-password-de-app"
+```
 
 4. **Configurar base de datos**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   npx prisma db seed
-   ```
+```bash
+npx prisma db push
+npx prisma db seed
+```
 
 5. **Ejecutar en desarrollo**
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run dev
+```
 
-## 🚀 Deployment en Vercel
-
-1. **Preparar el proyecto**
-   - El proyecto ya está optimizado para Vercel
-   - Configuración en `vercel.json`
-   - Variables de entorno en `.env.example`
-
-2. **Deploy**
-   ```bash
-   vercel --prod
-   ```
-
-3. **Variables de entorno en Vercel**
-   - `DATABASE_URL`: URL de PostgreSQL
-   - `MERCADOPAGO_ACCESS_TOKEN`: Token de MercadoPago
-   - `NEXTAUTH_SECRET`: Secret para autenticación
-   - `NEXTAUTH_URL`: URL de producción
+Abrir [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ## 📁 Estructura del Proyecto
 
 ```
-src/
-├── app/                 # App Router (Next.js 14)
-│   ├── api/            # API Routes
-│   ├── login/          # Página de login
-│   ├── register/       # Página de registro
-│   └── ...
-├── components/         # Componentes React
-│   ├── ui/            # Componentes UI base
-│   └── ...
-├── lib/               # Utilidades y configuraciones
-└── types/             # Tipos TypeScript
-
-prisma/
-├── schema.prisma      # Esquema de base de datos
-└── seed.ts           # Datos de prueba
-
-public/               # Archivos estáticos
+├── src/
+│   ├── app/                 # App Router de Next.js
+│   │   ├── api/            # API Routes
+│   │   ├── auth/           # Páginas de autenticación
+│   │   ├── dashboard/      # Panel de usuario
+│   │   └── property/       # Páginas de propiedades
+│   ├── components/         # Componentes React
+│   ├── hooks/             # Custom hooks
+│   ├── lib/               # Utilidades y servicios
+│   └── types/             # Definiciones TypeScript
+├── prisma/                # Schema y seeds de base de datos
+├── public/                # Archivos estáticos
+└── package.json
 ```
 
-## 🔑 Variables de Entorno
-
-| Variable | Descripción | Requerida |
-|----------|-------------|-----------|
-| `DATABASE_URL` | URL de PostgreSQL | ✅ |
-| `MERCADOPAGO_ACCESS_TOKEN` | Token de MercadoPago | ✅ |
-| `NEXTAUTH_SECRET` | Secret para NextAuth | ✅ |
-| `NEXTAUTH_URL` | URL base de la aplicación | ✅ |
-| `SMTP_HOST` | Servidor SMTP para emails | ❌ |
-| `SMTP_USER` | Usuario SMTP | ❌ |
-| `SMTP_PASS` | Contraseña SMTP | ❌ |
-
-## 🧪 Scripts Disponibles
+## 🔧 Scripts Disponibles
 
 ```bash
-npm run dev          # Desarrollo
-npm run build        # Build de producción
-npm run start        # Iniciar producción
+npm run dev          # Servidor de desarrollo
+npm run build        # Build para producción
+npm run start        # Servidor de producción
 npm run lint         # Linter
-npm run db:push      # Aplicar cambios DB
-npm run db:studio    # Prisma Studio
-npm run db:seed      # Poblar DB con datos
+npm run db:push      # Actualizar base de datos
+npm run db:seed      # Poblar con datos de prueba
 ```
 
-## 📊 API Endpoints
+## 🌐 Deployment en Vercel
+
+1. **Conectar repositorio a Vercel**
+2. **Configurar variables de entorno en Vercel**
+3. **Deploy automático** - Cada push a main despliega automáticamente
+
+### Variables de Entorno para Producción
+```env
+DATABASE_URL="postgresql://..."
+JWT_SECRET="production-jwt-secret"
+MERCADOPAGO_ACCESS_TOKEN="prod-token"
+EMAIL_USER="production-email"
+EMAIL_PASS="production-password"
+```
+
+## 🧪 Testing
+
+```bash
+npm run test         # Ejecutar tests
+npm run test:watch   # Tests en modo watch
+```
+
+## 📊 Funcionalidades
+
+### Autenticación
+- [x] Registro de usuarios
+- [x] Login/Logout
+- [x] Verificación de email
+- [x] Protección de rutas
 
 ### Propiedades
-- `GET /api/properties` - Listar propiedades
-- `GET /api/properties/[id]` - Obtener propiedad
-- `POST /api/properties` - Crear propiedad
-
-### Usuarios
-- `GET /api/users/[id]` - Obtener usuario
-- `PUT /api/users/[id]` - Actualizar usuario
+- [x] Listado con filtros
+- [x] Detalle de propiedad
+- [x] Búsqueda por ubicación
+- [x] Sistema de favoritos
 
 ### Pagos
-- `POST /api/payments/create-preference` - Crear preferencia de pago
+- [x] Integración MercadoPago
+- [x] Webhooks de confirmación
+- [x] Páginas de éxito/error
 
-### Consultas
-- `POST /api/inquiries` - Crear consulta
-
-## 🔒 Seguridad
-
-- Headers de seguridad configurados
-- Validación de datos con Zod
-- Sanitización de inputs
-- Rate limiting en APIs
-- CORS configurado
-
-## 🐛 Troubleshooting
-
-### Error de Base de Datos
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-### Error de Build
-```bash
-rm -rf .next
-npm run build
-```
-
-### Error de MercadoPago
-- Verificar token de acceso
-- Comprobar configuración de webhook
-
-## 📝 Licencia
-
-Este proyecto está bajo la Licencia MIT.
+### Dashboard
+- [x] Perfil de usuario
+- [x] Propiedades favoritas
+- [x] Historial de búsquedas
 
 ## 🤝 Contribuir
 
@@ -184,6 +151,15 @@ Este proyecto está bajo la Licencia MIT.
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abrir Pull Request
 
-## 📞 Soporte
+## 📝 Licencia
 
-Para soporte, crear un issue en el repositorio o contactar al equipo de desarrollo.
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+
+## 📞 Contacto
+
+- **Proyecto**: [https://github.com/tu-usuario/Misiones-arrienda](https://github.com/tu-usuario/Misiones-arrienda)
+- **Demo**: [https://misiones-arrienda.vercel.app](https://misiones-arrienda.vercel.app)
+
+---
+
+⭐ **¡Dale una estrella si te gusta el proyecto!**

@@ -1,4 +1,4 @@
-# 🧹 LIMPIEZA DEL PROYECTO COMPLETADA - REPORTE FINAL
+                                                                                                                                                                                                                                                                                                                                                                # 🧹 LIMPIEZA DEL PROYECTO COMPLETADA - REPORTE FINAL
 
 ## ✅ RESUMEN EJECUTIVO
 
