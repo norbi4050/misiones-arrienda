@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
+import { filterProperties } from '@/lib/mock-data';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -36,61 +36,10 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get('limit') || 12,
     });
 
-    const where: any = {
-      status: 'AVAILABLE',
-    };
+    // Use mock data instead of database
+    const result = filterProperties(params);
 
-    if (params.city) where.city = { contains: params.city, mode: 'insensitive' };
-    if (params.province) where.province = { contains: params.province, mode: 'insensitive' };
-    if (params.minPrice) where.price = { gte: params.minPrice };
-    if (params.maxPrice) where.price = { ...where.price, lte: params.maxPrice };
-    if (params.minBedrooms) where.bedrooms = { gte: params.minBedrooms };
-    if (params.maxBedrooms) where.bedrooms = { ...where.bedrooms, lte: params.maxBedrooms };
-    if (params.minBathrooms) where.bathrooms = { gte: params.minBathrooms };
-    if (params.propertyType) where.propertyType = params.propertyType;
-    if (params.featured) where.featured = true;
-
-    const skip = (params.page - 1) * params.limit;
-    
-    const [properties, total] = await Promise.all([
-      prisma.property.findMany({
-        where,
-        skip,
-        take: params.limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-              avatar: true,
-              rating: true,
-            }
-          }
-        }
-      }),
-      prisma.property.count({ where })
-    ]);
-
-    // Parse JSON fields for each property
-    const parsedProperties = properties.map(property => ({
-      ...property,
-      images: JSON.parse(property.images || '[]'),
-      amenities: JSON.parse(property.amenities || '[]'),
-      features: JSON.parse(property.features || '[]'),
-    }));
-
-    return NextResponse.json({
-      properties: parsedProperties,
-      pagination: {
-        page: params.page,
-        limit: params.limit,
-        total,
-        pages: Math.ceil(total / params.limit)
-      }
-    });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching properties:', error);
     return NextResponse.json({ error: 'Error fetching properties' }, { status: 500 });

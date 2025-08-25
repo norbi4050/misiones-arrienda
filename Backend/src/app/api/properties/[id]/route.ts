@@ -1,73 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPropertyById, mockProperties } from '@/lib/mock-data';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const property = await prisma.property.findUnique({
-      where: { id: params.id },
-      include: {
-        agent: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            avatar: true,
-            rating: true,
-            reviewCount: true,
-            bio: true,
-          }
-        }
-      }
-    });
+    const property = getPropertyById(params.id);
 
     if (!property) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 });
     }
 
-    // Get similar properties
-    const similarProperties = await prisma.property.findMany({
-      where: {
-        id: { not: property.id },
-        city: property.city,
-        propertyType: property.propertyType,
-        status: 'AVAILABLE',
-      },
-      take: 4,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        agent: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-          }
-        }
-      }
-    });
-
-    // Parse JSON fields for the main property
-    const parsedProperty = {
-      ...property,
-      images: JSON.parse(property.images || '[]'),
-      amenities: JSON.parse(property.amenities || '[]'),
-      features: JSON.parse(property.features || '[]'),
-    };
-
-    // Parse JSON fields for similar properties
-    const parsedSimilarProperties = similarProperties.map(prop => ({
-      ...prop,
-      images: JSON.parse(prop.images || '[]'),
-      amenities: JSON.parse(prop.amenities || '[]'),
-      features: JSON.parse(prop.features || '[]'),
-    }));
+    // Get similar properties (same city and property type, excluding current property)
+    const similarProperties = mockProperties
+      .filter(prop => 
+        prop.id !== property.id &&
+        prop.city === property.city &&
+        prop.propertyType === property.propertyType &&
+        prop.status === 'AVAILABLE'
+      )
+      .slice(0, 4);
 
     return NextResponse.json({
-      property: parsedProperty,
-      similarProperties: parsedSimilarProperties
+      property,
+      similarProperties
     });
   } catch (error) {
     console.error('Error fetching property:', error);
