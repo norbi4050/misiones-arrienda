@@ -7,13 +7,14 @@
 - [x] 1. Verificar estado actual de Git
 - [x] 2. Crear README.md optimizado para GitHub
 - [x] 3. Verificar/actualizar .gitignore
+- [x] 4. Hacer commit de cambios pendientes
+- [x] 5. Crear guía de comandos para GitHub
 
-## 🔄 En Progreso:
-- [ ] 4. Hacer commit de cambios pendientes
-- [ ] 5. Crear repositorio en GitHub
-- [ ] 6. Configurar remote origin
-- [ ] 7. Push inicial a GitHub
-- [ ] 8. Verificación final
+## 🔄 Próximos Pasos (MANUALES):
+- [ ] 6. Crear repositorio en GitHub (seguir COMANDOS-GITHUB.md)
+- [ ] 7. Configurar remote origin
+- [ ] 8. Push inicial a GitHub
+- [ ] 9. Verificación final
 
 ## 📋 Notas:
 - Proyecto: Portal inmobiliario Misiones Arrienda
