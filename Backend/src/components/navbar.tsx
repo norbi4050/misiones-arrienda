@@ -3,10 +3,17 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Home, User, LogIn, Menu, X } from "lucide-react"
+import { Home, User, LogIn, Menu, X, LogOut } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { user, isAuthenticated, logout, isLoading } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    setIsMenuOpen(false)
+  }
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -58,17 +65,52 @@ export function Navbar() {
             >
               Dueño Directo
             </Link>
-            <Link 
-              href="/login" 
-              className="text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              Iniciar Sesión
-            </Link>
-            <Link href="/register">
-              <Button>
-                Registrarse
-              </Button>
-            </Link>
+            
+            {/* Mostrar diferentes opciones según el estado de autenticación */}
+            {!isLoading && (
+              <>
+                {isAuthenticated ? (
+                  // Usuario logueado - mostrar perfil y logout
+                  <>
+                    <Link 
+                      href="/dashboard" 
+                      className="text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-1"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Mi Perfil</span>
+                    </Link>
+                    <span className="text-sm text-gray-600">
+                      Hola, {user?.name}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLogout}
+                      className="flex items-center space-x-1"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Salir</span>
+                    </Button>
+                  </>
+                ) : (
+                  // Usuario no logueado - mostrar login y registro
+                  <>
+                    <Link 
+                      href="/login" 
+                      className="text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-1"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      <span>Iniciar Sesión</span>
+                    </Link>
+                    <Link href="/register">
+                      <Button>
+                        Registrarse
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -133,20 +175,51 @@ export function Navbar() {
               >
                 Dueño Directo
               </Link>
-              <Link
-                href="/login"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Iniciar Sesión
-              </Link>
-              <div className="px-3 py-2">
-                <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full">
-                    Registrarse
-                  </Button>
-                </Link>
-              </div>
+              
+              {/* Mobile auth options */}
+              {!isLoading && (
+                <>
+                  {isAuthenticated ? (
+                    // Usuario logueado - versión móvil
+                    <>
+                      <div className="px-3 py-2 text-sm text-gray-600 border-t">
+                        Hola, {user?.name}
+                      </div>
+                      <Link
+                        href="/dashboard"
+                        className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Mi Perfil
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-3 py-2 text-gray-700 hover:text-red-600 transition-colors"
+                      >
+                        Cerrar Sesión
+                      </button>
+                    </>
+                  ) : (
+                    // Usuario no logueado - versión móvil
+                    <>
+                      <Link
+                        href="/login"
+                        className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Iniciar Sesión
+                      </Link>
+                      <div className="px-3 py-2">
+                        <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                          <Button className="w-full">
+                            Registrarse
+                          </Button>
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}

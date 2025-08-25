@@ -6,16 +6,20 @@ import { FilterSection } from "@/components/filter-section"
 import { getProperties } from "@/lib/api"
 import { Property, PropertyFilters } from "@/types/property"
 
-export function PropertyGrid() {
-  const [properties, setProperties] = useState<Property[]>([])
-  const [loading, setLoading] = useState(true)
+interface PropertyGridProps {
+  initialProperties?: Property[]
+}
+
+export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
+  const [properties, setProperties] = useState<Property[]>(initialProperties)
+  const [loading, setLoading] = useState(initialProperties.length === 0)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<PropertyFilters>({})
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
-    total: 0,
-    pages: 0
+    total: initialProperties.length,
+    pages: Math.ceil(initialProperties.length / 12)
   })
 
   const fetchProperties = async (currentFilters: PropertyFilters = {}, page: number = 1) => {
@@ -28,15 +32,22 @@ export function PropertyGrid() {
     } catch (err) {
       setError('Error al cargar las propiedades')
       console.error('Error fetching properties:', err)
-      // No fallback data - show empty state
-      setProperties([])
+      // Fallback to initial properties if available
+      if (initialProperties.length > 0) {
+        setProperties(initialProperties)
+      } else {
+        setProperties([])
+      }
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchProperties()
+    // Solo fetch si no tenemos propiedades iniciales
+    if (initialProperties.length === 0) {
+      fetchProperties()
+    }
   }, [])
 
   const handleFilterChange = (newFilters: PropertyFilters) => {
@@ -71,6 +82,7 @@ export function PropertyGrid() {
         </div>
       )}
       
+      {/* Propiedades renderizadas server-side para SEO */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {properties.map((property) => (
           <PropertyCard 

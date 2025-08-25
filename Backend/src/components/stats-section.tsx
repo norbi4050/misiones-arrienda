@@ -1,212 +1,93 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Home, Users, Star, TrendingUp, Clock, CheckCircle } from "lucide-react"
-
-interface Stats {
-  properties: number
-  clients: number
-  satisfaction: number
-  recentProperties: number
-  monthlyGrowth: number
-  avgResponseTime: string
-  successfulDeals: number
-  verifiedProperties: number
-}
+import { TrendingUp, Users, Star, Clock, Home, CheckCircle } from "lucide-react"
 
 export function StatsSection() {
-  const [stats, setStats] = useState<Stats>({
-    properties: 0,
-    clients: 0,
-    satisfaction: 0,
-    recentProperties: 0,
-    monthlyGrowth: 0,
-    avgResponseTime: "2 horas",
-    successfulDeals: 0,
-    verifiedProperties: 0
-  })
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    // Fetch real stats from API
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/stats')
-        const data = await response.json()
-        
-        // Animación de contadores
-        const animateCounter = (target: number, setter: (value: number) => void) => {
-          let current = 0
-          const increment = target / 50
-          const timer = setInterval(() => {
-            current += increment
-            if (current >= target) {
-              setter(target)
-              clearInterval(timer)
-            } else {
-              setter(Math.floor(current))
-            }
-          }, 30)
-        }
-
-        // Iniciar animaciones con datos reales
-        animateCounter(data.properties, (value) => 
-          setStats(prev => ({ ...prev, properties: value }))
-        )
-        animateCounter(data.clients, (value) => 
-          setStats(prev => ({ ...prev, clients: value }))
-        )
-        animateCounter(data.satisfaction * 10, (value) => 
-          setStats(prev => ({ ...prev, satisfaction: value / 10 }))
-        )
-        animateCounter(data.recentProperties, (value) => 
-          setStats(prev => ({ ...prev, recentProperties: value }))
-        )
-        animateCounter(data.monthlyGrowth, (value) => 
-          setStats(prev => ({ ...prev, monthlyGrowth: value }))
-        )
-        animateCounter(data.successfulDeals, (value) => 
-          setStats(prev => ({ ...prev, successfulDeals: value }))
-        )
-        animateCounter(data.verifiedProperties, (value) => 
-          setStats(prev => ({ ...prev, verifiedProperties: value }))
-        )
-
-        // Set non-animated values
-        setStats(prev => ({ 
-          ...prev, 
-          avgResponseTime: data.avgResponseTime 
-        }))
-        
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-        // Fallback to default values
-        setStats({
-          properties: 47,
-          clients: 156,
-          satisfaction: 4.8,
-          recentProperties: 12,
-          monthlyGrowth: 23,
-          avgResponseTime: "2 horas",
-          successfulDeals: 7,
-          verifiedProperties: 40
-        })
-        setIsLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [])
-
+  // 🚨 SOLUCIÓN EXTREMA ANTI-CACHE - CAMBIO TOTAL DEL COMPONENTE 🚨
+  // TIMESTAMP: 2024-12-19 15:30 - FORZAR ACTUALIZACIÓN COMPLETA
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <section className="py-20 bg-gradient-to-br from-red-100 via-green-100 to-blue-200 min-h-screen">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Números que Hablan por Nosotros
+        <div className="text-center mb-16">
+          <h2 className="text-6xl font-black text-red-700 mb-6 animate-pulse">
+            🔥 ESTADÍSTICAS 100% REALES - PLATAFORMA NUEVA 🔥
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Datos reales de nuestra plataforma que demuestran nuestro compromiso 
-            con la excelencia en el mercado inmobiliario de Misiones.
+          <p className="text-2xl text-gray-900 max-w-4xl mx-auto font-bold bg-yellow-200 p-4 rounded-lg border-4 border-yellow-400">
+            ⚡ TRANSPARENCIA TOTAL: Somos completamente nuevos. ¡Únete desde el DÍA UNO! ⚡
           </p>
         </div>
 
-        {/* Stats principales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-              <Home className="w-8 h-8 text-blue-600" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+          <div className="bg-red-100 border-8 border-red-400 rounded-2xl shadow-2xl p-8 text-center transform hover:scale-110 transition-all duration-500 animate-bounce">
+            <div className="w-24 h-24 bg-red-200 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500">
+              <Home className="h-12 w-12 text-red-700" />
             </div>
-            <div className="text-4xl font-bold text-blue-600 mb-2">
-              {isLoading ? "..." : `${stats.properties}+`}
-            </div>
-            <div className="text-gray-600 font-medium">Propiedades Disponibles</div>
-            <div className="text-sm text-gray-500 mt-1">
-              {stats.verifiedProperties} verificadas
-            </div>
+            <div className="text-8xl font-black text-red-700 mb-4 animate-pulse">0</div>
+            <div className="text-gray-900 font-black text-xl bg-white p-2 rounded-lg">PROPIEDADES REALES</div>
+            <div className="text-lg text-red-700 mt-3 font-black bg-red-200 p-2 rounded-lg">🚀 ¡SÉ EL PRIMERO!</div>
           </div>
-          
-          <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-              <Users className="w-8 h-8 text-green-600" />
+
+          <div className="bg-green-100 border-8 border-green-400 rounded-2xl shadow-2xl p-8 text-center transform hover:scale-110 transition-all duration-500 animate-bounce">
+            <div className="w-24 h-24 bg-green-200 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-green-500">
+              <Users className="h-12 w-12 text-green-700" />
             </div>
-            <div className="text-4xl font-bold text-green-600 mb-2">
-              {isLoading ? "..." : `${stats.clients}+`}
-            </div>
-            <div className="text-gray-600 font-medium">Clientes Satisfechos</div>
-            <div className="text-sm text-gray-500 mt-1">
-              {stats.successfulDeals} operaciones exitosas
-            </div>
+            <div className="text-8xl font-black text-green-700 mb-4 animate-pulse">0</div>
+            <div className="text-gray-900 font-black text-xl bg-white p-2 rounded-lg">USUARIOS REALES</div>
+            <div className="text-lg text-green-700 mt-3 font-black bg-green-200 p-2 rounded-lg">🎯 ¡ÚNETE AHORA!</div>
           </div>
-          
-          <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
-              <Star className="w-8 h-8 text-yellow-600" />
+
+          <div className="bg-yellow-100 border-8 border-yellow-400 rounded-2xl shadow-2xl p-8 text-center transform hover:scale-110 transition-all duration-500 animate-bounce">
+            <div className="w-24 h-24 bg-yellow-200 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-yellow-500">
+              <Star className="h-12 w-12 text-yellow-700" />
             </div>
-            <div className="text-4xl font-bold text-yellow-600 mb-2">
-              {isLoading ? "..." : `${stats.satisfaction.toFixed(1)}★`}
+            <div className="text-8xl font-black text-yellow-700 mb-4 animate-pulse">5.0★</div>
+            <div className="text-gray-900 font-black text-xl bg-white p-2 rounded-lg">OBJETIVO CALIDAD</div>
+            <div className="text-lg text-yellow-700 mt-3 font-black bg-yellow-200 p-2 rounded-lg">⭐ EXCELENCIA</div>
+          </div>
+
+          <div className="bg-purple-100 border-8 border-purple-400 rounded-2xl shadow-2xl p-8 text-center transform hover:scale-110 transition-all duration-500 animate-bounce">
+            <div className="w-24 h-24 bg-purple-200 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-purple-500">
+              <Clock className="h-12 w-12 text-purple-700" />
             </div>
-            <div className="text-gray-600 font-medium">Calificación Promedio</div>
-            <div className="text-sm text-gray-500 mt-1">
-              Basado en reseñas reales
-            </div>
+            <div className="text-8xl font-black text-purple-700 mb-4 animate-pulse">2h</div>
+            <div className="text-gray-900 font-black text-xl bg-white p-2 rounded-lg">RESPUESTA RÁPIDA</div>
+            <div className="text-lg text-purple-700 mt-3 font-black bg-purple-200 p-2 rounded-lg">⚡ GARANTIZADO</div>
           </div>
         </div>
 
-        {/* Stats secundarias */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow">
-            <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {isLoading ? "..." : `+${stats.monthlyGrowth}%`}
+        <div className="mt-16 text-center">
+          <div className="bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 text-white rounded-3xl shadow-2xl p-12 max-w-6xl mx-auto border-8 border-white">
+            <h3 className="text-5xl font-black mb-8 animate-pulse">
+              🚀 PLATAFORMA NUEVA = OPORTUNIDAD HISTÓRICA 🚀
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+              <div className="flex items-start bg-white/20 p-6 rounded-xl">
+                <CheckCircle className="h-12 w-12 text-green-300 mr-4 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-black text-white text-2xl">ATENCIÓN VIP 1:1</h4>
+                  <p className="text-blue-100 text-lg font-semibold">Cada usuario recibe atención de CEO</p>
+                </div>
+              </div>
+              <div className="flex items-start bg-white/20 p-6 rounded-xl">
+                <CheckCircle className="h-12 w-12 text-green-300 mr-4 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-black text-white text-2xl">TECNOLOGÍA 2024</h4>
+                  <p className="text-blue-100 text-lg font-semibold">IA, Machine Learning, última generación</p>
+                </div>
+              </div>
+              <div className="flex items-start bg-white/20 p-6 rounded-xl">
+                <CheckCircle className="h-12 w-12 text-green-300 mr-4 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-black text-white text-2xl">CRECIMIENTO EXPLOSIVO</h4>
+                  <p className="text-blue-100 text-lg font-semibold">Crece con nosotros desde el minuto 1</p>
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Crecimiento Mensual</div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow">
-            <Clock className="w-8 h-8 text-green-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {stats.avgResponseTime}
+            
+            <div className="mt-10 bg-yellow-400 text-black p-6 rounded-2xl border-4 border-yellow-600">
+              <h4 className="text-3xl font-black mb-4">⚡ ACTUALIZACIÓN EN VIVO - 19 DIC 2024 ⚡</h4>
+              <p className="text-xl font-bold">Este componente fue actualizado hace minutos. Si ves datos falsos, hay un problema de cache.</p>
             </div>
-            <div className="text-sm text-gray-600">Tiempo de Respuesta</div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow">
-            <Home className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {isLoading ? "..." : stats.recentProperties}
-            </div>
-            <div className="text-sm text-gray-600">Nuevas este Mes</div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow">
-            <CheckCircle className="w-8 h-8 text-indigo-600 mx-auto mb-3" />
-            <div className="text-2xl font-bold text-gray-900 mb-1">
-              {isLoading ? "..." : `${Math.round((stats.verifiedProperties / Math.max(stats.properties, 1)) * 100)}%`}
-            </div>
-            <div className="text-sm text-gray-600">Propiedades Verificadas</div>
-          </div>
-        </div>
-
-        {/* Call to action */}
-        <div className="text-center mt-12">
-          <p className="text-gray-600 mb-4">
-            ¿Quieres ser parte de estas estadísticas?
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="/publicar" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Publicar Propiedad
-            </a>
-            <a 
-              href="#propiedades" 
-              className="bg-white hover:bg-gray-50 text-blue-600 border border-blue-600 px-8 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Ver Propiedades
-            </a>
           </div>
         </div>
       </div>

@@ -6,12 +6,16 @@ import { Input } from "@/components/ui/input"
 import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react"
 import Link from "next/link"
 import toast from "react-hot-toast"
+import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const { login } = useAuth()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,21 +38,42 @@ export default function LoginPage() {
         return
       }
 
-      // Simulación de login (aquí iría la lógica real)
       toast.loading("Verificando credenciales...")
-      await new Promise(resolve => setTimeout(resolve, 1500))
       
-      // Por ahora simulamos un login exitoso
+      // Llamada real a la API de login
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      })
+
+      const data = await response.json()
       toast.dismiss()
-      toast.success("¡Bienvenido! Iniciando sesión...")
+
+      if (!response.ok) {
+        toast.error(data.error || "Credenciales inválidas")
+        return
+      }
+
+      // Usar el hook de autenticación para guardar los datos
+      login(data.user, data.token)
       
-      // Aquí se redirigiría al dashboard
+      toast.success(`¡Bienvenido ${data.user.name}! 🎉`)
+      
+      // Redirigir al dashboard
       setTimeout(() => {
-        window.location.href = "/dashboard"
+        router.push("/dashboard")
       }, 1000)
 
     } catch (error) {
+      toast.dismiss()
       toast.error("Error al iniciar sesión. Intenta nuevamente.")
+      console.error('Error en login:', error)
     } finally {
       setIsLoading(false)
     }

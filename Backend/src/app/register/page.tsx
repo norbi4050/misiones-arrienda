@@ -98,24 +98,50 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      // Simulación de registro (aquí iría la lógica real)
       toast.loading("Creando tu cuenta...")
-      await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Simulamos un registro exitoso
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password
+        })
+      })
+
+      const data = await response.json()
       toast.dismiss()
+
+      if (!response.ok) {
+        toast.error(data.error || "Error al crear la cuenta")
+        return
+      }
+
       toast.success("¡Cuenta creada exitosamente! 🎉")
       
-      // Aquí se redirigiría al login o dashboard
+      if (data.emailSent) {
+        toast("📧 Revisa tu email para verificar tu cuenta", { 
+          duration: 5000,
+          icon: "📧" 
+        })
+      }
+      
+      // Redirigir al login
       setTimeout(() => {
         toast("Redirigiendo al login...", { icon: "🚀" })
         setTimeout(() => {
-          window.location.href = "/login"
+          window.location.href = "/login?registered=true"
         }, 1000)
-      }, 1500)
+      }, 2000)
 
     } catch (error) {
+      toast.dismiss()
       toast.error("Error al crear la cuenta. Intenta nuevamente.")
+      console.error('Error en registro:', error)
     } finally {
       setIsLoading(false)
     }

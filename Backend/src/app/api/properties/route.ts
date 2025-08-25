@@ -36,8 +36,7 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get('limit') || 12,
     });
 
-    // Use mock data instead of database
-    const result = filterProperties(params);
+const result = filterProperties(params); // Volver a la función de mock para evitar errores
 
     return NextResponse.json(result);
   } catch (error) {

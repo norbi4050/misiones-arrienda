@@ -1,8 +1,9 @@
 "use client"
 
-import { MapPin, Bed, Bath, Square, Heart } from "lucide-react"
+import { MapPin, Bed, Bath, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { FavoriteButton } from "@/components/favorite-button"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -46,18 +47,13 @@ export function PropertyCard({
               Destacado
             </Badge>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm hover:bg-white z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              // Aquí se puede agregar lógica de favoritos
-            }}
-          >
-            <Heart className="h-4 w-4" />
-          </Button>
+          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <FavoriteButton 
+              propertyId={id}
+              size="sm"
+              className="bg-white/80 backdrop-blur-sm hover:bg-white"
+            />
+          </div>
           
           {/* Overlay gradient on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

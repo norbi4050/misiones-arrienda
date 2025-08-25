@@ -87,11 +87,14 @@ model User {
   name        String
   email       String   @unique
   phone       String
+  password    String
   avatar      String?
   bio         String?
   occupation  String?
   age         Int?
   verified    Boolean  @default(false)
+  emailVerified Boolean @default(false)
+  verificationToken String?
   rating      Float    @default(0)
   reviewCount Int      @default(0)
   createdAt   DateTime @default(now())
@@ -103,6 +106,7 @@ model User {
   reviewsGiven UserReview[] @relation("ReviewGiver")
   reviewsReceived UserReview[] @relation("ReviewReceiver")
   rentalHistory RentalHistory[]
+  searchHistory SearchHistory[]
 }
 
 model UserReview {
@@ -166,4 +170,17 @@ model Favorite {
   createdAt  DateTime @default(now())
   
   @@unique([userId, propertyId])
+}
+
+model SearchHistory {
+  id           String   @id @default(cuid())
+  searchTerm   String
+  filters      String?  // JSON string con filtros aplicados
+  resultsCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  
+  @@index([userId, createdAt])
 }

@@ -1,21 +1,72 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useRouter } from "next/navigation"
+import toast from "react-hot-toast"
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("propiedades")
+  const [userData, setUserData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
-  // Datos de ejemplo del propietario
+  useEffect(() => {
+    // Verificar si el usuario está autenticado
+    const token = localStorage.getItem('authToken')
+    const userDataStr = localStorage.getItem('userData')
+
+    if (!token || !userDataStr) {
+      toast.error("Debes iniciar sesión para acceder al dashboard")
+      router.push('/login')
+      return
+    }
+
+    try {
+      const user = JSON.parse(userDataStr)
+      setUserData(user)
+    } catch (error) {
+      console.error('Error parsing user data:', error)
+      toast.error("Error al cargar datos del usuario")
+      router.push('/login')
+      return
+    }
+
+    setIsLoading(false)
+  }, [router])
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('userData')
+    toast.success("Sesión cerrada exitosamente")
+    router.push('/')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!userData) {
+    return null
+  }
+
+  // Datos del propietario (ahora usando datos reales del usuario)
   const propietario = {
-    nombre: "Juan Pérez",
-    email: "juan@example.com",
-    plan: "Destacado",
-    propiedades: 3,
-    consultas: 12,
-    vencimiento: "2024-03-15"
+    nombre: userData.name || "Usuario",
+    email: userData.email || "",
+    plan: "Básico", // Por defecto, se puede expandir más tarde
+    propiedades: 0, // Se puede obtener de una API
+    consultas: 0, // Se puede obtener de una API
+    vencimiento: "2024-12-31"
   }
 
   const propiedades = [
@@ -84,12 +135,25 @@ export default function Dashboard() {
               <p className="text-gray-600">
                 Bienvenido, {propietario.nombre}
               </p>
+              <p className="text-sm text-gray-500">
+                Email: {propietario.email}
+              </p>
             </div>
             <div className="text-right">
-              <Badge variant={propietario.plan === "Destacado" ? "destructive" : "secondary"}>
-                Plan {propietario.plan}
-              </Badge>
-              <p className="text-sm text-gray-500 mt-1">
+              <div className="flex items-center gap-3 mb-2">
+                <Badge variant={propietario.plan === "Destacado" ? "destructive" : "secondary"}>
+                  Plan {propietario.plan}
+                </Badge>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Cerrar Sesión
+                </Button>
+              </div>
+              <p className="text-sm text-gray-500">
                 Vence: {propietario.vencimiento}
               </p>
             </div>
