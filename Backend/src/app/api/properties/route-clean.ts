@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
         { createdAt: 'desc' }  // Then by newest
       ],
       include: {
-        owner: {
+        agent: {
           select: {
             id: true,
             name: true,
