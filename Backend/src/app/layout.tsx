@@ -9,6 +9,10 @@ import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
+// FORCE DYNAMIC RENDERING FOR ENTIRE APP - SOLUCIÓN RADICAL
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app'),
   title: 'Misiones Arrienda - Propiedades en Misiones',
