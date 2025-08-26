@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PropertyCard } from "@/components/property-card";
-import { Property } from "@/types/property";
+import { Property, PropertyStatus } from "@/types/property";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Home, MapPin } from "lucide-react";
 
@@ -49,9 +49,6 @@ export function SimilarProperties({
   };
 
   const generateMockSimilarProperties = (): Property[] => {
-    const city = String(currentProperty.city ?? "");
-    const propType = currentProperty.propertyType;
-
     const baseProperties: Property[] = [
       {
         id: "similar-1",
@@ -72,7 +69,7 @@ export function SimilarProperties({
         longitude: (currentProperty.longitude ?? -55.9008) + 0.01,
         propertyType: currentProperty.propertyType,
         listingType: currentProperty.listingType,
-        status: 'AVAILABLE' as const,
+        status: 'AVAILABLE' as PropertyStatus,
         images: currentProperty.images?.length
           ? currentProperty.images
           : ["/placeholder-house-2.jpg"],
@@ -106,7 +103,7 @@ export function SimilarProperties({
         longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
         propertyType: currentProperty.propertyType,
         listingType: currentProperty.listingType,
-        status: 'AVAILABLE' as const,
+        status: 'AVAILABLE' as PropertyStatus,
         images: currentProperty.images?.length
           ? currentProperty.images
           : ["/placeholder-apartment-2.jpg"],
@@ -140,7 +137,7 @@ export function SimilarProperties({
         longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
         propertyType: currentProperty.propertyType,
         listingType: currentProperty.listingType,
-        status: 'AVAILABLE' as const,
+        status: 'AVAILABLE' as PropertyStatus,
         images: currentProperty.images?.length
           ? currentProperty.images
           : ["/placeholder-house-4.jpg"],
