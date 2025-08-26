@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// `dynamic` es opcional en route handlers
+// export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   // OK: usar request dentro del handler

@@ -2,88 +2,72 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPaymentPreference } from '@/lib/mercadopago';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// `dynamic` acá es opcional; los route handlers ya son dinámicos por defecto.
+// `revalidate` no tiene efecto en handlers, podés omitirlo.
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { propertyId, amount, title, description, userEmail, userName } = await request.json();
+    const { items, payer, back_urls, metadata, propertyId, amount, title, description, userEmail, userName } = await req.json();
 
-    // Validate required fields
-    if (!propertyId || !amount || !title || !userEmail || !userName) {
-      return NextResponse.json(
-        { error: 'Faltan parámetros requeridos: propertyId, amount, title, userEmail, userName' },
-        { status: 400 }
-      );
+    // Si viene en el formato nuevo (items, payer, etc.)
+    if (items && payer) {
+      const preferenceData = {
+        items: items ?? [{ 
+          title: "Destacado 7 días", 
+          quantity: 1, 
+          unit_price: 4999,
+          currency_id: 'ARS'
+        }],
+        payer,
+        back_urls: back_urls ?? {
+          success: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success`,
+          failure: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/failure`,
+          pending: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/pending`,
+        },
+        auto_return: 'approved' as const,
+        notification_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/webhook`,
+        metadata: { ...metadata, site: "misionesarrienda" },
+      };
+
+      // Aquí usaríamos directamente MercadoPago SDK si estuviera disponible
+      // Por ahora, devolvemos un mock response
+      return NextResponse.json({ 
+        id: 'mock-preference-id',
+        init_point: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock-preference-id',
+        sandbox_init_point: 'https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock-preference-id'
+      });
     }
 
-    // Validate amount is a positive number
-    if (typeof amount !== 'number' || amount <= 0) {
-      return NextResponse.json(
-        { error: 'El monto debe ser un número positivo' },
-        { status: 400 }
-      );
+    // Si viene en el formato legacy (propertyId, amount, etc.)
+    if (propertyId && amount && title && userEmail && userName) {
+      const preference = await createPaymentPreference({
+        title,
+        description: description || `Pago por propiedad: ${title}`,
+        price: amount,
+        quantity: 1,
+        propertyId,
+        userEmail,
+        userName
+      });
+
+      return NextResponse.json({
+        success: true,
+        preference: {
+          id: preference.id,
+          init_point: preference.init_point,
+          sandbox_init_point: preference.sandbox_init_point,
+          items: preference.items
+        }
+      });
     }
 
-    // Create MercadoPago preference with real credentials
-    const preference = await createPaymentPreference({
-      title,
-      description: description || `Pago por propiedad: ${title}`,
-      price: amount,
-      quantity: 1,
-      propertyId,
-      userEmail,
-      userName
-    });
-
-    return NextResponse.json({
-      success: true,
-      preference: {
-        id: preference.id,
-        init_point: preference.init_point,
-        sandbox_init_point: preference.sandbox_init_point,
-        items: preference.items
-      }
-    });
-  } catch (error) {
-    console.error('Error creating MercadoPago preference:', error);
     return NextResponse.json(
-      { error: 'Error al crear la preferencia de pago' },
-      { status: 500 }
+      { error: 'Faltan parámetros requeridos' },
+      { status: 400 }
     );
-  }
-}
 
-// GET endpoint to verify payment status
-export async function GET(request: NextRequest) {
-  try {
-    const paymentId = request.nextUrl.searchParams.get('payment_id');
-    const status = request.nextUrl.searchParams.get('status');
-    const externalReference = request.nextUrl.searchParams.get('external_reference');
-
-    if (!paymentId) {
-      return NextResponse.json(
-        { error: 'ID de pago requerido' },
-        { status: 400 }
-      );
-    }
-
-    // Here you can verify the payment with MercadoPago
-    // and update your database accordingly
-    
-    return NextResponse.json({
-      success: true,
-      payment: {
-        id: paymentId,
-        status,
-        external_reference: externalReference
-      }
-    });
-  } catch (error) {
-    console.error('Error verifying payment:', error);
-    return NextResponse.json(
-      { error: 'Error al verificar el pago' },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    console.error('Error creating MercadoPago preference:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
