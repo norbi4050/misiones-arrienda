@@ -54,52 +54,106 @@ export function SimilarProperties({
 
     const baseProperties: Property[] = [
       {
-        ...currentProperty,
         id: "similar-1",
         title: "Casa moderna con jardín",
         description: "Hermosa casa con jardín y parrilla.",
         price: Math.round((currentProperty.price ?? 0) * 0.85),
+        oldPrice: currentProperty.oldPrice,
+        bedrooms: currentProperty.bedrooms ?? 2,
+        bathrooms: currentProperty.bathrooms ?? 1,
+        garages: currentProperty.garages ?? 1,
+        area: currentProperty.area ?? 100,
+        lotArea: currentProperty.lotArea,
+        address: currentProperty.address ?? "Dirección similar",
+        city: currentProperty.city ?? "Posadas",
+        province: currentProperty.province ?? "Misiones",
+        postalCode: currentProperty.postalCode ?? "3300",
         latitude: (currentProperty.latitude ?? -27.3621) + 0.01,
         longitude: (currentProperty.longitude ?? -55.9008) + 0.01,
-        images:
-          currentProperty.images?.length
-            ? currentProperty.images
-            : ["/placeholder-house-2.jpg"],
+        propertyType: currentProperty.propertyType,
+        listingType: currentProperty.listingType,
+        status: 'AVAILABLE' as const,
+        images: currentProperty.images?.length
+          ? currentProperty.images
+          : ["/placeholder-house-2.jpg"],
+        virtualTourUrl: currentProperty.virtualTourUrl,
+        amenities: currentProperty.amenities ?? [],
+        features: currentProperty.features ?? [],
+        yearBuilt: currentProperty.yearBuilt,
+        floor: currentProperty.floor,
+        totalFloors: currentProperty.totalFloors,
         featured: false,
-        status: 'AVAILABLE', // Explicitly set to a valid PropertyStatus
+        createdAt: currentProperty.createdAt ?? new Date().toISOString(),
+        updatedAt: currentProperty.updatedAt ?? new Date().toISOString(),
+        agent: currentProperty.agent,
       },
       {
-        ...currentProperty,
         id: "similar-2",
         title: "Departamento luminoso céntrico",
         description: "Moderno departamento con excelente ubicación.",
         price: Math.round((currentProperty.price ?? 0) * 1.15),
+        oldPrice: currentProperty.oldPrice,
+        bedrooms: (currentProperty.bedrooms ?? 1) + 1,
+        bathrooms: currentProperty.bathrooms ?? 1,
+        garages: currentProperty.garages ?? 1,
+        area: currentProperty.area ?? 100,
+        lotArea: currentProperty.lotArea,
+        address: currentProperty.address ?? "Dirección similar",
+        city: currentProperty.city ?? "Posadas",
+        province: currentProperty.province ?? "Misiones",
+        postalCode: currentProperty.postalCode ?? "3300",
         latitude: (currentProperty.latitude ?? -27.3621) - 0.01,
         longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
-        images:
-          currentProperty.images?.length
-            ? currentProperty.images
-            : ["/placeholder-apartment-2.jpg"],
+        propertyType: currentProperty.propertyType,
+        listingType: currentProperty.listingType,
+        status: 'AVAILABLE' as const,
+        images: currentProperty.images?.length
+          ? currentProperty.images
+          : ["/placeholder-apartment-2.jpg"],
+        virtualTourUrl: currentProperty.virtualTourUrl,
+        amenities: currentProperty.amenities ?? [],
+        features: currentProperty.features ?? [],
+        yearBuilt: currentProperty.yearBuilt,
+        floor: currentProperty.floor,
+        totalFloors: currentProperty.totalFloors,
         featured: true,
-        bedrooms: (currentProperty.bedrooms ?? 1) + 1,
-        status: 'AVAILABLE', // Explicitly set to a valid PropertyStatus
+        createdAt: currentProperty.createdAt ?? new Date().toISOString(),
+        updatedAt: currentProperty.updatedAt ?? new Date().toISOString(),
+        agent: currentProperty.agent,
       },
       {
-        ...currentProperty,
         id: "similar-3",
         title: "Casa familiar con piscina",
         description: "Amplia casa familiar con piscina y quincho.",
         price: Math.round((currentProperty.price ?? 0) * 1.3),
+        oldPrice: currentProperty.oldPrice,
+        bedrooms: currentProperty.bedrooms ?? 3,
+        bathrooms: Math.max((currentProperty.bathrooms ?? 1) + 1, 1),
+        garages: currentProperty.garages ?? 1,
+        area: Math.max((currentProperty.area ?? 50) + 50, 50),
+        lotArea: currentProperty.lotArea,
+        address: currentProperty.address ?? "Dirección similar",
+        city: currentProperty.city ?? "Posadas",
+        province: currentProperty.province ?? "Misiones",
+        postalCode: currentProperty.postalCode ?? "3300",
         latitude: (currentProperty.latitude ?? -27.3621) + 0.02,
         longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
-        images:
-          currentProperty.images?.length
-            ? currentProperty.images
-            : ["/placeholder-house-4.jpg"],
+        propertyType: currentProperty.propertyType,
+        listingType: currentProperty.listingType,
+        status: 'AVAILABLE' as const,
+        images: currentProperty.images?.length
+          ? currentProperty.images
+          : ["/placeholder-house-4.jpg"],
+        virtualTourUrl: currentProperty.virtualTourUrl,
+        amenities: currentProperty.amenities ?? [],
+        features: currentProperty.features ?? [],
+        yearBuilt: currentProperty.yearBuilt,
+        floor: currentProperty.floor,
+        totalFloors: currentProperty.totalFloors,
         featured: false,
-        bathrooms: Math.max((currentProperty.bathrooms ?? 1) + 1, 1),
-        area: Math.max((currentProperty.area ?? 50) + 50, 50),
-        status: 'AVAILABLE', // Explicitly set to a valid PropertyStatus
+        createdAt: currentProperty.createdAt ?? new Date().toISOString(),
+        updatedAt: currentProperty.updatedAt ?? new Date().toISOString(),
+        agent: currentProperty.agent,
       },
     ];
 
