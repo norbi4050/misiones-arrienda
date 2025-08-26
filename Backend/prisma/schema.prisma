@@ -40,10 +40,15 @@ model Property {
   agent       Agent    @relation(fields: [agentId], references: [id])
   agentId     String
   
+  // Relaciones existentes
   inquiries   Inquiry[]
   userInquiries UserInquiry[]
   favorites   Favorite[]
   rentalHistory RentalHistory[]
+  
+  // Nuevas relaciones para sistema de pagos
+  payments    Payment[]
+  subscriptions Subscription[]
   
   @@index([city, province])
   @@index([price])
@@ -100,13 +105,18 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  // Relaciones
+  // Relaciones existentes
   favorites   Favorite[]
   inquiries   UserInquiry[]
   reviewsGiven UserReview[] @relation("ReviewGiver")
   reviewsReceived UserReview[] @relation("ReviewReceiver")
   rentalHistory RentalHistory[]
   searchHistory SearchHistory[]
+  
+  // Nuevas relaciones para sistema de pagos
+  payments    Payment[]
+  subscriptions Subscription[]
+  paymentMethods PaymentMethod[]
 }
 
 model UserReview {
@@ -183,4 +193,199 @@ model SearchHistory {
   userId       String
   
   @@index([userId, createdAt])
+}
+
+// =============================================================================
+// MODELOS PARA SISTEMA DE PAGOS MEJORADO
+// =============================================================================
+
+model Payment {
+  id                    String   @id @default(cuid())
+  
+  // Identificadores de MercadoPago
+  mercadopagoId         String   @unique // ID del pago en MercadoPago
+  preferenceId          String?  // ID de la preferencia
+  externalReference     String   // Referencia externa personalizada
+  
+  // Información del pago
+  amount                Float
+  currency              String   @default("ARS")
+  status                String   // pending, approved, rejected, cancelled, refunded, etc.
+  statusDetail          String?  // Detalle del estado
+  paymentMethodId       String?  // visa, mastercard, efectivo, etc.
+  paymentTypeId         String?  // credit_card, debit_card, ticket, etc.
+  installments          Int      @default(1)
+  
+  // Fechas importantes
+  dateCreated           DateTime @default(now())
+  dateApproved          DateTime?
+  dateLastUpdated       DateTime @updatedAt
+  
+  // Información del pagador
+  payerEmail            String
+  payerName             String?
+  payerIdentification   String?  // JSON con tipo y número de identificación
+  
+  // Relaciones
+  user                  User     @relation(fields: [userId], references: [id])
+  userId                String
+  property              Property @relation(fields: [propertyId], references: [id])
+  propertyId            String
+  subscription          Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId        String?
+  
+  // Relación con notificaciones de webhook
+  notifications         PaymentNotification[]
+  
+  // Metadata adicional
+  metadata              String?  // JSON con información adicional
+  webhookData           String?  // JSON con datos del webhook
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([mercadopagoId])
+  @@index([userId, status])
+  @@index([propertyId])
+  @@index([status, dateCreated])
+}
+
+model Subscription {
+  id                    String   @id @default(cuid())
+  
+  // Información del plan
+  planType              String   // basic, featured, premium
+  planName              String
+  planPrice             Float
+  planDuration          Int      // días
+  
+  // Estado de la suscripción
+  status                String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED, SUSPENDED
+  
+  // Fechas
+  startDate             DateTime @default(now())
+  endDate               DateTime
+  renewalDate           DateTime?
+  cancelledAt           DateTime?
+  
+  // Configuración
+  autoRenew             Boolean  @default(false)
+  renewalAttempts       Int      @default(0)
+  maxRenewalAttempts    Int      @default(3)
+  
+  // Relaciones
+  user                  User     @relation(fields: [userId], references: [id])
+  userId                String
+  property              Property @relation(fields: [propertyId], references: [id])
+  propertyId            String
+  payments              Payment[]
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([userId, status])
+  @@index([propertyId, status])
+  @@index([endDate, status])
+  @@index([renewalDate])
+}
+
+model PaymentMethod {
+  id                    String   @id @default(cuid())
+  
+  // Información del método de pago
+  type                  String   // credit_card, debit_card, bank_transfer, etc.
+  brand                 String?  // visa, mastercard, amex, etc.
+  lastFourDigits        String?  // Últimos 4 dígitos de la tarjeta
+  expirationMonth       Int?
+  expirationYear        Int?
+  holderName            String?
+  
+  // Identificadores de MercadoPago
+  mercadopagoCardId     String?  // ID de la tarjeta en MercadoPago
+  mercadopagoCustomerId String?  // ID del customer en MercadoPago
+  
+  // Estado
+  isActive              Boolean  @default(true)
+  isDefault             Boolean  @default(false)
+  
+  // Relaciones
+  user                  User     @relation(fields: [userId], references: [id])
+  userId                String
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([userId, isActive])
+}
+
+model PaymentAnalytics {
+  id                    String   @id @default(cuid())
+  
+  // Período de análisis
+  date                  DateTime @db.Date
+  period                String   // daily, weekly, monthly
+  
+  // Métricas de pagos
+  totalPayments         Int      @default(0)
+  successfulPayments    Int      @default(0)
+  failedPayments        Int      @default(0)
+  pendingPayments       Int      @default(0)
+  
+  // Métricas financieras
+  totalAmount           Float    @default(0)
+  successfulAmount      Float    @default(0)
+  averageAmount         Float    @default(0)
+  
+  // Métricas por método de pago
+  creditCardPayments    Int      @default(0)
+  debitCardPayments     Int      @default(0)
+  bankTransferPayments  Int      @default(0)
+  cashPayments          Int      @default(0)
+  
+  // Métricas por plan
+  basicPlanPayments     Int      @default(0)
+  featuredPlanPayments  Int      @default(0)
+  premiumPlanPayments   Int      @default(0)
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([date, period])
+  @@index([date])
+  @@index([period])
+}
+
+model PaymentNotification {
+  id                    String   @id @default(cuid())
+  
+  // Información del webhook
+  mercadopagoId         String   // ID del pago en MercadoPago
+  topic                 String   // payment, merchant_order, etc.
+  type                  String   // payment, merchant_order, etc.
+  
+  // Estado del procesamiento
+  status                String   @default("PENDING") // PENDING, PROCESSED, FAILED
+  attempts              Int      @default(0)
+  maxAttempts           Int      @default(3)
+  
+  // Datos del webhook
+  webhookData           String   // JSON completo del webhook
+  errorMessage          String?  // Mensaje de error si falló el procesamiento
+  
+  // Relación con el pago (opcional, puede no existir aún)
+  payment               Payment? @relation(fields: [paymentId], references: [id])
+  paymentId             String?
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  processedAt           DateTime?
+  
+  @@index([mercadopagoId])
+  @@index([status, attempts])
+  @@index([createdAt])
 }
