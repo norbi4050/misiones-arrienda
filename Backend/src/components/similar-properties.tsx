@@ -5,9 +5,10 @@ import { PropertyCard } from "@/components/property-card";
 import { Property } from "@/types/property";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { normalizeProperty } from "@/lib/type-helpers";
 
 // Versión para forzar recompilación en Vercel si quedara cacheado
-export const __SIMILAR_PROPS_VERSION = "v3-fix-dedup";
+export const __SIMILAR_PROPS_VERSION = "v4-typescript-fix";
 
 interface SimilarPropertiesProps {
   currentProperty: Property;
@@ -38,8 +39,9 @@ export function SimilarProperties({
 
       if (res.ok) {
         const data = await res.json();
-        // si el backend devuelve strings "libres", el cast asegura el tipo en FE
-        setSimilarProperties((data?.properties as Property[]) || []);
+        // Normalizar propiedades para asegurar tipos correctos
+        const normalizedProperties = (data?.properties || []).map(normalizeProperty);
+        setSimilarProperties(normalizedProperties);
       } else {
         // 2) Fallback mock
         setSimilarProperties(generateMockSimilarProperties());
@@ -52,13 +54,12 @@ export function SimilarProperties({
     }
   };
 
-  // ⚠️ Importante: partimos SIEMPRE del spread de currentProperty.
-  // No tocar `status`, `listingType` ni `propertyType` a mano.
+  // Generar propiedades mock con normalización de tipos
   const generateMockSimilarProperties = (): Property[] => {
     const city = String(currentProperty.city ?? "");
     const propType = currentProperty.propertyType;
 
-    const base: Property[] = [
+    const baseProperties = [
       {
         ...currentProperty,
         id: "similar-1",
@@ -106,8 +107,11 @@ export function SimilarProperties({
       },
     ];
 
+    // Normalizar todas las propiedades para asegurar tipos correctos
+    const normalizedProperties: Property[] = baseProperties.map(normalizeProperty);
+
     // Filtrar: misma ciudad y tipo, y no incluirse a sí misma
-    return base
+    return normalizedProperties
       .filter(
         (p) =>
           String(p.city ?? "") === city &&
