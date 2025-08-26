@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { headers } from 'next/headers'
 
 const prisma = new PrismaClient()
+
+// Marcar como ruta dinámica para evitar problemas de renderizado estático
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,11 +43,8 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Obtener la URL base de manera estática
-    const headersList = headers()
-    const host = headersList.get('host') || 'localhost:3000'
-    const protocol = headersList.get('x-forwarded-proto') || 'http'
-    const baseUrl = `${protocol}://${host}`
+    // Usar URL fija para evitar problemas de renderizado dinámico
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app'
 
     // Redirigir a una página de éxito
     return NextResponse.redirect(
