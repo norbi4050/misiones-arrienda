@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { PropertyCard } from '@/components/property-card'
-import { Property } from '@/types/property'
+import { Property, PropertyStatus, PropertyType, ListingType } from '@/types/property'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Home, MapPin } from 'lucide-react'
 
@@ -62,9 +62,9 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
         bathrooms: currentProperty.bathrooms - 1 || 1,
         garages: 1,
         area: currentProperty.area - 20,
-        propertyType: currentProperty.propertyType as "HOUSE" | "APARTMENT" | "COMMERCIAL" | "LAND",
-        listingType: currentProperty.listingType as "SALE" | "RENT",
-        status: "AVAILABLE",
+        propertyType: currentProperty.propertyType,
+        listingType: currentProperty.listingType,
+        status: "AVAILABLE" as PropertyStatus,
         address: "Av. San Martín 456",
         postalCode: currentProperty.postalCode,
         yearBuilt: 2019,
@@ -95,9 +95,9 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
         bathrooms: currentProperty.bathrooms,
         garages: 0,
         area: currentProperty.area + 30,
-        propertyType: currentProperty.propertyType as "HOUSE" | "APARTMENT" | "COMMERCIAL" | "LAND",
-        listingType: currentProperty.listingType as "SALE" | "RENT",
-        status: "AVAILABLE",
+        propertyType: currentProperty.propertyType,
+        listingType: currentProperty.listingType,
+        status: "AVAILABLE" as PropertyStatus,
         address: "Belgrano 789",
         postalCode: currentProperty.postalCode,
         yearBuilt: 2021,
@@ -128,9 +128,9 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
         bathrooms: currentProperty.bathrooms + 1,
         garages: 2,
         area: currentProperty.area + 50,
-        propertyType: "HOUSE" as const,
-        listingType: currentProperty.listingType as "SALE" | "RENT",
-        status: "AVAILABLE",
+        propertyType: "HOUSE" as PropertyType,
+        listingType: currentProperty.listingType,
+        status: "AVAILABLE" as PropertyStatus,
         address: "Los Aromos 321",
         postalCode: currentProperty.postalCode,
         yearBuilt: 2018,
