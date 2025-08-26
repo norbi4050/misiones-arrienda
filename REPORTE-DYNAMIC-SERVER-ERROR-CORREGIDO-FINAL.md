@@ -1,12 +1,12 @@
-# 🎉 DYNAMIC SERVER ERROR COMPLETAMENTE CORREGIDO
+# 🎉 DYNAMIC SERVER ERROR COMPLETAMENTE CORREGIDO + AJUSTES FINOS
 
 ## ✅ **PROBLEMA RESUELTO DEFINITIVAMENTE**
 
-El error `Dynamic server usage: Page couldn't be rendered statically because it used request.url` ha sido **COMPLETAMENTE ELIMINADO** siguiendo las mejores prácticas de Next.js 14.
+El error `Dynamic server usage: Page couldn't be rendered statically because it used request.url` ha sido **COMPLETAMENTE ELIMINADO** siguiendo las mejores prácticas de Next.js 14 + **AJUSTES FINOS IMPLEMENTADOS**.
 
 ---
 
-## 🔧 **CORRECCIONES IMPLEMENTADAS**
+## 🔧 **CORRECCIONES IMPLEMENTADAS + AJUSTES FINOS**
 
 ### **1. LAYOUT.TSX - FORCE-DYNAMIC GLOBAL ELIMINADO** ✅
 ```typescript
@@ -22,14 +22,34 @@ export const metadata: Metadata = {
 }
 ```
 
-### **2. API ROUTE: /api/auth/verify/route.ts** ✅
+### **2. API ROUTE: /api/payments/create-preference - CAMBIADO A POST** ✅
 ```typescript
-// ✅ FORMATO CORRECTO IMPLEMENTADO
+// ✅ FORMATO CORRECTO - POST (no GET)
+import { NextRequest, NextResponse } from 'next/server';
+import { createPaymentPreference } from '@/lib/mercadopago';
+
+export const runtime = 'nodejs';
+// `dynamic` es opcional en route handlers
+// `revalidate` no tiene efecto en handlers
+
+export async function POST(req: NextRequest) {
+  try {
+    const { items, payer, back_urls, metadata } = await req.json();
+    // ...lógica de creación de preferencia...
+    return NextResponse.json({ id: preference.id });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+```
+
+### **3. API ROUTE: /api/auth/verify/route.ts** ✅
+```typescript
+// ✅ FORMATO CORRECTO LIMPIO
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// `dynamic` es opcional en route handlers
 
 export async function GET(req: NextRequest) {
   // ✅ OK: usar request dentro del handler
@@ -40,24 +60,10 @@ export async function GET(req: NextRequest) {
 }
 ```
 
-### **3. API ROUTE: /api/payments/create-preference/route.ts** ✅
-```typescript
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-// ✅ Usa request.nextUrl.searchParams dentro del handler
-export async function GET(request: NextRequest) {
-  const paymentId = request.nextUrl.searchParams.get('payment_id');
-  // ...
-}
-```
-
 ### **4. API ROUTE: /api/search-history/route.ts** ✅
 ```typescript
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// `dynamic` es opcional en route handlers
 
 // ✅ Usa request.nextUrl.searchParams dentro del handler
 export async function GET(request: NextRequest) {
@@ -69,8 +75,7 @@ export async function GET(request: NextRequest) {
 ### **5. API ROUTE: /api/favorites/route.ts** ✅
 ```typescript
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// `dynamic` es opcional en route handlers
 
 // ✅ Usa request.nextUrl.searchParams dentro del handler
 export async function DELETE(request: NextRequest) {
