@@ -52,7 +52,7 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
               <SelectValue placeholder="Seleccionar ubicación" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas las ubicaciones</SelectItem>
+              <SelectItem value="all">Todas las ubicaciones</SelectItem>
               <SelectItem value="Posadas">🏙️ Posadas</SelectItem>
               <SelectItem value="Oberá">🌳 Oberá</SelectItem>
               <SelectItem value="Eldorado">🌿 Eldorado</SelectItem>
@@ -78,7 +78,7 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
               <SelectValue placeholder="Tipo de propiedad" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos los tipos</SelectItem>
+              <SelectItem value="all">Todos los tipos</SelectItem>
               <SelectItem value="HOUSE">🏡 Casa</SelectItem>
               <SelectItem value="APARTMENT">🏢 Departamento</SelectItem>
               <SelectItem value="COMMERCIAL">🏪 Local Comercial</SelectItem>
@@ -100,7 +100,7 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
               <SelectValue placeholder="Precio mín." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sin mínimo</SelectItem>
+              <SelectItem value="0">Sin mínimo</SelectItem>
               <SelectItem value="50000">$50,000</SelectItem>
               <SelectItem value="100000">$100,000</SelectItem>
               <SelectItem value="150000">$150,000</SelectItem>
@@ -124,7 +124,7 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
               <SelectValue placeholder="Precio máx." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sin máximo</SelectItem>
+              <SelectItem value="999999999">Sin máximo</SelectItem>
               <SelectItem value="100000">$100,000</SelectItem>
               <SelectItem value="200000">$200,000</SelectItem>
               <SelectItem value="300000">$300,000</SelectItem>

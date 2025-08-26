@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { AIChatbot } from '@/components/ai-chatbot'
 import WhatsAppButton from '@/components/whatsapp-button'
+import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -63,6 +64,9 @@ export default function RootLayout({
           
           {/* AI Chatbot */}
           <AIChatbot />
+          
+          {/* Build Badge para debugging */}
+          <BuildBadge />
           
           {/* Toast Notifications Mejoradas */}
           <Toaster

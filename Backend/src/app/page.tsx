@@ -1,8 +1,10 @@
 import { HeroSection } from '@/components/hero-section'
 import { PropertyGrid } from '@/components/property-grid'
-import { StatsSection } from '@/components/stats-section'
 import { fetchRealProperties } from '@/lib/api'
 import { Metadata } from 'next'
+
+// Neutralizar caché mientras depuramos
+export const revalidate = 0
 
 // Metadatos dinámicos para SEO
 export const metadata: Metadata = {
@@ -53,7 +55,6 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen">
       <HeroSection />
-      <StatsSection />
       <section id="propiedades">
         <PropertyGrid initialProperties={initialProperties} />
       </section>
