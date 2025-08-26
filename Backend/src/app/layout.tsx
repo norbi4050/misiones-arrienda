@@ -9,38 +9,10 @@ import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
-// FORCE DYNAMIC RENDERING FOR ENTIRE APP - SOLUCIÓN RADICAL
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app'),
-  title: 'Misiones Arrienda - Propiedades en Misiones',
-  description: 'Encuentra las mejores propiedades en alquiler y venta en Misiones. Casas, departamentos, locales comerciales y más.',
-  keywords: 'arriendo, venta, propiedades, Misiones, Posadas, casas, departamentos, locales, inmobiliaria',
-  authors: [{ name: 'Misiones Arrienda' }],
-  openGraph: {
-    title: 'Misiones Arrienda - Propiedades en Misiones',
-    description: 'Encuentra las mejores propiedades en alquiler y venta en Misiones',
-    type: 'website',
-    locale: 'es_AR',
-    siteName: 'Misiones Arrienda',
-    url: '/',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  verification: {
-    google: 'your-google-verification-code', // Agregar código real
-  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.misionesarrienda.com.ar'),
+  title: 'MisionesArrienda',
+  description: 'Casas, departamentos y locales en Misiones',
 }
 
 export default function RootLayout({
