@@ -4,12 +4,14 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Upload, DollarSign, Home, Check } from "lucide-react"
+import { MapPin, Upload, DollarSign, Home, Check, Loader2, CreditCard, Shield, Clock } from "lucide-react"
 import Link from "next/link"
+import toast from 'react-hot-toast'
 
 export default function PublicarPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedPlan, setSelectedPlan] = useState<'basico' | 'destacado' | 'full'>('basico')
+  const [isProcessing, setIsProcessing] = useState(false)
   const [propertyForm, setPropertyForm] = useState({
     title: "",
     description: "",
@@ -37,25 +39,30 @@ export default function PublicarPage() {
         "Hasta 3 fotos",
         "Descripción estándar",
         "Contacto directo",
-        "Vigencia 30 días"
+        "Vigencia 30 días",
+        "Analytics básicos"
       ],
       color: "bg-gray-100 border-gray-300",
-      badge: ""
+      badge: "",
+      popular: false
     },
     destacado: {
       name: "Plan Destacado",
       price: 5000,
       duration: "por mes",
       features: [
-        "Publicación destacada",
+        "Todo lo del Plan Básico",
         "Badge 'Destacado'",
         "Hasta 8 fotos",
         "Aparece primero en búsquedas",
         "Descripción extendida",
-        "Estadísticas de visualización"
+        "Estadísticas avanzadas",
+        "WhatsApp integration premium",
+        "Social media sharing"
       ],
       color: "bg-blue-50 border-blue-300",
-      badge: "Más Popular"
+      badge: "Más Popular",
+      popular: true
     },
     full: {
       name: "Plan Full",
@@ -68,34 +75,92 @@ export default function PublicarPage() {
         "Tour virtual 360°",
         "Promoción en redes sociales",
         "Agente asignado",
-        "Reportes detallados"
+        "Reportes detallados",
+        "Priority support",
+        "Custom branding"
       ],
       color: "bg-yellow-50 border-yellow-300",
-      badge: "Premium"
+      badge: "Premium",
+      popular: false
     }
+  }
+
+  const validateStep1 = () => {
+    const required = ['title', 'price', 'bedrooms', 'bathrooms', 'area', 'address', 'city', 'description']
+    const missing = required.filter(field => !propertyForm[field as keyof typeof propertyForm])
+    
+    if (missing.length > 0) {
+      toast.error(`Por favor completa: ${missing.join(', ')}`)
+      return false
+    }
+    
+    if (Number(propertyForm.price) <= 0) {
+      toast.error('El precio debe ser mayor a 0')
+      return false
+    }
+    
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsProcessing(true)
     
-    // Simular proceso de pago para planes pagos
-    if (selectedPlan !== 'basico') {
-      alert(`Redirigiendo a MercadoPago para pagar $${plans[selectedPlan].price}...`)
-      // Aquí iría la integración real con MercadoPago
-    }
+    try {
+      if (selectedPlan === 'basico') {
+        // Plan gratuito - crear propiedad directamente
+        const response = await fetch('/api/properties/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...propertyForm,
+            plan: selectedPlan,
+            featured: false,
+            status: 'ACTIVE'
+          })
+        })
 
-    // Simular creación de propiedad
-    const propertyData = {
-      ...propertyForm,
-      featured: selectedPlan !== 'basico',
-      plan: selectedPlan
-    }
+        if (response.ok) {
+          toast.success('¡Propiedad publicada exitosamente!')
+          window.location.href = '/dashboard'
+        } else {
+          throw new Error('Error al crear la propiedad')
+        }
+      } else {
+        // Plan pago - crear preferencia de MercadoPago
+        const response = await fetch('/api/payments/create-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `${plans[selectedPlan].name} - ${propertyForm.title}`,
+            description: `Plan ${plans[selectedPlan].name} para la propiedad: ${propertyForm.title}`,
+            amount: plans[selectedPlan].price,
+            quantity: 1,
+            propertyId: `temp-${Date.now()}`, // ID temporal
+            userEmail: 'usuario@ejemplo.com', // TODO: obtener del contexto de usuario
+            userName: 'Usuario Ejemplo', // TODO: obtener del contexto de usuario
+            metadata: {
+              plan: selectedPlan,
+              propertyData: JSON.stringify(propertyForm)
+            }
+          })
+        })
 
-    console.log('Creando propiedad:', propertyData)
-    alert('¡Propiedad publicada exitosamente!')
-    
-    // Redirigir al dashboard (simulado)
-    window.location.href = '/dashboard'
+        const data = await response.json()
+        
+        if (response.ok && data.preference) {
+          // Redirigir a MercadoPago
+          window.location.href = data.preference.init_point
+        } else {
+          throw new Error(data.error || 'Error al procesar el pago')
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Error al procesar la solicitud. Intenta nuevamente.')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   return (
@@ -298,7 +363,11 @@ export default function PublicarPage() {
               </div>
 
               <div className="flex justify-end mt-6">
-                <Button onClick={() => setCurrentStep(2)}>
+                <Button onClick={() => {
+                  if (validateStep1()) {
+                    setCurrentStep(2)
+                  }
+                }}>
                   Continuar
                 </Button>
               </div>
@@ -427,9 +496,26 @@ export default function PublicarPage() {
                 <Button variant="outline" onClick={() => setCurrentStep(2)}>
                   Anterior
                 </Button>
-                <Button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  {selectedPlan === 'basico' ? 'Publicar Gratis' : `Pagar y Publicar`}
+                <Button 
+                  onClick={handleSubmit} 
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      {selectedPlan === 'basico' ? (
+                        <Check className="h-4 w-4 mr-2" />
+                      ) : (
+                        <CreditCard className="h-4 w-4 mr-2" />
+                      )}
+                      {selectedPlan === 'basico' ? 'Publicar Gratis' : `Pagar $${plans[selectedPlan].price.toLocaleString()}`}
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
