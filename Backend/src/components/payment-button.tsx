@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { MERCADOPAGO_CONFIG } from '@/lib/mercadopago'
 
 interface PaymentButtonProps {
   propertyId: string
