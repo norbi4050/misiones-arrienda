@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { PropertyCard } from '@/components/property-card'
-import { FilterSection } from '@/components/filter-section'
+import { FilterSectionWrapper } from '@/components/filter-section-wrapper'
 import { getProperties } from '@/lib/api'
 import { generateCityPageSchema, generateBreadcrumbSchema } from '@/lib/structured-data'
 import { Property } from '@/types/property'
@@ -163,7 +163,7 @@ export default async function EldoradoPage() {
             </p>
           </div>
 
-          <FilterSection />
+          <FilterSectionWrapper />
           
           {eldoradoProperties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
