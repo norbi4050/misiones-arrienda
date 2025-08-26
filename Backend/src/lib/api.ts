@@ -1,4 +1,4 @@
-import { Property, PropertyFilters } from '@/types/property';
+import { Property, PropertyFilters, PropertyStatus } from '@/types/property';
 
 // Propiedades de ejemplo para SEO y renderizado inicial
 const sampleProperties: Property[] = [
@@ -17,7 +17,7 @@ const sampleProperties: Property[] = [
     postalCode: "3300",
     propertyType: "HOUSE",
     listingType: "SALE",
-    status: "AVAILABLE",
+    status: "AVAILABLE" as PropertyStatus,
     images: ["/placeholder-apartment-1.jpg", "/placeholder-apartment-2.jpg"],
     amenities: ["Jardín", "Parrilla", "Cochera"],
     features: ["Aire acondicionado", "Calefacción", "Alarma"],
@@ -47,7 +47,7 @@ const sampleProperties: Property[] = [
     postalCode: "3360",
     propertyType: "APARTMENT",
     listingType: "RENT",
-    status: "AVAILABLE",
+    status: "AVAILABLE" as PropertyStatus,
     images: ["/placeholder-apartment-2.jpg", "/placeholder-apartment-3.jpg"],
     amenities: ["Balcón", "Lavadero"],
     features: ["Aire acondicionado", "Amoblado"],
@@ -77,7 +77,7 @@ const sampleProperties: Property[] = [
     postalCode: "3380",
     propertyType: "HOUSE",
     listingType: "SALE",
-    status: "AVAILABLE",
+    status: "AVAILABLE" as PropertyStatus,
     images: ["/placeholder-apartment-3.jpg", "/placeholder-apartment-1.jpg"],
     amenities: ["Quincho", "Piscina", "Jardín amplio"],
     features: ["Calefacción", "Aire acondicionado", "Portón automático"],
@@ -107,7 +107,7 @@ const sampleProperties: Property[] = [
     postalCode: "3370",
     propertyType: "COMMERCIAL",
     listingType: "RENT",
-    status: "AVAILABLE",
+    status: "AVAILABLE" as PropertyStatus,
     images: ["/placeholder-apartment-2.jpg"],
     amenities: ["Vidriera", "Depósito"],
     features: ["Aire acondicionado", "Alarma", "Acceso discapacitados"],
@@ -137,7 +137,7 @@ const sampleProperties: Property[] = [
     postalCode: "3300",
     propertyType: "APARTMENT",
     listingType: "RENT",
-    status: "AVAILABLE",
+    status: "AVAILABLE" as PropertyStatus,
     images: ["/placeholder-apartment-1.jpg"],
     amenities: ["Balcón"],
     features: ["Aire acondicionado"],
@@ -167,7 +167,7 @@ const sampleProperties: Property[] = [
     postalCode: "3315",
     propertyType: "HOUSE",
     listingType: "SALE",
-    status: "AVAILABLE",
+    status: "AVAILABLE" as PropertyStatus,
     images: ["/placeholder-apartment-3.jpg", "/placeholder-apartment-2.jpg"],
     amenities: ["Jardín", "Parrilla", "Huerta"],
     features: ["Calefacción", "Pozo de agua"],
