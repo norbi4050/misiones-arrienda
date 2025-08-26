@@ -3,8 +3,8 @@ import { PropertyGrid } from '@/components/property-grid'
 import { fetchRealProperties } from '@/lib/api'
 import { Metadata } from 'next'
 
-// Neutralizar caché mientras depuramos
-export const revalidate = 0
+// Cache configurado para producción
+export const revalidate = 60
 
 // Metadatos dinámicos para SEO
 export const metadata: Metadata = {

@@ -7,9 +7,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { normalizeProperty } from "@/lib/type-helpers";
 
-// Versión para forzar recompilación en Vercel si quedara cacheado
-export const __SIMILAR_PROPS_VERSION = "v4-typescript-fix";
-
 interface SimilarPropertiesProps {
   currentProperty: Property;
   maxProperties?: number;
