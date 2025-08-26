@@ -1,4 +1,4 @@
-# WhatsApp & SEO Improvements - TODO
+  WhatsApp & SEO Improvements - TODO
 
 ## Phase 1: Fix WhatsApp Phone Normalization ✅ COMPLETED
 - [x] Create phone normalization utility function for Argentina format
