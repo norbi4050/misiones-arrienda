@@ -1,4 +1,4 @@
-# TODO: Fix TypeScript Compilation Error in similar-properties.tsx
+plan# TODO: Fix TypeScript Compilation Error in similar-properties.tsx
 
 ## Steps to Complete:
 
