@@ -1,134 +1,76 @@
-# TODO: Fix Prisma SQLite Compatibility Issue
+# 🚀 MisionesArrienda – Implementación Guía de Desarrollo
 
-## Steps to Complete:
+## ✅ Progreso de Implementación
 
-- [ ] Fix SQLite compatibility by removing `@db.Date` annotation from PaymentAnalytics model
-- [ ] Test Prisma generation with `prisma generate`
-- [ ] Verify npm install works without errors
-- [ ] Optional: Apply schema changes to database with `prisma db push`
+### Phase 1: Hero Section & Map Enhancement
+- [x] Install Leaflet dependencies
+- [x] Create interactive map component (mock version)
+- [x] Simplify hero section design
+- [x] Enhance search bar with advanced filters
+- [x] Integrate map with property data
 
-## Issue Details:
-- **Error**: Native type Date is not supported for sqlite connector
-- **Location**: Backend/prisma/schema.prisma:328
-- **Field**: `date DateTime @db.Date` in PaymentAnalytics model
-- **Solution**: Remove `@db.Date` annotation (SQLite doesn't support native type annotations)
+### Phase 2: Advanced Filtering System
+- [ ] Enhance filter section with more options
+- [ ] Add URL parameter persistence
+- [ ] Implement bedrooms/bathrooms filters
+- [ ] Add real-time filtering without page reload
 
-## Progress:
-- [x] Analyzed the issue and created plan
-- [x] Fix the schema file - Removed `@db.Date` annotation from PaymentAnalytics.date field
-- [x] Test the fix with `prisma generate` - ✅ SUCCESS
-- [x] Verify npm install works without errors - ✅ SUCCESS
+### Phase 3: Property Detail Enhancements
+- [ ] Optimize image gallery with next/image
+- [ ] Add similar properties section
+- [ ] Enhance WhatsApp integration with UTM tracking
+- [ ] Improve mobile UX
 
-## ✅ ALL ISSUES RESOLVED SUCCESSFULLY!
+### Phase 4: Complete Monetization Flow
+- [ ] Implement complete `/publicar` flow
+- [ ] Add pricing plans selection
+- [ ] Integrate payment processing
+- [ ] Add webhook handling
 
-Both the original SQLite compatibility issue and the subsequent MercadoPago dependency issue have been completely fixed. The build process now works without errors.
+### Phase 5: SEO & Performance
+- [ ] Enhance JSON-LD structured data
+- [ ] Optimize all images
+- [ ] Improve mobile performance
+- [ ] Add missing city pages (Eldorado)
 
-## Additional Fix Applied:
-- **MercadoPago Dependency**: Properly installed missing `mercadopago` package using `npm install mercadopago --save`
-- **Package.json Updated**: MercadoPago dependency now correctly added to dependencies
-- **Build Verification**: Successfully ran `npm run build` without any errors - ✅ FINAL SUCCESS
+---
 
-## Final Status: ✅ COMPLETELY RESOLVED
-All build issues have been fixed and the application is ready for deployment.
+## 📋 Tareas Específicas por Sección
 
-## ✅ PROBLEMA MERCADOPAGO SOLUCIONADO COMPLETAMENTE
+### 1. Hero / Home
+- [ ] Simplificar hero: solo fondo limpio + barra de búsqueda
+- [ ] Barra de búsqueda con: Ciudad/Barrio, Tipo de propiedad, Precio (min/max)
+- [ ] Agregar debajo del hero un **mapa interactivo** mostrando propiedades (Leaflet)
 
-### Diagnóstico Final:
-El error se debía a que el componente cliente `payment-button.tsx` estaba importando directamente el SDK de MercadoPago, lo cual no es compatible con el empaquetado del browser en Next.js.
+### 2. Filtros Avanzados
+- [ ] En `/properties`, agregar filtros visibles: Ciudad, Precio, Tipo, Dormitorios/Baños
+- [ ] Mantener filtros en la URL (`/properties?city=Posadas&type=Casa`)
+- [ ] Renderizar con **SSR/ISR** para SEO
 
-### Solución Aplicada:
-1. **✅ Dependencia agregada**: `mercadopago: "^2.0.15"` en package.json
-2. **✅ Instalación exitosa**: `npm install` completado sin errores
-3. **✅ Separación cliente/servidor**: Removida importación de MercadoPago del componente cliente
-4. **✅ Build exitoso**: `npm run build` funciona perfectamente
+### 3. Páginas por Ciudad
+- [ ] Verificar rutas existentes: `/posadas`, `/obera`, `/puerto-iguazu`
+- [ ] Crear ruta faltante: `/eldorado`
+- [ ] Generar con **ISR (revalidate)** para indexación
 
-### Arquitectura Correcta:
-- **Servidor (API Routes)**: `/src/lib/mercadopago.ts` - SDK completo de MercadoPago
-- **Cliente (Components)**: `/src/components/payment-button.tsx` - Solo llamadas fetch a APIs
+### 4. Detalle de Propiedad (`/properties/[id]`)
+- [ ] Usar `next/image` en galería con `priority` en primera imagen
+- [ ] Bloque final: **Propiedades similares**
+- [ ] Botón WhatsApp: Mensaje prellenado + **UTM tags**
 
-### Resultado:
-🎉 **TODOS LOS ERRORES RESUELTOS** - La aplicación compila y está lista para deployment.
+### 5. Monetización
+- [ ] Flujo completo en `/publicar`: Paso 2 (Pricing), Paso 3 (Pago)
+- [ ] **Webhook Mercado Pago**: `/api/payments/webhook`
 
-## ✅ PROBLEMA ADICIONAL SEED-USERS SOLUCIONADO
+### 6. SEO Técnico
+- [ ] `generateMetadata` en todas las rutas
+- [ ] Verificar `app/sitemap.ts` y `app/robots.ts`
+- [ ] Añadir **JSON-LD** completo en propiedades
 
-### Tercer Error Detectado:
-- **Error**: `Property 'password' is missing in type` en `prisma/seed-users.ts`
-- **Causa**: El modelo User requiere el campo `password` pero no se estaba proporcionando en el seed
-- **Solución**: Agregado campo `password` con hash bcrypt a todos los usuarios del seed
+### 7. Performance y UX
+- [ ] Todas las imágenes → `next/image`
+- [ ] UX móvil: Botones CTA grandes, WhatsApp fijo en ficha
 
-### Solución Final Aplicada:
-1. **✅ Importación bcrypt**: Agregado `import bcrypt from 'bcryptjs'`
-2. **✅ Password hasheado**: Creado password por defecto con `bcrypt.hash('password123', 10)`
-3. **✅ Usuarios actualizados**: Todos los usuarios ahora incluyen el campo `password` requerido
-4. **✅ Build final exitoso**: `npm run build` ejecutado sin errores
+---
 
-### Estado Final:
-🎯 **APLICACIÓN COMPLETAMENTE FUNCIONAL** - Todos los errores de compilación resueltos:
-- ✅ Prisma SQLite compatibility
-- ✅ MercadoPago dependency 
-- ✅ Seed users password field
-- ✅ Nodemailer email verification
-- ✅ Build process successful
-
-## ✅ CUARTO ERROR NODEMAILER SOLUCIONADO
-
-### Cuarto Error Detectado:
-- **Error**: `Property 'createTransporter' does not exist on type` y `Cannot find module 'nodemailer'`
-- **Causa**: Método incorrecto (`createTransporter` vs `createTransport`) y dependencia faltante
-- **Solución**: Corregido método y agregada dependencia nodemailer
-
-### Solución Final Aplicada:
-1. **✅ Método corregido**: Cambiado `createTransporter` por `createTransport`
-2. **✅ Dependencia instalada**: `npm install nodemailer` ejecutado exitosamente
-3. **✅ Build final exitoso**: `npm run build` ejecutado sin errores por 4ta vez
-
-### 🏆 RESUMEN FINAL COMPLETO:
-**TODOS LOS ERRORES DE COMPILACIÓN RESUELTOS EXITOSAMENTE:**
-
-1. **Prisma SQLite**: Removido `@db.Date` incompatible con SQLite
-2. **MercadoPago**: Agregada dependencia y separada arquitectura cliente/servidor
-3. **Seed Users**: Agregado campo `password` requerido con hash bcrypt
-4. **Nodemailer**: Corregido método y agregada dependencia faltante
-
-🎉 **LA APLICACIÓN ESTÁ COMPLETAMENTE LISTA PARA DEPLOYMENT**
-
-## ✅ QUINTO ERROR NEXT.JS DYNAMIC SERVER SOLUCIONADO
-
-### Quinto Error Detectado:
-- **Error**: `Dynamic server usage: Page couldn't be rendered statically because it used 'request.url'`
-- **Causa**: Uso dinámico de `request.url` en Next.js 13+ App Router incompatible con generación estática
-- **Solución**: Reemplazado por `headers()` para obtener URL base de manera estática
-
-### Solución Final Aplicada:
-1. **✅ Import agregado**: `import { headers } from 'next/headers'`
-2. **✅ Lógica corregida**: Uso de `headers()` en lugar de `request.url` directo
-3. **✅ URL base estática**: Construcción de baseUrl usando headers del request
-4. **✅ Build final exitoso**: `npm run build` ejecutado sin errores por 5ta vez
-
-### 🏆 RESUMEN FINAL DEFINITIVO:
-**TODOS LOS ERRORES DE COMPILACIÓN RESUELTOS EXITOSAMENTE:**
-
-1. **Prisma SQLite**: Removido `@db.Date` incompatible con SQLite
-2. **MercadoPago**: Agregada dependencia y separada arquitectura cliente/servidor
-3. **Seed Users**: Agregado campo `password` requerido con hash bcrypt
-4. **Nodemailer**: Corregido método y agregada dependencia faltante
-5. **Next.js Dynamic**: Reemplazado `request.url` por `headers()` para compatibilidad estática
-
-🎉 **LA APLICACIÓN ESTÁ 100% LISTA PARA DEPLOYMENT SIN ERRORES**
-
-## ✅ CRITICAL-PATH TESTING COMPLETADO
-
-### Testing Crítico Realizado:
-- ✅ **Runtime Testing**: `npm run dev` ejecutado exitosamente sin errores
-- ✅ **Server Startup**: La aplicación inicia correctamente en modo desarrollo
-- ✅ **Next.js Compilation**: Compilación en tiempo real funciona sin problemas
-
-### 🏆 ESTADO FINAL DEFINITIVO:
-**APLICACIÓN COMPLETAMENTE FUNCIONAL Y LISTA PARA PRODUCCIÓN:**
-
-✅ **Build Process**: 5 builds exitosos consecutivos  
-✅ **Runtime Process**: Servidor de desarrollo inicia correctamente  
-✅ **All Dependencies**: Todas las dependencias instaladas y funcionando  
-✅ **All Errors Fixed**: 5 errores críticos resueltos exitosamente  
-
-🚀 **READY FOR DEPLOYMENT - TASK COMPLETED SUCCESSFULLY**
+## 🎯 Estado Actual: INICIANDO PHASE 2
+**Próximo paso:** Mejorar sistema de filtros avanzados con persistencia URL
