@@ -1,13 +1,18 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
+  // Hash para password por defecto
+  const defaultPassword = await bcrypt.hash('password123', 10)
+
   // Crear usuarios con perfiles públicos
   const user1 = await prisma.user.create({
     data: {
       name: 'Carlos Mendoza',
       email: 'carlos.mendoza@email.com',
+      password: defaultPassword,
       phone: '+54 376 456-7890',
       avatar: '/users/carlos-mendoza.jpg',
       bio: 'Profesional de sistemas, trabajador responsable y cuidadoso con las propiedades. Vivo solo y mantengo todo en orden.',
@@ -23,6 +28,7 @@ async function main() {
     data: {
       name: 'Ana García',
       email: 'ana.garcia@email.com',
+      password: defaultPassword,
       phone: '+54 376 789-0123',
       avatar: '/users/ana-garcia.jpg',
       bio: 'Docente universitaria, muy ordenada y respetuosa. Busco un lugar tranquilo para vivir y estudiar.',
@@ -38,6 +44,7 @@ async function main() {
     data: {
       name: 'Miguel Torres',
       email: 'miguel.torres@email.com',
+      password: defaultPassword,
       phone: '+54 376 234-5678',
       avatar: '/users/miguel-torres.jpg',
       bio: 'Estudiante de medicina, responsable y tranquilo. Busco un lugar cerca de la universidad.',
@@ -53,6 +60,7 @@ async function main() {
     data: {
       name: 'Laura Fernández',
       email: 'laura.fernandez@email.com',
+      password: defaultPassword,
       phone: '+54 376 345-6789',
       avatar: '/users/laura-fernandez.jpg',
       bio: 'Contadora pública, muy organizada y puntual con los pagos. Tengo referencias laborales.',
