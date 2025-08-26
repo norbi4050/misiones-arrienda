@@ -48,18 +48,17 @@ export function SimilarProperties({
     }
   };
 
-  // ✅ Mock seguro: parte del currentProperty (spread) y NO agrega campos ajenos
   const generateMockSimilarProperties = (): Property[] => {
     const city = String(currentProperty.city ?? "");
     const propType = currentProperty.propertyType;
 
+    // 👇 usamos "base" (no baseProperties) y NADA de "agent", ni status hardcodeado
     const base: Property[] = [
       {
         ...currentProperty,
         id: "similar-1",
         title: "Casa moderna con jardín",
-        description:
-          "Hermosa casa de 3 dormitorios con amplio jardín y parrilla.",
+        description: "Hermosa casa con jardín y parrilla.",
         price: Math.round((currentProperty.price ?? 0) * 0.85),
         latitude: (currentProperty.latitude ?? -27.3621) + 0.01,
         longitude: (currentProperty.longitude ?? -55.9008) + 0.01,
@@ -68,13 +67,13 @@ export function SimilarProperties({
             ? currentProperty.images
             : ["/placeholder-house-2.jpg"],
         featured: false,
+        // status y propertyType quedan exactamente como en currentProperty
       },
       {
         ...currentProperty,
         id: "similar-2",
         title: "Departamento luminoso céntrico",
-        description:
-          "Moderno departamento con excelente ubicación y mucha luz natural.",
+        description: "Moderno departamento con excelente ubicación.",
         price: Math.round((currentProperty.price ?? 0) * 1.15),
         latitude: (currentProperty.latitude ?? -27.3621) - 0.01,
         longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
