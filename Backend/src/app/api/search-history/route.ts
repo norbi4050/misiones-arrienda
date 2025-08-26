@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 
+export const dynamic = 'force-dynamic';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Función para obtener el usuario del token
@@ -27,8 +29,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(request.nextUrl.searchParams.get('limit') || '10');
 
     const searchHistory = await prisma.searchHistory.findMany({
       where: { userId },
@@ -113,8 +114,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const searchId = searchParams.get('searchId');
+    const searchId = request.nextUrl.searchParams.get('searchId');
     
     if (searchId) {
       // Eliminar búsqueda específica

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 
+export const dynamic = 'force-dynamic';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Función para obtener el usuario del token
@@ -108,8 +110,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const propertyId = searchParams.get('propertyId');
+    const propertyId = request.nextUrl.searchParams.get('propertyId');
     
     if (!propertyId) {
       return NextResponse.json({ error: 'ID de propiedad requerido' }, { status: 400 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPaymentPreference } from '@/lib/mercadopago';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,10 +56,9 @@ export async function POST(request: NextRequest) {
 // GET endpoint to verify payment status
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const paymentId = searchParams.get('payment_id');
-    const status = searchParams.get('status');
-    const externalReference = searchParams.get('external_reference');
+    const paymentId = request.nextUrl.searchParams.get('payment_id');
+    const status = request.nextUrl.searchParams.get('status');
+    const externalReference = request.nextUrl.searchParams.get('external_reference');
 
     if (!paymentId) {
       return NextResponse.json(
