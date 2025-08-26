@@ -6,6 +6,9 @@ import { Property } from "@/types/property";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Home, MapPin } from "lucide-react";
 
+// Version marker to identify which file Vercel is compiling
+export const __SIMILAR_PROPS_VERSION = 'v3-fix-dedup';
+
 interface SimilarPropertiesProps {
   currentProperty: Property;
   maxProperties?: number;
