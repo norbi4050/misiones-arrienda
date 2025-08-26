@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PropertyCard } from "@/components/property-card";
-import { Property, PropertyStatus } from "@/types/property";
+import { Property } from "@/types/property";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Home, MapPin } from "lucide-react";
 
@@ -49,117 +49,56 @@ export function SimilarProperties({
   };
 
   const generateMockSimilarProperties = (): Property[] => {
-    const baseProperties: Property[] = [
+    const city = String(currentProperty.city ?? '');
+    const propType = currentProperty.propertyType;
+
+    // Partir SIEMPRE del spread para mantener el "shape" exacto de Property
+    const base: Property[] = [
       {
-        id: "similar-1",
-        title: "Casa moderna con jardín",
-        description: "Hermosa casa con jardín y parrilla.",
+        ...currentProperty,
+        id: 'similar-1',
+        title: 'Casa moderna con jardín',
+        description: 'Hermosa casa con jardín y parrilla.',
         price: Math.round((currentProperty.price ?? 0) * 0.85),
-        oldPrice: currentProperty.oldPrice,
-        bedrooms: currentProperty.bedrooms ?? 2,
-        bathrooms: currentProperty.bathrooms ?? 1,
-        garages: currentProperty.garages ?? 1,
-        area: currentProperty.area ?? 100,
-        lotArea: currentProperty.lotArea,
-        address: currentProperty.address ?? "Dirección similar",
-        city: currentProperty.city ?? "Posadas",
-        province: currentProperty.province ?? "Misiones",
-        postalCode: currentProperty.postalCode ?? "3300",
         latitude: (currentProperty.latitude ?? -27.3621) + 0.01,
         longitude: (currentProperty.longitude ?? -55.9008) + 0.01,
-        propertyType: currentProperty.propertyType,
-        listingType: currentProperty.listingType,
-        status: 'AVAILABLE' as PropertyStatus,
-        images: currentProperty.images?.length
-          ? currentProperty.images
-          : ["/placeholder-house-2.jpg"],
-        virtualTourUrl: currentProperty.virtualTourUrl,
-        amenities: currentProperty.amenities ?? [],
-        features: currentProperty.features ?? [],
-        yearBuilt: currentProperty.yearBuilt,
-        floor: currentProperty.floor,
-        totalFloors: currentProperty.totalFloors,
+        images: currentProperty.images?.length ? currentProperty.images : ['/placeholder-house-2.jpg'],
         featured: false,
-        createdAt: currentProperty.createdAt ?? new Date().toISOString(),
-        updatedAt: currentProperty.updatedAt ?? new Date().toISOString(),
-        agent: currentProperty.agent,
+        // status, propertyType, listingType, etc. se heredan del spread (sin strings "inventados")
       },
       {
-        id: "similar-2",
-        title: "Departamento luminoso céntrico",
-        description: "Moderno departamento con excelente ubicación.",
+        ...currentProperty,
+        id: 'similar-2',
+        title: 'Departamento luminoso céntrico',
+        description: 'Moderno departamento con excelente ubicación.',
         price: Math.round((currentProperty.price ?? 0) * 1.15),
-        oldPrice: currentProperty.oldPrice,
-        bedrooms: (currentProperty.bedrooms ?? 1) + 1,
-        bathrooms: currentProperty.bathrooms ?? 1,
-        garages: currentProperty.garages ?? 1,
-        area: currentProperty.area ?? 100,
-        lotArea: currentProperty.lotArea,
-        address: currentProperty.address ?? "Dirección similar",
-        city: currentProperty.city ?? "Posadas",
-        province: currentProperty.province ?? "Misiones",
-        postalCode: currentProperty.postalCode ?? "3300",
         latitude: (currentProperty.latitude ?? -27.3621) - 0.01,
         longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
-        propertyType: currentProperty.propertyType,
-        listingType: currentProperty.listingType,
-        status: 'AVAILABLE' as PropertyStatus,
-        images: currentProperty.images?.length
-          ? currentProperty.images
-          : ["/placeholder-apartment-2.jpg"],
-        virtualTourUrl: currentProperty.virtualTourUrl,
-        amenities: currentProperty.amenities ?? [],
-        features: currentProperty.features ?? [],
-        yearBuilt: currentProperty.yearBuilt,
-        floor: currentProperty.floor,
-        totalFloors: currentProperty.totalFloors,
+        images: currentProperty.images?.length ? currentProperty.images : ['/placeholder-apartment-2.jpg'],
         featured: true,
-        createdAt: currentProperty.createdAt ?? new Date().toISOString(),
-        updatedAt: currentProperty.updatedAt ?? new Date().toISOString(),
-        agent: currentProperty.agent,
+        bedrooms: (currentProperty.bedrooms ?? 1) + 1,
       },
       {
-        id: "similar-3",
-        title: "Casa familiar con piscina",
-        description: "Amplia casa familiar con piscina y quincho.",
+        ...currentProperty,
+        id: 'similar-3',
+        title: 'Casa familiar con piscina',
+        description: 'Amplia casa familiar con piscina y quincho.',
         price: Math.round((currentProperty.price ?? 0) * 1.3),
-        oldPrice: currentProperty.oldPrice,
-        bedrooms: currentProperty.bedrooms ?? 3,
-        bathrooms: Math.max((currentProperty.bathrooms ?? 1) + 1, 1),
-        garages: currentProperty.garages ?? 1,
-        area: Math.max((currentProperty.area ?? 50) + 50, 50),
-        lotArea: currentProperty.lotArea,
-        address: currentProperty.address ?? "Dirección similar",
-        city: currentProperty.city ?? "Posadas",
-        province: currentProperty.province ?? "Misiones",
-        postalCode: currentProperty.postalCode ?? "3300",
         latitude: (currentProperty.latitude ?? -27.3621) + 0.02,
         longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
-        propertyType: currentProperty.propertyType,
-        listingType: currentProperty.listingType,
-        status: 'AVAILABLE' as PropertyStatus,
-        images: currentProperty.images?.length
-          ? currentProperty.images
-          : ["/placeholder-house-4.jpg"],
-        virtualTourUrl: currentProperty.virtualTourUrl,
-        amenities: currentProperty.amenities ?? [],
-        features: currentProperty.features ?? [],
-        yearBuilt: currentProperty.yearBuilt,
-        floor: currentProperty.floor,
-        totalFloors: currentProperty.totalFloors,
+        images: currentProperty.images?.length ? currentProperty.images : ['/placeholder-house-4.jpg'],
         featured: false,
-        createdAt: currentProperty.createdAt ?? new Date().toISOString(),
-        updatedAt: currentProperty.updatedAt ?? new Date().toISOString(),
-        agent: currentProperty.agent,
+        bathrooms: Math.max((currentProperty.bathrooms ?? 1) + 1, 1),
+        area: Math.max((currentProperty.area ?? 50) + 50, 50),
       },
     ];
 
-    // Filter out properties that are too different and limit results
-    return baseProperties
-      .filter(prop => 
-        prop.city === currentProperty.city &&
-        prop.propertyType === currentProperty.propertyType &&
-        prop.id !== currentProperty.id
+    return base
+      .filter(
+        (p) =>
+          String(p.city ?? '') === city &&
+          p.propertyType === propType &&
+          p.id !== currentProperty.id
       )
       .slice(0, maxProperties);
   };
