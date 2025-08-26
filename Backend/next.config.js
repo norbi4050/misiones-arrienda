@@ -19,9 +19,40 @@ const nextConfig = {
   //   CUSTOM_KEY: process.env.CUSTOM_KEY,
   // },
   
-  // Headers for security
+  // Force all API routes to be dynamic to prevent static generation issues
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
+        has: [
+          {
+            type: 'header',
+            key: 'x-force-dynamic',
+            value: 'true',
+          },
+        ],
+      },
+    ];
+  },
+  
+  // Headers for security and force dynamic rendering
   async headers() {
     return [
+      {
+        // Force all API routes to be dynamic
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'x-force-dynamic',
+            value: 'true',
+          },
+        ],
+      },
       {
         source: '/(.*)',
         headers: [
