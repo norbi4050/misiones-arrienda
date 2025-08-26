@@ -25,75 +25,8 @@ export function HeroSection() {
     }
   }
 
-  // Mock properties for the map - in real app, this would come from API
-  const mockProperties = [
-    {
-      id: "1",
-      title: "Casa moderna en Posadas",
-      description: "Hermosa casa moderna con todas las comodidades",
-      price: 120000,
-      city: "Posadas",
-      province: "Misiones",
-      latitude: -27.3621,
-      longitude: -55.9008,
-      images: ["/placeholder-house-1.jpg"],
-      featured: true,
-      bedrooms: 3,
-      bathrooms: 2,
-      garages: 1,
-      area: 150,
-      propertyType: "HOUSE" as const,
-      listingType: "SALE" as const,
-      status: "AVAILABLE" as const,
-      address: "Av. Mitre 1234",
-      postalCode: "3300",
-      yearBuilt: 2020,
-      amenities: ["Piscina", "Jardín", "Parrilla"],
-      features: ["Cocina moderna", "Pisos de cerámica", "Aire acondicionado"],
-      createdAt: "2024-01-01T00:00:00Z",
-      updatedAt: "2024-01-01T00:00:00Z",
-      agent: {
-        id: "agent1",
-        name: "Juan Pérez",
-        phone: "+54 376 123456",
-        email: "juan@example.com",
-        rating: 4.8
-      }
-    },
-    {
-      id: "2", 
-      title: "Departamento céntrico en Oberá",
-      description: "Departamento céntrico con excelente ubicación",
-      price: 85000,
-      city: "Oberá",
-      province: "Misiones",
-      latitude: -27.4878,
-      longitude: -55.1199,
-      images: ["/placeholder-apartment-1.jpg"],
-      featured: false,
-      bedrooms: 2,
-      bathrooms: 1,
-      garages: 0,
-      area: 80,
-      propertyType: "APARTMENT" as const,
-      listingType: "SALE" as const,
-      status: "AVAILABLE" as const,
-      address: "San Martín 567",
-      postalCode: "3360",
-      yearBuilt: 2018,
-      amenities: ["Portero", "Ascensor"],
-      features: ["Balcón", "Cocina integrada"],
-      createdAt: "2024-01-01T00:00:00Z",
-      updatedAt: "2024-01-01T00:00:00Z",
-      agent: {
-        id: "agent2",
-        name: "María García",
-        phone: "+54 376 654321",
-        email: "maria@example.com",
-        rating: 4.5
-      }
-    }
-  ]
+  // Empty properties array - will be populated from real API
+  const mockProperties: any[] = []
 
   return (
     <section className="relative">
@@ -130,15 +63,27 @@ export function HeroSection() {
           </div>
           
           <div className="max-w-6xl mx-auto">
-            <PropertyMap 
-              properties={mockProperties}
-              height="500px"
-              onPropertyClick={(property) => {
-                console.log("Clicked property:", property.title)
-                // Could redirect to property detail page
-                window.location.href = `/property/${property.id}`
-              }}
-            />
+            {mockProperties.length > 0 ? (
+              <PropertyMap 
+                properties={mockProperties}
+                height="500px"
+                onPropertyClick={(property) => {
+                  console.log("Clicked property:", property.title)
+                  // Could redirect to property detail page
+                  window.location.href = `/property/${property.id}`
+                }}
+              />
+            ) : (
+              <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+                <div className="text-6xl mb-4">🗺️</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Mapa interactivo próximamente
+                </h3>
+                <p className="text-gray-600">
+                  Una vez que se publiquen propiedades, aparecerán marcadas en este mapa interactivo
+                </p>
+              </div>
+            )}
           </div>
           
           {/* Map Features */}

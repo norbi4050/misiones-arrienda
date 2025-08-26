@@ -31,7 +31,7 @@ export default function WhatsAppButton({
   campaign = "property_inquiry"
 }: WhatsAppButtonProps) {
   
-  const phoneNumber = "5493764123456" // Número de WhatsApp de la inmobiliaria
+  const phoneNumber = "5493764567890" // Número de WhatsApp de Misiones Arrienda
   
   const generateMessage = () => {
     const baseMessage = address && price 

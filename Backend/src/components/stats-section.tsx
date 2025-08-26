@@ -8,10 +8,10 @@ export function StatsSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Estadísticas de la Plataforma
+            Plataforma en Crecimiento
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Conoce los números que respaldan nuestra plataforma inmobiliaria
+            Únete a la nueva plataforma inmobiliaria de Misiones. ¡Sé parte del crecimiento!
           </p>
         </div>
 
@@ -20,36 +20,36 @@ export function StatsSection() {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Home className="h-8 w-8 text-blue-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">150+</div>
-            <div className="text-gray-600 font-medium">Propiedades Activas</div>
-            <div className="text-sm text-blue-600 mt-2">En crecimiento</div>
+            <div className="text-3xl font-bold text-blue-600 mb-2">🏠</div>
+            <div className="text-gray-600 font-medium">Propiedades</div>
+            <div className="text-sm text-blue-600 mt-2">¡Publica la primera!</div>
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Users className="h-8 w-8 text-green-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">500+</div>
-            <div className="text-gray-600 font-medium">Usuarios Registrados</div>
-            <div className="text-sm text-green-600 mt-2">Comunidad activa</div>
+            <div className="text-3xl font-bold text-green-600 mb-2">👥</div>
+            <div className="text-gray-600 font-medium">Usuarios</div>
+            <div className="text-sm text-green-600 mt-2">¡Únete ahora!</div>
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300">
             <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Star className="h-8 w-8 text-yellow-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">4.8★</div>
-            <div className="text-gray-600 font-medium">Calificación Promedio</div>
-            <div className="text-sm text-yellow-600 mt-2">Excelente servicio</div>
+            <div className="text-3xl font-bold text-yellow-600 mb-2">🌟</div>
+            <div className="text-gray-600 font-medium">Cobertura</div>
+            <div className="text-sm text-yellow-600 mt-2">Toda Misiones</div>
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Clock className="h-8 w-8 text-purple-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">24h</div>
-            <div className="text-gray-600 font-medium">Tiempo de Respuesta</div>
-            <div className="text-sm text-purple-600 mt-2">Soporte rápido</div>
+            <div className="text-3xl font-bold text-purple-600 mb-2">🚀</div>
+            <div className="text-gray-600 font-medium">Lanzamiento</div>
+            <div className="text-sm text-purple-600 mt-2">¡Estamos aquí!</div>
           </div>
         </div>
 
@@ -62,22 +62,22 @@ export function StatsSection() {
               <div className="flex items-start">
                 <CheckCircle className="h-6 w-6 text-green-300 mr-3 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-white text-lg">Tecnología Avanzada</h4>
-                  <p className="text-blue-100">Plataforma moderna con las últimas herramientas</p>
+                  <h4 className="font-semibold text-white text-lg">Plataforma Nueva</h4>
+                  <p className="text-blue-100">Tecnología moderna y actualizada</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-6 w-6 text-green-300 mr-3 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-white text-lg">Atención Personalizada</h4>
-                  <p className="text-blue-100">Cada cliente recibe atención especializada</p>
+                  <h4 className="font-semibold text-white text-lg">Sin Competencia</h4>
+                  <p className="text-blue-100">Sé de los primeros en publicar</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <CheckCircle className="h-6 w-6 text-green-300 mr-3 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-white text-lg">Crecimiento Constante</h4>
-                  <p className="text-blue-100">Expandiendo nuestros servicios continuamente</p>
+                  <h4 className="font-semibold text-white text-lg">Oportunidad Única</h4>
+                  <p className="text-blue-100">Forma parte del crecimiento desde el inicio</p>
                 </div>
               </div>
             </div>

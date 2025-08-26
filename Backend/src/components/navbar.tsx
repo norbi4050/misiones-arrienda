@@ -36,7 +36,7 @@ export function Navbar() {
               Inicio
             </Link>
             <Link 
-              href="/#propiedades" 
+              href="/properties" 
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
               Propiedades
@@ -141,7 +141,7 @@ export function Navbar() {
                 Inicio
               </Link>
               <Link
-                href="/#propiedades"
+                href="/properties"
                 className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
