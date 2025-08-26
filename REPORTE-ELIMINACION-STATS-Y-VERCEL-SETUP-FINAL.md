@@ -83,41 +83,53 @@ export default function BuildBadge() {
 + <BuildBadge />
 ```
 
-### 4) ✅ Corrección error Next.js useSearchParams()
+### 4) ✅ Corrección error Next.js useSearchParams() - SOLUCIÓN DEFINITIVA
 
 **Problema detectado:**
 ```
 ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/eldorado"
 ```
 
-**Solución implementada:**
+**Solución implementada (Opción A - Recomendada):**
 
-**A) Wrapper con Suspense creado:**
-- `Backend/src/components/filter-section-wrapper.tsx`
+**A) Eliminación completa de useSearchParams():**
+- Refactorizada página Eldorado para usar `searchParams` props oficiales de Next.js
+- `Backend/src/app/eldorado/page.tsx` ahora es Server Component puro
+- `Backend/src/components/eldorado/EldoradoClient.tsx` maneja la UI del cliente
+
+**B) Arquitectura Server/Client separada:**
 ```typescript
-import { Suspense } from 'react'
-import { FilterSection } from './filter-section'
+// Server Component (page.tsx)
+export default async function EldoradoPage({ searchParams }) {
+  const city = (searchParams.city as string) ?? 'Eldorado'
+  const type = (searchParams.type as string) ?? ''
+  // ... normalizar params sin useSearchParams()
+  
+  const response = await getProperties({ city: 'Eldorado', ...filters })
+  
+  return <EldoradoClient initial={filters} initialProperties={properties} />
+}
 
-export function FilterSectionWrapper(props) {
-  return (
-    <Suspense fallback={<FilterSectionFallback />}>
-      <FilterSection {...props} />
-    </Suspense>
-  )
+// Client Component (EldoradoClient.tsx)
+export default function EldoradoClient({ initial, initialProperties }) {
+  // Maneja UI y estado del cliente sin useSearchParams()
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    // Sincroniza con URL changes si es necesario
+  }, [])
 }
 ```
 
-**B) Página Eldorado actualizada:**
-- `Backend/src/app/eldorado/page.tsx`
-```diff
-- import { FilterSection } from '@/components/filter-section'
-+ import { FilterSectionWrapper } from '@/components/filter-section-wrapper'
-
-- <FilterSection />
-+ <FilterSectionWrapper />
+**C) Configuración adicional:**
+```typescript
+export const dynamic = 'force-dynamic' // Para query params
 ```
 
-**Resultado:** Error de Next.js corregido, FilterSection ahora funciona correctamente en producción
+**Resultado:** 
+- ✅ Error de Next.js completamente eliminado
+- ✅ No más dependencia de useSearchParams()
+- ✅ Arquitectura más robusta Server/Client
+- ✅ Mejor performance (Server-side filtering)
 
 ### 5) ✅ Configuración Vercel verificada
 
@@ -172,12 +184,13 @@ https://www.misionesarrienda.com.ar/?v=1234567890
 ### Modificados:
 1. `Backend/src/app/page.tsx` - Stats eliminados + revalidate = 0
 2. `Backend/src/app/layout.tsx` - BuildBadge agregado
-3. `Backend/src/app/eldorado/page.tsx` - FilterSectionWrapper implementado
+3. `Backend/src/app/eldorado/page.tsx` - Refactorizado a Server Component puro
 
 ### Creados:
 1. `Backend/src/app/api/version/route.ts` - API endpoint de versión
 2. `Backend/src/components/BuildBadge.tsx` - Componente de versión
-3. `Backend/src/components/filter-section-wrapper.tsx` - Wrapper con Suspense
+3. `Backend/src/components/filter-section-wrapper.tsx` - Wrapper con Suspense (backup)
+4. `Backend/src/components/eldorado/EldoradoClient.tsx` - Client Component para Eldorado
 
 ## ✅ ESTADO FINAL
 
