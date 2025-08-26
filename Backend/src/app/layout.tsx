@@ -10,6 +10,7 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app'),
   title: 'Misiones Arrienda - Propiedades en Misiones',
   description: 'Encuentra las mejores propiedades en alquiler y venta en Misiones. Casas, departamentos, locales comerciales y más.',
   keywords: 'arriendo, venta, propiedades, Misiones, Posadas, casas, departamentos, locales, inmobiliaria',
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'es_AR',
     siteName: 'Misiones Arrienda',
+    url: '/',
   },
   robots: {
     index: true,
