@@ -48,103 +48,44 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
   const generateMockSimilarProperties = (): Property[] => {
     const baseProperties: Property[] = [
       {
+        ...currentProperty,
         id: "similar-1",
         title: "Casa moderna con jardín",
         description: "Hermosa casa de 3 dormitorios con amplio jardín y parrilla.",
         price: Math.round(currentProperty.price * 0.85),
-        city: currentProperty.city,
-        province: currentProperty.province,
         latitude: (currentProperty.latitude || -27.3621) + 0.01,
         longitude: (currentProperty.longitude || -55.9008) + 0.01,
         images: ["/placeholder-house-2.jpg", "/placeholder-house-3.jpg"],
         featured: false,
-        bedrooms: currentProperty.bedrooms,
         bathrooms: Math.max(currentProperty.bathrooms - 1, 1),
-        garages: 1,
         area: Math.max(currentProperty.area - 20, 50),
-        propertyType: currentProperty.propertyType,
-        listingType: currentProperty.listingType,
-        status: "AVAILABLE" as PropertyStatus,
-        address: "Av. San Martín 456",
-        postalCode: currentProperty.postalCode || "3300",
-        yearBuilt: 2019,
-        amenities: ["Jardín", "Parrilla", "Garage"],
-        features: ["Cocina moderna", "Pisos de cerámica"],
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-        agent: {
-          id: "agent-similar-1",
-          name: "Ana López",
-          phone: "+54 376 111222",
-          email: "ana@example.com",
-          rating: 4.6
-        }
       },
       {
+        ...currentProperty,
         id: "similar-2",
         title: "Departamento luminoso céntrico",
         description: "Moderno departamento con excelente ubicación y mucha luz natural.",
         price: Math.round(currentProperty.price * 1.15),
-        city: currentProperty.city,
-        province: currentProperty.province,
         latitude: (currentProperty.latitude || -27.3621) - 0.01,
         longitude: (currentProperty.longitude || -55.9008) - 0.01,
         images: ["/placeholder-apartment-2.jpg", "/placeholder-apartment-3.jpg"],
         featured: true,
         bedrooms: currentProperty.bedrooms + 1,
-        bathrooms: currentProperty.bathrooms,
-        garages: 0,
         area: currentProperty.area + 30,
-        propertyType: currentProperty.propertyType,
-        listingType: currentProperty.listingType,
-        status: "AVAILABLE" as PropertyStatus,
-        address: "Belgrano 789",
-        postalCode: currentProperty.postalCode || "3300",
-        yearBuilt: 2021,
-        amenities: ["Portero", "Ascensor", "Balcón"],
-        features: ["Cocina integrada", "Pisos flotantes", "Aire acondicionado"],
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-        agent: {
-          id: "agent-similar-2",
-          name: "Carlos Mendez",
-          phone: "+54 376 333444",
-          email: "carlos@example.com",
-          rating: 4.8
-        }
       },
       {
+        ...currentProperty,
         id: "similar-3",
         title: "Casa familiar con piscina",
         description: "Amplia casa familiar con piscina y quincho, ideal para familias grandes.",
         price: Math.round(currentProperty.price * 1.3),
-        city: currentProperty.city,
-        province: currentProperty.province,
         latitude: (currentProperty.latitude || -27.3621) + 0.02,
         longitude: (currentProperty.longitude || -55.9008) - 0.01,
         images: ["/placeholder-house-4.jpg", "/placeholder-house-5.jpg"],
         featured: false,
         bedrooms: currentProperty.bedrooms + 1,
         bathrooms: currentProperty.bathrooms + 1,
-        garages: 2,
         area: currentProperty.area + 50,
-        propertyType: "HOUSE",
-        listingType: currentProperty.listingType,
-        status: "AVAILABLE" as PropertyStatus,
-        address: "Los Aromos 321",
-        postalCode: currentProperty.postalCode || "3300",
-        yearBuilt: 2018,
-        amenities: ["Piscina", "Quincho", "Jardín", "Garage doble"],
-        features: ["Cocina moderna", "Pisos de porcelanato", "Aire acondicionado"],
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-        agent: {
-          id: "agent-similar-3",
-          name: "María Fernández",
-          phone: "+54 376 555666",
-          email: "maria@example.com",
-          rating: 4.7
-        }
       }
     ]
 
@@ -296,7 +237,7 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
       <div className="mt-6 text-center">
         <Button 
           variant="outline" 
-          onClick={() => window.location.href = `/properties?city=${currentProperty.city}&type=${currentProperty.propertyType.toLowerCase()}`}
+          onClick={() => window.location.href = `/properties?city=${currentProperty.city}&type=${currentProperty.propertyType}`}
           className="border-blue-600 text-blue-600 hover:bg-blue-50"
         >
           Ver más propiedades en {currentProperty.city}
