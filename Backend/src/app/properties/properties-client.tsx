@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { FilterSection } from '@/components/filter-section'
+import { FilterSectionWrapper } from '@/components/filter-section-wrapper'
 import { PropertyGrid } from '@/components/property-grid'
 import { PropertyMap } from '@/components/property-map'
 import { Button } from '@/components/ui/button'
@@ -298,7 +298,7 @@ export function PropertiesPageClient() {
       </div>
 
       {/* Enhanced Filter Section */}
-      <FilterSection 
+      <FilterSectionWrapper
         onFilterChange={handleFilterChange}
         enableUrlPersistence={true}
         enableRealTimeFiltering={true}
