@@ -10,7 +10,7 @@ const nextConfig = {
   
   // Image optimization
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'misionesarrienda.com.ar', 'www.misionesarrienda.com.ar'],
     formats: ['image/webp', 'image/avif'],
   },
   

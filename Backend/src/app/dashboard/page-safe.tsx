@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/favorite-button"
 import { SearchHistory } from "@/components/search-history"
-import { useRouter } from "next/navigation"
+import { safeRouter, safeLocalStorage, safeConsole, isClient } from "@/lib/client-utils"
 import { Heart, Search, Clock, TrendingUp } from "lucide-react"
 import toast from "react-hot-toast"
 
@@ -33,13 +33,18 @@ export default function Dashboard() {
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(false)
 
   useEffect(() => {
-    // Verificar si el usuario está autenticado
-    const token = localStorage.getItem('token')
-    const userDataStr = localStorage.getItem('userData')
+    // Verificar si el usuario está autenticado de forma segura
+    if (!isClient) {
+      setIsLoading(false)
+      return
+    }
+
+    const token = safeLocalStorage.getItem('token')
+    const userDataStr = safeLocalStorage.getItem('userData')
 
     if (!token || !userDataStr) {
       toast.error("Debes iniciar sesión para acceder al dashboard")
-      router.push('/login')
+      safeRouter.push('/login')
       return
     }
 
@@ -47,14 +52,14 @@ export default function Dashboard() {
       const user = JSON.parse(userDataStr)
       setUserData(user)
     } catch (error) {
-      console.error('Error parsing user data:', error)
+      safeConsole.error('Error parsing user data:', error)
       toast.error("Error al cargar datos del usuario")
-      router.push('/login')
+      safeRouter.push('/login')
       return
     }
 
     setIsLoading(false)
-  }, [router])
+  }, [])
 
   useEffect(() => {
     if (userData && activeTab === "favoritos") {
@@ -65,7 +70,7 @@ export default function Dashboard() {
   const loadFavorites = async () => {
     setIsLoadingFavorites(true)
     try {
-      const token = localStorage.getItem('token')
+      const token = safeLocalStorage.getItem('token')
       const response = await fetch('/api/favorites', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -79,7 +84,7 @@ export default function Dashboard() {
         throw new Error('Error al cargar favoritos')
       }
     } catch (error) {
-      console.error('Error loading favorites:', error)
+      safeConsole.error('Error loading favorites:', error)
       toast.error('Error al cargar favoritos')
     } finally {
       setIsLoadingFavorites(false)
@@ -106,7 +111,7 @@ export default function Dashboard() {
       })
     }
     
-    router.push(`/?${searchParams.toString()}`)
+    safeRouter.push(`/?${searchParams.toString()}`)
   }
 
   if (isLoading) {

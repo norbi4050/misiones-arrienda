@@ -85,7 +85,7 @@ export function generatePropertySchema(property: any): PropertySchema {
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     },
     image: images.map(img => 
-      img.startsWith('http') ? img : `https://misionesarrienda.com${img}`
+      img.startsWith('http') ? img : `https://www.misionesarrienda.com.ar${img}`
     ),
     floorSize: {
       "@type": "QuantitativeValue",
@@ -154,8 +154,8 @@ export function generateOrganizationSchema(): OrganizationSchema {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     name: "Misiones Arrienda",
-    url: "https://misionesarrienda.com",
-    logo: "https://misionesarrienda.com/logo.png",
+    url: "https://www.misionesarrienda.com.ar",
+    logo: "https://www.misionesarrienda.com.ar/logo.png",
     description: "La plataforma líder de alquiler de propiedades en Misiones, Argentina. Encuentra casas, departamentos y locales comerciales en Posadas, Oberá, Puerto Iguazú y más ciudades.",
     address: {
       "@type": "PostalAddress",
@@ -201,7 +201,7 @@ export function generateBreadcrumbSchema(items: Array<{ name: string; url: strin
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      item: `https://misionesarrienda.com${item.url}`
+      item: `https://www.misionesarrienda.com.ar${item.url}`
     }))
   }
 }
@@ -231,13 +231,13 @@ export function generateWebSiteSchema(): WebSiteSchema {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Misiones Arrienda",
-    url: "https://misionesarrienda.com",
+    url: "https://www.misionesarrienda.com.ar",
     description: "Encuentra las mejores propiedades en alquiler en Misiones, Argentina",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://misionesarrienda.com/properties?search={search_term_string}"
+        urlTemplate: "https://www.misionesarrienda.com.ar/properties?search={search_term_string}"
       },
       "query-input": "required name=search_term_string"
     },
