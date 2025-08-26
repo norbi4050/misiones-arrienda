@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { PropertyCard } from '@/components/property-card'
-import { Property, PropertyStatus, PropertyType, ListingType } from '@/types/property'
+import { Property } from '@/types/property'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Home, MapPin } from 'lucide-react'
 
@@ -46,12 +46,12 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
   }
 
   const generateMockSimilarProperties = (): Property[] => {
-    const baseProperties = [
+    const baseProperties: Property[] = [
       {
         id: "similar-1",
         title: "Casa moderna con jardín",
         description: "Hermosa casa de 3 dormitorios con amplio jardín y parrilla.",
-        price: currentProperty.price * 0.85,
+        price: Math.round(currentProperty.price * 0.85),
         city: currentProperty.city,
         province: currentProperty.province,
         latitude: (currentProperty.latitude || -27.3621) + 0.01,
@@ -59,14 +59,14 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
         images: ["/placeholder-house-2.jpg", "/placeholder-house-3.jpg"],
         featured: false,
         bedrooms: currentProperty.bedrooms,
-        bathrooms: currentProperty.bathrooms - 1 || 1,
+        bathrooms: Math.max(currentProperty.bathrooms - 1, 1),
         garages: 1,
-        area: currentProperty.area - 20,
+        area: Math.max(currentProperty.area - 20, 50),
         propertyType: currentProperty.propertyType,
         listingType: currentProperty.listingType,
-        status: "AVAILABLE" as PropertyStatus,
+        status: "AVAILABLE",
         address: "Av. San Martín 456",
-        postalCode: currentProperty.postalCode,
+        postalCode: currentProperty.postalCode || "3300",
         yearBuilt: 2019,
         amenities: ["Jardín", "Parrilla", "Garage"],
         features: ["Cocina moderna", "Pisos de cerámica"],
@@ -84,7 +84,7 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
         id: "similar-2",
         title: "Departamento luminoso céntrico",
         description: "Moderno departamento con excelente ubicación y mucha luz natural.",
-        price: currentProperty.price * 1.15,
+        price: Math.round(currentProperty.price * 1.15),
         city: currentProperty.city,
         province: currentProperty.province,
         latitude: (currentProperty.latitude || -27.3621) - 0.01,
@@ -97,9 +97,9 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
         area: currentProperty.area + 30,
         propertyType: currentProperty.propertyType,
         listingType: currentProperty.listingType,
-        status: "AVAILABLE" as PropertyStatus,
+        status: "AVAILABLE",
         address: "Belgrano 789",
-        postalCode: currentProperty.postalCode,
+        postalCode: currentProperty.postalCode || "3300",
         yearBuilt: 2021,
         amenities: ["Portero", "Ascensor", "Balcón"],
         features: ["Cocina integrada", "Pisos flotantes", "Aire acondicionado"],
@@ -117,7 +117,7 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
         id: "similar-3",
         title: "Casa familiar con piscina",
         description: "Amplia casa familiar con piscina y quincho, ideal para familias grandes.",
-        price: currentProperty.price * 1.3,
+        price: Math.round(currentProperty.price * 1.3),
         city: currentProperty.city,
         province: currentProperty.province,
         latitude: (currentProperty.latitude || -27.3621) + 0.02,
@@ -128,11 +128,11 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
         bathrooms: currentProperty.bathrooms + 1,
         garages: 2,
         area: currentProperty.area + 50,
-        propertyType: "HOUSE" as PropertyType,
+        propertyType: "HOUSE",
         listingType: currentProperty.listingType,
-        status: "AVAILABLE" as PropertyStatus,
+        status: "AVAILABLE",
         address: "Los Aromos 321",
-        postalCode: currentProperty.postalCode,
+        postalCode: currentProperty.postalCode || "3300",
         yearBuilt: 2018,
         amenities: ["Piscina", "Quincho", "Jardín", "Garage doble"],
         features: ["Cocina moderna", "Pisos de porcelanato", "Aire acondicionado"],
