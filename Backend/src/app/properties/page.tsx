@@ -10,7 +10,27 @@ export const metadata: Metadata = {
     title: 'Propiedades en Misiones - Alquiler y Venta',
     description: 'Explora miles de propiedades en Misiones con filtros avanzados. Encuentra tu hogar ideal.',
     type: 'website',
-  }
+    locale: 'es_AR',
+    siteName: 'Misiones Arrienda',
+    url: 'https://www.misionesarrienda.com.ar/properties',
+    images: [
+      {
+        url: '/placeholder-apartment-1.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Propiedades en Misiones - Alquiler y Venta',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Propiedades en Misiones - Alquiler y Venta',
+    description: 'Explora miles de propiedades en Misiones con filtros avanzados. Encuentra tu hogar ideal.',
+    images: ['/placeholder-apartment-1.jpg'],
+  },
+  alternates: {
+    canonical: 'https://www.misionesarrienda.com.ar/properties',
+  },
 }
 
 export default function PropertiesPage() {

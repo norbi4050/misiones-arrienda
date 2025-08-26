@@ -340,6 +340,9 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                 propertyId={property.id}
                 address={`${property.address}, ${property.city}`}
                 price={property.price.toLocaleString()}
+                agentPhone={property.agent.phone}
+                agentName={property.agent.name}
+                propertyTitle={property.title}
               />
             </div>
 

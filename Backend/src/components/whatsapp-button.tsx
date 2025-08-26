@@ -19,6 +19,42 @@ interface WhatsAppButtonProps {
   className?: string
   source?: string
   campaign?: string
+  agentPhone?: string
+  agentName?: string
+  propertyTitle?: string
+}
+
+// Función para normalizar números de teléfono argentinos a formato WhatsApp
+function normalizeArgentinePhone(phone: string): string {
+  if (!phone) return "5493764567890" // Fallback al número de Misiones Arrienda
+  
+  // Remover todos los caracteres no numéricos
+  const digits = phone.replace(/\D/g, '')
+  
+  // Si ya está en formato internacional correcto (549...)
+  if (digits.startsWith('549')) {
+    return digits
+  }
+  
+  // Si empieza con 54 pero no 549 (teléfono móvil sin el 9)
+  if (digits.startsWith('54') && !digits.startsWith('549')) {
+    return '549' + digits.slice(2)
+  }
+  
+  // Si empieza con 0 (formato nacional argentino)
+  if (digits.startsWith('0')) {
+    // Remover el 0 inicial y agregar 549
+    return '549' + digits.slice(1)
+  }
+  
+  // Si es un número local (sin código de país)
+  if (digits.length >= 10) {
+    // Asumir que es un número móvil argentino y agregar 549
+    return '549' + digits
+  }
+  
+  // Si no se puede normalizar, usar el número de fallback
+  return "5493764567890"
 }
 
 export default function WhatsAppButton({ 
@@ -28,33 +64,36 @@ export default function WhatsAppButton({
   type = "inline",
   className = "",
   source = "web",
-  campaign = "property_inquiry"
+  campaign = "property_inquiry",
+  agentPhone,
+  agentName,
+  propertyTitle
 }: WhatsAppButtonProps) {
   
-  const phoneNumber = "5493764567890" // Número de WhatsApp de Misiones Arrienda
+  const phoneNumber = normalizeArgentinePhone(agentPhone || "")
   
   const generateMessage = () => {
-    const baseMessage = address && price 
-      ? `¡Hola! Me interesa la propiedad en ${address} por $${price}. ¿Podemos coordinar una visita? 🏠`
-      : propertyId 
-        ? `¡Hola! Me interesa la propiedad ID: ${propertyId}. ¿Podemos hablar? 🏠`
-        : `¡Hola! Me interesa conocer más sobre las propiedades disponibles en Misiones Arrienda 🏠`
+    // Usar el título de la propiedad y nombre del agente si están disponibles
+    const agentGreeting = agentName ? `Hola ${agentName}, ` : '¡Hola! '
     
-    // Add UTM tracking info to message
-    const utmInfo = `\n\n📊 Fuente: ${source} | Campaña: ${campaign}`
-    return baseMessage + utmInfo
+    let baseMessage = ''
+    
+    if (propertyTitle && address && price) {
+      baseMessage = `${agentGreeting}me interesa la propiedad "${propertyTitle}" en ${address} por $${price}. ¿Podemos coordinar una visita? 🏠`
+    } else if (address && price) {
+      baseMessage = `${agentGreeting}me interesa la propiedad en ${address} por $${price}. ¿Podemos coordinar una visita? 🏠`
+    } else if (propertyId) {
+      baseMessage = `${agentGreeting}me interesa la propiedad ID: ${propertyId}. ¿Podemos hablar? 🏠`
+    } else {
+      baseMessage = `${agentGreeting}me interesa conocer más sobre las propiedades disponibles en Misiones Arrienda 🏠`
+    }
+    
+    return baseMessage
   }
 
   const generateWhatsAppUrl = () => {
     const message = generateMessage()
-    const utmParams = new URLSearchParams({
-      utm_source: source,
-      utm_medium: 'whatsapp',
-      utm_campaign: campaign,
-      utm_content: propertyId || 'general_inquiry'
-    })
-    
-    return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}&${utmParams.toString()}`
+    return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
   }
 
   const handleClick = () => {
@@ -140,16 +179,29 @@ export function WhatsAppHeroButton() {
 }
 
 // Componente para tarjetas de propiedades
-export function WhatsAppPropertyButton({ propertyId, address, price }: { 
+export function WhatsAppPropertyButton({ 
+  propertyId, 
+  address, 
+  price, 
+  agentPhone, 
+  agentName, 
+  propertyTitle 
+}: { 
   propertyId: string
   address: string 
   price: string 
+  agentPhone?: string
+  agentName?: string
+  propertyTitle?: string
 }) {
   return (
     <WhatsAppButton 
       propertyId={propertyId}
       address={address}
       price={price}
+      agentPhone={agentPhone}
+      agentName={agentName}
+      propertyTitle={propertyTitle}
       type="inline"
       source="property_detail"
       campaign="property_inquiry"
