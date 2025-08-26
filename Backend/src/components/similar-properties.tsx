@@ -1,117 +1,134 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { PropertyCard } from '@/components/property-card'
-import { Property, PropertyStatus } from '@/types/property'
-import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, Home, MapPin } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { PropertyCard } from "@/components/property-card";
+import { Property } from "@/types/property";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Home, MapPin } from "lucide-react";
 
 interface SimilarPropertiesProps {
-  currentProperty: Property
-  maxProperties?: number
+  currentProperty: Property;
+  maxProperties?: number;
 }
 
-export function SimilarProperties({ currentProperty, maxProperties = 6 }: SimilarPropertiesProps) {
-  const [similarProperties, setSimilarProperties] = useState<Property[]>([])
-  const [loading, setLoading] = useState(true)
-  const [currentIndex, setCurrentIndex] = useState(0)
+export function SimilarProperties({
+  currentProperty,
+  maxProperties = 6,
+}: SimilarPropertiesProps) {
+  const [similarProperties, setSimilarProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    loadSimilarProperties()
-  }, [currentProperty.id])
+    loadSimilarProperties();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProperty.id]);
 
   const loadSimilarProperties = async () => {
     try {
-      setLoading(true)
-      
+      setLoading(true);
+
       // Try to fetch from API first
-      const response = await fetch(`/api/properties/similar/${currentProperty.id}?limit=${maxProperties}`)
-      
+      const response = await fetch(
+        `/api/properties/similar/${currentProperty.id}?limit=${maxProperties}`
+      );
+
       if (response.ok) {
-        const data = await response.json()
-        setSimilarProperties(data.properties || [])
+        const data = await response.json();
+        setSimilarProperties((data?.properties as Property[]) || []);
       } else {
         // Fallback to mock similar properties
-        const mockSimilar = generateMockSimilarProperties()
-        setSimilarProperties(mockSimilar)
+        setSimilarProperties(generateMockSimilarProperties());
       }
     } catch (error) {
-      console.error('Error loading similar properties:', error)
-      // Fallback to mock data
-      const mockSimilar = generateMockSimilarProperties()
-      setSimilarProperties(mockSimilar)
+      console.error("Error loading similar properties:", error);
+      setSimilarProperties(generateMockSimilarProperties());
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // ✅ Mock seguro: parte del currentProperty (spread) y NO agrega campos ajenos
   const generateMockSimilarProperties = (): Property[] => {
-    const baseProperties: Property[] = [
+    const city = String(currentProperty.city ?? "");
+    const propType = currentProperty.propertyType;
+
+    const base: Property[] = [
       {
         ...currentProperty,
         id: "similar-1",
         title: "Casa moderna con jardín",
-        description: "Hermosa casa de 3 dormitorios con amplio jardín y parrilla.",
-        price: Math.round(currentProperty.price * 0.85),
-        latitude: (currentProperty.latitude || -27.3621) + 0.01,
-        longitude: (currentProperty.longitude || -55.9008) + 0.01,
-        images: ["/placeholder-house-2.jpg", "/placeholder-house-3.jpg"],
+        description:
+          "Hermosa casa de 3 dormitorios con amplio jardín y parrilla.",
+        price: Math.round((currentProperty.price ?? 0) * 0.85),
+        latitude: (currentProperty.latitude ?? -27.3621) + 0.01,
+        longitude: (currentProperty.longitude ?? -55.9008) + 0.01,
+        images:
+          currentProperty.images?.length
+            ? currentProperty.images
+            : ["/placeholder-house-2.jpg"],
         featured: false,
-        bathrooms: Math.max(currentProperty.bathrooms - 1, 1),
-        area: Math.max(currentProperty.area - 20, 50),
       },
       {
         ...currentProperty,
         id: "similar-2",
         title: "Departamento luminoso céntrico",
-        description: "Moderno departamento con excelente ubicación y mucha luz natural.",
-        price: Math.round(currentProperty.price * 1.15),
-        latitude: (currentProperty.latitude || -27.3621) - 0.01,
-        longitude: (currentProperty.longitude || -55.9008) - 0.01,
-        images: ["/placeholder-apartment-2.jpg", "/placeholder-apartment-3.jpg"],
+        description:
+          "Moderno departamento con excelente ubicación y mucha luz natural.",
+        price: Math.round((currentProperty.price ?? 0) * 1.15),
+        latitude: (currentProperty.latitude ?? -27.3621) - 0.01,
+        longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
+        images:
+          currentProperty.images?.length
+            ? currentProperty.images
+            : ["/placeholder-apartment-2.jpg"],
         featured: true,
-        bedrooms: currentProperty.bedrooms + 1,
-        area: currentProperty.area + 30,
+        bedrooms: (currentProperty.bedrooms ?? 1) + 1,
       },
       {
         ...currentProperty,
         id: "similar-3",
         title: "Casa familiar con piscina",
-        description: "Amplia casa familiar con piscina y quincho, ideal para familias grandes.",
-        price: Math.round(currentProperty.price * 1.3),
-        latitude: (currentProperty.latitude || -27.3621) + 0.02,
-        longitude: (currentProperty.longitude || -55.9008) - 0.01,
-        images: ["/placeholder-house-4.jpg", "/placeholder-house-5.jpg"],
+        description: "Amplia casa familiar con piscina y quincho.",
+        price: Math.round((currentProperty.price ?? 0) * 1.3),
+        latitude: (currentProperty.latitude ?? -27.3621) + 0.02,
+        longitude: (currentProperty.longitude ?? -55.9008) - 0.01,
+        images:
+          currentProperty.images?.length
+            ? currentProperty.images
+            : ["/placeholder-house-4.jpg"],
         featured: false,
-        bedrooms: currentProperty.bedrooms + 1,
-        bathrooms: currentProperty.bathrooms + 1,
-        area: currentProperty.area + 50,
-      }
-    ]
+        bathrooms: Math.max((currentProperty.bathrooms ?? 1) + 1, 1),
+        area: Math.max((currentProperty.area ?? 50) + 50, 50),
+      },
+    ];
 
-    // Filter out properties that are too different and limit results
-    return baseProperties
-      .filter(prop => 
-        prop.city === currentProperty.city &&
-        prop.propertyType === currentProperty.propertyType &&
-        prop.id !== currentProperty.id
+    return base
+      .filter(
+        (p) =>
+          String(p.city ?? "") === city &&
+          p.propertyType === propType &&
+          p.id !== currentProperty.id
       )
-      .slice(0, maxProperties)
-  }
+      .slice(0, maxProperties);
+  };
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => 
+    setCurrentIndex((prev) =>
       prev + 3 >= similarProperties.length ? 0 : prev + 3
-    )
-  }
+    );
+  };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => 
+    setCurrentIndex((prev) =>
       prev === 0 ? Math.max(0, similarProperties.length - 3) : prev - 3
-    )
-  }
+    );
+  };
 
-  const visibleProperties = similarProperties.slice(currentIndex, currentIndex + 3)
+  const visibleProperties = similarProperties.slice(
+    currentIndex,
+    currentIndex + 3
+  );
 
   if (loading) {
     return (
@@ -133,7 +150,7 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (similarProperties.length === 0) {
@@ -149,14 +166,18 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
             No hay propiedades similares disponibles
           </h3>
           <p className="text-gray-600 mb-4">
-            No encontramos propiedades similares en {currentProperty.city} en este momento.
+            No encontramos propiedades similares en {currentProperty.city} en
+            este momento.
           </p>
-          <Button variant="outline" onClick={() => window.location.href = '/properties'}>
+          <Button
+            variant="outline"
+            onClick={() => (window.location.href = "/properties")}
+          >
             Ver todas las propiedades
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -166,12 +187,14 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
           <Home className="w-6 h-6 mr-2 text-blue-500" />
           Propiedades Similares
         </h2>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">
-            {currentIndex + 1}-{Math.min(currentIndex + 3, similarProperties.length)} de {similarProperties.length}
+            {currentIndex + 1}-
+            {Math.min(currentIndex + 3, similarProperties.length)} de{" "}
+            {similarProperties.length}
           </span>
-          
+
           {similarProperties.length > 3 && (
             <div className="flex gap-1">
               <Button
@@ -209,7 +232,7 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
               bedrooms={property.bedrooms}
               bathrooms={property.bathrooms}
               area={property.area}
-              image={property.images[0] || "/placeholder-apartment-1.jpg"}
+              image={property.images?.[0] ?? "/placeholder-apartment-1.jpg"}
               featured={property.featured}
             />
           </div>
@@ -219,14 +242,16 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
       {similarProperties.length > 3 && (
         <div className="flex justify-center mt-6">
           <div className="flex gap-2">
-            {Array.from({ length: Math.ceil(similarProperties.length / 3) }).map((_, index) => (
+            {Array.from({
+              length: Math.ceil(similarProperties.length / 3),
+            }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index * 3)}
                 className={`w-2 h-2 rounded-full transition-all ${
                   Math.floor(currentIndex / 3) === index
-                    ? 'bg-blue-500 w-6'
-                    : 'bg-gray-300 hover:bg-gray-400'
+                    ? "bg-blue-500 w-6"
+                    : "bg-gray-300 hover:bg-gray-400"
                 }`}
               />
             ))}
@@ -235,14 +260,20 @@ export function SimilarProperties({ currentProperty, maxProperties = 6 }: Simila
       )}
 
       <div className="mt-6 text-center">
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.href = `/properties?city=${currentProperty.city}&type=${currentProperty.propertyType}`}
+        <Button
+          variant="outline"
+          onClick={() =>
+            (window.location.href = `/properties?city=${encodeURIComponent(
+              String(currentProperty.city ?? "")
+            )}&type=${encodeURIComponent(
+              String(currentProperty.propertyType ?? "")
+            )}`)
+          }
           className="border-blue-600 text-blue-600 hover:bg-blue-50"
         >
           Ver más propiedades en {currentProperty.city}
         </Button>
       </div>
     </div>
-  )
+  );
 }
