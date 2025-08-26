@@ -83,7 +83,43 @@ export default function BuildBadge() {
 + <BuildBadge />
 ```
 
-### 4) ✅ Configuración Vercel verificada
+### 4) ✅ Corrección error Next.js useSearchParams()
+
+**Problema detectado:**
+```
+⨯ useSearchParams() should be wrapped in a suspense boundary at page "/eldorado"
+```
+
+**Solución implementada:**
+
+**A) Wrapper con Suspense creado:**
+- `Backend/src/components/filter-section-wrapper.tsx`
+```typescript
+import { Suspense } from 'react'
+import { FilterSection } from './filter-section'
+
+export function FilterSectionWrapper(props) {
+  return (
+    <Suspense fallback={<FilterSectionFallback />}>
+      <FilterSection {...props} />
+    </Suspense>
+  )
+}
+```
+
+**B) Página Eldorado actualizada:**
+- `Backend/src/app/eldorado/page.tsx`
+```diff
+- import { FilterSection } from '@/components/filter-section'
++ import { FilterSectionWrapper } from '@/components/filter-section-wrapper'
+
+- <FilterSection />
++ <FilterSectionWrapper />
+```
+
+**Resultado:** Error de Next.js corregido, FilterSection ahora funciona correctamente en producción
+
+### 5) ✅ Configuración Vercel verificada
 
 **Configuración recomendada:**
 - ✅ **Root Directory:** `Backend`
@@ -136,18 +172,21 @@ https://www.misionesarrienda.com.ar/?v=1234567890
 ### Modificados:
 1. `Backend/src/app/page.tsx` - Stats eliminados + revalidate = 0
 2. `Backend/src/app/layout.tsx` - BuildBadge agregado
+3. `Backend/src/app/eldorado/page.tsx` - FilterSectionWrapper implementado
 
 ### Creados:
 1. `Backend/src/app/api/version/route.ts` - API endpoint de versión
 2. `Backend/src/components/BuildBadge.tsx` - Componente de versión
+3. `Backend/src/components/filter-section-wrapper.tsx` - Wrapper con Suspense
 
 ## ✅ ESTADO FINAL
 
 - **Stats eliminados:** ✅ COMPLETADO
 - **Cache neutralizado:** ✅ COMPLETADO  
 - **Sello de versión:** ✅ COMPLETADO
+- **Error Next.js corregido:** ✅ COMPLETADO
 - **Setup Vercel:** ✅ DOCUMENTADO
 - **API /version:** ✅ FUNCIONAL
 - **BuildBadge:** ✅ INTEGRADO
 
-**El Home ya NO muestra los carteles de estadísticas y está listo para deployment en Vercel con tracking de versiones.**
+**El Home ya NO muestra los carteles de estadísticas, el error de Next.js está corregido, y está listo para deployment en Vercel con tracking de versiones.**
