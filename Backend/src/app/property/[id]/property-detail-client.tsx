@@ -8,6 +8,7 @@ import { MapPin, Bed, Bath, Square, Car, Heart, Phone, Mail, Calendar, Share2, E
 import Image from "next/image"
 import Link from "next/link"
 import { WhatsAppPropertyButton } from "@/components/whatsapp-button"
+import { SimilarProperties } from "@/components/similar-properties"
 import toast from 'react-hot-toast'
 import { Property } from '@/types/property'
 
@@ -447,6 +448,11 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Similar Properties Section */}
+        <div className="mt-12">
+          <SimilarProperties currentProperty={property} />
         </div>
       </div>
     </div>
