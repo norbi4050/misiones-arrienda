@@ -6,8 +6,8 @@ import { Metadata } from 'next'
 // Configuración para páginas dinámicas con searchParams
 export const dynamic = 'force-dynamic'
 
-// Cache configurado para producción
-export const revalidate = 60
+// Cache configurado para producción - temporalmente 0 para testing
+export const revalidate = 0
 
 // Metadatos dinámicos para SEO
 export const metadata: Metadata = {
