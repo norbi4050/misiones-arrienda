@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
 
 const prisma = new PrismaClient()
 
@@ -7,8 +8,17 @@ export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   try {
+    // Verificar autenticación del usuario
+    const authenticatedUser = await getAuthenticatedUser(req)
+    if (!authenticatedUser) {
+      return NextResponse.json(
+        { error: 'Usuario no autenticado. Debe iniciar sesión para crear propiedades.' },
+        { status: 401 }
+      )
+    }
+
     const body = await req.json()
-    
+
     const {
       title,
       description,
@@ -63,7 +73,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Crear la propiedad en la base de datos
+    // Crear la propiedad en la base de datos con el userId del usuario autenticado
     const property = await prisma.property.create({
       data: {
         title,
@@ -95,6 +105,7 @@ export async function POST(req: NextRequest) {
           'Baño completo',
           'Patio'
         ]),
+        userId: authenticatedUser.id, // Guardar automáticamente el ID del usuario autenticado
         agentId: defaultAgent.id
       }
     })
@@ -109,19 +120,19 @@ export async function POST(req: NextRequest) {
       const selectedPlan = planConfig[plan as keyof typeof planConfig]
       
       if (selectedPlan) {
-        // TODO: Crear suscripción cuando tengamos userId
-        // await prisma.subscription.create({
-        //   data: {
-        //     planType: plan,
-        //     planName: selectedPlan.name,
-        //     planPrice: selectedPlan.price,
-        //     planDuration: selectedPlan.duration,
-        //     startDate: new Date(),
-        //     endDate: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000),
-        //     userId: userId, // Necesitamos implementar autenticación
-        //     propertyId: property.id
-        //   }
-        // })
+        // Crear suscripción con el userId del usuario autenticado
+        await prisma.subscription.create({
+          data: {
+            planType: plan,
+            planName: selectedPlan.name,
+            planPrice: selectedPlan.price,
+            planDuration: selectedPlan.duration,
+            startDate: new Date(),
+            endDate: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000),
+            userId: authenticatedUser.id, // Usar el ID del usuario autenticado
+            propertyId: property.id
+          }
+        })
       }
     }
 
@@ -135,7 +146,13 @@ export async function POST(req: NextRequest) {
         city: property.city,
         featured: property.featured,
         status: property.status,
-        plan: plan || 'basico' // Devolvemos el plan aunque no se guarde en Property
+        plan: plan || 'basico', // Devolvemos el plan aunque no se guarde en Property
+        userId: authenticatedUser.id, // Incluir el userId en la respuesta
+        owner: {
+          id: authenticatedUser.id,
+          name: authenticatedUser.name,
+          email: authenticatedUser.email
+        }
       },
       message: 'Propiedad creada exitosamente'
     })

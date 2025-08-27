@@ -178,14 +178,13 @@ export default function PublicarPage() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${user.id}`
           },
           body: JSON.stringify({
             ...propertyForm,
             plan: selectedPlan,
             featured: false,
-            status: 'ACTIVE',
-            userId: user.id
+            status: 'ACTIVE'
           })
         })
 
@@ -202,7 +201,7 @@ export default function PublicarPage() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${user.id}`
           },
           body: JSON.stringify({
             title: `${plans[selectedPlan].name} - ${propertyForm.title}`,
