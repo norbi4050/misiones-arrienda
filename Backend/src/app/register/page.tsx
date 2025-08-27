@@ -20,7 +20,10 @@ export default function RegisterPage() {
     companyName: "",
     licenseNumber: "",
     // Campos adicionales para dueños directos
-    propertyCount: ""
+    propertyCount: "",
+    // Campos adicionales para inquilinos
+    searchType: "",
+    budgetRange: ""
   })
   
   const [showPassword, setShowPassword] = useState(false)
@@ -42,7 +45,9 @@ export default function RegisterPage() {
       // Limpiar campos específicos cuando cambia el tipo
       companyName: "",
       licenseNumber: "",
-      propertyCount: ""
+      propertyCount: "",
+      searchType: "",
+      budgetRange: ""
     })
   }
 
@@ -248,7 +253,7 @@ export default function RegisterPage() {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona tu tipo de usuario" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
                   <SelectItem value="inquilino">
                     <div className="flex items-center space-x-2">
                       <UserCheck className="h-4 w-4" />
@@ -303,74 +308,144 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Campos específicos para Inmobiliaria */}
-            {formData.userType === "inmobiliaria" && (
-              <>
-                <div>
-                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-                    Nombre de la Inmobiliaria
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <Input
-                      id="companyName"
-                      name="companyName"
-                      type="text"
-                      required
-                      value={formData.companyName}
-                      onChange={handleChange}
-                      placeholder="Inmobiliaria San Martín"
-                      className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={isLoading}
-                    />
-                  </div>
+            {/* Campos específicos según tipo de usuario */}
+            {formData.userType && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 transition-all duration-300">
+                <div className="flex items-center space-x-2 mb-3">
+                  {formData.userType === "inmobiliaria" && <Building className="h-5 w-5 text-purple-600" />}
+                  {formData.userType === "dueno_directo" && <Home className="h-5 w-5 text-green-600" />}
+                  {formData.userType === "inquilino" && <UserCheck className="h-5 w-5 text-blue-600" />}
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    {formData.userType === "inmobiliaria" && "Información de la Inmobiliaria"}
+                    {formData.userType === "dueno_directo" && "Información del Propietario"}
+                    {formData.userType === "inquilino" && "Información del Inquilino"}
+                  </h3>
                 </div>
 
-                <div>
-                  <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-700">
-                    Número de Matrícula
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <CheckCircle className="h-5 w-5 text-gray-400" />
+                {/* Campos específicos para Inmobiliaria */}
+                {formData.userType === "inmobiliaria" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                        Nombre de la Inmobiliaria *
+                      </label>
+                      <div className="mt-1 relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Building className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <Input
+                          id="companyName"
+                          name="companyName"
+                          type="text"
+                          required
+                          value={formData.companyName}
+                          onChange={handleChange}
+                          placeholder="Inmobiliaria San Martín"
+                          className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          disabled={isLoading}
+                        />
+                      </div>
                     </div>
-                    <Input
-                      id="licenseNumber"
-                      name="licenseNumber"
-                      type="text"
-                      required
-                      value={formData.licenseNumber}
-                      onChange={handleChange}
-                      placeholder="MAT-12345"
-                      className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
 
-            {/* Campos específicos para Dueño Directo */}
-            {formData.userType === "dueno_directo" && (
-              <div>
-                <label htmlFor="propertyCount" className="block text-sm font-medium text-gray-700">
-                  ¿Cuántas propiedades tienes para publicar?
-                </label>
-                <div className="mt-1">
-                  <Select onValueChange={(value) => setFormData({...formData, propertyCount: value})} disabled={isLoading}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecciona la cantidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 propiedad</SelectItem>
-                      <SelectItem value="2-3">2-3 propiedades</SelectItem>
-                      <SelectItem value="4-5">4-5 propiedades</SelectItem>
-                      <SelectItem value="6+">Más de 6 propiedades</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div>
+                      <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-700">
+                        Número de Matrícula *
+                      </label>
+                      <div className="mt-1 relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <CheckCircle className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <Input
+                          id="licenseNumber"
+                          name="licenseNumber"
+                          type="text"
+                          required
+                          value={formData.licenseNumber}
+                          onChange={handleChange}
+                          placeholder="MAT-12345"
+                          className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Número de matrícula profesional o registro comercial
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Campos específicos para Dueño Directo */}
+                {formData.userType === "dueno_directo" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="propertyCount" className="block text-sm font-medium text-gray-700">
+                        ¿Cuántas propiedades tienes para publicar? *
+                      </label>
+                      <div className="mt-1">
+                        <Select onValueChange={(value) => setFormData({...formData, propertyCount: value})} disabled={isLoading}>
+                          <SelectTrigger className="w-full focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                            <SelectValue placeholder="Selecciona la cantidad" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                            <SelectItem value="1">1 propiedad</SelectItem>
+                            <SelectItem value="2-3">2-3 propiedades</SelectItem>
+                            <SelectItem value="4-5">4-5 propiedades</SelectItem>
+                            <SelectItem value="6+">Más de 6 propiedades</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Esto nos ayuda a personalizar tu experiencia
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Campos específicos para Inquilino */}
+                {formData.userType === "inquilino" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="searchType" className="block text-sm font-medium text-gray-700">
+                        ¿Qué tipo de propiedad buscas?
+                      </label>
+                      <div className="mt-1">
+                        <Select onValueChange={(value) => setFormData({...formData, searchType: value})} disabled={isLoading}>
+                          <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <SelectValue placeholder="Selecciona el tipo" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                            <SelectItem value="alquiler">Para alquilar</SelectItem>
+                            <SelectItem value="compra">Para comprar</SelectItem>
+                            <SelectItem value="ambos">Ambos (alquiler y compra)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="budgetRange" className="block text-sm font-medium text-gray-700">
+                        Rango de presupuesto (opcional)
+                      </label>
+                      <div className="mt-1">
+                        <Select onValueChange={(value) => setFormData({...formData, budgetRange: value})} disabled={isLoading}>
+                          <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <SelectValue placeholder="Selecciona tu presupuesto" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                            <SelectItem value="0-50000">Hasta $50.000</SelectItem>
+                            <SelectItem value="50000-100000">$50.000 - $100.000</SelectItem>
+                            <SelectItem value="100000-200000">$100.000 - $200.000</SelectItem>
+                            <SelectItem value="200000-500000">$200.000 - $500.000</SelectItem>
+                            <SelectItem value="500000+">Más de $500.000</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Esto nos ayuda a mostrarte propiedades relevantes
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

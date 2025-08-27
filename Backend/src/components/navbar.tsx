@@ -91,11 +91,11 @@ export function Navbar() {
                   // Usuario logueado - mostrar pestaña personalizada según tipo
                   <>
                     <Link 
-                      href="/dashboard" 
+                      href={`/profile/${user?.userType || 'user'}`}
                       className={`hover:${userTypeInfo.color} transition-colors flex items-center space-x-1 ${userTypeInfo.color}`}
                     >
                       <UserIcon className="h-4 w-4" />
-                      <span>{userTypeInfo.text}</span>
+                      <span>Mi Perfil</span>
                     </Link>
                     <span className="text-sm text-gray-600">
                       Hola, {user?.name}
@@ -190,12 +190,12 @@ export function Navbar() {
                         Hola, {user?.name}
                       </div>
                       <Link
-                        href="/dashboard"
+                        href={`/profile/${user?.userType || 'user'}`}
                         className={`block px-3 py-2 hover:${userTypeInfo.color} transition-colors flex items-center space-x-2 ${userTypeInfo.color}`}
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <UserIcon className="h-4 w-4" />
-                        <span>{userTypeInfo.text}</span>
+                        <span>Mi Perfil</span>
                       </Link>
                       <button
                         onClick={handleLogout}
