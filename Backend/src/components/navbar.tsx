@@ -4,11 +4,11 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Home, User, LogIn, Menu, X, LogOut, Building2, UserCheck, Search } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { user, isAuthenticated, logout, isLoading } = useAuth()
+  const { user, isAuthenticated, logout, isLoading } = useSupabaseAuth()
 
   const handleLogout = () => {
     logout()

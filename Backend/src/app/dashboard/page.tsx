@@ -1,57 +1,38 @@
 "use client";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useEffect } from "react";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useRouter } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isAuthenticated, isLoading, logout } = useSupabaseAuth();
   const router = useRouter();
 
+  // Redirigir si no está autenticado
   useEffect(() => {
-    // Obtener usuario actual
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-      
-      if (!user) {
-        router.push("/login");
-      }
-    };
-
-    getUser();
-
-    // Escuchar cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT' || !session) {
-          router.push("/login");
-        } else {
-          setUser(session.user);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [router]);
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
+    await logout();
   };
 
-  if (loading) {
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Verificando autenticación...</p>
+        </div>
       </div>
     );
   }
 
-  if (!user) {
-    return null; // Se redirigirá al login
+  // Si no está autenticado, no mostrar nada (se redirigirá)
+  if (!isAuthenticated || !user) {
+    return null;
   }
 
   return (
@@ -63,7 +44,7 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
               <button
                 onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors"
               >
                 Cerrar sesión
               </button>
@@ -78,10 +59,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">
-                    ¡Autenticación exitosa!
+                    ¡Bienvenido, {user.name}!
                   </h3>
                   <div className="mt-2 text-sm text-green-700">
-                    <p>Has iniciado sesión correctamente con Supabase Auth.</p>
+                    <p>Has iniciado sesión correctamente. Tu sesión se mantiene activa entre pestañas.</p>
                   </div>
                 </div>
               </div>
@@ -92,24 +73,36 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Información del Usuario</h2>
                 <dl className="space-y-2">
                   <div>
+                    <dt className="text-sm font-medium text-gray-500">Nombre:</dt>
+                    <dd className="text-sm text-gray-900">{user.name}</dd>
+                  </div>
+                  <div>
                     <dt className="text-sm font-medium text-gray-500">Email:</dt>
                     <dd className="text-sm text-gray-900">{user.email}</dd>
                   </div>
                   <div>
+                    <dt className="text-sm font-medium text-gray-500">Tipo de usuario:</dt>
+                    <dd className="text-sm text-gray-900 capitalize">
+                      {user.userType === 'dueno_directo' ? 'Dueño Directo' : 
+                       user.userType === 'inmobiliaria' ? 'Inmobiliaria' : 
+                       user.userType || 'Inquilino'}
+                    </dd>
+                  </div>
+                  {user.companyName && (
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Empresa:</dt>
+                      <dd className="text-sm text-gray-900">{user.companyName}</dd>
+                    </div>
+                  )}
+                  {user.licenseNumber && (
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Matrícula:</dt>
+                      <dd className="text-sm text-gray-900">{user.licenseNumber}</dd>
+                    </div>
+                  )}
+                  <div>
                     <dt className="text-sm font-medium text-gray-500">ID:</dt>
-                    <dd className="text-sm text-gray-900 font-mono">{user.id}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Creado:</dt>
-                    <dd className="text-sm text-gray-900">
-                      {new Date(user.created_at).toLocaleDateString('es-ES')}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Email confirmado:</dt>
-                    <dd className="text-sm text-gray-900">
-                      {user.email_confirmed_at ? 'Sí' : 'No'}
-                    </dd>
+                    <dd className="text-sm text-gray-900 font-mono text-xs">{user.id}</dd>
                   </div>
                 </dl>
               </div>
@@ -119,21 +112,27 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   <a
                     href="/"
-                    className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded"
+                    className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition-colors"
                   >
                     Ir al inicio
                   </a>
                   <a
                     href="/properties"
-                    className="block w-full text-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                    className="block w-full text-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
                   >
                     Ver propiedades
                   </a>
                   <a
                     href="/publicar"
-                    className="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    className="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
                   >
                     Publicar propiedad
+                  </a>
+                  <a
+                    href={`/profile/${user.userType || 'inquilino'}`}
+                    className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                  >
+                    Mi perfil
                   </a>
                 </div>
               </div>
@@ -148,12 +147,14 @@ export default function DashboardPage() {
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-blue-800">
-                    Sistema de Autenticación Activo
+                    Sistema de Autenticación Mejorado
                   </h3>
                   <div className="mt-2 text-sm text-blue-700">
                     <p>
-                      El patch de autenticación Supabase está funcionando correctamente. 
-                      Todas las funciones de registro, login y logout están operativas.
+                      ✅ Sesión persistente entre pestañas<br/>
+                      ✅ Redirecciones automáticas<br/>
+                      ✅ Estado de autenticación sincronizado<br/>
+                      ✅ Logout seguro con limpieza de sesión
                     </p>
                   </div>
                 </div>

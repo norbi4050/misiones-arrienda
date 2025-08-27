@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useState, useEffect } from "react";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -8,22 +8,48 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  const { login, isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({ email, password }); // <-- llamada real
-    
-    if (error) {
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        setMsg("¡Login exitoso! Redirigiendo...");
+        // La redirección se maneja automáticamente por el useEffect
+      } else {
+        setMsg(`Error: ${result.error}`);
+      }
+    } catch (error: any) {
       setMsg(`Error: ${error.message}`);
+    } finally {
       setLoading(false);
-    } else {
-      setMsg("¡Login exitoso! Redirigiendo...");
-      router.push("/dashboard");
     }
+  }
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
