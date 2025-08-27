@@ -298,7 +298,6 @@ export default function RegisterPage() {
                   name="name"
                   type="text"
                   autoComplete="name"
-                  required
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="Juan Pérez"
@@ -337,7 +336,6 @@ export default function RegisterPage() {
                           id="companyName"
                           name="companyName"
                           type="text"
-                          required
                           value={formData.companyName}
                           onChange={handleChange}
                           placeholder="Inmobiliaria San Martín"
@@ -359,7 +357,6 @@ export default function RegisterPage() {
                           id="licenseNumber"
                           name="licenseNumber"
                           type="text"
-                          required
                           value={formData.licenseNumber}
                           onChange={handleChange}
                           placeholder="MAT-12345"
@@ -462,7 +459,6 @@ export default function RegisterPage() {
                   name="email"
                   type="email"
                   autoComplete="email"
-                  required
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="juan@email.com"
@@ -485,7 +481,6 @@ export default function RegisterPage() {
                   name="phone"
                   type="tel"
                   autoComplete="tel"
-                  required
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="+54 376 123-4567"
@@ -508,7 +503,6 @@ export default function RegisterPage() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  required
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
@@ -558,7 +552,6 @@ export default function RegisterPage() {
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  required
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
@@ -596,7 +589,6 @@ export default function RegisterPage() {
                 id="terms"
                 name="terms"
                 type="checkbox"
-                required
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
