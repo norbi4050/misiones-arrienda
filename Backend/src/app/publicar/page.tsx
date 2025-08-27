@@ -174,17 +174,29 @@ export default function PublicarPage() {
     try {
       if (selectedPlan === 'basico') {
         // Plan gratuito - crear propiedad directamente
-        const response = await fetch('/api/properties/create', {
+        const response = await fetch('/api/properties', {
           method: 'POST',
           headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user.id}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            ...propertyForm,
-            plan: selectedPlan,
-            featured: false,
-            status: 'ACTIVE'
+            title: propertyForm.title,
+            description: propertyForm.description,
+            type: propertyForm.propertyType,
+            price: Number(propertyForm.price),
+            currency: 'ARS',
+            city: propertyForm.city,
+            address: propertyForm.address,
+            deposit: Number(propertyForm.garages) || 0,
+            mascotas: false,
+            expensasIncl: false,
+            servicios: [],
+            bedrooms: Number(propertyForm.bedrooms),
+            bathrooms: Number(propertyForm.bathrooms),
+            area: Number(propertyForm.area),
+            images: propertyForm.images,
+            amenities: propertyForm.amenities,
+            features: propertyForm.features
           })
         })
 
