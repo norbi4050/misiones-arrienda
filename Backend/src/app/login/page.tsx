@@ -15,7 +15,7 @@ export default function LoginPage() {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -29,7 +29,10 @@ export default function LoginPage() {
       
       if (result.success) {
         setMsg("¡Login exitoso! Redirigiendo...");
-        // La redirección se maneja automáticamente por el useEffect
+        // Redirección explícita al dashboard después del login exitoso
+        setTimeout(() => {
+          router.replace("/dashboard");
+        }, 1000);
       } else {
         setMsg(`Error: ${result.error}`);
       }
