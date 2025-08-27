@@ -65,10 +65,8 @@ export default function LoginPage() {
       
       toast.success(`¡Bienvenido ${data.user.name}! 🎉`)
       
-      // Redirigir al dashboard
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 1000)
+      // Redirigir al dashboard inmediatamente
+      router.push("/dashboard")
 
     } catch (error) {
       toast.dismiss()

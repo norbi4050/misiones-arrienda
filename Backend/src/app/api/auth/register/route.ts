@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma, handlePrismaError, checkDatabaseConnection } from '@/lib/prisma'
-import { sendVerificationEmailAsync, checkEmailServiceStatus } from '@/lib/email-verification-robust'
+import { sendVerificationEmailAsync, checkEmailConfiguration } from '@/lib/email-service-simple'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,8 +18,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar estado del servicio de email
-    const emailStatus = checkEmailServiceStatus();
+    const emailStatus = checkEmailConfiguration();
     console.log(`📧 Estado del servicio de email: ${emailStatus.configured ? 'Configurado' : 'No configurado'}`);
+    console.log(`📧 Mensaje: ${emailStatus.message}`);
 
     const { 
       name, 
