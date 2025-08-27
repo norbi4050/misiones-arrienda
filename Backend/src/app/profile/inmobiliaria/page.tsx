@@ -592,29 +592,6 @@ export default function InmobiliariaProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Herramientas Profesionales */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Herramientas Pro</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start text-sm">
-                  📊 Dashboard Avanzado
-                </Button>
-                <Button variant="outline" className="w-full justify-start text-sm">
-                  📈 Análisis de Mercado
-                </Button>
-                <Button variant="outline" className="w-full justify-start text-sm">
-                  🎯 Campañas Publicitarias
-                </Button>
-                <Button variant="outline" className="w-full justify-start text-sm">
-                  📱 App Móvil Inmobiliaria
-                </Button>
-                <Button variant="outline" className="w-full justify-start text-sm">
-                  🤝 CRM de Clientes
-                </Button>
-              </CardContent>
-            </Card>
 
             {/* Contacto Rápido */}
             <Card>
