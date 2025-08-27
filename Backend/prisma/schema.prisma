@@ -142,6 +142,9 @@ model User {
   payments    Payment[]
   subscriptions Subscription[]
   paymentMethods PaymentMethod[]
+  
+  // Relación con perfil de comunidad
+  communityProfile UserProfile?
 }
 
 model UserReview {
@@ -413,4 +416,206 @@ model PaymentNotification {
   @@index([mercadopagoId])
   @@index([status, attempts])
   @@index([createdAt])
+}
+
+// =============================================================================
+// MODELOS PARA MÓDULO COMUNIDAD (ESTILO FLATMATES)
+// =============================================================================
+
+// Enums para el módulo Comunidad
+enum CommunityRole {
+  BUSCO     // Busco habitación/compañeros
+  OFREZCO   // Ofrezco habitación/casa
+}
+
+enum PetPref {
+  SI_PET        // Acepta mascotas
+  NO_PET        // No acepta mascotas
+  INDIFERENTE   // Indiferente
+}
+
+enum SmokePref {
+  FUMADOR       // Es fumador
+  NO_FUMADOR    // No fumador
+  INDIFERENTE   // Indiferente
+}
+
+enum Diet {
+  NINGUNA       // Sin restricciones
+  VEGETARIANO   // Vegetariano
+  VEGANO        // Vegano
+  CELIACO       // Celíaco
+  OTRO          // Otras restricciones
+}
+
+enum RoomType {
+  PRIVADA       // Habitación privada
+  COMPARTIDA    // Habitación compartida
+  ESTUDIO       // Estudio/monoambiente
+}
+
+model UserProfile {
+  id                    String   @id @default(cuid())
+  
+  // Vinculación con User existente
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Información básica del perfil
+  role                  CommunityRole
+  city                  String
+  neighborhood          String?
+  budgetMin             Int      // Presupuesto mínimo en ARS
+  budgetMax             Int      // Presupuesto máximo en ARS
+  bio                   String?
+  photos                String[] // Array de URLs de fotos
+  
+  // Preferencias de convivencia
+  age                   Int?
+  petPref               PetPref  @default(INDIFERENTE)
+  smokePref             SmokePref @default(INDIFERENTE)
+  diet                  Diet     @default(NINGUNA)
+  scheduleNotes         String?  // horarios de trabajo/estudio
+  tags                  String[] // limpio, sociable, gym, gamer, etc.
+  
+  // Configuración
+  acceptsMessages       Boolean  @default(true)
+  highlightedUntil      DateTime?
+  isSuspended           Boolean  @default(false)
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relaciones
+  rooms                 Room[]
+  likesGiven            Like[]   @relation("likes_given")
+  likesReceived         Like[]   @relation("likes_received")
+  conversationsA        Conversation[] @relation("conv_a")
+  conversationsB        Conversation[] @relation("conv_b")
+  messagesSent          Message[] @relation("message_sender")
+  reports               Report[]
+  
+  @@index([role, city])
+  @@index([budgetMin, budgetMax])
+  @@index([highlightedUntil])
+  @@index([isSuspended])
+}
+
+model Room {
+  id                    String   @id @default(cuid())
+  
+  // Relación con el perfil propietario
+  ownerId               String
+  owner                 UserProfile @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  // Información de la habitación
+  title                 String
+  description           String
+  price                 Int      // Precio mensual en ARS
+  city                  String
+  neighborhood          String?
+  type                  RoomType
+  amenities             String[] // wifi, cochera, patio, etc.
+  photos                String[] // Array de URLs de fotos
+  rules                 String?  // no fiestas, etc.
+  
+  // Estado
+  isActive              Boolean  @default(true)
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([city, type])
+  @@index([price])
+  @@index([isActive])
+}
+
+model Like {
+  id                    String   @id @default(cuid())
+  
+  // Relaciones
+  fromId                String
+  toId                  String
+  from                  UserProfile @relation("likes_given", fields: [fromId], references: [id], onDelete: Cascade)
+  to                    UserProfile @relation("likes_received", fields: [toId], references: [id], onDelete: Cascade)
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  
+  @@unique([fromId, toId])
+  @@index([fromId])
+  @@index([toId])
+}
+
+model Conversation {
+  id                    String   @id @default(cuid())
+  
+  // Participantes (siempre 2 en MVP)
+  aId                   String
+  bId                   String
+  a                     UserProfile @relation("conv_a", fields: [aId], references: [id], onDelete: Cascade)
+  b                     UserProfile @relation("conv_b", fields: [bId], references: [id], onDelete: Cascade)
+  
+  // Estado
+  isActive              Boolean  @default(true)
+  lastMessageAt         DateTime?
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relaciones
+  messages              Message[]
+  
+  @@unique([aId, bId])
+  @@index([aId, isActive])
+  @@index([bId, isActive])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id                    String   @id @default(cuid())
+  
+  // Relaciones
+  conversationId        String
+  conversation          Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId              String
+  sender                UserProfile @relation("message_sender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  // Contenido
+  body                  String
+  isRead                Boolean  @default(false)
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([isRead])
+}
+
+model Report {
+  id                    String   @id @default(cuid())
+  
+  // Relación con el perfil reportado
+  targetId              String
+  target                UserProfile @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  
+  // Información del reporte
+  reason                String   // spam, contenido_inapropiado, acoso, etc.
+  details               String?
+  reporterEmail         String?  // Email del reportador (puede ser anónimo)
+  
+  // Estado
+  status                String   @default("PENDING") // PENDING, REVIEWED, RESOLVED, DISMISSED
+  adminNotes            String?
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([targetId, status])
+  @@index([status, createdAt])
 }

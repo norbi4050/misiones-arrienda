@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import type { User, Session } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
+import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
+
+const supabase = createClient()
 
 interface AuthUser {
   id: string
@@ -56,7 +58,7 @@ export function useSupabaseAuth() {
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         console.log('Auth state changed:', event, session?.user?.email)
         
         setSession(session)
