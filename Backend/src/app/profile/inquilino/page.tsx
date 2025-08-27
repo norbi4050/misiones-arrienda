@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search, User, Mail, Phone, MapPin, Heart, History, Settings, Camera, Save, Edit } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 
 export default function InquilinoProfilePage() {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useSupabaseAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -25,7 +25,13 @@ export default function InquilinoProfilePage() {
     searchType: "",
     budgetRange: "",
     bio: "",
-    profileImage: ""
+    profileImage: "",
+    preferredAreas: "",
+    familySize: "",
+    petFriendly: "",
+    moveInDate: "",
+    employmentStatus: "",
+    monthlyIncome: ""
   })
 
   useEffect(() => {
@@ -48,7 +54,13 @@ export default function InquilinoProfilePage() {
         searchType: (user as any).searchType || "",
         budgetRange: (user as any).budgetRange || "",
         bio: (user as any).bio || "",
-        profileImage: (user as any).profileImage || ""
+        profileImage: (user as any).profileImage || "",
+        preferredAreas: (user as any).preferredAreas || "",
+        familySize: (user as any).familySize || "",
+        petFriendly: (user as any).petFriendly || "",
+        moveInDate: (user as any).moveInDate || "",
+        employmentStatus: (user as any).employmentStatus || "",
+        monthlyIncome: (user as any).monthlyIncome || ""
       })
     }
   }, [user, isAuthenticated, isLoading, router])
@@ -232,9 +244,112 @@ export default function InquilinoProfilePage() {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tamaño de familia
+                    </label>
+                    <Select 
+                      value={profileData.familySize} 
+                      onValueChange={(value) => setProfileData({...profileData, familySize: value})}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectValue placeholder="Selecciona el tamaño" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectItem value="1">Solo yo</SelectItem>
+                        <SelectItem value="2">Pareja (2 personas)</SelectItem>
+                        <SelectItem value="3-4">Familia pequeña (3-4 personas)</SelectItem>
+                        <SelectItem value="5+">Familia grande (5+ personas)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Situación laboral
+                    </label>
+                    <Select 
+                      value={profileData.employmentStatus} 
+                      onValueChange={(value) => setProfileData({...profileData, employmentStatus: value})}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectValue placeholder="Selecciona tu situación" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectItem value="empleado">Empleado en relación de dependencia</SelectItem>
+                        <SelectItem value="autonomo">Trabajador autónomo</SelectItem>
+                        <SelectItem value="profesional">Profesional independiente</SelectItem>
+                        <SelectItem value="jubilado">Jubilado/Pensionado</SelectItem>
+                        <SelectItem value="estudiante">Estudiante</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Ingresos mensuales aproximados
+                    </label>
+                    <Select 
+                      value={profileData.monthlyIncome} 
+                      onValueChange={(value) => setProfileData({...profileData, monthlyIncome: value})}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectValue placeholder="Selecciona el rango" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectItem value="hasta-100k">Hasta $100.000</SelectItem>
+                        <SelectItem value="100k-200k">$100.000 - $200.000</SelectItem>
+                        <SelectItem value="200k-400k">$200.000 - $400.000</SelectItem>
+                        <SelectItem value="400k-600k">$400.000 - $600.000</SelectItem>
+                        <SelectItem value="600k+">Más de $600.000</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fecha deseada de mudanza
+                    </label>
+                    <Select 
+                      value={profileData.moveInDate} 
+                      onValueChange={(value) => setProfileData({...profileData, moveInDate: value})}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectValue placeholder="¿Cuándo te mudas?" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectItem value="inmediato">Inmediatamente</SelectItem>
+                        <SelectItem value="1-mes">En 1 mes</SelectItem>
+                        <SelectItem value="2-3-meses">En 2-3 meses</SelectItem>
+                        <SelectItem value="6-meses">En 6 meses</SelectItem>
+                        <SelectItem value="flexible">Flexible</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sobre mí
+                    Zonas de interés
+                  </label>
+                  <Input
+                    value={profileData.preferredAreas}
+                    onChange={(e) => setProfileData({...profileData, preferredAreas: e.target.value})}
+                    disabled={!isEditing}
+                    placeholder="Ej: Centro, Villa Cabello, Itaembé Guazú"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sobre mí y mis necesidades
                   </label>
                   <textarea
                     value={profileData.bio}
@@ -242,7 +357,7 @@ export default function InquilinoProfilePage() {
                     disabled={!isEditing}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
                     rows={3}
-                    placeholder="Cuéntanos un poco sobre ti y qué tipo de propiedad estás buscando..."
+                    placeholder="Cuéntanos sobre ti, tu estilo de vida, qué buscas en una propiedad, si tienes mascotas, etc..."
                   />
                 </div>
               </CardContent>
@@ -283,7 +398,7 @@ export default function InquilinoProfilePage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rango de presupuesto
+                      Presupuesto mensual para alquiler
                     </label>
                     <Select 
                       value={profileData.budgetRange} 
@@ -294,11 +409,11 @@ export default function InquilinoProfilePage() {
                         <SelectValue placeholder="Selecciona tu presupuesto" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
-                        <SelectItem value="0-50000">Hasta $50.000</SelectItem>
-                        <SelectItem value="50000-100000">$50.000 - $100.000</SelectItem>
-                        <SelectItem value="100000-200000">$100.000 - $200.000</SelectItem>
-                        <SelectItem value="200000-500000">$200.000 - $500.000</SelectItem>
-                        <SelectItem value="500000+">Más de $500.000</SelectItem>
+                        <SelectItem value="hasta-80k">Hasta $80.000</SelectItem>
+                        <SelectItem value="80k-120k">$80.000 - $120.000</SelectItem>
+                        <SelectItem value="120k-180k">$120.000 - $180.000</SelectItem>
+                        <SelectItem value="180k-250k">$180.000 - $250.000</SelectItem>
+                        <SelectItem value="250k+">Más de $250.000</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -332,9 +447,16 @@ export default function InquilinoProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Search className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Vistas</span>
+                    <span className="text-sm">Propiedades vistas</span>
                   </div>
                   <Badge variant="secondary">156</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm">Alertas activas</span>
+                  </div>
+                  <Badge variant="secondary">3</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -352,6 +474,10 @@ export default function InquilinoProfilePage() {
                 <Button variant="outline" className="w-full justify-start">
                   <History className="h-4 w-4 mr-2" />
                   Historial de Búsquedas
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Crear Alerta de Búsqueda
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <Settings className="h-4 w-4 mr-2" />

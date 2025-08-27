@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { MapPin, Upload, DollarSign, Home, Check, Loader2, CreditCard, Shield, Clock, Lock } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
-import { useAuth } from "@/hooks/useAuth"
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 
 // Componente de pantalla de autenticación requerida
@@ -55,7 +55,7 @@ function AuthRequiredScreen() {
 }
 
 export default function PublicarPage() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useSupabaseAuth()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedPlan, setSelectedPlan] = useState<'basico' | 'destacado' | 'full'>('basico')

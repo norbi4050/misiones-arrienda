@@ -1,11 +1,20 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading, logout } = useSupabaseAuth();
   const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    name: "",
+    companyName: "",
+    licenseNumber: ""
+  });
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
 
   // Redirigir si no está autenticado
   useEffect(() => {
@@ -14,8 +23,76 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
+  // Inicializar datos de edición cuando el usuario esté disponible
+  useEffect(() => {
+    if (user) {
+      setEditData({
+        name: user.name || "",
+        companyName: user.companyName || "",
+        licenseNumber: user.licenseNumber || ""
+      });
+    }
+  }, [user]);
+
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+    setUpdateMessage(null);
+    if (user) {
+      setEditData({
+        name: user.name || "",
+        companyName: user.companyName || "",
+        licenseNumber: user.licenseNumber || ""
+      });
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setUpdateLoading(true);
+    setUpdateMessage(null);
+
+    try {
+      // Actualizar metadatos del usuario en Supabase
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          name: editData.name,
+          userType: user.userType,
+          ...(user.userType === 'inmobiliaria' && {
+            companyName: editData.companyName,
+            licenseNumber: editData.licenseNumber
+          })
+        }
+      });
+
+      if (error) throw error;
+
+      setUpdateMessage("✅ Perfil actualizado correctamente");
+      setIsEditing(false);
+      
+      // Recargar la página para mostrar los datos actualizados
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      setUpdateMessage(`❌ Error: ${error.message}`);
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   // Mostrar loading mientras se verifica la autenticación
@@ -68,43 +145,110 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {updateMessage && (
+              <div className={`mb-6 p-4 rounded-md ${updateMessage.includes('✅') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                <p className="text-sm">{updateMessage}</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-50 rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Información del Usuario</h2>
-                <dl className="space-y-2">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-medium text-gray-900">Mi Perfil</h2>
+                  <button
+                    onClick={handleEditToggle}
+                    className={`px-3 py-1 text-sm rounded transition-colors ${
+                      isEditing 
+                        ? 'bg-gray-500 hover:bg-gray-600 text-white' 
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
+                  >
+                    {isEditing ? 'Cancelar' : 'Editar'}
+                  </button>
+                </div>
+
+                <div className="space-y-4">
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Nombre:</dt>
-                    <dd className="text-sm text-gray-900">{user.name}</dd>
+                    <label className="text-sm font-medium text-gray-500">Nombre:</label>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        name="name"
+                        value={editData.name}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-900 mt-1">{user.name}</p>
+                    )}
                   </div>
+
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Email:</dt>
-                    <dd className="text-sm text-gray-900">{user.email}</dd>
+                    <label className="text-sm font-medium text-gray-500">Email:</label>
+                    <p className="text-sm text-gray-900 mt-1">{user.email}</p>
+                    <p className="text-xs text-gray-400 mt-1">El email no se puede cambiar</p>
                   </div>
+
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">Tipo de usuario:</dt>
-                    <dd className="text-sm text-gray-900 capitalize">
+                    <label className="text-sm font-medium text-gray-500">Tipo de usuario:</label>
+                    <p className="text-sm text-gray-900 mt-1 capitalize">
                       {user.userType === 'dueno_directo' ? 'Dueño Directo' : 
                        user.userType === 'inmobiliaria' ? 'Inmobiliaria' : 
                        user.userType || 'Inquilino'}
-                    </dd>
+                    </p>
                   </div>
-                  {user.companyName && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Empresa:</dt>
-                      <dd className="text-sm text-gray-900">{user.companyName}</dd>
-                    </div>
+
+                  {user.userType === 'inmobiliaria' && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Empresa:</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="companyName"
+                            value={editData.companyName}
+                            onChange={handleInputChange}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-900 mt-1">{user.companyName || 'No especificado'}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Matrícula:</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="licenseNumber"
+                            value={editData.licenseNumber}
+                            onChange={handleInputChange}
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-900 mt-1">{user.licenseNumber || 'No especificado'}</p>
+                        )}
+                      </div>
+                    </>
                   )}
-                  {user.licenseNumber && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Matrícula:</dt>
-                      <dd className="text-sm text-gray-900">{user.licenseNumber}</dd>
-                    </div>
-                  )}
+
                   <div>
-                    <dt className="text-sm font-medium text-gray-500">ID:</dt>
-                    <dd className="text-sm text-gray-900 font-mono text-xs">{user.id}</dd>
+                    <label className="text-sm font-medium text-gray-500">ID:</label>
+                    <p className="text-sm text-gray-900 font-mono text-xs mt-1">{user.id}</p>
                   </div>
-                </dl>
+                </div>
+
+                {isEditing && (
+                  <div className="mt-6">
+                    <button
+                      onClick={handleSave}
+                      disabled={updateLoading}
+                      className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-2 px-4 rounded transition-colors"
+                    >
+                      {updateLoading ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="bg-gray-50 rounded-lg p-6">
@@ -154,6 +298,7 @@ export default function DashboardPage() {
                       ✅ Sesión persistente entre pestañas<br/>
                       ✅ Redirecciones automáticas<br/>
                       ✅ Estado de autenticación sincronizado<br/>
+                      ✅ Perfil editable con actualización en tiempo real<br/>
                       ✅ Logout seguro con limpieza de sesión
                     </p>
                   </div>

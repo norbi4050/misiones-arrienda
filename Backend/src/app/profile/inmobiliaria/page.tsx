@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Building2, User, Mail, Phone, MapPin, Home, Users, Award, Camera, Save, Edit, Building, CheckCircle } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 
 export default function InmobiliariaProfilePage() {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useSupabaseAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -27,7 +27,15 @@ export default function InmobiliariaProfilePage() {
     bio: "",
     profileImage: "",
     website: "",
-    foundedYear: ""
+    foundedYear: "",
+    teamSize: "",
+    specializations: "",
+    serviceAreas: "",
+    languages: "",
+    certifications: "",
+    businessHours: "",
+    emergencyContact: "",
+    socialMedia: ""
   })
 
   useEffect(() => {
@@ -52,7 +60,15 @@ export default function InmobiliariaProfilePage() {
         bio: (user as any).bio || "",
         profileImage: (user as any).profileImage || "",
         website: (user as any).website || "",
-        foundedYear: (user as any).foundedYear || ""
+        foundedYear: (user as any).foundedYear || "",
+        teamSize: (user as any).teamSize || "",
+        specializations: (user as any).specializations || "",
+        serviceAreas: (user as any).serviceAreas || "",
+        languages: (user as any).languages || "",
+        certifications: (user as any).certifications || "",
+        businessHours: (user as any).businessHours || "",
+        emergencyContact: (user as any).emergencyContact || "",
+        socialMedia: (user as any).socialMedia || ""
       })
     }
   }, [user, isAuthenticated, isLoading, router])
@@ -329,6 +345,115 @@ export default function InmobiliariaProfilePage() {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tamaño del equipo
+                    </label>
+                    <Select 
+                      value={profileData.teamSize} 
+                      onValueChange={(value) => setProfileData({...profileData, teamSize: value})}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectValue placeholder="¿Cuántas personas trabajan?" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectItem value="1-2">1-2 personas</SelectItem>
+                        <SelectItem value="3-5">3-5 personas</SelectItem>
+                        <SelectItem value="6-10">6-10 personas</SelectItem>
+                        <SelectItem value="11-20">11-20 personas</SelectItem>
+                        <SelectItem value="20+">Más de 20 personas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Horarios de atención
+                    </label>
+                    <Select 
+                      value={profileData.businessHours} 
+                      onValueChange={(value) => setProfileData({...profileData, businessHours: value})}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectValue placeholder="¿Cuándo atienden?" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                        <SelectItem value="lun-vie-9-18">Lun-Vie 9:00-18:00</SelectItem>
+                        <SelectItem value="lun-vie-8-19">Lun-Vie 8:00-19:00</SelectItem>
+                        <SelectItem value="lun-sab-9-18">Lun-Sáb 9:00-18:00</SelectItem>
+                        <SelectItem value="24-7">24/7 disponible</SelectItem>
+                        <SelectItem value="personalizado">Horario personalizado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Zonas de servicio
+                    </label>
+                    <Input
+                      value={profileData.serviceAreas}
+                      onChange={(e) => setProfileData({...profileData, serviceAreas: e.target.value})}
+                      disabled={!isEditing}
+                      placeholder="Ej: Posadas, Garupá, Candelaria"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Idiomas que hablan
+                    </label>
+                    <Input
+                      value={profileData.languages}
+                      onChange={(e) => setProfileData({...profileData, languages: e.target.value})}
+                      disabled={!isEditing}
+                      placeholder="Ej: Español, Portugués, Inglés"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Especializaciones
+                  </label>
+                  <Select 
+                    value={profileData.specializations} 
+                    onValueChange={(value) => setProfileData({...profileData, specializations: value})}
+                    disabled={!isEditing}
+                  >
+                    <SelectTrigger className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                      <SelectValue placeholder="¿En qué se especializan?" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                      <SelectItem value="residencial">Propiedades residenciales</SelectItem>
+                      <SelectItem value="comercial">Propiedades comerciales</SelectItem>
+                      <SelectItem value="lujo">Propiedades de lujo</SelectItem>
+                      <SelectItem value="inversion">Inversiones inmobiliarias</SelectItem>
+                      <SelectItem value="rural">Propiedades rurales</SelectItem>
+                      <SelectItem value="integral">Servicio integral</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Certificaciones y membresías
+                  </label>
+                  <textarea
+                    value={profileData.certifications}
+                    onChange={(e) => setProfileData({...profileData, certifications: e.target.value})}
+                    disabled={!isEditing}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
+                    rows={2}
+                    placeholder="Ej: Cámara Inmobiliaria de Misiones, Certificación ISO 9001..."
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Descripción de la empresa
@@ -339,8 +464,34 @@ export default function InmobiliariaProfilePage() {
                     disabled={!isEditing}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-50"
                     rows={4}
-                    placeholder="Describe tu inmobiliaria, servicios que ofreces, experiencia en el mercado, zonas de especialización..."
+                    placeholder="Describe tu inmobiliaria, servicios que ofreces, experiencia en el mercado, zonas de especialización, valores de la empresa..."
                   />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contacto de emergencia
+                    </label>
+                    <Input
+                      value={profileData.emergencyContact}
+                      onChange={(e) => setProfileData({...profileData, emergencyContact: e.target.value})}
+                      disabled={!isEditing}
+                      placeholder="+54 376 123-4567 (24hs)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Redes sociales
+                    </label>
+                    <Input
+                      value={profileData.socialMedia}
+                      onChange={(e) => setProfileData({...profileData, socialMedia: e.target.value})}
+                      disabled={!isEditing}
+                      placeholder="@inmobiliaria_instagram, Facebook, LinkedIn"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -414,10 +565,10 @@ export default function InmobiliariaProfilePage() {
               </CardContent>
             </Card>
 
-            {/* Certificaciones */}
+            {/* Certificaciones y Verificaciones */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Certificaciones</CardTitle>
+                <CardTitle className="text-lg">Verificaciones</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -433,7 +584,53 @@ export default function InmobiliariaProfilePage() {
                     <CheckCircle className="h-4 w-4 text-green-500" />
                     <span className="text-sm">Perfil Completo</span>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Cuenta Premium</span>
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Herramientas Profesionales */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Herramientas Pro</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  📊 Dashboard Avanzado
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  📈 Análisis de Mercado
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  🎯 Campañas Publicitarias
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  📱 App Móvil Inmobiliaria
+                </Button>
+                <Button variant="outline" className="w-full justify-start text-sm">
+                  🤝 CRM de Clientes
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Contacto Rápido */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Contacto Directo</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full bg-green-600 hover:bg-green-700">
+                  📞 Llamar Ahora
+                </Button>
+                <Button variant="outline" className="w-full">
+                  💬 WhatsApp Business
+                </Button>
+                <Button variant="outline" className="w-full">
+                  📧 Email Corporativo
+                </Button>
               </CardContent>
             </Card>
           </div>

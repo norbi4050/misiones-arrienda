@@ -127,12 +127,53 @@ export function useSupabaseAuth() {
         }
       })
 
-      if (error) throw error
+      if (error) {
+        // Manejar errores específicos de Supabase
+        if (error.message.includes('User already registered')) {
+          throw new Error('Ya existe una cuenta con este email. Intenta iniciar sesión.')
+        }
+        if (error.message.includes('already been registered')) {
+          throw new Error('Ya existe una cuenta con este email. Intenta iniciar sesión.')
+        }
+        if (error.message.includes('email address is already registered')) {
+          throw new Error('Ya existe una cuenta con este email. Intenta iniciar sesión.')
+        }
+        if (error.message.includes('signup is disabled')) {
+          throw new Error('El registro está temporalmente deshabilitado. Contacta al administrador.')
+        }
+        if (error.message.includes('Password should be at least')) {
+          throw new Error('La contraseña debe tener al menos 6 caracteres.')
+        }
+        if (error.message.includes('Invalid email')) {
+          throw new Error('El formato del email no es válido.')
+        }
+        
+        throw error
+      }
+
+      // Verificar si el usuario fue creado pero necesita confirmación
+      if (data.user && !data.user.email_confirmed_at) {
+        return { 
+          success: true, 
+          data,
+          message: 'Cuenta creada exitosamente. Revisa tu email para confirmar tu cuenta.'
+        }
+      }
 
       return { success: true, data }
     } catch (error: any) {
       console.error('Register error:', error)
-      return { success: false, error: error.message }
+      
+      // Mapear errores comunes a mensajes más amigables
+      let errorMessage = error.message
+      
+      if (errorMessage.includes('fetch')) {
+        errorMessage = 'Error de conexión. Verifica tu conexión a internet.'
+      } else if (errorMessage.includes('network')) {
+        errorMessage = 'Error de red. Intenta nuevamente.'
+      }
+      
+      return { success: false, error: errorMessage }
     }
   }
 
