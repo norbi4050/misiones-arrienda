@@ -228,8 +228,9 @@ Console Logs Vercel:
 [error] React Error #425 (4x) - Hydration mismatch
 [error] React Error #418 (1x) - Invalid hook call
 [error] React Error #423 (1x) - Cannot read properties
+[error] useSearchParams() should be wrapped in suspense boundary
 [error] Failed to load resource: 404
-Total: 6 errores críticos
+Total: 7 errores críticos
 ```
 
 ### **DESPUÉS (Corregido):**
