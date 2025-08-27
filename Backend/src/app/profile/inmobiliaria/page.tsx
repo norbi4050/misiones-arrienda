@@ -391,6 +391,14 @@ export default function InmobiliariaProfilePage() {
                 <CardTitle className="text-lg">Gestión</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => router.push('/publicar/premium')}
+                >
+                  <Home className="h-4 w-4 mr-2" />
+                  Crear Publicación Premium
+                </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <Home className="h-4 w-4 mr-2" />
                   Mis Propiedades
