@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 // Schema de validación para crear/actualizar perfil
@@ -35,6 +34,58 @@ const searchSchema = z.object({
   limit: z.number().min(1).max(50).optional()
 })
 
+// Mock data para demostración
+const mockProfiles = [
+  {
+    id: '1',
+    role: 'BUSCO',
+    city: 'Posadas',
+    neighborhood: 'Centro',
+    budgetMin: 120000,
+    budgetMax: 180000,
+    bio: 'Estudiante de medicina, busco habitación tranquila cerca de la universidad.',
+    age: 22,
+    petPref: 'SI_PET',
+    smokePref: 'NO_FUMADOR',
+    diet: 'VEGETARIANO',
+    tags: ['estudiante', 'ordenado', 'responsable'],
+    photos: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'],
+    user: {
+      id: '1',
+      name: 'María González',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+      rating: 4.8,
+      reviewCount: 12
+    },
+    createdAt: new Date('2024-01-15'),
+    likesCount: 8
+  },
+  {
+    id: '2',
+    role: 'OFREZCO',
+    city: 'Oberá',
+    neighborhood: 'Villa Bonita',
+    budgetMin: 100000,
+    budgetMax: 150000,
+    bio: 'Tengo una casa grande, busco compañeros responsables para compartir.',
+    age: 32,
+    petPref: 'INDIFERENTE',
+    smokePref: 'NO_FUMADOR',
+    diet: 'NINGUNA',
+    tags: ['propietario', 'familiar', 'acogedor'],
+    photos: ['https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face'],
+    user: {
+      id: '2',
+      name: 'Carlos Mendoza',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+      rating: 4.9,
+      reviewCount: 25
+    },
+    createdAt: new Date('2024-01-10'),
+    likesCount: 15
+  }
+]
+
 // GET /api/comunidad/profiles - Listar perfiles con filtros
 export async function GET(request: NextRequest) {
   try {
@@ -58,131 +109,36 @@ export async function GET(request: NextRequest) {
     // Validar parámetros
     const validatedParams = searchSchema.parse(params)
 
-    // Construir filtros para Prisma
-    const where: any = {
-      isSuspended: false
-    }
+    // Filtrar mock data
+    let filteredProfiles = mockProfiles
 
     if (validatedParams.role) {
-      where.role = validatedParams.role
+      filteredProfiles = filteredProfiles.filter(p => p.role === validatedParams.role)
     }
 
     if (validatedParams.city) {
-      where.city = {
-        contains: validatedParams.city,
-        mode: 'insensitive'
-      }
+      filteredProfiles = filteredProfiles.filter(p => 
+        p.city.toLowerCase().includes(validatedParams.city!.toLowerCase())
+      )
     }
-
-    if (validatedParams.budgetMin || validatedParams.budgetMax) {
-      where.AND = []
-      if (validatedParams.budgetMin) {
-        where.AND.push({
-          budgetMax: {
-            gte: validatedParams.budgetMin
-          }
-        })
-      }
-      if (validatedParams.budgetMax) {
-        where.AND.push({
-          budgetMin: {
-            lte: validatedParams.budgetMax
-          }
-        })
-      }
-    }
-
-    if (validatedParams.petPref) {
-      where.petPref = validatedParams.petPref
-    }
-
-    if (validatedParams.smokePref) {
-      where.smokePref = validatedParams.smokePref
-    }
-
-    if (validatedParams.diet) {
-      where.diet = validatedParams.diet
-    }
-
-    if (validatedParams.tags && validatedParams.tags.length > 0) {
-      where.tags = {
-        hasSome: validatedParams.tags
-      }
-    }
-
-    // Configurar ordenamiento
-    const orderBy: any[] = []
-    
-    if (validatedParams.highlightedFirst) {
-      orderBy.push({
-        highlightedUntil: {
-          sort: 'desc',
-          nulls: 'last'
-        }
-      })
-    }
-    
-    orderBy.push({
-      createdAt: 'desc'
-    })
 
     // Calcular paginación
-    const skip = (validatedParams.page - 1) * validatedParams.limit
-    const take = validatedParams.limit
-
-    // Ejecutar consulta
-    const [profiles, total] = await Promise.all([
-      prisma.userProfile.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-              rating: true,
-              reviewCount: true
-            }
-          },
-          rooms: {
-            where: {
-              isActive: true
-            },
-            select: {
-              id: true,
-              title: true,
-              price: true,
-              type: true,
-              photos: true
-            }
-          },
-          _count: {
-            select: {
-              likesReceived: true
-            }
-          }
-        }
-      }),
-      prisma.userProfile.count({ where })
-    ])
-
-    // Calcular metadatos de paginación
-    const totalPages = Math.ceil(total / validatedParams.limit)
-    const hasNextPage = validatedParams.page < totalPages
-    const hasPrevPage = validatedParams.page > 1
+    const page = validatedParams.page ?? 1
+    const limit = validatedParams.limit ?? 20
+    const total = filteredProfiles.length
+    const totalPages = Math.ceil(total / limit)
+    const skip = (page - 1) * limit
+    const profiles = filteredProfiles.slice(skip, skip + limit)
 
     return NextResponse.json({
       profiles,
       pagination: {
-        page: validatedParams.page,
-        limit: validatedParams.limit,
+        page,
+        limit,
         total,
         totalPages,
-        hasNextPage,
-        hasPrevPage
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
       }
     })
 
@@ -206,79 +162,28 @@ export async function GET(request: NextRequest) {
 // POST /api/comunidad/profiles - Crear/actualizar perfil del usuario autenticado
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Implementar autenticación
-    // const user = await getAuthenticatedUser(request)
-    // if (!user) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
-
-    // Por ahora, usar un usuario de ejemplo
-    const userId = 'temp-user-id'
-
     const body = await request.json()
     const validatedData = profileSchema.parse(body)
 
-    // Verificar si ya existe un perfil para este usuario
-    const existingProfile = await prisma.userProfile.findUnique({
-      where: { userId }
-    })
-
-    let profile
-    if (existingProfile) {
-      // Actualizar perfil existente
-      profile = await prisma.userProfile.update({
-        where: { userId },
-        data: {
-          ...validatedData,
-          updatedAt: new Date()
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-              rating: true,
-              reviewCount: true
-            }
-          },
-          rooms: {
-            where: {
-              isActive: true
-            }
-          }
-        }
-      })
-    } else {
-      // Crear nuevo perfil
-      profile = await prisma.userProfile.create({
-        data: {
-          userId,
-          ...validatedData
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-              rating: true,
-              reviewCount: true
-            }
-          },
-          rooms: {
-            where: {
-              isActive: true
-            }
-          }
-        }
-      })
+    // Simular creación de perfil
+    const newProfile = {
+      id: Date.now().toString(),
+      ...validatedData,
+      user: {
+        id: 'temp-user-id',
+        name: 'Usuario Temporal',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+        rating: 5.0,
+        reviewCount: 0
+      },
+      createdAt: new Date(),
+      likesCount: 0
     }
 
-    return NextResponse.json(profile, { status: existingProfile ? 200 : 201 })
+    return NextResponse.json(newProfile, { status: 201 })
 
   } catch (error) {
-    console.error('Error creating/updating community profile:', error)
+    console.error('Error creating community profile:', error)
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
