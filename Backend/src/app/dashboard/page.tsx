@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [favorites, setFavorites] = useState<FavoriteProperty[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     // Verificar si el usuario está autenticado
@@ -87,10 +88,10 @@ export default function Dashboard() {
   }
 
   const handleLogout = () => {
-    safeLocalStorage.removeItem('token')
-    safeLocalStorage.removeItem('userData')
+    localStorage.removeItem('token')
+    localStorage.removeItem('userData')
     toast.success("Sesión cerrada exitosamente")
-    safeRouter.push('/')
+    router.push('/')
   }
 
   const handleSearchSelect = (searchTerm: string, filters?: any) => {
@@ -275,7 +276,7 @@ export default function Dashboard() {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Mis Propiedades Favoritas</h2>
-                  <Button onClick={() => safeRouter.push('/')}>
+                  <Button onClick={() => router.push('/')}>
                     Explorar Más Propiedades
                   </Button>
                 </div>
@@ -294,7 +295,7 @@ export default function Dashboard() {
                     <p className="text-gray-600 mb-4">
                       Explora propiedades y marca las que más te gusten como favoritas
                     </p>
-                    <Button onClick={() => safeRouter.push('/')}>
+                    <Button onClick={() => router.push('/')}>
                       Explorar Propiedades
                     </Button>
                   </div>
@@ -336,7 +337,7 @@ export default function Dashboard() {
                               <Button 
                                 size="sm" 
                                 className="flex-1"
-                                onClick={() => safeRouter.push(`/property/${favorite.property.id}`)}
+                                onClick={() => router.push(`/property/${favorite.property.id}`)}
                               >
                                 Ver Detalles
                               </Button>
@@ -372,7 +373,7 @@ export default function Dashboard() {
                   <p className="text-gray-600 mb-4">
                     Realiza búsquedas en la plataforma para ver tu historial y acceder rápidamente a búsquedas anteriores
                   </p>
-                  <Button onClick={() => safeRouter.push('/')}>
+                  <Button onClick={() => router.push('/')}>
                     Comenzar a Buscar
                   </Button>
                 </div>
@@ -384,7 +385,7 @@ export default function Dashboard() {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Explorar Propiedades</h2>
-                  <Button onClick={() => safeRouter.push('/')}>
+                  <Button onClick={() => router.push('/')}>
                     Ver Todas las Propiedades
                   </Button>
                 </div>
@@ -392,37 +393,37 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* Accesos rápidos a búsquedas populares */}
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
-                       onClick={() => safeRouter.push('/?city=Posadas')}>
+                       onClick={() => router.push('/?city=Posadas')}>
                     <h3 className="font-semibold text-lg mb-2">Propiedades en Posadas</h3>
                     <p className="text-gray-600">Explora las mejores opciones en la capital</p>
                   </div>
                   
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
-                       onClick={() => safeRouter.push('/?city=Oberá')}>
+                       onClick={() => router.push('/?city=Oberá')}>
                     <h3 className="font-semibold text-lg mb-2">Propiedades en Oberá</h3>
                     <p className="text-gray-600">Descubre opciones en la ciudad del bosque</p>
                   </div>
                   
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
-                       onClick={() => safeRouter.push('/?propertyType=HOUSE')}>
+                       onClick={() => router.push('/?propertyType=HOUSE')}>
                     <h3 className="font-semibold text-lg mb-2">Casas</h3>
                     <p className="text-gray-600">Encuentra la casa perfecta para tu familia</p>
                   </div>
                   
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
-                       onClick={() => safeRouter.push('/?propertyType=APARTMENT')}>
+                       onClick={() => router.push('/?propertyType=APARTMENT')}>
                     <h3 className="font-semibold text-lg mb-2">Departamentos</h3>
                     <p className="text-gray-600">Departamentos modernos y cómodos</p>
                   </div>
                   
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
-                       onClick={() => safeRouter.push('/?maxPrice=200000')}>
+                       onClick={() => router.push('/?maxPrice=200000')}>
                     <h3 className="font-semibold text-lg mb-2">Hasta $200.000</h3>
                     <p className="text-gray-600">Opciones accesibles para tu presupuesto</p>
                   </div>
                   
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
-                       onClick={() => safeRouter.push('/?featured=true')}>
+                       onClick={() => router.push('/?featured=true')}>
                     <h3 className="font-semibold text-lg mb-2">Propiedades Destacadas</h3>
                     <p className="text-gray-600">Las mejores opciones seleccionadas</p>
                   </div>

@@ -1,4 +1,4 @@
-mimport { Metadata } from 'next'
+import { Metadata } from 'next'
 import { ProfilesPageClient } from './profiles-client'
 
 export const metadata: Metadata = {
