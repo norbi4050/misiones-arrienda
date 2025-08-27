@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Home, User, LogIn, Menu, X, LogOut } from "lucide-react"
+import { Home, User, LogIn, Menu, X, LogOut, Building2, UserCheck, Search } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 
 export function Navbar() {
@@ -14,6 +14,36 @@ export function Navbar() {
     logout()
     setIsMenuOpen(false)
   }
+
+  // Función para obtener el icono y texto según el tipo de usuario
+  const getUserTypeInfo = () => {
+    if (!user?.userType) return { icon: User, text: "Usuario", color: "text-blue-600" }
+    
+    switch (user.userType) {
+      case 'inmobiliaria':
+        return { 
+          icon: Building2, 
+          text: "Inmobiliaria", 
+          color: "text-purple-600" 
+        }
+      case 'dueno_directo':
+        return { 
+          icon: UserCheck, 
+          text: "Dueño Directo", 
+          color: "text-green-600" 
+        }
+      case 'inquilino':
+      default:
+        return { 
+          icon: Search, 
+          text: "Inquilino", 
+          color: "text-blue-600" 
+        }
+    }
+  }
+
+  const userTypeInfo = getUserTypeInfo()
+  const UserIcon = userTypeInfo.icon
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -53,31 +83,19 @@ export function Navbar() {
             >
               Publicar
             </Link>
-            <Link 
-              href="/inmobiliaria/register" 
-              className="text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              Inmobiliarias
-            </Link>
-            <Link 
-              href="/dueno-directo/register" 
-              className="text-gray-700 hover:text-green-600 transition-colors"
-            >
-              Dueño Directo
-            </Link>
             
             {/* Mostrar diferentes opciones según el estado de autenticación */}
             {!isLoading && (
               <>
                 {isAuthenticated ? (
-                  // Usuario logueado - mostrar perfil y logout
+                  // Usuario logueado - mostrar pestaña personalizada según tipo
                   <>
                     <Link 
                       href="/dashboard" 
-                      className="text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-1"
+                      className={`hover:${userTypeInfo.color} transition-colors flex items-center space-x-1 ${userTypeInfo.color}`}
                     >
-                      <User className="h-4 w-4" />
-                      <span>Mi Perfil</span>
+                      <UserIcon className="h-4 w-4" />
+                      <span>{userTypeInfo.text}</span>
                     </Link>
                     <span className="text-sm text-gray-600">
                       Hola, {user?.name}
@@ -161,20 +179,6 @@ export function Navbar() {
               >
                 Publicar
               </Link>
-              <Link
-                href="/inmobiliaria/register"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Inmobiliarias
-              </Link>
-              <Link
-                href="/dueno-directo/register"
-                className="block px-3 py-2 text-gray-700 hover:text-green-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Dueño Directo
-              </Link>
               
               {/* Mobile auth options */}
               {!isLoading && (
@@ -187,10 +191,11 @@ export function Navbar() {
                       </div>
                       <Link
                         href="/dashboard"
-                        className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
+                        className={`block px-3 py-2 hover:${userTypeInfo.color} transition-colors flex items-center space-x-2 ${userTypeInfo.color}`}
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        Mi Perfil
+                        <UserIcon className="h-4 w-4" />
+                        <span>{userTypeInfo.text}</span>
                       </Link>
                       <button
                         onClick={handleLogout}

@@ -6,6 +6,9 @@ interface User {
   id: string
   name: string
   email: string
+  userType?: string // inquilino, dueno_directo, inmobiliaria
+  companyName?: string // Solo para inmobiliarias
+  licenseNumber?: string // Solo para inmobiliarias
 }
 
 export function useAuth() {
