@@ -3,6 +3,46 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
+  // Create sample users first
+  const user1 = await prisma.user.upsert({
+    where: { email: 'propietario1@example.com' },
+    update: {},
+    create: {
+      name: 'Carlos Rodríguez',
+      email: 'propietario1@example.com',
+      phone: '+54 376 111111',
+      password: 'hashed_password_1', // In real app, this should be properly hashed
+      verified: true,
+      emailVerified: true,
+    },
+  })
+
+  const user2 = await prisma.user.upsert({
+    where: { email: 'propietario2@example.com' },
+    update: {},
+    create: {
+      name: 'Ana Martínez',
+      email: 'propietario2@example.com',
+      phone: '+54 376 222222',
+      password: 'hashed_password_2', // In real app, this should be properly hashed
+      verified: true,
+      emailVerified: true,
+    },
+  })
+
+  const user3 = await prisma.user.upsert({
+    where: { email: 'inmobiliaria@example.com' },
+    update: {},
+    create: {
+      name: 'Inmobiliaria Misiones',
+      email: 'inmobiliaria@example.com',
+      phone: '+54 376 333333',
+      password: 'hashed_password_3', // In real app, this should be properly hashed
+      verified: true,
+      emailVerified: true,
+    },
+  })
+
   // Create sample agents
   const agent1 = await prisma.agent.upsert({
     where: { email: 'juan.perez@misiones-arrienda.com' },
@@ -51,6 +91,7 @@ async function main() {
       amenities: JSON.stringify(['Aire acondicionado', 'Balcón', 'Portero']),
       features: JSON.stringify(['Luminoso', 'Céntrico', 'Amoblado']),
       featured: true,
+      userId: user1.id,
       agentId: agent1.id,
     },
     {
@@ -71,6 +112,7 @@ async function main() {
       amenities: JSON.stringify(['Jardín', 'Parrilla', 'Garage']),
       features: JSON.stringify(['Amplia', 'Luminosa', 'Tranquila']),
       featured: false,
+      userId: user1.id,
       agentId: agent1.id,
     },
     {
@@ -90,6 +132,7 @@ async function main() {
       amenities: JSON.stringify(['Aire acondicionado', 'Cocina equipada']),
       features: JSON.stringify(['Moderno', 'Céntrico', 'Equipado']),
       featured: false,
+      userId: user2.id,
       agentId: agent2.id,
     },
     {
@@ -110,6 +153,7 @@ async function main() {
       amenities: JSON.stringify(['Pileta', 'Parrilla', 'Jardín', 'Garage doble']),
       features: JSON.stringify(['Amplia', 'Con pileta', 'Barrio residencial']),
       featured: true,
+      userId: user2.id,
       agentId: agent2.id,
     },
     {
@@ -129,6 +173,7 @@ async function main() {
       amenities: JSON.stringify(['Vista al río', 'Aire acondicionado', 'Balcón']),
       features: JSON.stringify(['Lujo', 'Vista al río', 'Céntrico']),
       featured: false,
+      userId: user3.id,
       agentId: agent1.id,
     },
     {
@@ -149,6 +194,7 @@ async function main() {
       amenities: JSON.stringify(['Jardín', 'Garage']),
       features: JSON.stringify(['Tranquila', 'Bien ubicada']),
       featured: false,
+      userId: user3.id,
       agentId: agent2.id,
     },
   ]
