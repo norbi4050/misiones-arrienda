@@ -365,13 +365,23 @@ export default function RegisterPage() {
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
                 Acepto los{" "}
-                <button
-                  type="button"
-                  className="text-blue-600 hover:text-blue-500 transition-colors"
-                  onClick={() => toast("Términos y condiciones próximamente disponibles", { icon: "📋" })}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-500 transition-colors underline"
                 >
                   términos y condiciones
-                </button>
+                </Link>
+                {" "}y la{" "}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-500 transition-colors underline"
+                >
+                  política de privacidad
+                </Link>
               </label>
             </div>
 
