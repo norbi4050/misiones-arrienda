@@ -1,7 +1,10 @@
 import { HeroSection } from '@/components/hero-section'
-import { PropertyGrid } from '@/components/property-grid'
+import { PropertyGridServer } from '@/components/property-grid-server'
 import { fetchRealProperties } from '@/lib/api'
 import { Metadata } from 'next'
+
+// Configuración para páginas dinámicas con searchParams
+export const dynamic = 'force-dynamic'
 
 // Cache configurado para producción
 export const revalidate = 60
@@ -48,7 +51,14 @@ async function getInitialProperties() {
   }
 }
 
-export default async function HomePage() {
+// Definir tipos para searchParams
+type SearchParams = { [key: string]: string | string[] | undefined }
+
+interface HomePageProps {
+  searchParams: SearchParams
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
   // Obtener propiedades destacadas para renderizado inicial
   const initialProperties = await getInitialProperties()
 
@@ -56,7 +66,10 @@ export default async function HomePage() {
     <main className="min-h-screen">
       <HeroSection />
       <section id="propiedades">
-        <PropertyGrid initialProperties={initialProperties} />
+        <PropertyGridServer 
+          initialProperties={initialProperties} 
+          searchParams={searchParams}
+        />
       </section>
       
       {/* JSON-LD para SEO */}

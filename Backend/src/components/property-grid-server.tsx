@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from "react"
 import { PropertyCard } from "@/components/property-card"
-import { FilterSection } from "@/components/filter-section-fixed"
+import { FilterSectionServer } from "@/components/filter-section-server"
 import { getProperties } from "@/lib/api"
 import { Property, PropertyFilters } from "@/types/property"
 
-interface PropertyGridProps {
+interface PropertyGridServerProps {
   initialProperties?: Property[]
+  searchParams?: { [key: string]: string | string[] | undefined }
 }
 
-export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
+export function PropertyGridServer({ initialProperties = [], searchParams = {} }: PropertyGridServerProps) {
   const [properties, setProperties] = useState<Property[]>(initialProperties)
   const [loading, setLoading] = useState(initialProperties.length === 0)
   const [error, setError] = useState<string | null>(null)
@@ -64,7 +65,10 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
   if (loading && properties.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <FilterSection onFilterChange={handleFilterChange} />
+        <FilterSectionServer 
+          onFilterChange={handleFilterChange} 
+          initialSearchParams={searchParams}
+        />
         <div className="flex justify-center items-center py-12">
           <div className="text-lg">Cargando propiedades...</div>
         </div>
@@ -74,7 +78,10 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <FilterSection onFilterChange={handleFilterChange} />
+      <FilterSectionServer 
+        onFilterChange={handleFilterChange} 
+        initialSearchParams={searchParams}
+      />
       
       {error && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">

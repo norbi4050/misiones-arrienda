@@ -1,6 +1,9 @@
 import { Metadata } from 'next'
 import { getProperties } from '@/lib/api'
-import { PropertyGrid } from '@/components/property-grid'
+import { PropertyGridServer } from '@/components/property-grid-server'
+
+// Configuración para páginas dinámicas con searchParams
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Propiedades en Oberá, Misiones | Alquiler y Venta - Misiones Arrienda',
@@ -36,7 +39,14 @@ async function getOberaProperties() {
   }
 }
 
-export default async function OberaPage() {
+// Definir tipos para searchParams
+type SearchParams = { [key: string]: string | string[] | undefined }
+
+interface OberaPageProps {
+  searchParams: SearchParams
+}
+
+export default async function OberaPage({ searchParams }: OberaPageProps) {
   const properties = await getOberaProperties()
 
   return (
@@ -113,7 +123,10 @@ export default async function OberaPage() {
           <h2 className="text-3xl font-bold text-center mb-12">
             Propiedades Disponibles en Oberá
           </h2>
-          <PropertyGrid initialProperties={properties} />
+          <PropertyGridServer 
+            initialProperties={properties} 
+            searchParams={searchParams}
+          />
         </div>
       </section>
 
