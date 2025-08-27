@@ -102,6 +102,13 @@ model User {
   verificationToken String?
   rating      Float    @default(0)
   reviewCount Int      @default(0)
+  
+  // Nuevos campos para tipos de usuario
+  userType    String?  // inquilino, dueno_directo, inmobiliaria
+  companyName String?  // Solo para inmobiliarias
+  licenseNumber String? // Solo para inmobiliarias
+  propertyCount String? // Solo para dueños directos
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

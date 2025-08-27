@@ -7,12 +7,49 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, password } = await request.json()
+    const { 
+      name, 
+      email, 
+      phone, 
+      password, 
+      userType, 
+      companyName, 
+      licenseNumber, 
+      propertyCount 
+    } = await request.json()
 
-    // Validaciones
-    if (!name || !email || !phone || !password) {
+    // Validaciones básicas
+    if (!name || !email || !phone || !password || !userType) {
       return NextResponse.json(
-        { error: 'Todos los campos son requeridos' },
+        { error: 'Todos los campos básicos son requeridos' },
+        { status: 400 }
+      )
+    }
+
+    // Validaciones específicas por tipo de usuario
+    if (userType === 'inmobiliaria') {
+      if (!companyName || !licenseNumber) {
+        return NextResponse.json(
+          { error: 'Para inmobiliarias se requiere nombre de empresa y número de matrícula' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (userType === 'dueno_directo') {
+      if (!propertyCount) {
+        return NextResponse.json(
+          { error: 'Para dueños directos se requiere indicar la cantidad de propiedades' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validar tipo de usuario
+    const validUserTypes = ['inquilino', 'dueno_directo', 'inmobiliaria']
+    if (!validUserTypes.includes(userType)) {
+      return NextResponse.json(
+        { error: 'Tipo de usuario inválido' },
         { status: 400 }
       )
     }
@@ -53,21 +90,38 @@ export async function POST(request: NextRequest) {
     const verificationToken = Math.random().toString(36).substring(2, 15) + 
                              Math.random().toString(36).substring(2, 15)
 
-    // Crear usuario
+    // Crear usuario con campos adicionales según el tipo
+    const userData: any = {
+      name,
+      email,
+      phone,
+      password: hashedPassword,
+      emailVerified: false,
+      verificationToken,
+      userType,
+    }
+
+    // Agregar campos específicos según el tipo de usuario
+    if (userType === 'inmobiliaria') {
+      userData.companyName = companyName
+      userData.licenseNumber = licenseNumber
+    }
+
+    if (userType === 'dueno_directo') {
+      userData.propertyCount = propertyCount
+    }
+
     const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        phone,
-        password: hashedPassword,
-        emailVerified: false,
-        verificationToken,
-      },
+      data: userData,
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
+        userType: true,
+        companyName: true,
+        licenseNumber: true,
+        propertyCount: true,
         emailVerified: true,
         createdAt: true
       }

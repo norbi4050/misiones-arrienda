@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Eye, EyeOff, User, Mail, Phone, Lock, Loader2, CheckCircle } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Eye, EyeOff, User, Mail, Phone, Lock, Loader2, CheckCircle, Building, Home, UserCheck } from "lucide-react"
 import Link from "next/link"
 import toast from "react-hot-toast"
 
@@ -13,7 +14,13 @@ export default function RegisterPage() {
     email: "",
     phone: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    userType: "", // "inquilino", "dueno_directo", "inmobiliaria"
+    // Campos adicionales para inmobiliarias
+    companyName: "",
+    licenseNumber: "",
+    // Campos adicionales para dueños directos
+    propertyCount: ""
   })
   
   const [showPassword, setShowPassword] = useState(false)
@@ -25,6 +32,17 @@ export default function RegisterPage() {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
+    })
+  }
+
+  const handleUserTypeChange = (value: string) => {
+    setFormData({
+      ...formData,
+      userType: value,
+      // Limpiar campos específicos cuando cambia el tipo
+      companyName: "",
+      licenseNumber: "",
+      propertyCount: ""
     })
   }
 
@@ -59,6 +77,31 @@ export default function RegisterPage() {
     if (!phoneRegex.test(formData.phone)) {
       toast.error("Por favor ingresa un teléfono válido")
       return false
+    }
+
+    // Validación de tipo de usuario
+    if (!formData.userType) {
+      toast.error("Debes seleccionar el tipo de usuario")
+      return false
+    }
+
+    // Validaciones específicas por tipo de usuario
+    if (formData.userType === "inmobiliaria") {
+      if (!formData.companyName.trim()) {
+        toast.error("El nombre de la empresa es requerido")
+        return false
+      }
+      if (!formData.licenseNumber.trim()) {
+        toast.error("El número de matrícula es requerido")
+        return false
+      }
+    }
+
+    if (formData.userType === "dueno_directo") {
+      if (!formData.propertyCount) {
+        toast.error("Debes indicar cuántas propiedades tienes")
+        return false
+      }
     }
 
     // Validación de contraseña
@@ -109,7 +152,16 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          password: formData.password
+          password: formData.password,
+          userType: formData.userType,
+          // Campos adicionales según el tipo
+          ...(formData.userType === "inmobiliaria" && {
+            companyName: formData.companyName,
+            licenseNumber: formData.licenseNumber
+          }),
+          ...(formData.userType === "dueno_directo" && {
+            propertyCount: parseInt(formData.propertyCount)
+          })
         })
       })
 
@@ -187,9 +239,50 @@ export default function RegisterPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-xl sm:rounded-lg sm:px-10 transition-all duration-300 hover:shadow-2xl">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Tipo de Usuario */}
+            <div>
+              <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-2">
+                ¿Cómo vas a usar Misiones Arrienda?
+              </label>
+              <Select onValueChange={handleUserTypeChange} disabled={isLoading}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona tu tipo de usuario" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inquilino">
+                    <div className="flex items-center space-x-2">
+                      <UserCheck className="h-4 w-4" />
+                      <div>
+                        <div className="font-medium">Inquilino / Comprador</div>
+                        <div className="text-xs text-gray-500">Busco propiedades para alquilar o comprar</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="dueno_directo">
+                    <div className="flex items-center space-x-2">
+                      <Home className="h-4 w-4" />
+                      <div>
+                        <div className="font-medium">Dueño Directo</div>
+                        <div className="text-xs text-gray-500">Tengo propiedades para alquilar o vender</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="inmobiliaria">
+                    <div className="flex items-center space-x-2">
+                      <Building className="h-4 w-4" />
+                      <div>
+                        <div className="font-medium">Inmobiliaria</div>
+                        <div className="text-xs text-gray-500">Represento una empresa inmobiliaria</div>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Nombre completo
+                {formData.userType === "inmobiliaria" ? "Nombre del responsable" : "Nombre completo"}
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -209,6 +302,77 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
+
+            {/* Campos específicos para Inmobiliaria */}
+            {formData.userType === "inmobiliaria" && (
+              <>
+                <div>
+                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                    Nombre de la Inmobiliaria
+                  </label>
+                  <div className="mt-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Building className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <Input
+                      id="companyName"
+                      name="companyName"
+                      type="text"
+                      required
+                      value={formData.companyName}
+                      onChange={handleChange}
+                      placeholder="Inmobiliaria San Martín"
+                      className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-700">
+                    Número de Matrícula
+                  </label>
+                  <div className="mt-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <CheckCircle className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <Input
+                      id="licenseNumber"
+                      name="licenseNumber"
+                      type="text"
+                      required
+                      value={formData.licenseNumber}
+                      onChange={handleChange}
+                      placeholder="MAT-12345"
+                      className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Campos específicos para Dueño Directo */}
+            {formData.userType === "dueno_directo" && (
+              <div>
+                <label htmlFor="propertyCount" className="block text-sm font-medium text-gray-700">
+                  ¿Cuántas propiedades tienes para publicar?
+                </label>
+                <div className="mt-1">
+                  <Select onValueChange={(value) => setFormData({...formData, propertyCount: value})} disabled={isLoading}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecciona la cantidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 propiedad</SelectItem>
+                      <SelectItem value="2-3">2-3 propiedades</SelectItem>
+                      <SelectItem value="4-5">4-5 propiedades</SelectItem>
+                      <SelectItem value="6+">Más de 6 propiedades</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
