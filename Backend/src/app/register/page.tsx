@@ -10,7 +10,13 @@ export default function RegisterPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
-    const { error } = await supabase.auth.signUp({ email, password }); // <-- llamada real
+    const { error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+      }
+    }); // <-- llamada real con emailRedirectTo
     setMsg(error ? `Error: ${error.message}` : "¡Listo! Revisa tu email para confirmar.");
   }
 
