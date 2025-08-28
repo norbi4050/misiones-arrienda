@@ -80,27 +80,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createPropertySchema.parse(body);
 
-
-    if (error) {
-      console.error('Error creating property:', error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    return NextResponse.json({ property: data }, { status: 201 });
-  } catch (error) {
-    console.error('Error in POST /api/properties:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Datos inválidos', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
-  }
-}
-=======
-    // Insertar la propiedad en Supabase - VERSIÓN MÍNIMA PARA EVITAR ERRORES POSTGREST
+    // SOLUCIÓN DEFINITIVA PARA PROBLEMA POSTGREST SCHEMA CACHE
     // PROBLEMA: PostgREST schema cache desactualizado causa errores con campos específicos
+    // EVOLUCIÓN: currency → createdAt → deposit (confirma problema sistemático)
     // SOLUCIÓN: Solo insertar campos básicos que sabemos que existen
     const { data, error } = await supabase
       .from('properties')
@@ -116,29 +98,10 @@ export async function POST(request: NextRequest) {
         // - currency, createdAt, updatedAt, deposit, propertyType
         // - mascotas, expensasIncl, servicios, bedrooms, bathrooms, area
         // - images, amenities, features, featured
-        // Estos se pueden agregar después de sincronizar el schema cache
+        // Estos se pueden agregar después de ejecutar el script SQL de sincronización
       }])
       .select()
       .single();
-
-    if (error) {
-      console.error('Error creating property:', error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    return NextResponse.json({ property: data }, { status: 201 });
-  } catch (error) {
-    console.error('Error in POST /api/properties:', error);
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Datos inválidos', 
-        details: error.errors 
-      }, { status: 400 });
-    }
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
-  }
-}
-=======
 
     if (error) {
       console.error('Error creating property:', error);
