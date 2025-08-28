@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
       title,
       description,
       price,
+      currency = 'ARS', // Campo currency con valor por defecto
       propertyType,
       bedrooms,
       bathrooms,
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
         title,
         description,
         price: numericPrice,
+        currency: currency || 'ARS', // Agregar el campo currency
         propertyType: propertyType || 'HOUSE',
         bedrooms: parseInt(bedrooms) || 0,
         bathrooms: parseInt(bathrooms) || 0,

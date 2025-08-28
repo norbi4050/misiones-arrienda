@@ -22,6 +22,7 @@ model Property {
   title       String
   description String
   price       Float
+  currency    String   @default("ARS") // Moneda de la propiedad (ARS, USD, EUR, etc.)
   oldPrice    Float?
   bedrooms    Int
   bathrooms   Int
