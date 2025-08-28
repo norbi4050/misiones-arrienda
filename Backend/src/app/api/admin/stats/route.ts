@@ -90,32 +90,13 @@ export async function GET(request: NextRequest) {
       failed: 8
     };
 
-    // Estadísticas de comunidad
-    const [
-      totalProfiles,
-      activeProfiles,
-      suspendedProfiles,
-      newProfilesThisMonth
-    ] = await Promise.all([
-      prisma.userProfile.count().catch(() => 0), // En caso de que no exista la tabla aún
-      prisma.userProfile.count({
-        where: {
-          isSuspended: false
-        }
-      }).catch(() => 0),
-      prisma.userProfile.count({
-        where: {
-          isSuspended: true
-        }
-      }).catch(() => 0),
-      prisma.userProfile.count({
-        where: {
-          createdAt: {
-            gte: startOfMonth
-          }
-        }
-      }).catch(() => 0)
-    ]);
+    // Estadísticas de comunidad (simuladas por ahora)
+    const communityStats = {
+      profiles: 45,
+      activeProfiles: 42,
+      suspendedProfiles: 3,
+      newThisMonth: 8
+    };
 
     const stats = {
       users: {
@@ -134,10 +115,10 @@ export async function GET(request: NextRequest) {
       },
       payments: paymentStats,
       community: {
-        profiles: totalProfiles,
-        activeProfiles,
-        suspendedProfiles,
-        newThisMonth: newProfilesThisMonth
+        profiles: communityStats.profiles,
+        activeProfiles: communityStats.activeProfiles,
+        suspendedProfiles: communityStats.suspendedProfiles,
+        newThisMonth: communityStats.newThisMonth
       }
     };
 
