@@ -35,7 +35,7 @@ model Property {
   latitude    Float?
   longitude   Float?
   propertyType String  // APARTMENT, HOUSE, COMMERCIAL, LAND, OFFICE, WAREHOUSE, PH, STUDIO
-  status      String   @default("AVAILABLE") // AVAILABLE, RENTED, SOLD, MAINTENANCE, RESERVED
+  status      String   @default("AVAILABLE") // AVAILABLE, RENTED, SOLD, MAINTENANCE, RESERVED, EXPIRED
   images      String   // JSON string of array
   virtualTourUrl String?
   amenities   String   // JSON string of array
@@ -44,6 +44,12 @@ model Property {
   floor       Int?
   totalFloors Int?
   featured    Boolean  @default(false)
+  
+  // Campos para sistema de caducidad
+  expiresAt   DateTime?
+  highlightedUntil DateTime?
+  isPaid      Boolean  @default(false)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -482,6 +488,10 @@ model UserProfile {
   acceptsMessages       Boolean  @default(true)
   highlightedUntil      DateTime?
   isSuspended           Boolean  @default(false)
+  
+  // Campos para sistema de caducidad
+  expiresAt             DateTime?
+  isPaid                Boolean  @default(false)
   
   // Auditoría
   createdAt             DateTime @default(now())
