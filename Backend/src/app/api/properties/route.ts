@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Insertar la propiedad en Supabase con el user_id
     const { data, error } = await supabase
-      .from('Property')
+      .from('properties')
       .insert([{
         title: validatedData.title,
         description: validatedData.description,
