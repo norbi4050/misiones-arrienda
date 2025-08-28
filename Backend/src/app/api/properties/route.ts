@@ -81,6 +81,8 @@ export async function POST(request: NextRequest) {
     const validatedData = createPropertySchema.parse(body);
 
     // Insertar la propiedad en Supabase con el user_id
+    // NOTA: Eliminamos createdAt y updatedAt porque PostgREST no los reconoce
+    // Supabase los manejará automáticamente si están configurados como DEFAULT
     const { data, error } = await supabase
       .from('properties')
       .insert([{
@@ -88,7 +90,6 @@ export async function POST(request: NextRequest) {
         description: validatedData.description,
         propertyType: validatedData.type,
         price: validatedData.price,
-        currency: validatedData.currency,
         city: validatedData.city,
         address: validatedData.address,
         deposit: validatedData.deposit || 0,
@@ -103,9 +104,9 @@ export async function POST(request: NextRequest) {
         features: JSON.stringify(validatedData.features),
         userId: user.id, // Clave: asignar automáticamente el user_id
         status: 'disponible',
-        featured: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        featured: false
+        // currency, createdAt, updatedAt se eliminan para evitar errores PostgREST
+        // Supabase los manejará automáticamente si están en el schema
       }])
       .select()
       .single();
