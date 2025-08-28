@@ -1,0 +1,329 @@
+-- =====================================================
+-- MIGRACIÓN BOOTSTRAP - MISIONES ARRIENDA
+-- Configuración completa de Supabase con RLS + Storage
+-- =====================================================
+
+-- 1. TABLA PROFILES (sincronizada con auth.users)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name text,
+  avatar_url text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Índices para optimización
+CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON public.profiles(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_profiles_full_name ON public.profiles(full_name);
+
+-- Habilitar RLS
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Políticas RLS para profiles
+CREATE POLICY "Users can view own profile" ON public.profiles 
+FOR SELECT TO authenticated 
+USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile" ON public.profiles 
+FOR INSERT TO authenticated 
+WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON public.profiles 
+FOR UPDATE TO authenticated 
+USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+-- 2. FUNCIONES Y TRIGGERS
+-- =====================================================
+
+-- Función para auto-crear perfiles
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name)
+  VALUES (new.id, new.raw_user_meta_data->>'full_name');
+  RETURN new;
+END;
+$$;
+
+-- Función para updated_at automático
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  new.updated_at = now();
+  RETURN new;
+END;
+$$;
+
+-- Triggers
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users FOR EACH ROW
+EXECUTE FUNCTION public.handle_new_user();
+
+CREATE TRIGGER handle_profiles_updated_at
+BEFORE UPDATE ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+-- 3. RLS PARA PROPERTY
+-- =====================================================
+ALTER TABLE public."Property" ENABLE ROW LEVEL SECURITY;
+
+-- Política: Select público para propiedades disponibles
+CREATE POLICY "Anyone can view available properties" ON public."Property" 
+FOR SELECT USING (status = 'AVAILABLE');
+
+-- Política: Owners pueden hacer todo con sus propiedades
+CREATE POLICY "Users can manage own properties" ON public."Property" 
+FOR ALL TO authenticated USING ("userId" = auth.uid()::text);
+
+-- 4. STORAGE BUCKETS
+-- =====================================================
+
+-- Crear buckets
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('property-images', 'property-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('profile-images', 'profile-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('community-images', 'community-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Políticas para property-images
+CREATE POLICY "Anyone can view property images" ON storage.objects 
+FOR SELECT USING (bucket_id = 'property-images');
+
+CREATE POLICY "Authenticated users can upload property images" ON storage.objects 
+FOR INSERT TO authenticated WITH CHECK (
+  bucket_id = 'property-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can update own property images" ON storage.objects 
+FOR UPDATE TO authenticated USING (
+  bucket_id = 'property-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can delete own property images" ON storage.objects 
+FOR DELETE TO authenticated USING (
+  bucket_id = 'property-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Políticas para profile-images
+CREATE POLICY "Anyone can view profile images" ON storage.objects 
+FOR SELECT USING (bucket_id = 'profile-images');
+
+CREATE POLICY "Authenticated users can upload profile images" ON storage.objects 
+FOR INSERT TO authenticated WITH CHECK (
+  bucket_id = 'profile-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can update own profile images" ON storage.objects 
+FOR UPDATE TO authenticated USING (
+  bucket_id = 'profile-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can delete own profile images" ON storage.objects 
+FOR DELETE TO authenticated USING (
+  bucket_id = 'profile-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Políticas para community-images
+CREATE POLICY "Anyone can view community images" ON storage.objects 
+FOR SELECT USING (bucket_id = 'community-images');
+
+CREATE POLICY "Authenticated users can upload community images" ON storage.objects 
+FOR INSERT TO authenticated WITH CHECK (
+  bucket_id = 'community-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can update own community images" ON storage.objects 
+FOR UPDATE TO authenticated USING (
+  bucket_id = 'community-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can delete own community images" ON storage.objects 
+FOR DELETE TO authenticated USING (
+  bucket_id = 'community-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- 5. PACK A - RLS EXTRA CONDICIONAL
+-- =====================================================
+
+-- RLS para User (si existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'User' AND table_schema = 'public') THEN
+    ALTER TABLE public."User" ENABLE ROW LEVEL SECURITY;
+    
+    CREATE POLICY "Users can view own data" ON public."User" 
+    FOR SELECT TO authenticated USING (id = auth.uid()::text);
+    
+    CREATE POLICY "Users can update own data" ON public."User" 
+    FOR UPDATE TO authenticated USING (id = auth.uid()::text);
+  END IF;
+END $$;
+
+-- RLS para UserProfile (si existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'UserProfile' AND table_schema = 'public') THEN
+    ALTER TABLE public."UserProfile" ENABLE ROW LEVEL SECURITY;
+    
+    CREATE POLICY "Anyone can view active community profiles" ON public."UserProfile" 
+    FOR SELECT USING (NOT "isSuspended");
+    
+    CREATE POLICY "Users can manage own community profile" ON public."UserProfile" 
+    FOR ALL TO authenticated USING ("userId" = auth.uid()::text);
+  END IF;
+END $$;
+
+-- RLS para Payment (si existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'Payment' AND table_schema = 'public') THEN
+    ALTER TABLE public."Payment" ENABLE ROW LEVEL SECURITY;
+    
+    CREATE POLICY "Users can view own payments" ON public."Payment" 
+    FOR SELECT TO authenticated USING ("userId" = auth.uid()::text);
+    
+    CREATE POLICY "Users can create own payments" ON public."Payment" 
+    FOR INSERT TO authenticated WITH CHECK ("userId" = auth.uid()::text);
+  END IF;
+END $$;
+
+-- RLS para Subscription (si existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'Subscription' AND table_schema = 'public') THEN
+    ALTER TABLE public."Subscription" ENABLE ROW LEVEL SECURITY;
+    
+    CREATE POLICY "Users can view own subscriptions" ON public."Subscription" 
+    FOR SELECT TO authenticated USING ("userId" = auth.uid()::text);
+    
+    CREATE POLICY "Users can manage own subscriptions" ON public."Subscription" 
+    FOR ALL TO authenticated USING ("userId" = auth.uid()::text);
+  END IF;
+END $$;
+
+-- 6. PACK B - REALTIME (OPCIONAL)
+-- =====================================================
+
+-- Habilitar realtime para Message (si existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'Message' AND table_schema = 'public') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public."Message";
+    
+    CREATE POLICY "Users can subscribe to own messages" ON public."Message" 
+    FOR SELECT TO authenticated USING (
+      EXISTS (
+        SELECT 1 FROM public."Conversation" c 
+        WHERE c.id = "conversationId" 
+        AND (c."aId" = auth.uid()::text OR c."bId" = auth.uid()::text)
+      )
+    );
+  END IF;
+END $$;
+
+-- Habilitar realtime para Conversation (si existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'Conversation' AND table_schema = 'public') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public."Conversation";
+  END IF;
+END $$;
+
+-- Habilitar realtime para UserInquiry (si existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'UserInquiry' AND table_schema = 'public') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public."UserInquiry";
+  END IF;
+END $$;
+
+-- 7. PACK C - ANALYTICS MÍNIMO (OPCIONAL)
+-- =====================================================
+
+-- Tabla Analytics
+CREATE TABLE IF NOT EXISTS public."Analytics" (
+  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  event_type text NOT NULL,
+  user_id text,
+  metadata jsonb,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Índices para Analytics
+CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON public."Analytics"(event_type);
+CREATE INDEX IF NOT EXISTS idx_analytics_user_id ON public."Analytics"(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_created_at ON public."Analytics"(created_at DESC);
+
+-- Función para tracking de eventos
+CREATE OR REPLACE FUNCTION public.track_user_event()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  INSERT INTO public."Analytics" (
+    event_type,
+    user_id,
+    metadata,
+    created_at
+  ) VALUES (
+    TG_TABLE_NAME || '_' || TG_OP,
+    COALESCE(NEW."userId", OLD."userId"),
+    jsonb_build_object('table', TG_TABLE_NAME, 'operation', TG_OP),
+    now()
+  );
+  
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+-- Triggers para tracking (si las tablas existen)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'Property' AND table_schema = 'public') THEN
+    DROP TRIGGER IF EXISTS track_property_events ON public."Property";
+    CREATE TRIGGER track_property_events
+    AFTER INSERT OR UPDATE OR DELETE ON public."Property"
+    FOR EACH ROW EXECUTE FUNCTION public.track_user_event();
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'User' AND table_schema = 'public') THEN
+    DROP TRIGGER IF EXISTS track_user_events ON public."User";
+    CREATE TRIGGER track_user_events  
+    AFTER INSERT OR UPDATE ON public."User"
+    FOR EACH ROW EXECUTE FUNCTION public.track_user_event();
+  END IF;
+END $$;
+
+-- Vista para métricas de performance
+CREATE OR REPLACE VIEW public.performance_metrics AS
+SELECT 
+  date_trunc('hour', created_at) as hour,
+  event_type,
+  count(*) as total_events,
+  count(DISTINCT user_id) as unique_users
+FROM public."Analytics" 
+WHERE created_at >= now() - interval '24 hours'
+GROUP BY hour, event_type
+ORDER BY hour DESC, total_events DESC;
+
+-- =====================================================
+-- MIGRACIÓN BOOTSTRAP COMPLETADA
+-- =====================================================
