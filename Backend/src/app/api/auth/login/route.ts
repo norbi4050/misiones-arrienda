@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         userId: user.id, 
         email: user.email 
       },
-      process.env.JWT_SECRET || 'fallback-secret-key',
+      process.env.JWT_SECRET || '5685128fb42e3ceca234ecd61cac300c',
       { expiresIn: '7d' }
     )
 
