@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { ImageUpload } from "@/components/ui/image-upload"
 import { MapPin, Upload, DollarSign, Home, Check, Loader2, CreditCard, Shield, Clock, Lock } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
@@ -454,6 +455,25 @@ export default function PublicarPage() {
                     onChange={(e) => setPropertyForm({...propertyForm, description: e.target.value})}
                     required
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Imágenes de la propiedad
+                  </label>
+                  <ImageUpload
+                    value={propertyForm.images}
+                    onChange={(images) => setPropertyForm({...propertyForm, images})}
+                    maxImages={selectedPlan === 'basico' ? 3 : selectedPlan === 'destacado' ? 8 : 20}
+                    maxSizeMB={5}
+                    uploadText="Subir fotos de la propiedad"
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    {selectedPlan === 'basico' && 'Plan Básico: Hasta 3 fotos'}
+                    {selectedPlan === 'destacado' && 'Plan Destacado: Hasta 8 fotos'}
+                    {selectedPlan === 'full' && 'Plan Full: Fotos ilimitadas'}
+                  </p>
                 </div>
               </div>
 

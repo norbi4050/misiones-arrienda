@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { ProfileImageUpload } from "@/components/ui/image-upload"
 import { UserCheck, User, Mail, Phone, MapPin, Home, Plus, Settings, Camera, Save, Edit, Building } from "lucide-react"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
@@ -108,20 +109,28 @@ export default function DuenoDirectoProfilePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                  {profileData.profileImage ? (
-                    <img 
-                      src={profileData.profileImage} 
-                      alt="Perfil" 
-                      className="w-20 h-20 rounded-full object-cover"
+                {isEditing ? (
+                  <div className="w-20 h-20">
+                    <ProfileImageUpload
+                      value={profileData.profileImage}
+                      onChange={(url) => setProfileData({...profileData, profileImage: url})}
+                      disabled={!isEditing}
+                      className="w-full"
                     />
-                  ) : (
-                    <UserCheck className="h-8 w-8 text-green-600" />
-                  )}
-                </div>
-                <button className="absolute -bottom-1 -right-1 bg-green-600 text-white p-1.5 rounded-full hover:bg-green-700 transition-colors">
-                  <Camera className="h-3 w-3" />
-                </button>
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                    {profileData.profileImage ? (
+                      <img 
+                        src={profileData.profileImage} 
+                        alt="Perfil" 
+                        className="w-20 h-20 rounded-full object-cover"
+                      />
+                    ) : (
+                      <UserCheck className="h-8 w-8 text-green-600" />
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{profileData.name}</h1>
