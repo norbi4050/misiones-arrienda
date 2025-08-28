@@ -401,10 +401,10 @@ export default function ComunidadPage() {
                       <span>{profile.user.rating.toFixed(1)}</span>
                       <span>({profile.user.reviewCount})</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-4 h-4 text-red-500" />
-                      <span>{profile._count.likesReceived}</span>
-                    </div>
+                  <div className="flex items-center gap-1">
+                    <Heart className="w-4 h-4 text-red-500" />
+                    <span>{profile._count?.likesReceived || 0}</span>
+                  </div>
                   </div>
 
                   {/* Acciones */}

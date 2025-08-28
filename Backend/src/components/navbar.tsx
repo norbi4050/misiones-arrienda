@@ -72,10 +72,10 @@ export function Navbar() {
               Propiedades
             </Link>
             <Link 
-              href="/profiles" 
+              href="/comunidad" 
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
-              Perfiles
+              Comunidad
             </Link>
             <Link 
               href="/publicar" 
@@ -166,11 +166,11 @@ export function Navbar() {
                 Propiedades
               </Link>
               <Link
-                href="/profiles"
+                href="/comunidad"
                 className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Perfiles
+                Comunidad
               </Link>
               <Link
                 href="/publicar"
