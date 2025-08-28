@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         currency: validatedData.currency,
         city: validatedData.city,
         address: validatedData.address,
-        deposito: validatedData.deposit || 0,
+        deposit: validatedData.deposit || 0,
         mascotas: validatedData.mascotas,
         expensasIncl: validatedData.expensasIncl,
         servicios: validatedData.servicios,
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         images: JSON.stringify(validatedData.images),
         amenities: JSON.stringify(validatedData.amenities),
         features: JSON.stringify(validatedData.features),
-        user_id: user.id, // Clave: asignar automáticamente el user_id
+        userId: user.id, // Clave: asignar automáticamente el user_id
         status: 'disponible',
         featured: false,
         createdAt: new Date().toISOString(),
