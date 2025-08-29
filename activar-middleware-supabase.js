@@ -1,4 +1,19 @@
-import { NextResponse, type NextRequest } from 'next/server'
+const fs = require('fs');
+const path = require('path');
+
+console.log('🔧 ACTIVANDO MIDDLEWARE DE SUPABASE');
+console.log('===================================');
+
+// Leer el middleware actual
+const middlewarePath = 'Backend/src/middleware.ts';
+
+try {
+  const currentMiddleware = fs.readFileSync(middlewarePath, 'utf8');
+  
+  console.log('📄 Middleware actual detectado');
+  
+  // Crear el nuevo middleware con autenticación real
+  const newMiddleware = `import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
@@ -96,6 +111,39 @@ export const config = {
      * - favicon.ico (favicon file)
      * - api routes (handled separately)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
+}`;
+
+  // Crear backup del middleware actual
+  const backupPath = 'Backend/src/middleware-backup.ts';
+  fs.writeFileSync(backupPath, currentMiddleware);
+  console.log('💾 Backup creado:', backupPath);
+
+  // Escribir el nuevo middleware
+  fs.writeFileSync(middlewarePath, newMiddleware);
+  console.log('✅ Middleware de Supabase activado exitosamente');
+
+  console.log('\n🎯 MIDDLEWARE ACTIVADO:');
+  console.log('✅ Protección de rutas habilitada');
+  console.log('✅ Autenticación con Supabase activa');
+  console.log('✅ Redirecciones automáticas configuradas');
+  
+  console.log('\n🔒 RUTAS PROTEGIDAS:');
+  console.log('- /dashboard (requiere login)');
+  console.log('- /publicar (requiere login)');
+  console.log('- /profile (requiere login)');
+  console.log('- /admin (requiere login)');
+
+  console.log('\n🚀 PRÓXIMOS PASOS:');
+  console.log('1. Verifica que las variables de entorno estén configuradas');
+  console.log('2. Inicia el servidor: cd Backend && npm run dev');
+  console.log('3. Ejecuta el testing: node test-integracion-supabase-autenticacion-completo.js');
+
+} catch (error) {
+  console.log('❌ Error activando middleware:', error.message);
+  console.log('\n💡 SOLUCIÓN:');
+  console.log('1. Verifica que el archivo Backend/src/middleware.ts existe');
+  console.log('2. Asegúrate de tener permisos de escritura');
+  console.log('3. Ejecuta desde el directorio raíz del proyecto');
 }
