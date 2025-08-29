@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
         postalCode: '3300', // Código postal por defecto para Misiones
         featured: featured || false,
         status: status || 'AVAILABLE',
+        contact_phone: '+54 376 000000', // Agregar campo contact_phone requerido
         images: JSON.stringify(images.length > 0 ? images : [
           '/images/properties/default-1.jpg',
           '/images/properties/default-2.jpg',
