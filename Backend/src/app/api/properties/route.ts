@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
       address,
       city,
       state,
+      province,
       country,
       latitude,
       longitude,
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
       area: area ? parseFloat(area) : null,
       address,
       city,
-      state,
+      province: province || state, // Usar province si está disponible, sino state
       country: country || 'Argentina',
       latitude: latitude ? parseFloat(latitude) : null,
       longitude: longitude ? parseFloat(longitude) : null,
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
       contact_email,
       user_id,
       deposit: deposit ? parseFloat(deposit) : null,
-      status: 'active',
+      status: 'AVAILABLE', // Usar enum value correcto
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

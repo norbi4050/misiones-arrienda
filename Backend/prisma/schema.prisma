@@ -46,6 +46,11 @@ model Property {
   totalFloors Int?
   featured    Boolean  @default(false)
   
+  // Campos de contacto agregados para alinear con API
+  contact_name  String?
+  contact_phone String
+  contact_email String?
+  
   // Campos para sistema de caducidad
   expiresAt   DateTime?
   highlightedUntil DateTime?
@@ -58,8 +63,9 @@ model Property {
   user        User     @relation(fields: [userId], references: [id])
   userId      String
   
-  agent       Agent    @relation(fields: [agentId], references: [id])
-  agentId     String
+  // Hacer agentId opcional para evitar errores
+  agent       Agent?   @relation(fields: [agentId], references: [id])
+  agentId     String?
   
   // Relaciones existentes
   inquiries   Inquiry[]
