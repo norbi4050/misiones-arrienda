@@ -1,0 +1,31 @@
+{
+  "prioridades": [
+    {
+      "paso": 1,
+      "titulo": "Limpieza de archivos duplicados",
+      "accion": "Eliminar archivos duplicados críticos: route-fixed.ts, route-fixed-final.ts, useAuth-fixed.ts, useAuth-safe.ts, similar-properties-fixed.tsx, seed-fixed.ts, email-service-fixed.ts. Mantener solo las versiones base funcionales. Eliminar directorios obsoletos: misiones-arrienda-v2/, misionesarrienda1/, src/ (fuera de Backend)."
+    },
+    {
+      "paso": 2,
+      "titulo": "Consolidar schema Prisma",
+      "accion": "Usar solo Backend/prisma/schema.prisma como fuente única. Eliminar schema-inmobiliarias.prisma y schema-alternative.prisma. Verificar que el campo 'currency' esté correctamente tipado. Mantener solo seed.ts funcional, eliminar seed-fixed.ts, seed-clean.ts, seed-sqlite.ts."
+    },
+    {
+      "paso": 3,
+      "titulo": "Corregir package.json",
+      "accion": "Agregar dependencia 'tsx' faltante para script db:seed. Verificar que todas las dependencias estén sincronizadas. Eliminar scripts obsoletos que referencien archivos eliminados."
+    },
+    {
+      "paso": 4,
+      "titulo": "Estabilizar rutas API críticas",
+      "accion": "Consolidar /api/auth/register y /api/auth/verify eliminando versiones duplicadas. Mantener solo /api/properties/route.ts funcional. Verificar que /api/properties/create funcione correctamente para /publicar. Eliminar archivos HTML estáticos (login.html, register.html) que conflictúan con rutas Next.js."
+    },
+    {
+      "paso": 5,
+      "titulo": "Verificar build Vercel",
+      "accion": "Ejecutar 'npm run build' localmente para detectar errores de compilación. Verificar que no haya imports rotos después de eliminar archivos duplicados. Confirmar que next.config.js esté limpio sin configuraciones obsoletas."
+    }
+  ],
+  "impacto": "Proyecto limpio y funcional de punta a punta. Elimina confusión de archivos duplicados, reduce tamaño del repo en ~60%, estabiliza APIs críticas (/publicar, /properties), y garantiza builds exitosos en Vercel. Mantiene toda la funcionalidad core sin agregar dependencias innecesarias.",
+  "rollback": "Git commit antes de iniciar. Si algo falla: 'git reset --hard HEAD~1' para volver al estado anterior. Backup de archivos críticos: schema.prisma, package.json, route.ts principales. Cada paso es reversible individualmente usando git checkout de archivos específicos."
+}
