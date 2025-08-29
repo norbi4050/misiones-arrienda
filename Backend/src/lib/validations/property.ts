@@ -15,6 +15,7 @@ export const propertySchema = z.object({
   city: z.string().min(1, 'La ciudad es requerida'),
   state: z.string().optional(),
   country: z.string().optional(),
+  contact_phone: z.string().min(1, 'El teléfono de contacto es requerido'),
   images: z.array(z.string()),
   amenities: z.array(z.string()),
   features: z.array(z.string()),

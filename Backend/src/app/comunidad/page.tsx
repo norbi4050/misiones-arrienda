@@ -410,16 +410,10 @@ export default function ComunidadPage() {
                   {/* Acciones */}
                   <div className="flex gap-2 pt-2">
                     <Link href={`/comunidad/${profile.id}`} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        Ver perfil
+                      <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                        Ver perfil completo
                       </Button>
                     </Link>
-                    <Button
-                      onClick={() => handleLike(profile.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white"
-                    >
-                      <Heart className="w-4 h-4" />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
