@@ -69,6 +69,18 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Verificar si el usuario ya existe en Supabase Auth
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const userExists = existingUsers?.users?.find(user => user.email === email);
+    
+    if (userExists) {
+      console.warn(`⚠️ Usuario ya existe con email: ${email}`);
+      return NextResponse.json(
+        { error: 'Ya existe un usuario con este email' },
+        { status: 409 }
+      )
+    }
+
     // Registrar usuario en Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
@@ -87,7 +99,7 @@ export async function POST(request: NextRequest) {
     if (authError) {
       console.error('❌ Error creando usuario en Supabase Auth:', authError);
       
-      if (authError.message.includes('already registered')) {
+      if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
         return NextResponse.json(
           { error: 'Ya existe un usuario con este email' },
           { status: 409 }
