@@ -72,7 +72,7 @@ async function main() {
     },
   })
 
-  // Create sample properties with userId
+  // Create sample properties with userId and contact_phone
   const properties = [
     {
       title: 'Hermoso departamento en el centro',
@@ -91,6 +91,9 @@ async function main() {
       amenities: JSON.stringify(['Aire acondicionado', 'Balcón', 'Portero']),
       features: JSON.stringify(['Luminoso', 'Céntrico', 'Amoblado']),
       featured: true,
+      contact_phone: '+54 376 111111',
+      contact_name: 'Carlos Rodríguez',
+      contact_email: 'propietario1@example.com',
       userId: user1.id,
       agentId: agent1.id,
     },
@@ -112,6 +115,9 @@ async function main() {
       amenities: JSON.stringify(['Jardín', 'Parrilla', 'Garage']),
       features: JSON.stringify(['Amplia', 'Luminosa', 'Tranquila']),
       featured: false,
+      contact_phone: '+54 376 111111',
+      contact_name: 'Carlos Rodríguez',
+      contact_email: 'propietario1@example.com',
       userId: user1.id,
       agentId: agent1.id,
     },
@@ -132,6 +138,9 @@ async function main() {
       amenities: JSON.stringify(['Aire acondicionado', 'Cocina equipada']),
       features: JSON.stringify(['Moderno', 'Céntrico', 'Equipado']),
       featured: false,
+      contact_phone: '+54 376 222222',
+      contact_name: 'Ana Martínez',
+      contact_email: 'propietario2@example.com',
       userId: user2.id,
       agentId: agent2.id,
     },
@@ -153,6 +162,9 @@ async function main() {
       amenities: JSON.stringify(['Pileta', 'Parrilla', 'Jardín', 'Garage doble']),
       features: JSON.stringify(['Amplia', 'Con pileta', 'Barrio residencial']),
       featured: true,
+      contact_phone: '+54 376 222222',
+      contact_name: 'Ana Martínez',
+      contact_email: 'propietario2@example.com',
       userId: user2.id,
       agentId: agent2.id,
     },
@@ -173,6 +185,9 @@ async function main() {
       amenities: JSON.stringify(['Vista al río', 'Aire acondicionado', 'Balcón']),
       features: JSON.stringify(['Lujo', 'Vista al río', 'Céntrico']),
       featured: false,
+      contact_phone: '+54 376 333333',
+      contact_name: 'Inmobiliaria Misiones',
+      contact_email: 'inmobiliaria@example.com',
       userId: user3.id,
       agentId: agent1.id,
     },
@@ -194,6 +209,9 @@ async function main() {
       amenities: JSON.stringify(['Jardín', 'Garage']),
       features: JSON.stringify(['Tranquila', 'Bien ubicada']),
       featured: false,
+      contact_phone: '+54 376 333333',
+      contact_name: 'Inmobiliaria Misiones',
+      contact_email: 'inmobiliaria@example.com',
       userId: user3.id,
       agentId: agent2.id,
     },
