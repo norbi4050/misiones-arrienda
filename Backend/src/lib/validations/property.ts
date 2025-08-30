@@ -24,7 +24,7 @@ export const propertySchema = z.object({
   address: z.string().min(1, 'La dirección es requerida'),
   city: z.string().min(1, 'La ciudad es requerida'),
   province: z.string().default('Misiones'),
-  state: z.string().optional(), // Para formularios
+  state: z.string().default('Misiones'), // Para formularios - cambiar a default
   country: z.string().default('Argentina'),
   postalCode: z.string().optional(),
   
@@ -46,8 +46,8 @@ export const propertySchema = z.object({
   features: z.array(z.string()).default([]),
   
   // Campos específicos del formulario
-  mascotas: z.boolean().optional(),
-  expensasIncl: z.boolean().optional(),
+  mascotas: z.boolean().default(false),
+  expensasIncl: z.boolean().default(false),
   servicios: z.array(z.string()).default([]),
   
   // Información adicional

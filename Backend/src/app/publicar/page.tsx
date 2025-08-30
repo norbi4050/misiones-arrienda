@@ -87,7 +87,10 @@ export default function PublicarPage() {
       deposit: 0,
       mascotas: false,
       expensasIncl: false,
-      servicios: []
+      servicios: [],
+      status: "AVAILABLE",
+      featured: false,
+      garages: 0
     }
   })
 
