@@ -80,6 +80,7 @@ export default function PublicarPage() {
       city: "",
       state: "Misiones",
       country: "Argentina",
+      contact_phone: "",
       images: [],
       amenities: [],
       features: [],
@@ -192,7 +193,6 @@ export default function PublicarPage() {
             user_id: user?.id,
             contact_name: user?.name,
             contact_email: user?.email,
-            contact_phone: '',
             state: data.state || 'Misiones'
           })
         })
@@ -450,6 +450,20 @@ export default function PublicarPage() {
                     disabled
                     className="bg-gray-100"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Teléfono de contacto *
+                  </label>
+                  <Input
+                    type="tel"
+                    placeholder="Ej: +54 376 123-4567"
+                    {...register("contact_phone")}
+                  />
+                  {errors.contact_phone && (
+                    <p className="text-sm text-red-600 mt-1">{errors.contact_phone.message}</p>
+                  )}
                 </div>
 
                 <div className="md:col-span-2">
