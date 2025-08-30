@@ -88,7 +88,7 @@ export default function PublicarPage() {
       mascotas: false,
       expensasIncl: false,
       servicios: [],
-      status: "AVAILABLE",
+      status: "active",
       featured: false,
       garages: 0
     }
@@ -390,10 +390,10 @@ export default function PublicarPage() {
                   <Input
                     type="number"
                     placeholder="1"
-                    {...register("deposit", { valueAsNumber: true })}
+                    {...register("garages", { valueAsNumber: true })}
                   />
-                  {errors.deposit && (
-                    <p className="text-sm text-red-600 mt-1">{errors.deposit.message}</p>
+                  {errors.garages && (
+                    <p className="text-sm text-red-600 mt-1">{errors.garages.message}</p>
                   )}
                 </div>
 
