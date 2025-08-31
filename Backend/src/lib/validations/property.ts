@@ -75,10 +75,7 @@ export const propertySchema = z.object({
   agentId: z.string().optional()
 });
 
-export type PropertyFormData = z.infer<typeof propertySchema>;
-export type PropertyFormSchemaData = z.infer<typeof propertyFormSchema>;
-
-// Schema específico para formularios (más flexible)
+// Schema específico para formularios (más flexible) - CORREGIDO PARA REACT HOOK FORM
 export const propertyFormSchema = z.object({
   // Campos básicos requeridos
   title: z.string().min(1, 'El título es requerido').max(200, 'El título es muy largo'),
@@ -145,6 +142,10 @@ export const propertyFormSchema = z.object({
   userId: z.string().optional(),
   agentId: z.string().optional()
 });
+
+// Tipos exportados - CORREGIDOS
+export type PropertyFormData = z.infer<typeof propertySchema>;
+export type PropertyFormSchemaData = z.infer<typeof propertyFormSchema>;
 
 // Schema para creación con validación de plan
 export const createPropertySchema = propertyFormSchema.extend({
