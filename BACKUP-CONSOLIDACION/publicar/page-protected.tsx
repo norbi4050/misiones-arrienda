@@ -1,18 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { ImageUpload } from "@/components/ui/image-upload"
 import { MapPin, Upload, DollarSign, Home, Check, Loader2, CreditCard, Shield, Clock, Lock } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
-import { propertySchema, type PropertyFormData } from "@/lib/validations/property"
 
 // Componente de pantalla de autenticación requerida
 function AuthRequiredScreen() {
@@ -59,42 +55,27 @@ function AuthRequiredScreen() {
 }
 
 export default function PublicarPage() {
-  const { user, isLoading } = useSupabaseAuth()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedPlan, setSelectedPlan] = useState<'basico' | 'destacado' | 'full'>('basico')
   const [isProcessing, setIsProcessing] = useState(false)
-  
-  const form = useForm<PropertyFormData>({
-    resolver: zodResolver(propertySchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      price: 0,
-      currency: "ARS",
-      propertyType: "HOUSE",
-      bedrooms: 0,
-      bathrooms: 0,
-      area: 0,
-      address: "",
-      city: "",
-      province: "Misiones",
-      postalCode: "",
-      contact_phone: "",
-      images: [],
-      amenities: [],
-      features: [],
-      mascotas: false,
-      expensasIncl: false,
-      servicios: [],
-      status: "AVAILABLE",
-      featured: false,
-      garages: 0
-    }
+  const [propertyForm, setPropertyForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    propertyType: "HOUSE",
+    bedrooms: "",
+    bathrooms: "",
+    garages: "",
+    area: "",
+    address: "",
+    city: "",
+    province: "Misiones",
+    images: [] as string[],
+    amenities: [] as string[],
+    features: [] as string[]
   })
-
-  const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = form
-  const watchedValues = watch()
 
   // Mostrar loading mientras se verifica la autenticación
   if (isLoading) {
@@ -170,38 +151,46 @@ export default function PublicarPage() {
   }
 
   const validateStep1 = () => {
-    const result = propertySchema.safeParse(watchedValues)
-    if (!result.success) {
-      const firstError = result.error.errors[0]
-      toast.error(firstError.message)
+    const required = ['title', 'price', 'bedrooms', 'bathrooms', 'area', 'address', 'city', 'description']
+    const missing = required.filter(field => !propertyForm[field as keyof typeof propertyForm])
+    
+    if (missing.length > 0) {
+      toast.error(`Por favor completa: ${missing.join(', ')}`)
       return false
     }
+    
+    if (Number(propertyForm.price) <= 0) {
+      toast.error('El precio debe ser mayor a 0')
+      return false
+    }
+    
     return true
   }
 
-  const onSubmit = async (data: PropertyFormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsProcessing(true)
     
     try {
       if (selectedPlan === 'basico') {
         // Plan gratuito - crear propiedad directamente
-        const response = await fetch('/api/properties', {
+        const response = await fetch('/api/properties/create', {
           method: 'POST',
           headers: { 
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
           body: JSON.stringify({
-            ...data,
-            user_id: user?.id,
-            contact_name: user?.name,
-            contact_email: user?.email,
-            province: data.province || 'Misiones'
+            ...propertyForm,
+            plan: selectedPlan,
+            featured: false,
+            status: 'ACTIVE',
+            userId: user.id
           })
         })
 
         if (response.ok) {
           toast.success('¡Propiedad publicada exitosamente!')
-          reset()
           router.push('/dashboard')
         } else {
           const errorData = await response.json()
@@ -213,31 +202,31 @@ export default function PublicarPage() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user?.id}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
           body: JSON.stringify({
-            title: `${plans[selectedPlan].name} - ${data.title}`,
-            description: `Plan ${plans[selectedPlan].name} para la propiedad: ${data.title}`,
+            title: `${plans[selectedPlan].name} - ${propertyForm.title}`,
+            description: `Plan ${plans[selectedPlan].name} para la propiedad: ${propertyForm.title}`,
             amount: plans[selectedPlan].price,
             quantity: 1,
             propertyId: `temp-${Date.now()}`,
-            userEmail: user?.email,
-            userName: user?.name,
+            userEmail: user.email,
+            userName: user.name,
             metadata: {
               plan: selectedPlan,
-              propertyData: JSON.stringify(data),
-              userId: user?.id
+              propertyData: JSON.stringify(propertyForm),
+              userId: user.id
             }
           })
         })
 
-        const responseData = await response.json()
+        const data = await response.json()
         
-        if (response.ok && responseData.preference) {
+        if (response.ok && data.preference) {
           // Redirigir a MercadoPago
-          window.location.href = responseData.preference.init_point
+          window.location.href = data.preference.init_point
         } else {
-          throw new Error(responseData.error || 'Error al procesar el pago')
+          throw new Error(data.error || 'Error al procesar el pago')
         }
       }
     } catch (error) {
@@ -315,11 +304,10 @@ export default function PublicarPage() {
                   </label>
                   <Input
                     placeholder="Ej: Casa familiar en Eldorado con jardín"
-                    {...register("title")}
+                    value={propertyForm.title}
+                    onChange={(e) => setPropertyForm({...propertyForm, title: e.target.value})}
+                    required
                   />
-                  {errors.title && (
-                    <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>
-                  )}
                 </div>
 
                 <div>
@@ -328,16 +316,14 @@ export default function PublicarPage() {
                   </label>
                   <select
                     className="w-full p-3 border border-gray-300 rounded-md"
-                    {...register("propertyType")}
+                    value={propertyForm.propertyType}
+                    onChange={(e) => setPropertyForm({...propertyForm, propertyType: e.target.value})}
                   >
                     <option value="HOUSE">Casa</option>
                     <option value="APARTMENT">Departamento</option>
                     <option value="COMMERCIAL">Local Comercial</option>
                     <option value="LAND">Terreno</option>
                   </select>
-                  {errors.propertyType && (
-                    <p className="text-sm text-red-600 mt-1">{errors.propertyType.message}</p>
-                  )}
                 </div>
 
                 <div>
@@ -347,11 +333,10 @@ export default function PublicarPage() {
                   <Input
                     type="number"
                     placeholder="320000"
-                    {...register("price", { valueAsNumber: true })}
+                    value={propertyForm.price}
+                    onChange={(e) => setPropertyForm({...propertyForm, price: e.target.value})}
+                    required
                   />
-                  {errors.price && (
-                    <p className="text-sm text-red-600 mt-1">{errors.price.message}</p>
-                  )}
                 </div>
 
                 <div>
@@ -361,11 +346,10 @@ export default function PublicarPage() {
                   <Input
                     type="number"
                     placeholder="3"
-                    {...register("bedrooms", { valueAsNumber: true })}
+                    value={propertyForm.bedrooms}
+                    onChange={(e) => setPropertyForm({...propertyForm, bedrooms: e.target.value})}
+                    required
                   />
-                  {errors.bedrooms && (
-                    <p className="text-sm text-red-600 mt-1">{errors.bedrooms.message}</p>
-                  )}
                 </div>
 
                 <div>
@@ -375,11 +359,10 @@ export default function PublicarPage() {
                   <Input
                     type="number"
                     placeholder="2"
-                    {...register("bathrooms", { valueAsNumber: true })}
+                    value={propertyForm.bathrooms}
+                    onChange={(e) => setPropertyForm({...propertyForm, bathrooms: e.target.value})}
+                    required
                   />
-                  {errors.bathrooms && (
-                    <p className="text-sm text-red-600 mt-1">{errors.bathrooms.message}</p>
-                  )}
                 </div>
 
                 <div>
@@ -389,11 +372,9 @@ export default function PublicarPage() {
                   <Input
                     type="number"
                     placeholder="1"
-                    {...register("garages", { valueAsNumber: true })}
+                    value={propertyForm.garages}
+                    onChange={(e) => setPropertyForm({...propertyForm, garages: e.target.value})}
                   />
-                  {errors.garages && (
-                    <p className="text-sm text-red-600 mt-1">{errors.garages.message}</p>
-                  )}
                 </div>
 
                 <div>
@@ -403,11 +384,10 @@ export default function PublicarPage() {
                   <Input
                     type="number"
                     placeholder="180"
-                    {...register("area", { valueAsNumber: true })}
+                    value={propertyForm.area}
+                    onChange={(e) => setPropertyForm({...propertyForm, area: e.target.value})}
+                    required
                   />
-                  {errors.area && (
-                    <p className="text-sm text-red-600 mt-1">{errors.area.message}</p>
-                  )}
                 </div>
 
                 <div className="md:col-span-2">
@@ -416,11 +396,10 @@ export default function PublicarPage() {
                   </label>
                   <Input
                     placeholder="Av. San Martín 1234"
-                    {...register("address")}
+                    value={propertyForm.address}
+                    onChange={(e) => setPropertyForm({...propertyForm, address: e.target.value})}
+                    required
                   />
-                  {errors.address && (
-                    <p className="text-sm text-red-600 mt-1">{errors.address.message}</p>
-                  )}
                 </div>
 
                 <div>
@@ -429,7 +408,8 @@ export default function PublicarPage() {
                   </label>
                   <select
                     className="w-full p-3 border border-gray-300 rounded-md"
-                    {...register("city")}
+                    value={propertyForm.city}
+                    onChange={(e) => setPropertyForm({...propertyForm, city: e.target.value})}
                   >
                     <option value="">Seleccionar ciudad</option>
                     <option value="Posadas">Posadas</option>
@@ -438,9 +418,6 @@ export default function PublicarPage() {
                     <option value="Oberá">Oberá</option>
                     <option value="Leandro N. Alem">Leandro N. Alem</option>
                   </select>
-                  {errors.city && (
-                    <p className="text-sm text-red-600 mt-1">{errors.city.message}</p>
-                  )}
                 </div>
 
                 <div>
@@ -454,33 +431,6 @@ export default function PublicarPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Código Postal *
-                  </label>
-                  <Input
-                    placeholder="Ej: 3300"
-                    {...register("postalCode")}
-                  />
-                  {errors.postalCode && (
-                    <p className="text-sm text-red-600 mt-1">{errors.postalCode.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Teléfono de contacto *
-                  </label>
-                  <Input
-                    type="tel"
-                    placeholder="Ej: +54 376 123-4567"
-                    {...register("contact_phone")}
-                  />
-                  {errors.contact_phone && (
-                    <p className="text-sm text-red-600 mt-1">{errors.contact_phone.message}</p>
-                  )}
-                </div>
-
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Descripción
@@ -489,30 +439,10 @@ export default function PublicarPage() {
                     className="w-full p-3 border border-gray-300 rounded-md resize-none"
                     rows={4}
                     placeholder="Describe tu propiedad, sus características principales y lo que la hace especial..."
-                    {...register("description")}
+                    value={propertyForm.description}
+                    onChange={(e) => setPropertyForm({...propertyForm, description: e.target.value})}
+                    required
                   />
-                  {errors.description && (
-                    <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
-                  )}
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Imágenes de la propiedad
-                  </label>
-                  <ImageUpload
-                    value={watchedValues.images}
-                    onChange={(images) => setValue("images", images)}
-                    maxImages={selectedPlan === 'basico' ? 3 : selectedPlan === 'destacado' ? 8 : 20}
-                    maxSizeMB={5}
-                    uploadText="Subir fotos de la propiedad"
-                    className="mt-2"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                    {selectedPlan === 'basico' && 'Plan Básico: Hasta 3 fotos'}
-                    {selectedPlan === 'destacado' && 'Plan Destacado: Hasta 8 fotos'}
-                    {selectedPlan === 'full' && 'Plan Full: Fotos ilimitadas'}
-                  </p>
                 </div>
               </div>
 
@@ -601,11 +531,11 @@ export default function PublicarPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Resumen de la Propiedad</h3>
                   <div className="space-y-2 text-sm">
-                    <p><strong>Título:</strong> {watchedValues.title}</p>
-                    <p><strong>Tipo:</strong> {watchedValues.propertyType}</p>
-                    <p><strong>Precio:</strong> ${watchedValues.price?.toLocaleString()}</p>
-                    <p><strong>Ubicación:</strong> {watchedValues.address}, {watchedValues.city}</p>
-                    <p><strong>Características:</strong> {watchedValues.bedrooms} hab, {watchedValues.bathrooms} baños, {watchedValues.area} m²</p>
+                    <p><strong>Título:</strong> {propertyForm.title}</p>
+                    <p><strong>Tipo:</strong> {propertyForm.propertyType}</p>
+                    <p><strong>Precio:</strong> ${Number(propertyForm.price).toLocaleString()}</p>
+                    <p><strong>Ubicación:</strong> {propertyForm.address}, {propertyForm.city}</p>
+                    <p><strong>Características:</strong> {propertyForm.bedrooms} hab, {propertyForm.bathrooms} baños, {propertyForm.area} m²</p>
                   </div>
                 </div>
 
@@ -651,7 +581,7 @@ export default function PublicarPage() {
                   Anterior
                 </Button>
                 <Button 
-                  onClick={handleSubmit(onSubmit)} 
+                  onClick={handleSubmit} 
                   className="bg-green-600 hover:bg-green-700"
                   disabled={isProcessing}
                 >

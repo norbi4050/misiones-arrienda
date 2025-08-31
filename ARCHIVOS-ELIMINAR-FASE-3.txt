@@ -1,0 +1,22 @@
+# ARCHIVOS PARA ELIMINACION - FASE 3 
+# APIs de Properties duplicadas 
+Backend/src/app/api/properties/route-fixed.ts 
+Backend/src/app/api/properties/route-mock.ts 
+Backend/src/app/api/properties/route-original.ts 
+Backend/src/app/api/properties/route-updated.ts 
+Backend/src/app/api/properties/route-fixed-final.ts 
+Backend/src/app/api/properties/route-clean.ts 
+ 
+# Formularios de Publicacion duplicados 
+Backend/src/app/publicar/page-fixed.tsx 
+Backend/src/app/publicar/page-protected.tsx 
+ 
+# Hooks de Autenticacion duplicados 
+Backend/src/hooks/useAuth-final.ts 
+Backend/src/hooks/useAuth-fixed.ts 
+Backend/src/hooks/useAuth-safe.ts 
+ 
+# Componentes de Filtros duplicados 
+Backend/src/components/filter-section-fixed.tsx 
+Backend/src/components/filter-section-server.tsx 
+Backend/src/components/filter-section-wrapper.tsx 
