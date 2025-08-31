@@ -88,7 +88,7 @@ export default function PublicarPage() {
       mascotas: false,
       expensasIncl: false,
       servicios: [],
-      status: "active" as const,
+      status: "active",
       featured: false,
       garages: 0
     }
