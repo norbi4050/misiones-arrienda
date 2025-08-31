@@ -56,12 +56,12 @@ export const propertySchema = z.object({
   totalFloors: z.number().optional(),
   
   // Estado y configuración
-  status: z.enum(['active', 'inactive', 'sold', 'rented']).optional().default('active'),
+  status: z.enum(['active', 'inactive', 'sold', 'rented']).default('active'),
   featured: z.boolean().default(false),
   
   // Precios adicionales
   oldPrice: z.number().optional(),
-  deposit: z.number().optional(),
+  deposit: z.number().min(0).optional(),
   
   // Campos de sistema (opcionales para formularios)
   userId: z.string().optional(),
