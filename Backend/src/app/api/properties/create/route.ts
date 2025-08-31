@@ -37,13 +37,16 @@ export async function POST(req: NextRequest) {
       status,
       images = [],
       amenities = [],
-      features = []
+      features = [],
+      contact_phone, // Campo requerido según schema
+      contact_name,
+      contact_email
     } = body
 
     // Validación de campos requeridos
-    if (!title || !description || !price || !propertyType || !bedrooms || !bathrooms || !area || !address || !city) {
+    if (!title || !description || !price || !propertyType || !bedrooms || !bathrooms || !area || !address || !city || !contact_phone) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos' },
+        { error: 'Faltan campos requeridos. Se requiere: title, description, price, propertyType, bedrooms, bathrooms, area, address, city, contact_phone' },
         { status: 400 }
       )
     }
@@ -107,6 +110,10 @@ export async function POST(req: NextRequest) {
           'Baño completo',
           'Patio'
         ]),
+        // Campos de contacto requeridos
+        contact_phone: contact_phone,
+        contact_name: contact_name || authenticatedUser.name,
+        contact_email: contact_email || authenticatedUser.email,
         userId: authenticatedUser.id, // Guardar automáticamente el ID del usuario autenticado
         agentId: defaultAgent.id
       }
@@ -202,7 +209,8 @@ export async function GET() {
       'bathrooms',
       'area',
       'address',
-      'city'
+      'city',
+      'contact_phone'
     ],
     optionalFields: [
       'garages',
@@ -212,7 +220,10 @@ export async function GET() {
       'status',
       'images',
       'amenities',
-      'features'
+      'features',
+      'contact_name',
+      'contact_email',
+      'currency'
     ],
     plans: {
       basico: { price: 0, features: ['Publicación básica', 'Hasta 3 fotos', 'Vigencia 30 días'] },
