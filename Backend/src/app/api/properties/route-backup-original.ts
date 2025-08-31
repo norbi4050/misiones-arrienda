@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     const insertData = {
       ...propertyData,
       userId: user?.id || null,
-      propertyType: propertyData.type, // Mapear type a propertyType
+      // propertyType ya viene correctamente del schema de validación
       images: JSON.stringify(propertyData.images || []),
       amenities: JSON.stringify(propertyData.amenities || []),
       features: JSON.stringify(propertyData.features || []),

@@ -312,7 +312,7 @@ export async function POST(request: NextRequest) {
       const insertData = {
         ...propertyData,
         userId: user?.id || null,
-        propertyType: propertyData.type, // Mapear type a propertyType
+        propertyType: propertyData.propertyType, // Mapear type a propertyType
         images: JSON.stringify(propertyData.images || []),
         amenities: JSON.stringify(propertyData.amenities || []),
         features: JSON.stringify(propertyData.features || []),
@@ -348,7 +348,7 @@ export async function POST(request: NextRequest) {
       newProperty = {
         id: (mockProperties.length + 1).toString(),
         ...propertyData,
-        propertyType: propertyData.type,
+        propertyType: propertyData.propertyType,
         contactName: propertyData.contactName || propertyData.contact_name,
         contactPhone: propertyData.contactPhone || propertyData.contact_phone,
         contactEmail: propertyData.contactEmail || propertyData.contact_email,
