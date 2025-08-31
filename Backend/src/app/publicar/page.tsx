@@ -12,7 +12,7 @@ import Link from "next/link"
 import toast from 'react-hot-toast'
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
-import { propertySchema, type PropertyFormData } from "@/lib/validations/property"
+import { propertyFormSchema, type PropertyFormSchemaData } from "@/lib/validations/property"
 
 // Componente de pantalla de autenticación requerida
 function AuthRequiredScreen() {
@@ -65,8 +65,8 @@ export default function PublicarPage() {
   const [selectedPlan, setSelectedPlan] = useState<'basico' | 'destacado' | 'full'>('basico')
   const [isProcessing, setIsProcessing] = useState(false)
   
-  const form = useForm<PropertyFormData>({
-    resolver: zodResolver(propertySchema),
+  const form = useForm<PropertyFormSchemaData>({
+    resolver: zodResolver(propertyFormSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -170,7 +170,7 @@ export default function PublicarPage() {
   }
 
   const validateStep1 = () => {
-    const result = propertySchema.safeParse(watchedValues)
+    const result = propertyFormSchema.safeParse(watchedValues)
     if (!result.success) {
       const firstError = result.error.errors[0]
       toast.error(firstError.message)
@@ -179,7 +179,7 @@ export default function PublicarPage() {
     return true
   }
 
-  const onSubmit = async (data: PropertyFormData) => {
+  const onSubmit = async (data: PropertyFormSchemaData) => {
     setIsProcessing(true)
     
     try {

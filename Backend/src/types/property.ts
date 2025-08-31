@@ -87,39 +87,65 @@ export interface InquiryData {
   interestedIn?: 'BUY' | 'RENT' | 'INFO'
 }
 
-// Tipo para formulario de creación (sin campos de sistema)
+// Tipo para formulario de creación (sincronizado con propertySchema)
 export interface PropertyFormData {
+  // Campos básicos requeridos
   title: string
   description: string
   price: number
   currency: string
+  oldPrice?: number
+  
+  // Tipo de propiedad
   propertyType: Property['propertyType']
+  
+  // Características
   bedrooms: number
   bathrooms: number
   garages: number
   area: number
   lotArea?: number
+  
+  // Ubicación
   address: string
   city: string
   province: string
+  country: string
   postalCode: string
   latitude?: number
   longitude?: number
+  
+  // Contacto
+  contact_name?: string
+  contact_phone: string
+  contact_email?: string
+  
+  // Multimedia
   images: string[]
   virtualTourUrl?: string
+  
+  // Características adicionales
   amenities: string[]
   features: string[]
   yearBuilt?: number
   floor?: number
   totalFloors?: number
-  contact_name?: string
-  contact_phone: string
-  contact_email?: string
+  
+  // Estado
+  status: Property['status']
+  featured: boolean
   
   // Campos específicos del formulario
   mascotas?: boolean
   expensasIncl?: boolean
   servicios?: string[]
+  
+  // Campos de sistema opcionales
+  expiresAt?: Date
+  highlightedUntil?: Date
+  isPaid?: boolean
+  userId?: string
+  agentId?: string
 }
 
 // Límites por plan

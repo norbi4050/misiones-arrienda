@@ -234,7 +234,7 @@ export class EnhancedEmailService {
             <p>Hemos recibido tu consulta y te contactaremos pronto. Aquí tienes un resumen:</p>
             
             <div style="background: white; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0;">
-                <p><strong>Tipo de consulta:</strong> ${this.getInquiryTypeLabel(inquiryData.type)}</p>
+                <p><strong>Tipo de consulta:</strong> ${this.getInquiryTypeLabel(inquiryData.type || 'GENERAL')}</p>
                 <p><strong>Mensaje:</strong> ${inquiryData.message}</p>
                 <p><strong>Teléfono:</strong> ${inquiryData.phone}</p>
                 ${inquiryData.propertyId ? `<p><strong>Propiedad:</strong> ID ${inquiryData.propertyId}</p>` : ''}
@@ -302,7 +302,7 @@ export class EnhancedEmailService {
                 <tr><td><strong>Nombre</strong></td><td>${inquiryData.name}</td></tr>
                 <tr><td><strong>Email</strong></td><td><a href="mailto:${inquiryData.email}">${inquiryData.email}</a></td></tr>
                 <tr><td><strong>Teléfono</strong></td><td><a href="tel:${inquiryData.phone}">${inquiryData.phone}</a></td></tr>
-                <tr><td><strong>Tipo</strong></td><td>${this.getInquiryTypeLabel(inquiryData.type)}</td></tr>
+                <tr><td><strong>Tipo</strong></td><td>${this.getInquiryTypeLabel(inquiryData.type || 'GENERAL')}</td></tr>
                 <tr><td><strong>Propiedad ID</strong></td><td>${inquiryData.propertyId || 'N/A'}</td></tr>
                 <tr><td><strong>Fecha</strong></td><td>${new Date().toLocaleString('es-AR')}</td></tr>
             </table>
