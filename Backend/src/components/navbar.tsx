@@ -1,144 +1,107 @@
 "use client"
 
-import { useState } from "react"
+import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Menu, X, Search, User, Heart, MessageCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Home, User, LogIn, Menu, X, LogOut, Building2, UserCheck, Search } from "lucide-react"
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import { Input } from "@/components/ui/input"
+
+const navigation = [
+  { name: 'Inicio', href: '/' },
+  { name: 'Propiedades', href: '/properties' },
+  { name: 'Comunidad', href: '/comunidad' },
+  { name: 'Publicar', href: '/publicar' },
+]
 
 export function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { user, isAuthenticated, logout, isLoading } = useSupabaseAuth()
-
-  const handleLogout = () => {
-    logout()
-    setIsMenuOpen(false)
-  }
-
-  // Función para obtener el icono y texto según el tipo de usuario
-  const getUserTypeInfo = () => {
-    if (!user?.userType) return { icon: User, text: "Usuario", color: "text-blue-600" }
-    
-    switch (user.userType) {
-      case 'inmobiliaria':
-        return { 
-          icon: Building2, 
-          text: "Inmobiliaria", 
-          color: "text-purple-600" 
-        }
-      case 'dueno_directo':
-        return { 
-          icon: UserCheck, 
-          text: "Dueño Directo", 
-          color: "text-green-600" 
-        }
-      case 'inquilino':
-      default:
-        return { 
-          icon: Search, 
-          text: "Inquilino", 
-          color: "text-blue-600" 
-        }
-    }
-  }
-
-  const userTypeInfo = getUserTypeInfo()
-  const UserIcon = userTypeInfo.icon
+  const [isOpen, setIsOpen] = React.useState(false)
+  const [searchOpen, setSearchOpen] = React.useState(false)
+  const pathname = usePathname()
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <Home className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">
-              Misiones Arrienda
-            </span>
-          </Link>
+          <div className="flex items-center">
+            <Link href="/" className="flex-shrink-0 flex items-center">
+              <span className="text-2xl font-bold text-primary">
+                Misiones Arrienda
+              </span>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/" 
-              className="text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              Inicio
-            </Link>
-            <Link 
-              href="/properties" 
-              className="text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              Propiedades
-            </Link>
-            <Link 
-              href="/comunidad" 
-              className="text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              Comunidad
-            </Link>
-            <Link 
-              href="/publicar" 
-              className="text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              Publicar
-            </Link>
-            
-            {/* Mostrar diferentes opciones según el estado de autenticación */}
-            {!isLoading && (
-              <>
-                {isAuthenticated ? (
-                  // Usuario logueado - mostrar pestaña personalizada según tipo
-                  <>
-                    <Link 
-                      href={`/profile/${user?.userType || 'user'}`}
-                      className={`hover:${userTypeInfo.color} transition-colors flex items-center space-x-1 ${userTypeInfo.color}`}
-                    >
-                      <UserIcon className="h-4 w-4" />
-                      <span>Mi Perfil</span>
-                    </Link>
-                    <span className="text-sm text-gray-600">
-                      Hola, {user?.name}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleLogout}
-                      className="flex items-center space-x-1"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Salir</span>
-                    </Button>
-                  </>
-                ) : (
-                  // Usuario no logueado - mostrar login y registro
-                  <>
-                    <Link 
-                      href="/login" 
-                      className="text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-1"
-                    >
-                      <LogIn className="h-4 w-4" />
-                      <span>Iniciar Sesión</span>
-                    </Link>
-                    <Link href="/register">
-                      <Button>
-                        Registrarse
-                      </Button>
-                    </Link>
-                  </>
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
+                  pathname === item.href
+                    ? "text-primary bg-primary/10 border-b-2 border-primary"
+                    : "text-gray-700 hover:text-primary hover:bg-gray-50"
                 )}
-              </>
-            )}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Search and Actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* Search */}
+            <div className="relative">
+              {searchOpen ? (
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="text"
+                    placeholder="Buscar propiedades..."
+                    className="w-64"
+                    icon={<Search className="h-4 w-4" />}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchOpen(true)}
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Quick Actions */}
+            <Button variant="ghost" size="sm">
+              <Heart className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <MessageCircle className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <User className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center">
             <Button
               variant="ghost"
-              size="icon"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              size="sm"
+              onClick={() => setIsOpen(!isOpen)}
             >
-              {isMenuOpen ? (
+              {isOpen ? (
                 <X className="h-6 w-6" />
               ) : (
                 <Menu className="h-6 w-6" />
@@ -146,89 +109,39 @@ export function Navbar() {
             </Button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t">
+      {/* Mobile Navigation */}
+      {isOpen && (
+        <div className="md:hidden border-t bg-white">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navigation.map((item) => (
               <Link
-                href="/"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200",
+                  pathname === item.href
+                    ? "text-primary bg-primary/10"
+                    : "text-gray-700 hover:text-primary hover:bg-gray-50"
+                )}
+                onClick={() => setIsOpen(false)}
               >
-                Inicio
+                {item.name}
               </Link>
-              <Link
-                href="/properties"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Propiedades
-              </Link>
-              <Link
-                href="/comunidad"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Comunidad
-              </Link>
-              <Link
-                href="/publicar"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Publicar
-              </Link>
-              
-              {/* Mobile auth options */}
-              {!isLoading && (
-                <>
-                  {isAuthenticated ? (
-                    // Usuario logueado - versión móvil
-                    <>
-                      <div className="px-3 py-2 text-sm text-gray-600 border-t">
-                        Hola, {user?.name}
-                      </div>
-                      <Link
-                        href={`/profile/${user?.userType || 'user'}`}
-                        className={`block px-3 py-2 hover:${userTypeInfo.color} transition-colors flex items-center space-x-2 ${userTypeInfo.color}`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <UserIcon className="h-4 w-4" />
-                        <span>Mi Perfil</span>
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-3 py-2 text-gray-700 hover:text-red-600 transition-colors"
-                      >
-                        Cerrar Sesión
-                      </button>
-                    </>
-                  ) : (
-                    // Usuario no logueado - versión móvil
-                    <>
-                      <Link
-                        href="/login"
-                        className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Iniciar Sesión
-                      </Link>
-                      <div className="px-3 py-2">
-                        <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                          <Button className="w-full">
-                            Registrarse
-                          </Button>
-                        </Link>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
+            ))}
+            
+            {/* Mobile Search */}
+            <div className="px-3 py-2">
+              <Input
+                type="text"
+                placeholder="Buscar propiedades..."
+                icon={<Search className="h-4 w-4" />}
+              />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   )
 }
