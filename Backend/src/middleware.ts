@@ -95,7 +95,11 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - api routes (handled separately)
+     * - auth/callback (Supabase auth callback)
+     * - auth/confirm (Supabase email confirmation)
+     * - auth/reset-password (Supabase password reset)
+     * - static assets
      */
-    '/((?!_next/static|_next/image|favicon.ico|api|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|auth/callback|auth/confirm|auth/reset-password|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

@@ -1,0 +1,79 @@
+{
+  "timestamp": "2025-08-30T21:24:22.095Z",
+  "results": {
+    "totalTests": 28,
+    "passed": 17,
+    "failed": 11,
+    "critical": 1,
+    "issues": [
+      {
+        "test": "Profile ID con @db.Uuid",
+        "status": "FAIL",
+        "details": "ID String con @db.Uuid causa conflictos en Supabase",
+        "severity": "critical"
+      },
+      {
+        "test": "Arrays JSON compatibles",
+        "status": "FAIL",
+        "details": "Arrays String[] no son compatibles con Supabase",
+        "severity": "high"
+      },
+      {
+        "test": "Manejo de errores cliente",
+        "status": "FAIL",
+        "details": "No hay manejo de errores en cliente",
+        "severity": "high"
+      },
+      {
+        "test": "Configuración robusta cliente",
+        "status": "FAIL",
+        "details": "Configuración básica sin opciones avanzadas",
+        "severity": "medium"
+      },
+      {
+        "test": "Exclusión rutas Supabase",
+        "status": "FAIL",
+        "details": "Middleware no excluye rutas críticas de Supabase",
+        "severity": "high"
+      },
+      {
+        "test": "Configuración Edge Runtime",
+        "status": "FAIL",
+        "details": "No hay configuración para Edge Runtime",
+        "severity": "medium"
+      },
+      {
+        "test": "route implementa RLS",
+        "status": "FAIL",
+        "details": "No hay implementación de RLS (Row Level Security)",
+        "severity": "high"
+      },
+      {
+        "test": "supabaseServer.ts eliminado",
+        "status": "FAIL",
+        "details": "Archivo legacy supabaseServer.ts aún existe",
+        "severity": "medium"
+      },
+      {
+        "test": "useSupabaseAuth.ts eliminado",
+        "status": "FAIL",
+        "details": "Archivo legacy useSupabaseAuth.ts aún existe",
+        "severity": "medium"
+      },
+      {
+        "test": "Archivos SQL duplicados",
+        "status": "FAIL",
+        "details": "20 archivos SQL de Supabase encontrados",
+        "severity": "medium"
+      },
+      {
+        "test": "Validación arrays JSON",
+        "status": "FAIL",
+        "details": "Arrays no validados como JSON",
+        "severity": "high"
+      }
+    ]
+  },
+  "overallStatus": "CRÍTICO",
+  "successRate": 60.7
+}
