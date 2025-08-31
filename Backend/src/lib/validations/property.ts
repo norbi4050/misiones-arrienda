@@ -32,6 +32,7 @@ export const propertySchema = z.object({
   address: z.string().min(1, 'La dirección es requerida').max(300, 'La dirección es muy larga'),
   city: z.string().min(1, 'La ciudad es requerida').max(100, 'El nombre de la ciudad es muy largo'),
   province: z.string().default('Misiones'),
+  country: z.string().default('Argentina'), // Campo faltante agregado
   postalCode: z.string().min(1, 'El código postal es requerido').max(10, 'Código postal inválido'),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),

@@ -20,9 +20,9 @@ const mockProperties = [
     country: 'Argentina',
     images: ['/placeholder-house-1.jpg'],
     amenities: ['garage', 'garden'],
-    contactName: 'Juan Pérez',
-    contactPhone: '+54 376 123456',
-    contactEmail: 'juan@example.com',
+    contact_name: 'Juan Pérez',
+    contact_phone: '+54 376 123456',
+    contact_email: 'juan@example.com',
     status: 'AVAILABLE',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -43,9 +43,9 @@ const mockProperties = [
     country: 'Argentina',
     images: ['/placeholder-apartment-1.jpg'],
     amenities: ['pool', 'gym'],
-    contactName: 'María González',
-    contactPhone: '+54 3757 987654',
-    contactEmail: 'maria@example.com',
+    contact_name: 'María González',
+    contact_phone: '+54 3757 987654',
+    contact_email: 'maria@example.com',
     status: 'AVAILABLE',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -66,9 +66,9 @@ const mockProperties = [
     country: 'Argentina',
     images: ['/placeholder-house-2.jpg'],
     amenities: ['parking'],
-    contactName: 'Carlos Rodríguez',
-    contactPhone: '+54 3755 456789',
-    contactEmail: 'carlos@example.com',
+    contact_name: 'Carlos Rodríguez',
+    contact_phone: '+54 3755 456789',
+    contact_email: 'carlos@example.com',
     status: 'AVAILABLE',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
     const propertyData = validationResult.data;
     
     // Validaciones adicionales de negocio
-    if (!propertyData.contactPhone) {
+    if (!propertyData.contact_phone) {
       return NextResponse.json(
         { 
           error: 'Contact phone is required',
@@ -316,9 +316,10 @@ export async function POST(request: NextRequest) {
         images: JSON.stringify(propertyData.images || []),
         amenities: JSON.stringify(propertyData.amenities || []),
         features: JSON.stringify(propertyData.features || []),
-        contactName: propertyData.contactName || propertyData.contact_name,
-        contactPhone: propertyData.contactPhone || propertyData.contact_phone,
-        contactEmail: propertyData.contactEmail || propertyData.contact_email,
+        contact_name: propertyData.contact_name || 'Sin nombre',
+        contact_phone: propertyData.contact_phone,
+        contact_email: propertyData.contact_email || '',
+        country: propertyData.country || 'Argentina',
         status: 'AVAILABLE',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -349,10 +350,11 @@ export async function POST(request: NextRequest) {
         id: (mockProperties.length + 1).toString(),
         ...propertyData,
         propertyType: propertyData.propertyType,
-        contactName: propertyData.contactName || propertyData.contact_name,
-        contactPhone: propertyData.contactPhone || propertyData.contact_phone,
-        contactEmail: propertyData.contactEmail || propertyData.contact_email,
+        contact_name: propertyData.contact_name || 'Sin nombre',
+        contact_phone: propertyData.contact_phone,
+        contact_email: propertyData.contact_email || '',
         status: 'AVAILABLE',
+        country: propertyData.country || 'Argentina',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };

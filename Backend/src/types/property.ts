@@ -14,11 +14,13 @@ export interface Property {
   address: string
   city: string
   province: string
+  country: string // Campo faltante agregado
   postalCode: string
   latitude?: number
   longitude?: number
   propertyType: 'APARTMENT' | 'HOUSE' | 'COMMERCIAL' | 'LAND' | 'OFFICE' | 'WAREHOUSE' | 'PH' | 'STUDIO'
   status: 'AVAILABLE' | 'RENTED' | 'SOLD' | 'MAINTENANCE' | 'RESERVED' | 'EXPIRED'
+  listingType?: 'SALE' | 'RENT' // Campo faltante agregado
   images: string[] // Array de URLs de imágenes
   virtualTourUrl?: string
   amenities: string[] // Array de amenidades
@@ -45,18 +47,42 @@ export interface Property {
   // Relaciones
   userId: string
   agentId?: string
+  agent?: {
+    id: string
+    name: string
+    email: string
+    phone?: string
+  }
 }
+
+// Tipos exportados individuales
+export type PropertyType = Property['propertyType']
+export type PropertyStatus = Property['status']
+export type ListingType = 'SALE' | 'RENT'
 
 // Tipo para filtros de propiedades
 export interface PropertyFilters {
   city?: string
+  province?: string // Campo faltante agregado
   propertyType?: Property['propertyType']
+  listingType?: ListingType // Campo faltante agregado
   minPrice?: number
   maxPrice?: number
   minBedrooms?: number
+  maxBedrooms?: number // Campo faltante agregado
   minBathrooms?: number
   featured?: boolean
   status?: Property['status']
+}
+
+// Tipo para datos de consulta/inquiry
+export interface InquiryData {
+  propertyId: string
+  name: string
+  email: string
+  phone?: string
+  message: string
+  interestedIn?: 'BUY' | 'RENT' | 'INFO'
 }
 
 // Tipo para formulario de creación (sin campos de sistema)
