@@ -340,8 +340,8 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                 propertyId={property.id}
                 address={`${property.address}, ${property.city}`}
                 price={property.price.toLocaleString()}
-                agentPhone={property.agent.phone}
-                agentName={property.agent.name}
+                agentPhone={property.agent?.phone || ''}
+                agentName={property.agent?.name || 'Agente no disponible'}
                 propertyTitle={property.title}
               />
             </div>
@@ -352,14 +352,14 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
               <div className="flex items-center mb-4">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
                   <span className="text-white font-bold text-xl">
-                    {property.agent.name.charAt(0)}
+                    {property.agent?.name?.charAt(0) || 'A'}
                   </span>
                 </div>
                 <div>
-                  <div className="font-semibold text-lg">{property.agent.name}</div>
+                  <div className="font-semibold text-lg">{property.agent?.name || 'Agente no disponible'}</div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                    {property.agent.rating}/5 • Agente Verificado
+                    {property.agent?.rating || 0}/5 • Agente Verificado
                   </div>
                 </div>
               </div>
@@ -367,11 +367,11 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
               <div className="space-y-3 mb-6">
                 <div className="flex items-center text-sm bg-gray-50 p-3 rounded-lg">
                   <Phone className="h-4 w-4 mr-3 text-blue-500" />
-                  <span className="font-medium">{property.agent.phone}</span>
+                  <span className="font-medium">{property.agent?.phone || 'No disponible'}</span>
                 </div>
                 <div className="flex items-center text-sm bg-gray-50 p-3 rounded-lg">
                   <Mail className="h-4 w-4 mr-3 text-blue-500" />
-                  <span className="font-medium">{property.agent.email}</span>
+                  <span className="font-medium">{property.agent?.email || 'No disponible'}</span>
                 </div>
               </div>
 

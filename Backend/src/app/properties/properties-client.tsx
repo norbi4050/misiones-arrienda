@@ -54,8 +54,10 @@ export function PropertiesPageClient() {
         title: "Casa moderna en Posadas Centro",
         description: "Hermosa casa de 3 dormitorios en el corazón de Posadas, con todas las comodidades modernas.",
         price: 120000,
+        currency: "ARS",
         city: "Posadas",
         province: "Misiones",
+        country: "Argentina",
         latitude: -27.3621,
         longitude: -55.9008,
         images: ["/placeholder-house-1.jpg", "/placeholder-house-2.jpg"],
@@ -72,14 +74,16 @@ export function PropertiesPageClient() {
         yearBuilt: 2020,
         amenities: ["Piscina", "Jardín", "Parrilla", "Garage"],
         features: ["Cocina moderna", "Pisos de cerámica", "Aire acondicionado"],
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
+        contact_phone: "+54 376 123456",
+        isPaid: false,
+        userId: "user1",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
         agent: {
           id: "agent1",
           name: "Juan Pérez",
           phone: "+54 376 123456",
-          email: "juan@example.com",
-          rating: 4.8
+          email: "juan@example.com"
         }
       },
       {
@@ -87,8 +91,10 @@ export function PropertiesPageClient() {
         title: "Departamento céntrico en Oberá",
         description: "Moderno departamento de 2 dormitorios en el centro de Oberá, ideal para parejas jóvenes.",
         price: 85000,
+        currency: "ARS",
         city: "Oberá",
         province: "Misiones",
+        country: "Argentina",
         latitude: -27.4878,
         longitude: -55.1199,
         images: ["/placeholder-apartment-1.jpg", "/placeholder-apartment-2.jpg"],
@@ -105,14 +111,16 @@ export function PropertiesPageClient() {
         yearBuilt: 2018,
         amenities: ["Portero", "Ascensor", "Balcón"],
         features: ["Cocina integrada", "Pisos flotantes"],
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
+        contact_phone: "+54 376 654321",
+        isPaid: false,
+        userId: "user2",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
         agent: {
           id: "agent2",
           name: "María García",
           phone: "+54 376 654321",
-          email: "maria@example.com",
-          rating: 4.5
+          email: "maria@example.com"
         }
       },
       {
@@ -120,8 +128,10 @@ export function PropertiesPageClient() {
         title: "Local comercial en Puerto Iguazú",
         description: "Excelente local comercial en zona turística de Puerto Iguazú, ideal para negocio gastronómico.",
         price: 200000,
+        currency: "ARS",
         city: "Puerto Iguazú",
         province: "Misiones",
+        country: "Argentina",
         latitude: -25.5948,
         longitude: -54.5805,
         images: ["/placeholder-commercial-1.jpg"],
@@ -138,14 +148,16 @@ export function PropertiesPageClient() {
         yearBuilt: 2015,
         amenities: ["Aire acondicionado", "Estacionamiento"],
         features: ["Vidriera amplia", "Depósito", "Baño completo"],
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
+        contact_phone: "+54 376 789012",
+        isPaid: false,
+        userId: "user3",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
         agent: {
           id: "agent3",
           name: "Carlos López",
           phone: "+54 376 789012",
-          email: "carlos@example.com",
-          rating: 4.7
+          email: "carlos@example.com"
         }
       },
       {
@@ -153,8 +165,10 @@ export function PropertiesPageClient() {
         title: "Terreno en Eldorado",
         description: "Amplio terreno de 1000m² en Eldorado, ideal para construcción de vivienda familiar.",
         price: 45000,
+        currency: "ARS",
         city: "Eldorado",
         province: "Misiones",
+        country: "Argentina",
         latitude: -26.4009,
         longitude: -54.6156,
         images: ["/placeholder-land-1.jpg"],
@@ -170,14 +184,16 @@ export function PropertiesPageClient() {
         postalCode: "3380",
         amenities: ["Luz", "Agua"],
         features: ["Esquina", "Arbolado"],
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
+        contact_phone: "+54 376 345678",
+        isPaid: false,
+        userId: "user4",
+        createdAt: new Date("2024-01-01T00:00:00Z"),
+        updatedAt: new Date("2024-01-01T00:00:00Z"),
         agent: {
           id: "agent4",
           name: "Ana Rodríguez",
           phone: "+54 376 345678",
-          email: "ana@example.com",
-          rating: 4.6
+          email: "ana@example.com"
         }
       }
     ]

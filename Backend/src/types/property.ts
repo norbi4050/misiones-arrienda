@@ -52,13 +52,14 @@ export interface Property {
     name: string
     email: string
     phone?: string
+    rating?: number
   }
 }
 
 // Tipos exportados individuales
 export type PropertyType = Property['propertyType']
 export type PropertyStatus = Property['status']
-export type ListingType = 'SALE' | 'RENT'
+export type ListingType = 'SALE' | 'RENT' | 'BOTH'
 
 // Tipo para filtros de propiedades
 export interface PropertyFilters {
@@ -82,6 +83,7 @@ export interface InquiryData {
   email: string
   phone?: string
   message: string
+  type?: 'GENERAL' | 'VISIT' | 'INFO' | 'BUY' | 'RENT'
   interestedIn?: 'BUY' | 'RENT' | 'INFO'
 }
 

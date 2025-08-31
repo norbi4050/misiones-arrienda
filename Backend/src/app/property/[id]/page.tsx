@@ -101,12 +101,12 @@ export default async function PropertyDetailPage({ params }: Props) {
             "numberOfBathroomsTotal": property.bathrooms,
             "yearBuilt": property.yearBuilt,
             "propertyType": property.propertyType,
-            "listingAgent": {
+            "listingAgent": property.agent ? {
               "@type": "RealEstateAgent",
               "name": property.agent.name,
               "telephone": property.agent.phone,
               "email": property.agent.email
-            }
+            } : undefined
           })
         }}
       />
