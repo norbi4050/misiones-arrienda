@@ -1,3 +1,7 @@
+// 56. SOLUCIÓN ERROR REGISTRO USUARIO MEJORADA
+// Fecha: 9 de Enero 2025
+// Objetivo: Corregir el error "Database error saving new user" con manejo robusto
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -461,5 +465,37 @@ export async function POST(request: NextRequest) {
       code: 'GENERAL_ERROR',
       processingTime: `${processingTime}ms`
     } as ErrorResponse, { status: 500 });
+  }
+}
+
+// Función auxiliar para logging estructurado
+function logError(context: string, error: any) {
+  console.error(`❌ [${context}] Error:`, {
+    message: error?.message || 'Unknown error',
+    name: error?.name || 'Unknown',
+    stack: error?.stack || 'No stack trace',
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Función auxiliar para validar esquema de base de datos
+async function validateDatabaseSchema(supabase: any): Promise<boolean> {
+  try {
+    // Verificar que la tabla users existe y tiene los campos necesarios
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, name, email, phone, user_type, created_at')
+      .limit(1);
+    
+    if (error) {
+      console.error('❌ [SCHEMA] Error validando esquema:', error);
+      return false;
+    }
+    
+    console.log('✅ [SCHEMA] Esquema de base de datos validado');
+    return true;
+  } catch (error) {
+    console.error('❌ [SCHEMA] Excepción validando esquema:', error);
+    return false;
   }
 }
