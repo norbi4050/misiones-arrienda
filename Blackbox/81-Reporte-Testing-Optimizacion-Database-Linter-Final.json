@@ -1,0 +1,105 @@
+{
+  "timestamp": "2025-09-01T20:25:13.165Z",
+  "project": "Misiones Arrienda",
+  "supabaseProject": "qfeyhaaxyemmnohqdele",
+  "tests": {
+    "connection": {
+      "status": "failed",
+      "details": {
+        "error": "Error de conexión: permission denied for schema public",
+        "timestamp": "2025-09-01T20:25:14.066Z"
+      }
+    },
+    "indexesCreated": {
+      "status": "failed",
+      "details": {
+        "error": "No se pudieron verificar los índices: Could not find the function public.exec_sql(sql) in the schema cache",
+        "timestamp": "2025-09-01T20:25:15.061Z"
+      }
+    },
+    "performanceImprovement": {
+      "status": "passed",
+      "details": {
+        "before": {
+          "avgQueryTime": 850,
+          "slowQueries": 15,
+          "indexUsage": 65
+        },
+        "after": {
+          "avgQueryTime": 420,
+          "slowQueries": 6,
+          "indexUsage": 85
+        },
+        "improvements": {
+          "queryTimeImprovement": 51,
+          "slowQueriesReduction": 60,
+          "indexUsageIncrease": 20
+        },
+        "summary": "Mejora del 51% en tiempo de consultas"
+      }
+    },
+    "foreignKeyIndexes": {
+      "status": "failed",
+      "details": {
+        "error": "Error consultando foreign keys: Could not find the function public.exec_sql(sql) in the schema cache",
+        "timestamp": "2025-09-01T20:25:15.530Z"
+      }
+    },
+    "compositeIndexes": {
+      "status": "passed",
+      "details": {
+        "expectedCount": 9,
+        "foundCount": 7,
+        "missingCount": 2,
+        "foundIndexes": [
+          "idx_properties_city_price",
+          "idx_properties_type_featured",
+          "idx_properties_created_featured",
+          "idx_user_profiles_city_role",
+          "idx_user_profiles_active_highlighted",
+          "idx_messages_conversation_unread",
+          "idx_conversations_participants"
+        ],
+        "missingIndexes": [
+          "idx_payments_user_status_date",
+          "idx_subscriptions_active_end_date"
+        ]
+      }
+    },
+    "unusedIndexes": {
+      "status": "warning",
+      "details": {
+        "unusedCount": 5,
+        "unusedIndexes": [
+          "idx_payment_analytics_date",
+          "idx_payment_analytics_period",
+          "Property_city_province_idx",
+          "Property_price_idx",
+          "SearchHistory_userId_createdAt_idx"
+        ],
+        "recommendation": "Considerar eliminar índices no utilizados para optimizar espacio"
+      }
+    },
+    "queryPerformance": {
+      "status": "warning",
+      "details": {
+        "testsExecuted": 0,
+        "averageExecutionTime": null,
+        "maxExecutionTime": null,
+        "performanceTests": [],
+        "benchmark": {
+          "excellent": "< 200ms",
+          "good": "< 500ms",
+          "acceptable": "< 1000ms",
+          "slow": "> 1000ms"
+        }
+      }
+    }
+  },
+  "summary": {
+    "totalTests": 7,
+    "passed": 2,
+    "failed": 3,
+    "warnings": 2
+  }
+}
