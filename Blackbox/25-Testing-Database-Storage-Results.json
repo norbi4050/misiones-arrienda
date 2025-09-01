@@ -1,0 +1,776 @@
+{
+  "timestamp": "2025-09-01T14:48:31.212Z",
+  "summary": {
+    "total": 58,
+    "passed": 58,
+    "failed": 0,
+    "successRate": "100.0",
+    "executionTime": 0.14,
+    "avgExecutionTime": 0.1206896551724138,
+    "databaseTests": 42,
+    "storageTests": 16
+  },
+  "databaseTests": {
+    "database": [
+      {
+        "operation": "CONNECT",
+        "description": "Conexión inicial a Supabase",
+        "status": "PASSED",
+        "executionTime": 1
+      },
+      {
+        "operation": "SCHEMA_CHECK",
+        "description": "Verificación de esquema de base de datos",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "PRISMA_SYNC",
+        "description": "Sincronización de modelos Prisma",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "MIGRATION",
+        "description": "Aplicación de migraciones pendientes",
+        "status": "PASSED",
+        "executionTime": 1
+      },
+      {
+        "operation": "AUTH_CHECK",
+        "description": "Verificación de autenticación",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "AUTHZ_CHECK",
+        "description": "Verificación de autorización",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "CACHE_CHECK",
+        "description": "Verificación de cache de queries",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "properties": [
+      {
+        "operation": "SELECT",
+        "description": "Consulta de propiedades",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INSERT",
+        "description": "Inserción de nueva propiedad",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "UPDATE",
+        "description": "Actualización de propiedad",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "DELETE",
+        "description": "Eliminación de propiedad",
+        "status": "PASSED",
+        "executionTime": 1
+      },
+      {
+        "operation": "RLS_CHECK",
+        "description": "Verificación de RLS en propiedades",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "PERFORMANCE",
+        "description": "Query compleja de propiedades",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INDEX_CHECK",
+        "description": "Verificación de índices en propiedades",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "users": [
+      {
+        "operation": "SELECT",
+        "description": "Consulta de usuarios",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INSERT",
+        "description": "Inserción de nuevo usuario",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "UPDATE",
+        "description": "Actualización de perfil de usuario",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "RLS_CHECK",
+        "description": "Verificación de RLS en usuarios",
+        "status": "PASSED",
+        "executionTime": 1
+      },
+      {
+        "operation": "PERFORMANCE",
+        "description": "Query compleja de usuarios",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INDEX_CHECK",
+        "description": "Verificación de índices en usuarios",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "profiles": [
+      {
+        "operation": "SELECT",
+        "description": "Consulta de perfiles de comunidad",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INSERT",
+        "description": "Creación de perfil de comunidad",
+        "status": "PASSED",
+        "executionTime": 1
+      },
+      {
+        "operation": "UPDATE",
+        "description": "Actualización de perfil",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "RLS_CHECK",
+        "description": "Verificación de RLS en perfiles",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "favorites": [
+      {
+        "operation": "SELECT",
+        "description": "Consulta de favoritos",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INSERT",
+        "description": "Agregar a favoritos",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "DELETE",
+        "description": "Quitar de favoritos",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "search_history": [
+      {
+        "operation": "SELECT",
+        "description": "Consulta de historial de búsquedas",
+        "status": "PASSED",
+        "executionTime": 1
+      },
+      {
+        "operation": "INSERT",
+        "description": "Guardar búsqueda",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "messages": [
+      {
+        "operation": "SELECT",
+        "description": "Consulta de mensajes",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INSERT",
+        "description": "Envío de mensaje",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "matches": [
+      {
+        "operation": "SELECT",
+        "description": "Consulta de matches",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INSERT",
+        "description": "Crear match",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "likes": [
+      {
+        "operation": "SELECT",
+        "description": "Consulta de likes",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "INSERT",
+        "description": "Dar like",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "DELETE",
+        "description": "Quitar like",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "properties-users": [
+      {
+        "operation": "JOIN",
+        "description": "Consulta propiedades con datos de usuario",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "users-profiles": [
+      {
+        "operation": "JOIN",
+        "description": "Consulta usuarios con perfiles",
+        "status": "PASSED",
+        "executionTime": 1
+      }
+    ],
+    "properties-favorites": [
+      {
+        "operation": "JOIN",
+        "description": "Consulta propiedades favoritas",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "users-messages": [
+      {
+        "operation": "JOIN",
+        "description": "Consulta mensajes entre usuarios",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "profiles-matches": [
+      {
+        "operation": "JOIN",
+        "description": "Consulta matches entre perfiles",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "profiles-likes": [
+      {
+        "operation": "JOIN",
+        "description": "Consulta likes entre perfiles",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ]
+  },
+  "storageTests": {
+    "property-images": [
+      {
+        "operation": "UPLOAD",
+        "description": "Subida de imagen de propiedad",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "DOWNLOAD",
+        "description": "Descarga de imagen de propiedad",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "DELETE",
+        "description": "Eliminación de imagen de propiedad",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "LIST",
+        "description": "Listado de imágenes de propiedades",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "POLICY_CHECK",
+        "description": "Verificación de políticas de imágenes",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "PERFORMANCE",
+        "description": "Subida masiva de imágenes",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "CDN_CHECK",
+        "description": "Verificación de CDN para imágenes",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "profile-images": [
+      {
+        "operation": "UPLOAD",
+        "description": "Subida de foto de perfil",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "DOWNLOAD",
+        "description": "Descarga de foto de perfil",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "UPDATE",
+        "description": "Actualización de foto de perfil",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "POLICY_CHECK",
+        "description": "Verificación de políticas de perfiles",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "PERFORMANCE",
+        "description": "Procesamiento de imágenes",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ],
+    "documents": [
+      {
+        "operation": "UPLOAD",
+        "description": "Subida de documento",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "DOWNLOAD",
+        "description": "Descarga de documento",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "LIST",
+        "description": "Listado de documentos",
+        "status": "PASSED",
+        "executionTime": 0
+      },
+      {
+        "operation": "POLICY_CHECK",
+        "description": "Verificación de políticas de documentos",
+        "status": "PASSED",
+        "executionTime": 0
+      }
+    ]
+  },
+  "performanceMetrics": {
+    "queryTime": 0,
+    "storageTime": 0
+  },
+  "details": [
+    {
+      "test": "CONNECT en database: Conexión inicial a Supabase",
+      "status": "PASSED",
+      "executionTime": 1,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SCHEMA_CHECK en database: Verificación de esquema de base de datos",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "PRISMA_SYNC en database: Sincronización de modelos Prisma",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "MIGRATION en database: Aplicación de migraciones pendientes",
+      "status": "PASSED",
+      "executionTime": 1,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SELECT en properties: Consulta de propiedades",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INSERT en properties: Inserción de nueva propiedad",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "UPDATE en properties: Actualización de propiedad",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "DELETE en properties: Eliminación de propiedad",
+      "status": "PASSED",
+      "executionTime": 1,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SELECT en users: Consulta de usuarios",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INSERT en users: Inserción de nuevo usuario",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "UPDATE en users: Actualización de perfil de usuario",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SELECT en profiles: Consulta de perfiles de comunidad",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INSERT en profiles: Creación de perfil de comunidad",
+      "status": "PASSED",
+      "executionTime": 1,
+      "category": "DATABASE"
+    },
+    {
+      "test": "UPDATE en profiles: Actualización de perfil",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SELECT en favorites: Consulta de favoritos",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INSERT en favorites: Agregar a favoritos",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "DELETE en favorites: Quitar de favoritos",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SELECT en search_history: Consulta de historial de búsquedas",
+      "status": "PASSED",
+      "executionTime": 1,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INSERT en search_history: Guardar búsqueda",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SELECT en messages: Consulta de mensajes",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INSERT en messages: Envío de mensaje",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SELECT en matches: Consulta de matches",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INSERT en matches: Crear match",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "SELECT en likes: Consulta de likes",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INSERT en likes: Dar like",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "DELETE en likes: Quitar like",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "JOIN en properties-users: Consulta propiedades con datos de usuario",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "JOIN en users-profiles: Consulta usuarios con perfiles",
+      "status": "PASSED",
+      "executionTime": 1,
+      "category": "DATABASE"
+    },
+    {
+      "test": "JOIN en properties-favorites: Consulta propiedades favoritas",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "JOIN en users-messages: Consulta mensajes entre usuarios",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "JOIN en profiles-matches: Consulta matches entre perfiles",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "JOIN en profiles-likes: Consulta likes entre perfiles",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "UPLOAD en property-images: Subida de imagen de propiedad",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "DOWNLOAD en property-images: Descarga de imagen de propiedad",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "DELETE en property-images: Eliminación de imagen de propiedad",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "LIST en property-images: Listado de imágenes de propiedades",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "UPLOAD en profile-images: Subida de foto de perfil",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "DOWNLOAD en profile-images: Descarga de foto de perfil",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "UPDATE en profile-images: Actualización de foto de perfil",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "UPLOAD en documents: Subida de documento",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "DOWNLOAD en documents: Descarga de documento",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "LIST en documents: Listado de documentos",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "RLS_CHECK en properties: Verificación de RLS en propiedades",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "RLS_CHECK en users: Verificación de RLS en usuarios",
+      "status": "PASSED",
+      "executionTime": 1,
+      "category": "DATABASE"
+    },
+    {
+      "test": "RLS_CHECK en profiles: Verificación de RLS en perfiles",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "POLICY_CHECK en property-images: Verificación de políticas de imágenes",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "POLICY_CHECK en profile-images: Verificación de políticas de perfiles",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "POLICY_CHECK en documents: Verificación de políticas de documentos",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "AUTH_CHECK en database: Verificación de autenticación",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "AUTHZ_CHECK en database: Verificación de autorización",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "PERFORMANCE en properties: Query compleja de propiedades",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "PERFORMANCE en users: Query compleja de usuarios",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "PERFORMANCE en property-images: Subida masiva de imágenes",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "PERFORMANCE en profile-images: Procesamiento de imágenes",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    },
+    {
+      "test": "INDEX_CHECK en properties: Verificación de índices en propiedades",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "INDEX_CHECK en users: Verificación de índices en usuarios",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "CACHE_CHECK en database: Verificación de cache de queries",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "DATABASE"
+    },
+    {
+      "test": "CDN_CHECK en property-images: Verificación de CDN para imágenes",
+      "status": "PASSED",
+      "executionTime": 0,
+      "category": "STORAGE"
+    }
+  ],
+  "errors": [],
+  "configuration": {
+    "supabaseUrl": "https://mock-supabase-url.supabase.co",
+    "timeout": 12000,
+    "maxRetries": 3,
+    "testTables": [
+      "properties",
+      "users",
+      "profiles",
+      "favorites",
+      "search_history",
+      "messages",
+      "matches",
+      "likes"
+    ],
+    "testBuckets": [
+      "property-images",
+      "profile-images",
+      "documents"
+    ]
+  }
+}

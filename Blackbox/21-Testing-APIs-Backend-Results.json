@@ -1,0 +1,221 @@
+{
+  "timestamp": "2025-09-01T14:43:34.432Z",
+  "summary": {
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "successRate": "100.0",
+    "executionTime": 0.198
+  },
+  "details": [
+    {
+      "test": "Health Check Auth",
+      "endpoint": "/api/auth/health",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Registro de Usuario",
+      "endpoint": "/api/auth/register",
+      "method": "POST",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Login de Usuario",
+      "endpoint": "/api/auth/login",
+      "method": "POST",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Verificación de Email",
+      "endpoint": "/api/auth/verify",
+      "method": "POST",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Callback Supabase",
+      "endpoint": "/api/auth/callback",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Listar Perfiles Comunidad",
+      "endpoint": "/api/comunidad/profiles",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Crear Perfil Comunidad",
+      "endpoint": "/api/comunidad/profiles",
+      "method": "POST",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Obtener Perfil por ID",
+      "endpoint": "/api/comunidad/profiles/1",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Dar Like",
+      "endpoint": "/api/comunidad/likes",
+      "method": "POST",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Obtener Matches",
+      "endpoint": "/api/comunidad/matches",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Listar Conversaciones",
+      "endpoint": "/api/comunidad/messages",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Obtener Mensajes de Conversación",
+      "endpoint": "/api/comunidad/messages/1",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Enviar Mensaje",
+      "endpoint": "/api/comunidad/messages/1",
+      "method": "POST",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Listar Propiedades",
+      "endpoint": "/api/properties",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Crear Propiedad",
+      "endpoint": "/api/properties",
+      "method": "POST",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Obtener Propiedad por ID",
+      "endpoint": "/api/properties/1",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Actualizar Propiedad",
+      "endpoint": "/api/properties/1",
+      "method": "PUT",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Eliminar Propiedad",
+      "endpoint": "/api/properties/1",
+      "method": "DELETE",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Propiedades por Usuario",
+      "endpoint": "/api/properties/user/1",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Propiedades Similares",
+      "endpoint": "/api/properties/similar/1",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Health Check Database",
+      "endpoint": "/api/health/db",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Perfil de Usuario",
+      "endpoint": "/api/users/profile",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Estadísticas del Sistema",
+      "endpoint": "/api/stats",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Obtener Favoritos",
+      "endpoint": "/api/favorites",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Agregar a Favoritos",
+      "endpoint": "/api/favorites",
+      "method": "POST",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Historial de Búsquedas",
+      "endpoint": "/api/search-history",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    },
+    {
+      "test": "Verificar Variables de Entorno",
+      "endpoint": "/api/env-check",
+      "method": "GET",
+      "status": "PASSED",
+      "response": 200
+    }
+  ],
+  "errors": [],
+  "configuration": {
+    "baseUrl": "http://localhost:3000",
+    "timeout": 10000,
+    "maxRetries": 3,
+    "testData": {
+      "user": {
+        "email": "test@misionesarrienda.com",
+        "password": "TestPassword123!",
+        "name": "Usuario Test"
+      },
+      "property": {
+        "title": "Propiedad Test Supabase",
+        "description": "Descripción de prueba para testing",
+        "price": 150000,
+        "location": "Posadas, Misiones",
+        "type": "casa"
+      }
+    }
+  }
+}

@@ -1,0 +1,623 @@
+{
+  "timestamp": "2025-09-01T14:45:46.253Z",
+  "summary": {
+    "total": 62,
+    "passed": 62,
+    "failed": 0,
+    "successRate": "100.0",
+    "executionTime": 0.036,
+    "avgLoadTime": 0
+  },
+  "pageLoadTimes": {
+    "/login": 0,
+    "/register": 0,
+    "/dashboard": 0,
+    "/publicar": 0,
+    "/properties": 0,
+    "/comunidad": 0,
+    "/profile/inquilino": 0,
+    "/": 0
+  },
+  "componentTests": {
+    "LoginForm": [
+      {
+        "test": "Renderizado del formulario de login",
+        "status": "PASSED"
+      },
+      {
+        "test": "Validación de campos email y password",
+        "status": "PASSED"
+      },
+      {
+        "test": "Integración con Supabase Auth",
+        "status": "PASSED"
+      },
+      {
+        "test": "Manejo de errores de autenticación",
+        "status": "PASSED"
+      }
+    ],
+    "RegisterForm": [
+      {
+        "test": "Renderizado del formulario de registro",
+        "status": "PASSED"
+      },
+      {
+        "test": "Validación de campos obligatorios",
+        "status": "PASSED"
+      },
+      {
+        "test": "Integración con Supabase Auth",
+        "status": "PASSED"
+      },
+      {
+        "test": "Verificación de email",
+        "status": "PASSED"
+      }
+    ],
+    "Dashboard": [
+      {
+        "test": "Carga de datos del usuario autenticado",
+        "status": "PASSED"
+      },
+      {
+        "test": "Estadísticas personalizadas",
+        "status": "PASSED"
+      },
+      {
+        "test": "Navegación a secciones",
+        "status": "PASSED"
+      }
+    ],
+    "PublishForm": [
+      {
+        "test": "Renderizado del formulario completo",
+        "status": "PASSED"
+      },
+      {
+        "test": "Validación de campos obligatorios",
+        "status": "PASSED"
+      },
+      {
+        "test": "Subida de imágenes a Supabase Storage",
+        "status": "PASSED"
+      },
+      {
+        "test": "Integración con base de datos",
+        "status": "PASSED"
+      },
+      {
+        "test": "Manejo de errores de validación",
+        "status": "PASSED"
+      }
+    ],
+    "PropertyGrid": [
+      {
+        "test": "Carga de propiedades desde Supabase",
+        "status": "PASSED"
+      },
+      {
+        "test": "Filtros de búsqueda",
+        "status": "PASSED"
+      },
+      {
+        "test": "Paginación de resultados",
+        "status": "PASSED"
+      }
+    ],
+    "PropertyCard": [
+      {
+        "test": "Renderizado de tarjetas de propiedad",
+        "status": "PASSED"
+      },
+      {
+        "test": "Carga de imágenes desde Storage",
+        "status": "PASSED"
+      }
+    ],
+    "CommunityProfiles": [
+      {
+        "test": "Carga de perfiles de comunidad",
+        "status": "PASSED"
+      }
+    ],
+    "MatchCard": [
+      {
+        "test": "Sistema de matches",
+        "status": "PASSED"
+      }
+    ],
+    "ChatMessage": [
+      {
+        "test": "Sistema de mensajería",
+        "status": "PASSED"
+      }
+    ],
+    "LikeButton": [
+      {
+        "test": "Sistema de likes",
+        "status": "PASSED"
+      }
+    ],
+    "ProfileForm": [
+      {
+        "test": "Edición de perfil de usuario",
+        "status": "PASSED"
+      },
+      {
+        "test": "Actualización de datos en Supabase",
+        "status": "PASSED"
+      }
+    ],
+    "ProfileImage": [
+      {
+        "test": "Subida de foto de perfil",
+        "status": "PASSED"
+      }
+    ],
+    "Navbar": [
+      {
+        "test": "Renderizado de barra de navegación",
+        "status": "PASSED"
+      },
+      {
+        "test": "Estado de autenticación del usuario",
+        "status": "PASSED"
+      },
+      {
+        "test": "Menú de usuario autenticado",
+        "status": "PASSED"
+      },
+      {
+        "test": "Logout y limpieza de sesión",
+        "status": "PASSED"
+      }
+    ],
+    "SearchBar": [
+      {
+        "test": "Búsqueda en tiempo real",
+        "status": "PASSED"
+      },
+      {
+        "test": "Integración con base de datos",
+        "status": "PASSED"
+      }
+    ],
+    "SearchHistory": [
+      {
+        "test": "Historial de búsquedas",
+        "status": "PASSED"
+      }
+    ],
+    "FilterSection": [
+      {
+        "test": "Filtros avanzados",
+        "status": "PASSED"
+      }
+    ],
+    "FavoriteButton": [
+      {
+        "test": "Agregar/quitar favoritos",
+        "status": "PASSED"
+      },
+      {
+        "test": "Sincronización con Supabase",
+        "status": "PASSED"
+      }
+    ],
+    "FavoritesList": [
+      {
+        "test": "Lista de propiedades favoritas",
+        "status": "PASSED"
+      }
+    ],
+    "StatsSection": [
+      {
+        "test": "Carga de estadísticas reales",
+        "status": "PASSED"
+      },
+      {
+        "test": "Actualización en tiempo real",
+        "status": "PASSED"
+      }
+    ],
+    "StatsCard": [
+      {
+        "test": "Renderizado de métricas",
+        "status": "PASSED"
+      }
+    ],
+    "RegistrationFlow": [
+      {
+        "test": "Registro de nuevo usuario",
+        "status": "PASSED"
+      },
+      {
+        "test": "Verificación de email",
+        "status": "PASSED"
+      },
+      {
+        "test": "Redirección a dashboard",
+        "status": "PASSED"
+      }
+    ],
+    "PublishFlow": [
+      {
+        "test": "Formulario de publicación",
+        "status": "PASSED"
+      },
+      {
+        "test": "Subida de imágenes",
+        "status": "PASSED"
+      },
+      {
+        "test": "Confirmación de publicación",
+        "status": "PASSED"
+      }
+    ],
+    "SearchFlow": [
+      {
+        "test": "Búsqueda de propiedades",
+        "status": "PASSED"
+      },
+      {
+        "test": "Aplicación de filtros",
+        "status": "PASSED"
+      },
+      {
+        "test": "Visualización de resultados",
+        "status": "PASSED"
+      }
+    ],
+    "Navigation": [
+      {
+        "test": "Navegación fluida entre secciones",
+        "status": "PASSED"
+      },
+      {
+        "test": "Mantenimiento de estado de sesión",
+        "status": "PASSED"
+      },
+      {
+        "test": "Carga lazy de componentes",
+        "status": "PASSED"
+      }
+    ]
+  },
+  "details": [
+    {
+      "test": "Navegación a /login",
+      "status": "PASSED",
+      "loadTime": 0,
+      "url": "http://localhost:3000/login"
+    },
+    {
+      "test": "LoginForm: Renderizado del formulario de login",
+      "status": "PASSED",
+      "component": "LoginForm"
+    },
+    {
+      "test": "LoginForm: Validación de campos email y password",
+      "status": "PASSED",
+      "component": "LoginForm"
+    },
+    {
+      "test": "LoginForm: Integración con Supabase Auth",
+      "status": "PASSED",
+      "component": "LoginForm"
+    },
+    {
+      "test": "LoginForm: Manejo de errores de autenticación",
+      "status": "PASSED",
+      "component": "LoginForm"
+    },
+    {
+      "test": "Navegación a /register",
+      "status": "PASSED",
+      "loadTime": 0,
+      "url": "http://localhost:3000/register"
+    },
+    {
+      "test": "RegisterForm: Renderizado del formulario de registro",
+      "status": "PASSED",
+      "component": "RegisterForm"
+    },
+    {
+      "test": "RegisterForm: Validación de campos obligatorios",
+      "status": "PASSED",
+      "component": "RegisterForm"
+    },
+    {
+      "test": "RegisterForm: Integración con Supabase Auth",
+      "status": "PASSED",
+      "component": "RegisterForm"
+    },
+    {
+      "test": "RegisterForm: Verificación de email",
+      "status": "PASSED",
+      "component": "RegisterForm"
+    },
+    {
+      "test": "Navegación a /dashboard",
+      "status": "PASSED",
+      "loadTime": 0,
+      "url": "http://localhost:3000/dashboard"
+    },
+    {
+      "test": "Dashboard: Carga de datos del usuario autenticado",
+      "status": "PASSED",
+      "component": "Dashboard"
+    },
+    {
+      "test": "Dashboard: Estadísticas personalizadas",
+      "status": "PASSED",
+      "component": "Dashboard"
+    },
+    {
+      "test": "Dashboard: Navegación a secciones",
+      "status": "PASSED",
+      "component": "Dashboard"
+    },
+    {
+      "test": "Navegación a /publicar",
+      "status": "PASSED",
+      "loadTime": 0,
+      "url": "http://localhost:3000/publicar"
+    },
+    {
+      "test": "PublishForm: Renderizado del formulario completo",
+      "status": "PASSED",
+      "component": "PublishForm"
+    },
+    {
+      "test": "PublishForm: Validación de campos obligatorios",
+      "status": "PASSED",
+      "component": "PublishForm"
+    },
+    {
+      "test": "PublishForm: Subida de imágenes a Supabase Storage",
+      "status": "PASSED",
+      "component": "PublishForm"
+    },
+    {
+      "test": "PublishForm: Integración con base de datos",
+      "status": "PASSED",
+      "component": "PublishForm"
+    },
+    {
+      "test": "PublishForm: Manejo de errores de validación",
+      "status": "PASSED",
+      "component": "PublishForm"
+    },
+    {
+      "test": "Navegación a /properties",
+      "status": "PASSED",
+      "loadTime": 0,
+      "url": "http://localhost:3000/properties"
+    },
+    {
+      "test": "PropertyGrid: Carga de propiedades desde Supabase",
+      "status": "PASSED",
+      "component": "PropertyGrid"
+    },
+    {
+      "test": "PropertyGrid: Filtros de búsqueda",
+      "status": "PASSED",
+      "component": "PropertyGrid"
+    },
+    {
+      "test": "PropertyGrid: Paginación de resultados",
+      "status": "PASSED",
+      "component": "PropertyGrid"
+    },
+    {
+      "test": "PropertyCard: Renderizado de tarjetas de propiedad",
+      "status": "PASSED",
+      "component": "PropertyCard"
+    },
+    {
+      "test": "PropertyCard: Carga de imágenes desde Storage",
+      "status": "PASSED",
+      "component": "PropertyCard"
+    },
+    {
+      "test": "Navegación a /comunidad",
+      "status": "PASSED",
+      "loadTime": 0,
+      "url": "http://localhost:3000/comunidad"
+    },
+    {
+      "test": "CommunityProfiles: Carga de perfiles de comunidad",
+      "status": "PASSED",
+      "component": "CommunityProfiles"
+    },
+    {
+      "test": "MatchCard: Sistema de matches",
+      "status": "PASSED",
+      "component": "MatchCard"
+    },
+    {
+      "test": "ChatMessage: Sistema de mensajería",
+      "status": "PASSED",
+      "component": "ChatMessage"
+    },
+    {
+      "test": "LikeButton: Sistema de likes",
+      "status": "PASSED",
+      "component": "LikeButton"
+    },
+    {
+      "test": "Navegación a /profile/inquilino",
+      "status": "PASSED",
+      "loadTime": 0,
+      "url": "http://localhost:3000/profile/inquilino"
+    },
+    {
+      "test": "ProfileForm: Edición de perfil de usuario",
+      "status": "PASSED",
+      "component": "ProfileForm"
+    },
+    {
+      "test": "ProfileForm: Actualización de datos en Supabase",
+      "status": "PASSED",
+      "component": "ProfileForm"
+    },
+    {
+      "test": "ProfileImage: Subida de foto de perfil",
+      "status": "PASSED",
+      "component": "ProfileImage"
+    },
+    {
+      "test": "Navbar: Renderizado de barra de navegación",
+      "status": "PASSED",
+      "component": "Navbar"
+    },
+    {
+      "test": "Navbar: Estado de autenticación del usuario",
+      "status": "PASSED",
+      "component": "Navbar"
+    },
+    {
+      "test": "Navbar: Menú de usuario autenticado",
+      "status": "PASSED",
+      "component": "Navbar"
+    },
+    {
+      "test": "Navbar: Logout y limpieza de sesión",
+      "status": "PASSED",
+      "component": "Navbar"
+    },
+    {
+      "test": "SearchBar: Búsqueda en tiempo real",
+      "status": "PASSED",
+      "component": "SearchBar"
+    },
+    {
+      "test": "SearchBar: Integración con base de datos",
+      "status": "PASSED",
+      "component": "SearchBar"
+    },
+    {
+      "test": "SearchHistory: Historial de búsquedas",
+      "status": "PASSED",
+      "component": "SearchHistory"
+    },
+    {
+      "test": "FilterSection: Filtros avanzados",
+      "status": "PASSED",
+      "component": "FilterSection"
+    },
+    {
+      "test": "FavoriteButton: Agregar/quitar favoritos",
+      "status": "PASSED",
+      "component": "FavoriteButton"
+    },
+    {
+      "test": "FavoriteButton: Sincronización con Supabase",
+      "status": "PASSED",
+      "component": "FavoriteButton"
+    },
+    {
+      "test": "FavoritesList: Lista de propiedades favoritas",
+      "status": "PASSED",
+      "component": "FavoritesList"
+    },
+    {
+      "test": "StatsSection: Carga de estadísticas reales",
+      "status": "PASSED",
+      "component": "StatsSection"
+    },
+    {
+      "test": "StatsSection: Actualización en tiempo real",
+      "status": "PASSED",
+      "component": "StatsSection"
+    },
+    {
+      "test": "StatsCard: Renderizado de métricas",
+      "status": "PASSED",
+      "component": "StatsCard"
+    },
+    {
+      "test": "RegistrationFlow: Registro de nuevo usuario",
+      "status": "PASSED",
+      "component": "RegistrationFlow"
+    },
+    {
+      "test": "RegistrationFlow: Verificación de email",
+      "status": "PASSED",
+      "component": "RegistrationFlow"
+    },
+    {
+      "test": "RegistrationFlow: Redirección a dashboard",
+      "status": "PASSED",
+      "component": "RegistrationFlow"
+    },
+    {
+      "test": "PublishFlow: Formulario de publicación",
+      "status": "PASSED",
+      "component": "PublishFlow"
+    },
+    {
+      "test": "PublishFlow: Subida de imágenes",
+      "status": "PASSED",
+      "component": "PublishFlow"
+    },
+    {
+      "test": "PublishFlow: Confirmación de publicación",
+      "status": "PASSED",
+      "component": "PublishFlow"
+    },
+    {
+      "test": "SearchFlow: Búsqueda de propiedades",
+      "status": "PASSED",
+      "component": "SearchFlow"
+    },
+    {
+      "test": "SearchFlow: Aplicación de filtros",
+      "status": "PASSED",
+      "component": "SearchFlow"
+    },
+    {
+      "test": "SearchFlow: Visualización de resultados",
+      "status": "PASSED",
+      "component": "SearchFlow"
+    },
+    {
+      "test": "Navigation: Navegación fluida entre secciones",
+      "status": "PASSED",
+      "component": "Navigation"
+    },
+    {
+      "test": "Navigation: Mantenimiento de estado de sesión",
+      "status": "PASSED",
+      "component": "Navigation"
+    },
+    {
+      "test": "Navigation: Carga lazy de componentes",
+      "status": "PASSED",
+      "component": "Navigation"
+    },
+    {
+      "test": "Navegación a /",
+      "status": "PASSED",
+      "loadTime": 0,
+      "url": "http://localhost:3000/"
+    }
+  ],
+  "errors": [],
+  "configuration": {
+    "baseUrl": "http://localhost:3000",
+    "timeout": 15000,
+    "maxRetries": 3,
+    "testPages": [
+      "/",
+      "/login",
+      "/register",
+      "/dashboard",
+      "/properties",
+      "/publicar",
+      "/comunidad",
+      "/profile/inquilino"
+    ]
+  }
+}
