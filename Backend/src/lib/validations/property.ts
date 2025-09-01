@@ -126,7 +126,7 @@ export const propertyFormSchema = z.object({
   floor: z.number().min(0, 'Piso inválido').max(200, 'Piso muy alto').optional(),
   totalFloors: z.number().min(1, 'Total de pisos inválido').max(200, 'Demasiados pisos').optional(),
   
-  // Estado (opcionales para formulario)
+  // Estado - CORREGIDO: Usar enum igual que propertySchema
   status: z.enum(['AVAILABLE', 'RENTED', 'SOLD', 'MAINTENANCE', 'RESERVED', 'EXPIRED']).default('AVAILABLE'),
   featured: z.boolean().default(false),
   
