@@ -1,0 +1,559 @@
+{
+  "auditInfo": {
+    "timestamp": "2025-09-01T18:24:23.190Z",
+    "duration": "5.43 segundos",
+    "mode": "READ_ONLY_AUDIT",
+    "connection": true
+  },
+  "riskAssessment": {
+    "overallRisk": "MEDIUM",
+    "potentialIssues": [],
+    "recommendations": [
+      {
+        "priority": "HIGH",
+        "action": "Verificar funciones relacionadas con usuarios",
+        "description": "Algunas funciones pueden tener dependencias que afecten el registro"
+      },
+      {
+        "priority": "MEDIUM",
+        "action": "Probar registro de usuario en entorno de desarrollo",
+        "description": "Realizar prueba completa del flujo de registro"
+      },
+      {
+        "priority": "LOW",
+        "action": "Monitorear logs de errores de registro",
+        "description": "Vigilar errores relacionados con políticas RLS o funciones"
+      }
+    ]
+  },
+  "detailedAnalysis": {
+    "rlsPolicies": [
+      {
+        "table": "users",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "users",
+            "policyname": "Anyone can create user",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "INSERT",
+            "qual": null,
+            "with_check": "true"
+          },
+          {
+            "schemaname": "public",
+            "tablename": "users",
+            "policyname": "Users can update own profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "UPDATE",
+            "qual": "((auth.uid())::text = id)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "users",
+            "policyname": "Users can update their own user data",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "UPDATE",
+            "qual": "((auth.uid())::text = id)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "users",
+            "policyname": "Users can view own profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "((auth.uid())::text = id)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "users",
+            "policyname": "Users can view their own user data",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "((auth.uid())::text = id)",
+            "with_check": null
+          }
+        ],
+        "riskLevel": "LOW",
+        "issues": []
+      },
+      {
+        "table": "profiles",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "profiles",
+            "policyname": "Public profiles are viewable",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "true",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "profiles",
+            "policyname": "Users can insert own profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "INSERT",
+            "qual": null,
+            "with_check": "(auth.uid() = id)"
+          },
+          {
+            "schemaname": "public",
+            "tablename": "profiles",
+            "policyname": "Users can update own profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "UPDATE",
+            "qual": "(auth.uid() = id)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "profiles",
+            "policyname": "Users can update their own profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "UPDATE",
+            "qual": "(auth.uid() = id)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "profiles",
+            "policyname": "Users can view own profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() = id)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "profiles",
+            "policyname": "Users can view their own profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() = id)",
+            "with_check": null
+          }
+        ],
+        "riskLevel": "MEDIUM",
+        "issues": [
+          {
+            "type": "RESTRICTIVE_WITH_CHECK",
+            "policy": "Users can insert own profile",
+            "description": "WITH CHECK requiere auth.uid() - puede interferir con registro"
+          }
+        ]
+      },
+      {
+        "table": "User",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "User",
+            "policyname": "Public user profiles are viewable",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "true",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "User",
+            "policyname": "Users can insert own data",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "INSERT",
+            "qual": null,
+            "with_check": "(id = (auth.uid())::text)"
+          },
+          {
+            "schemaname": "public",
+            "tablename": "User",
+            "policyname": "Users can update own data",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "UPDATE",
+            "qual": "(id = (auth.uid())::text)",
+            "with_check": "(id = (auth.uid())::text)"
+          },
+          {
+            "schemaname": "public",
+            "tablename": "User",
+            "policyname": "Users can update own user record",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "UPDATE",
+            "qual": "((auth.uid())::text = id)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "User",
+            "policyname": "Users can view own data",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "SELECT",
+            "qual": "(id = (auth.uid())::text)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "User",
+            "policyname": "Users can view own user record",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "((auth.uid())::text = id)",
+            "with_check": null
+          }
+        ],
+        "riskLevel": "MEDIUM",
+        "issues": [
+          {
+            "type": "RESTRICTIVE_WITH_CHECK",
+            "policy": "Users can insert own data",
+            "description": "WITH CHECK requiere auth.uid() - puede interferir con registro"
+          },
+          {
+            "type": "RESTRICTIVE_WITH_CHECK",
+            "policy": "Users can update own data",
+            "description": "WITH CHECK requiere auth.uid() - puede interferir con registro"
+          }
+        ]
+      },
+      {
+        "table": "UserProfile",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "UserProfile",
+            "policyname": "Anyone can view active community profiles",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "(NOT \"isSuspended\")",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "UserProfile",
+            "policyname": "Anyone can view community profiles",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "SELECT",
+            "qual": "(NOT \"isSuspended\")",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "UserProfile",
+            "policyname": "Users can delete own community profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "DELETE",
+            "qual": "((auth.uid())::text = \"userId\")",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "UserProfile",
+            "policyname": "Users can insert own community profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "INSERT",
+            "qual": null,
+            "with_check": "((auth.uid())::text = \"userId\")"
+          },
+          {
+            "schemaname": "public",
+            "tablename": "UserProfile",
+            "policyname": "Users can manage own community profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "ALL",
+            "qual": "(\"userId\" = (auth.uid())::text)",
+            "with_check": null
+          },
+          {
+            "schemaname": "public",
+            "tablename": "UserProfile",
+            "policyname": "Users can update own community profile",
+            "permissive": "PERMISSIVE",
+            "roles": "{public}",
+            "cmd": "UPDATE",
+            "qual": "((auth.uid())::text = \"userId\")",
+            "with_check": null
+          }
+        ],
+        "riskLevel": "MEDIUM",
+        "issues": [
+          {
+            "type": "RESTRICTIVE_WITH_CHECK",
+            "policy": "Users can insert own community profile",
+            "description": "WITH CHECK requiere auth.uid() - puede interferir con registro"
+          }
+        ]
+      },
+      {
+        "table": "Agent",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "Agent",
+            "policyname": "agent_select_policy",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() IS NOT NULL)",
+            "with_check": null
+          }
+        ],
+        "createdRecently": true,
+        "potentialImpact": "LOW"
+      },
+      {
+        "table": "Inquiry",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "Inquiry",
+            "policyname": "inquiry_select_policy",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() IS NOT NULL)",
+            "with_check": null
+          }
+        ],
+        "createdRecently": true,
+        "potentialImpact": "LOW"
+      },
+      {
+        "table": "PaymentAnalytics",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "PaymentAnalytics",
+            "policyname": "paymentanalytics_select_policy",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() IS NOT NULL)",
+            "with_check": null
+          }
+        ],
+        "createdRecently": true,
+        "potentialImpact": "LOW"
+      },
+      {
+        "table": "PaymentNotification",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "PaymentNotification",
+            "policyname": "paymentnotification_select_policy",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() IS NOT NULL)",
+            "with_check": null
+          }
+        ],
+        "createdRecently": true,
+        "potentialImpact": "LOW"
+      },
+      {
+        "table": "RentalHistory",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "RentalHistory",
+            "policyname": "rentalhistory_select_policy",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() IS NOT NULL)",
+            "with_check": null
+          }
+        ],
+        "createdRecently": true,
+        "potentialImpact": "LOW"
+      },
+      {
+        "table": "Report",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "Report",
+            "policyname": "report_select_policy",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() IS NOT NULL)",
+            "with_check": null
+          }
+        ],
+        "createdRecently": true,
+        "potentialImpact": "LOW"
+      },
+      {
+        "table": "UserReview",
+        "policies": [
+          {
+            "schemaname": "public",
+            "tablename": "UserReview",
+            "policyname": "userreview_select_policy",
+            "permissive": "PERMISSIVE",
+            "roles": "{authenticated}",
+            "cmd": "SELECT",
+            "qual": "(auth.uid() IS NOT NULL)",
+            "with_check": null
+          }
+        ],
+        "createdRecently": true,
+        "potentialImpact": "LOW"
+      }
+    ],
+    "functions": [
+      {
+        "name": "get_current_user_profile",
+        "schema": "public",
+        "hasSearchPath": true,
+        "relatedToUserRegistration": true,
+        "riskLevel": "MEDIUM",
+        "issues": [
+          {
+            "type": "AUTH_DEPENDENCY",
+            "description": "Función depende de auth.uid() - puede fallar durante registro inicial"
+          },
+          {
+            "type": "SECURITY_DEFINER",
+            "description": "Función con SECURITY DEFINER - verificar permisos"
+          }
+        ]
+      },
+      {
+        "name": "handle_community_profile_creation",
+        "schema": "public",
+        "hasSearchPath": true,
+        "relatedToUserRegistration": true,
+        "riskLevel": "LOW",
+        "issues": [
+          {
+            "type": "SECURITY_DEFINER",
+            "description": "Función con SECURITY DEFINER - verificar permisos"
+          }
+        ]
+      },
+      {
+        "name": "handle_user_delete",
+        "schema": "public",
+        "hasSearchPath": true,
+        "relatedToUserRegistration": true,
+        "riskLevel": "LOW",
+        "issues": [
+          {
+            "type": "SECURITY_DEFINER",
+            "description": "Función con SECURITY DEFINER - verificar permisos"
+          }
+        ]
+      },
+      {
+        "name": "handle_user_update",
+        "schema": "public",
+        "hasSearchPath": true,
+        "relatedToUserRegistration": true,
+        "riskLevel": "LOW",
+        "issues": [
+          {
+            "type": "SECURITY_DEFINER",
+            "description": "Función con SECURITY DEFINER - verificar permisos"
+          }
+        ]
+      },
+      {
+        "name": "has_community_profile",
+        "schema": "public",
+        "hasSearchPath": true,
+        "relatedToUserRegistration": true,
+        "riskLevel": "MEDIUM",
+        "issues": [
+          {
+            "type": "AUTH_DEPENDENCY",
+            "description": "Función depende de auth.uid() - puede fallar durante registro inicial"
+          },
+          {
+            "type": "SECURITY_DEFINER",
+            "description": "Función con SECURITY DEFINER - verificar permisos"
+          }
+        ]
+      },
+      {
+        "name": "validate_user_data",
+        "schema": "public",
+        "hasSearchPath": true,
+        "relatedToUserRegistration": true,
+        "riskLevel": "LOW",
+        "issues": []
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_favorites_property_id",
+        "table": "favorites",
+        "definition": "CREATE INDEX idx_favorites_property_id ON public.favorites USING btree (property_id)",
+        "impactOnRegistration": "NONE",
+        "riskLevel": "LOW"
+      },
+      {
+        "name": "idx_favorites_user_id",
+        "table": "favorites",
+        "definition": "CREATE INDEX idx_favorites_user_id ON public.favorites USING btree (user_id)",
+        "impactOnRegistration": "NONE",
+        "riskLevel": "LOW"
+      },
+      {
+        "name": "idx_inquiries_property_id",
+        "table": "inquiries",
+        "definition": "CREATE INDEX idx_inquiries_property_id ON public.inquiries USING btree (property_id)",
+        "impactOnRegistration": "NONE",
+        "riskLevel": "LOW"
+      },
+      {
+        "name": "idx_messages_sender_id",
+        "table": "messages",
+        "definition": "CREATE INDEX idx_messages_sender_id ON public.messages USING btree (sender_id)",
+        "impactOnRegistration": "NONE",
+        "riskLevel": "LOW"
+      },
+      {
+        "name": "idx_properties_user_id",
+        "table": "properties",
+        "definition": "CREATE INDEX idx_properties_user_id ON public.properties USING btree (user_id)",
+        "impactOnRegistration": "NONE",
+        "riskLevel": "LOW"
+      }
+    ]
+  },
+  "summary": {
+    "totalIssuesFound": 0,
+    "highRiskIssues": 0,
+    "mediumRiskIssues": 0,
+    "lowRiskIssues": 0
+  }
+}
