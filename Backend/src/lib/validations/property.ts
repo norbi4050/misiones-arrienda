@@ -144,7 +144,7 @@ export const propertyFormSchema = z.object({
 });
 
 // Tipos exportados - CORREGIDOS
-export type PropertyFormData = z.infer<typeof propertySchema>;
+export type PropertyFormData = z.infer<typeof propertyFormSchema>;
 export type PropertyFormSchemaData = z.infer<typeof propertyFormSchema>;
 
 // Schema para creación con validación de plan

@@ -79,6 +79,7 @@ export default function PublicarPage() {
       address: "",
       city: "",
       province: "Misiones",
+      country: "Argentina",
       postalCode: "",
       contact_phone: "",
       images: [],
