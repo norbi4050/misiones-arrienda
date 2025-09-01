@@ -12,7 +12,7 @@ import Link from "next/link"
 import toast from 'react-hot-toast'
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
-import { propertyFormSchema, type PropertyFormSchemaData } from "@/lib/validations/property"
+import { propertyFormSchema } from "@/lib/validations/property"
 
 // Componente de pantalla de autenticación requerida
 function AuthRequiredScreen() {
@@ -65,7 +65,7 @@ export default function PublicarPage() {
   const [selectedPlan, setSelectedPlan] = useState<'basico' | 'destacado' | 'full'>('basico')
   const [isProcessing, setIsProcessing] = useState(false)
   
-  const form = useForm<PropertyFormSchemaData>({
+  const form = useForm({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
       title: "",
@@ -180,7 +180,7 @@ export default function PublicarPage() {
     return true
   }
 
-  const onSubmit = async (data: PropertyFormSchemaData) => {
+  const onSubmit = async (data: any) => {
     setIsProcessing(true)
     
     try {
@@ -259,7 +259,7 @@ export default function PublicarPage() {
           </Link>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
-              Bienvenido, <strong>{user.name}</strong>
+              Bienvenido, <strong>{user?.name}</strong>
             </span>
             <Link href="/dashboard">
               <Button variant="outline" size="sm">
@@ -502,7 +502,7 @@ export default function PublicarPage() {
                     Imágenes de la propiedad
                   </label>
                   <ImageUpload
-                    value={watchedValues.images}
+                    value={watchedValues.images || []}
                     onChange={(images) => setValue("images", images)}
                     maxImages={selectedPlan === 'basico' ? 3 : selectedPlan === 'destacado' ? 8 : 20}
                     maxSizeMB={5}
