@@ -70,3 +70,8 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Variables de entorno
+.env.local
+.env
+*.env.local
