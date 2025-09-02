@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash2, Eye, AlertTriangle, Users, UserCheck, UserX } from 'lucide-react';
+
 // Función toast simple usando alert nativo
 const toast = {
   success: (message: string) => alert(`✅ ${message}`),
@@ -35,6 +38,34 @@ export default function AdminUsersPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserWithStats | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Estados para búsqueda y paginación
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [filterRole, setFilterRole] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  // Filtrar y ordenar usuarios
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    return matchesSearch && matchesRole;
+  }).sort((a, b) => {
+    const aValue = a[sortBy as keyof User] || '';
+    const bValue = b[sortBy as keyof User] || '';
+    if (sortOrder === 'asc') {
+      return aValue.toString().localeCompare(bValue.toString());
+    }
+    return bValue.toString().localeCompare(aValue.toString());
+  });
+
+  // Paginación
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
 
   // Cargar usuarios
   const loadUsers = async () => {
@@ -225,6 +256,56 @@ export default function AdminUsersPage() {
         </Card>
       </div>
 
+      {/* Controles de búsqueda y filtros */}
+      <div className="search-controls mb-6 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="Buscar por email o nombre..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <Select value={filterRole} onValueChange={setFilterRole}>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder="Filtrar por rol" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los roles</SelectItem>
+              <SelectItem value="ADMIN">Administradores</SelectItem>
+              <SelectItem value="USER">Usuarios</SelectItem>
+              <SelectItem value="MODERATOR">Moderadores</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full md:w-48">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created_at">Fecha de registro</SelectItem>
+              <SelectItem value="email">Email</SelectItem>
+              <SelectItem value="name">Nombre</SelectItem>
+              <SelectItem value="updated_at">Último acceso</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'asc' ? '↑' : '↓'}
+          </Button>
+        </div>
+        
+        {/* Estadísticas */}
+        <div className="flex gap-4 text-sm text-gray-600">
+          <span>Total: {users.length}</span>
+          <span>Filtrados: {filteredUsers.length}</span>
+          <span>Página {currentPage} de {totalPages}</span>
+        </div>
+      </div>
+
       {/* Lista de usuarios */}
       <Card>
         <CardHeader>
@@ -246,7 +327,7 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
                     <td className="p-4">
                       <div>
@@ -305,6 +386,51 @@ export default function AdminUsersPage() {
             <div className="text-center py-8">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">No hay usuarios registrados</p>
+            </div>
+          )}
+
+          {/* Controles de paginación */}
+          {totalPages > 1 && (
+            <div className="pagination-controls flex items-center justify-between mt-6 pt-4 border-t">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Select 
+                  value={currentPage.toString()} 
+                  onValueChange={(value) => setCurrentPage(parseInt(value))}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <SelectItem key={page} value={page.toString()}>
+                        {page}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
         </CardContent>

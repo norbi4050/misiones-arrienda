@@ -62,15 +62,18 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Prevenir auto-eliminación
+    // SELF DELETE PREVENTION MARKER - Verificaciones de seguridad mejoradas
+    
+    // 1. Verificación ID usuario - Prevenir auto-eliminación por ID
     if (user.id === userIdToDelete) {
+      console.error(`CRITICAL ERROR: Self-deletion attempt by user ID ${user.id}`);
       return NextResponse.json(
-        { error: 'No puedes eliminar tu propia cuenta' },
+        { error: 'CRÍTICO: No puedes eliminar tu propia cuenta por ID' },
         { status: 400 }
       );
     }
 
-    // Obtener información del usuario antes de eliminarlo (para logging)
+    // Obtener información del usuario antes de eliminarlo (para logging y verificaciones)
     const { data: userToDelete, error: getUserError } = await supabaseAdmin
       .from('User')
       .select('email, name, role')
@@ -81,6 +84,40 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: 'Usuario no encontrado' },
         { status: 404 }
+      );
+    }
+
+    // 2. Verificación email - Prevenir auto-eliminación por email
+    if (user.email === userToDelete.email) {
+      console.error(`CRITICAL ERROR: Self-deletion attempt by email ${user.email}`);
+      return NextResponse.json(
+        { error: 'CRÍTICO: No puedes eliminar tu propia cuenta por email' },
+        { status: 400 }
+      );
+    }
+
+    // 3. Verificación último admin - Prevenir eliminación del último administrador
+    if (userToDelete.role === 'ADMIN') {
+      const { count: adminCount } = await supabaseAdmin
+        .from('User')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'ADMIN');
+
+      if (adminCount && adminCount <= 1) {
+        console.error(`CRITICAL ERROR: Attempt to delete last admin by ${user.email}`);
+        return NextResponse.json(
+          { error: 'CRÍTICO: No se puede eliminar el último administrador del sistema' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 4. Final Safety Check - Verificación final de seguridad
+    if (user.id === userIdToDelete || user.email === userToDelete.email) {
+      console.error(`CRITICAL ERROR: Final safety check failed - self deletion attempt`);
+      return NextResponse.json(
+        { error: 'CRÍTICO: Verificación final de seguridad falló' },
+        { status: 400 }
       );
     }
 
