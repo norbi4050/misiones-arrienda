@@ -1,4 +1,4 @@
-@echo off
+te vo@echo off
 echo ================================================================
 echo EJECUTANDO SOLUCION AUTOMATICA PROBLEMAS BACKEND/API
 echo ================================================================
