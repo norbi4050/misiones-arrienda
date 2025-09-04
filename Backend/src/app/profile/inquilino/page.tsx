@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ProfileImageUpload } from "@/components/ui/image-upload"
-import { Search, User, Mail, Phone, MapPin, Heart, History, Settings, Camera, Save, Edit } from "lucide-react"
+import { Search, User, Mail, Phone, MapPin, Heart, History, Settings, Camera, Save, Edit, Loader2 } from "lucide-react"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
@@ -17,6 +17,14 @@ export default function InquilinoProfilePage() {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [userStats, setUserStats] = useState({
+    favorites: 0,
+    searches: 0,
+    propertiesViewed: 0,
+    activeAlerts: 0,
+    memberSince: 'Reciente'
+  })
   
   const [profileData, setProfileData] = useState({
     name: "",
@@ -34,6 +42,34 @@ export default function InquilinoProfilePage() {
     employmentStatus: "",
     monthlyIncome: ""
   })
+
+  // Función para cargar estadísticas reales del usuario
+  const loadUserStats = async () => {
+    if (!user) return
+    
+    try {
+      setIsLoadingStats(true)
+      const response = await fetch('/api/users/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setUserStats(result.data)
+        }
+      } else {
+        console.warn('No se pudieron cargar las estadísticas del usuario')
+      }
+    } catch (error) {
+      console.error('Error al cargar estadísticas:', error)
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -63,6 +99,9 @@ export default function InquilinoProfilePage() {
         employmentStatus: (user as any).employmentStatus || "",
         monthlyIncome: (user as any).monthlyIncome || ""
       })
+      
+      // Cargar estadísticas reales
+      loadUserStats()
     }
   }, [user, isAuthenticated, isLoading, router])
 
@@ -433,10 +472,16 @@ export default function InquilinoProfilePage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Estadísticas */}
+            {/* Estadísticas Reales */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Mi Actividad</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Mi Actividad
+                  {isLoadingStats && <Loader2 className="h-4 w-4 animate-spin" />}
+                </CardTitle>
+                <CardDescription>
+                  Miembro desde {userStats.memberSince}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -444,29 +489,53 @@ export default function InquilinoProfilePage() {
                     <Heart className="h-4 w-4 text-red-500" />
                     <span className="text-sm">Favoritos</span>
                   </div>
-                  <Badge variant="secondary">12</Badge>
+                  <Badge variant="secondary" className="bg-red-50 text-red-700 border-red-200">
+                    {isLoadingStats ? '...' : userStats.favorites}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <History className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">Búsquedas</span>
+                    <span className="text-sm">Búsquedas realizadas</span>
                   </div>
-                  <Badge variant="secondary">28</Badge>
+                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {isLoadingStats ? '...' : userStats.searches}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Search className="h-4 w-4 text-green-500" />
                     <span className="text-sm">Propiedades vistas</span>
                   </div>
-                  <Badge variant="secondary">156</Badge>
+                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                    {isLoadingStats ? '...' : userStats.propertiesViewed}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-4 w-4 text-orange-500" />
                     <span className="text-sm">Alertas activas</span>
                   </div>
-                  <Badge variant="secondary">3</Badge>
+                  <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-orange-200">
+                    {isLoadingStats ? '...' : userStats.activeAlerts}
+                  </Badge>
                 </div>
+                
+                {/* Mensaje motivacional basado en actividad */}
+                {!isLoadingStats && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      {userStats.favorites === 0 && userStats.searches === 0 
+                        ? "¡Comienza a explorar propiedades para ver tu actividad aquí!"
+                        : userStats.favorites > 5 
+                        ? "¡Excelente! Tienes varias propiedades en favoritos. ¿Ya contactaste a los propietarios?"
+                        : userStats.searches > 10
+                        ? "Has realizado varias búsquedas. ¡Guarda tus favoritas para no perderlas!"
+                        : "¡Sigue explorando! Encuentra la propiedad perfecta para ti."
+                      }
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
