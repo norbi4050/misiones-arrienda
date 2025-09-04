@@ -54,6 +54,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  return handleProfileUpdate(request);
+}
+
+export async function PATCH(request: NextRequest) {
+  return handleProfileUpdate(request);
+}
+
+async function handleProfileUpdate(request: NextRequest) {
   try {
     const cookieStore = cookies();
     
@@ -109,7 +117,7 @@ export async function PUT(request: NextRequest) {
       profile: updatedProfile 
     });
   } catch (error) {
-    console.error('Error en API profile PUT:', error);
+    console.error('Error en API profile update:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
