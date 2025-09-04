@@ -1,143 +1,94 @@
-import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
-
-const JWT_SECRET = process.env.JWT_SECRET || '5685128fb42e3ceca234ecd61cac300c'
-
-export async function PUT(request: NextRequest) {
-  try {
-    // Verificar autenticación
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Token de autorización requerido' },
-        { status: 401 }
-      )
-    }
-
-    const token = authHeader.substring(7)
-    let decoded: any
-
-    try {
-      decoded = jwt.verify(token, JWT_SECRET)
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Token inválido' },
-        { status: 401 }
-      )
-    }
-
-    // Obtener datos del cuerpo de la petición
-    const body = await request.json()
-    const { name, bio, occupation, age, phone } = body
-
-    // Validaciones básicas
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'El nombre es requerido' },
-        { status: 400 }
-      )
-    }
-
-    if (age && (age < 18 || age > 120)) {
-      return NextResponse.json(
-        { error: 'La edad debe estar entre 18 y 120 años' },
-        { status: 400 }
-      )
-    }
-
-    // Simular actualización de usuario (en una implementación real usarías Prisma)
-    const updatedUser = {
-      id: decoded.userId,
-      name: name.trim(),
-      bio: bio?.trim() || '',
-      occupation: occupation?.trim() || '',
-      age: age || null,
-      phone: phone?.trim() || '',
-      email: decoded.email,
-      userType: decoded.userType || 'inquilino',
-      verified: decoded.verified || false,
-      updatedAt: new Date().toISOString()
-    }
-
-    // En una implementación real, aquí actualizarías la base de datos:
-    /*
-    const prisma = new PrismaClient()
-    const user = await prisma.user.update({
-      where: { id: decoded.userId },
-      data: {
-        name: name.trim(),
-        bio: bio?.trim() || null,
-        occupation: occupation?.trim() || null,
-        age: age || null,
-        phone: phone?.trim() || null,
-      }
-    })
-    */
-
-    return NextResponse.json({
-      success: true,
-      message: 'Perfil actualizado exitosamente',
-      user: updatedUser
-    })
-
-  } catch (error) {
-    console.error('Error updating profile:', error)
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    )
-  }
-}
+import { NextRequest, NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createRouteHandlerClient({ cookies });
+    
     // Verificar autenticación
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    
+    if (authError || !session) {
       return NextResponse.json(
-        { error: 'Token de autorización requerido' },
+        { error: 'No autorizado - Sesión inválida' },
         { status: 401 }
-      )
+      );
     }
 
-    const token = authHeader.substring(7)
-    let decoded: any
+    // Obtener perfil del usuario
+    const { data: profile, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
 
-    try {
-      decoded = jwt.verify(token, JWT_SECRET)
-    } catch (error) {
+    if (error) {
+      console.error('Error obteniendo perfil:', error);
       return NextResponse.json(
-        { error: 'Token inválido' },
-        { status: 401 }
-      )
+        { error: 'Error obteniendo perfil de usuario' },
+        { status: 500 }
+      );
     }
 
-    // Simular obtención de perfil de usuario
-    const userProfile = {
-      id: decoded.userId,
-      name: decoded.name || 'Usuario',
-      email: decoded.email,
-      bio: decoded.bio || '',
-      occupation: decoded.occupation || '',
-      age: decoded.age || null,
-      phone: decoded.phone || '',
-      userType: decoded.userType || 'inquilino',
-      verified: decoded.verified || false,
-      rating: 0,
-      reviewCount: 0,
-      createdAt: decoded.createdAt || new Date().toISOString()
-    }
-
-    return NextResponse.json({
-      success: true,
-      user: userProfile
-    })
-
+    return NextResponse.json({ profile });
   } catch (error) {
-    console.error('Error getting profile:', error)
+    console.error('Error en API profile:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
-    )
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = createRouteHandlerClient({ cookies });
+    
+    // Verificar autenticación
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    
+    if (authError || !session) {
+      return NextResponse.json(
+        { error: 'No autorizado - Sesión inválida' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { name, email, phone, bio } = body;
+
+    // Actualizar perfil del usuario
+    const { data: updatedProfile, error } = await supabase
+      .from('users')
+      .update({
+        name,
+        email,
+        phone,
+        bio,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', session.user.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error actualizando perfil:', error);
+      return NextResponse.json(
+        { error: 'Error actualizando perfil de usuario' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ 
+      message: 'Perfil actualizado exitosamente',
+      profile: updatedProfile 
+    });
+  } catch (error) {
+    console.error('Error en API profile PUT:', error);
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    );
   }
 }

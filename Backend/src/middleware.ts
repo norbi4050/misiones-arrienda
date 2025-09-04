@@ -1,105 +1,39 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  console.log('🔐 Middleware de autenticación activo:', request.nextUrl.pathname)
-  
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
-
-  // Verificar autenticación
-  const { data: { user }, error } = await supabase.auth.getUser()
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
 
   // Rutas que requieren autenticación
-  const protectedRoutes = ['/dashboard', '/publicar', '/profile', '/admin']
+  const protectedRoutes = ['/profile', '/dashboard', '/publicar'];
   const isProtectedRoute = protectedRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  )
+    req.nextUrl.pathname.startsWith(route)
+  );
 
-  // Rutas de autenticación (login, register)
-  const authRoutes = ['/login', '/register']
-  const isAuthRoute = authRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  )
-
-  if (isProtectedRoute && (!user || error)) {
-    console.log('❌ Acceso denegado - Usuario no autenticado')
-    const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
-    return NextResponse.redirect(redirectUrl)
+  if (isProtectedRoute) {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        // Redirigir a login si no está autenticado
+        const redirectUrl = new URL('/login', req.url);
+        redirectUrl.searchParams.set('redirect', req.nextUrl.pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+    } catch (error) {
+      console.error('Error en middleware:', error);
+      const redirectUrl = new URL('/login', req.url);
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
-  if (isAuthRoute && user && !error) {
-    console.log('✅ Usuario ya autenticado - Redirigiendo a dashboard')
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  console.log('✅ Acceso permitido:', request.nextUrl.pathname)
-  return response
+  return res;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - api routes (handled separately)
-     * - auth/callback (Supabase auth callback)
-     * - auth/confirm (Supabase email confirmation)
-     * - auth/reset-password (Supabase password reset)
-     * - static assets
-     */
-    '/((?!_next/static|_next/image|favicon.ico|api|auth/callback|auth/confirm|auth/reset-password|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-}
+};
