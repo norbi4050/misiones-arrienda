@@ -1,0 +1,226 @@
+{
+  "timestamp": "2025-09-04T03:19:28.398Z",
+  "summary": {
+    "total": 33,
+    "passed": 18,
+    "failed": 15,
+    "successRate": "54.5%"
+  },
+  "errors": [
+    "Conectividad a Internet: ",
+    "Conectividad a Supabase: Request timeout",
+    "API Auth Login (POST /api/auth/login): Status: 500",
+    "Supabase Properties Table: getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+    "Supabase Users Table: getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+    "Supabase Community Profiles Table: getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+    "Supabase Favorites Table: getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+    "Supabase Search History Table: getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+    "Supabase Auth Service: getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+    "Supabase Storage Service: getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+    "CORS Headers: CORS: Disabled",
+    "Web Page Dashboard Page: Status: 307",
+    "Web Page Publish Page: Status: 307",
+    "Web Page Profiles Page: Status: 307",
+    "Web Page Admin Dashboard: Status: 307"
+  ],
+  "details": [
+    {
+      "test": "Conectividad a Internet",
+      "passed": false,
+      "details": "",
+      "timestamp": "2025-09-04T03:18:53.662Z"
+    },
+    {
+      "test": "Conectividad a Supabase",
+      "passed": false,
+      "details": "Request timeout",
+      "timestamp": "2025-09-04T03:18:59.172Z"
+    },
+    {
+      "test": "Servidor Backend Local (localhost:3000)",
+      "passed": true,
+      "details": "",
+      "timestamp": "2025-09-04T03:19:02.871Z"
+    },
+    {
+      "test": "API Health Check (GET /api/health)",
+      "passed": true,
+      "details": "Status: 404",
+      "timestamp": "2025-09-04T03:19:04.065Z"
+    },
+    {
+      "test": "API Database Health (GET /api/health/db)",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:10.475Z"
+    },
+    {
+      "test": "API Properties List (GET /api/properties)",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:11.574Z"
+    },
+    {
+      "test": "API Auth Register (POST /api/auth/register)",
+      "passed": true,
+      "details": "Status: 400",
+      "timestamp": "2025-09-04T03:19:11.835Z"
+    },
+    {
+      "test": "API Auth Login (POST /api/auth/login)",
+      "passed": false,
+      "details": "Status: 500",
+      "timestamp": "2025-09-04T03:19:12.769Z"
+    },
+    {
+      "test": "API Statistics (GET /api/stats)",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:12.966Z"
+    },
+    {
+      "test": "API Environment Check (GET /api/env-check)",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:13.149Z"
+    },
+    {
+      "test": "Supabase Properties Table",
+      "passed": false,
+      "details": "getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+      "timestamp": "2025-09-04T03:19:13.594Z"
+    },
+    {
+      "test": "Supabase Users Table",
+      "passed": false,
+      "details": "getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+      "timestamp": "2025-09-04T03:19:13.596Z"
+    },
+    {
+      "test": "Supabase Community Profiles Table",
+      "passed": false,
+      "details": "getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+      "timestamp": "2025-09-04T03:19:13.597Z"
+    },
+    {
+      "test": "Supabase Favorites Table",
+      "passed": false,
+      "details": "getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+      "timestamp": "2025-09-04T03:19:13.600Z"
+    },
+    {
+      "test": "Supabase Search History Table",
+      "passed": false,
+      "details": "getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+      "timestamp": "2025-09-04T03:19:13.602Z"
+    },
+    {
+      "test": "Supabase Auth Service",
+      "passed": false,
+      "details": "getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+      "timestamp": "2025-09-04T03:19:13.603Z"
+    },
+    {
+      "test": "Supabase Storage Service",
+      "passed": false,
+      "details": "getaddrinfo ENOTFOUND hnqmkqjzjqjzjqjzjqjz.supabase.co",
+      "timestamp": "2025-09-04T03:19:13.605Z"
+    },
+    {
+      "test": "CORS Headers",
+      "passed": false,
+      "details": "CORS: Disabled",
+      "timestamp": "2025-09-04T03:19:13.728Z"
+    },
+    {
+      "test": "Rate Limiting",
+      "passed": true,
+      "details": "Rate limiting: Not detected",
+      "timestamp": "2025-09-04T03:19:13.817Z"
+    },
+    {
+      "test": "Web Page Homepage",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:14.013Z"
+    },
+    {
+      "test": "Web Page Properties Page",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:15.058Z"
+    },
+    {
+      "test": "Web Page Login Page",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:16.601Z"
+    },
+    {
+      "test": "Web Page Register Page",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:17.732Z"
+    },
+    {
+      "test": "Web Page Dashboard Page",
+      "passed": false,
+      "details": "Status: 307",
+      "timestamp": "2025-09-04T03:19:17.745Z"
+    },
+    {
+      "test": "Web Page Publish Page",
+      "passed": false,
+      "details": "Status: 307",
+      "timestamp": "2025-09-04T03:19:17.758Z"
+    },
+    {
+      "test": "Web Page Community Page",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:18.565Z"
+    },
+    {
+      "test": "Web Page Profiles Page",
+      "passed": false,
+      "details": "Status: 307",
+      "timestamp": "2025-09-04T03:19:18.581Z"
+    },
+    {
+      "test": "Web Page Admin Dashboard",
+      "passed": false,
+      "details": "Status: 307",
+      "timestamp": "2025-09-04T03:19:18.599Z"
+    },
+    {
+      "test": "Property Search Functionality",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-09-04T03:19:19.202Z"
+    },
+    {
+      "test": "Image Upload Endpoint",
+      "passed": true,
+      "details": "Status: 500",
+      "timestamp": "2025-09-04T03:19:23.759Z"
+    },
+    {
+      "test": "Payment Integration",
+      "passed": true,
+      "details": "Status: 400",
+      "timestamp": "2025-09-04T03:19:25.342Z"
+    },
+    {
+      "test": "API Response Time",
+      "passed": true,
+      "details": "160ms",
+      "timestamp": "2025-09-04T03:19:25.504Z"
+    },
+    {
+      "test": "Concurrent Requests Handling",
+      "passed": true,
+      "details": "10/10 successful in 2890ms",
+      "timestamp": "2025-09-04T03:19:28.394Z"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-@echo off
+o@echo off
 echo ========================================
 echo BLACKBOX AI - EJECUTAR AUDITORIA COMPLETA PROYECTO 100%
 echo Fecha: 3 de Enero 2025

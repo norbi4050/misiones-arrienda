@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-09-04T00:52:20.295Z",
+  "supabaseUrl": "https://qfeyhaaxyemmnohqdele.supabase.co",
+  "tablesProcessed": 0,
+  "policiesCreated": 0,
+  "bucketsCreated": 3,
+  "functionsCreated": 0,
+  "errors": [
+    "Error habilitando RLS en tabla: profiles",
+    "Error habilitando RLS en tabla: users",
+    "Error habilitando RLS en tabla: properties",
+    "Error habilitando RLS en tabla: payments",
+    "Error habilitando RLS en tabla: user_profiles",
+    "Error habilitando RLS en tabla: messages",
+    "Error habilitando RLS en tabla: conversations",
+    "Error habilitando RLS en tabla: favorites",
+    "Error habilitando RLS en tabla: user_reviews",
+    "Error habilitando RLS en tabla: rental_history",
+    "Error habilitando RLS en tabla: search_history",
+    "Error habilitando RLS en tabla: payment_methods",
+    "Error habilitando RLS en tabla: subscriptions"
+  ],
+  "success": false,
+  "verification": {
+    "tablesWithRLS": 0,
+    "totalPolicies": 0,
+    "errors": [
+      "Error verificando tablas: Could not find the function public.exec_sql(sql) in the schema cache",
+      "Error verificando políticas: Could not find the function public.exec_sql(sql) in the schema cache"
+    ]
+  },
+  "duration": "42 segundos",
+  "summary": {
+    "tablesWithRLS": 0,
+    "totalPolicies": 0,
+    "securityLevel": "BAJO",
+    "recommendation": "Implementación incompleta. Revisar errores y reintentar."
+  }
+}

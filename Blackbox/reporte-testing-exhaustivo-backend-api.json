@@ -1,0 +1,243 @@
+{
+  "timestamp": "2025-09-04T00:59:43.229Z",
+  "supabaseConnection": true,
+  "backendEndpoints": [
+    {
+      "name": "Health Check",
+      "url": "http://localhost:3000/api/health",
+      "method": "GET",
+      "status": 0,
+      "expectedStatus": 200,
+      "passed": false,
+      "responseTime": 1756947584968,
+      "error": "fetch failed",
+      "accessible": false
+    },
+    {
+      "name": "Properties API",
+      "url": "http://localhost:3000/api/properties",
+      "method": "GET",
+      "status": 0,
+      "expectedStatus": 200,
+      "passed": false,
+      "responseTime": 1756947585472,
+      "error": "fetch failed",
+      "accessible": false
+    },
+    {
+      "name": "Auth Register",
+      "url": "http://localhost:3000/api/auth/register",
+      "method": "POST",
+      "status": 0,
+      "expectedStatus": [
+        200,
+        400,
+        422
+      ],
+      "passed": false,
+      "responseTime": 1756947585989,
+      "error": "fetch failed",
+      "accessible": false
+    },
+    {
+      "name": "Auth Login",
+      "url": "http://localhost:3000/api/auth/login",
+      "method": "POST",
+      "status": 0,
+      "expectedStatus": [
+        200,
+        400,
+        401
+      ],
+      "passed": false,
+      "responseTime": 1756947586501,
+      "error": "fetch failed",
+      "accessible": false
+    },
+    {
+      "name": "Stats API",
+      "url": "http://localhost:3000/api/stats",
+      "method": "GET",
+      "status": 0,
+      "expectedStatus": 200,
+      "passed": false,
+      "responseTime": 1756947587015,
+      "error": "fetch failed",
+      "accessible": false
+    },
+    {
+      "name": "Favorites API",
+      "url": "http://localhost:3000/api/favorites",
+      "method": "GET",
+      "status": 0,
+      "expectedStatus": [
+        200,
+        401
+      ],
+      "passed": false,
+      "responseTime": 1756947587530,
+      "error": "fetch failed",
+      "accessible": false
+    }
+  ],
+  "authenticationTests": [
+    {
+      "name": "Registro con datos válidos",
+      "passed": false,
+      "status": 0,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Registro con email inválido",
+      "passed": false,
+      "status": 0,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Login con credenciales válidas",
+      "passed": false,
+      "status": 0,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Protección de rutas autenticadas",
+      "passed": false,
+      "status": 0,
+      "error": "fetch failed"
+    }
+  ],
+  "databaseOperations": [
+    {
+      "name": "Consulta de propiedades",
+      "passed": false,
+      "status": 403,
+      "error": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for schema public\"}"
+    },
+    {
+      "name": "Verificación de esquema profiles",
+      "passed": false,
+      "status": 403,
+      "error": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for schema public\"}"
+    },
+    {
+      "name": "Testing RLS en tabla users",
+      "passed": false,
+      "status": 403,
+      "error": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for schema public\"}"
+    }
+  ],
+  "securityTests": [
+    {
+      "name": "Inyección SQL en parámetros",
+      "passed": true,
+      "details": {
+        "ok": false,
+        "status": 403,
+        "statusText": "Forbidden",
+        "data": null,
+        "error": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for schema public\"}",
+        "headers": {
+          "alt-svc": "h3=\":443\"; ma=86400",
+          "cf-cache-status": "DYNAMIC",
+          "cf-ray": "97998c04cdb7f227-GRU",
+          "connection": "keep-alive",
+          "content-encoding": "br",
+          "content-type": "application/json; charset=utf-8",
+          "date": "Thu, 04 Sep 2025 00:59:55 GMT",
+          "proxy-status": "PostgREST; error=42501",
+          "sb-gateway-version": "1",
+          "sb-project-ref": "qfeyhaaxyemmnohqdele",
+          "sb-request-id": "0199123c-bf07-7d2e-afa8-0608c2dc2803",
+          "server": "cloudflare",
+          "set-cookie": "__cf_bm=63lNoU6GMsSJ1nvSVvDuwcfokMB5AH1W_out1Yy9XQ8-1756947595-1.0.1.1-n95UxmibUO.7XsZf.esF09DYSvxUcLkNDRqL.twv4.8mLne9zq3XXACxcYAC864ZfsA6rEcM01IUSFP2ZWHJai.m9DsDwJm9aUBLCRCyh94; path=/; expires=Thu, 04-Sep-25 01:29:55 GMT; domain=.supabase.co; HttpOnly; Secure; SameSite=None",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "transfer-encoding": "chunked",
+          "vary": "Accept-Encoding",
+          "x-content-type-options": "nosniff",
+          "x-envoy-attempt-count": "1",
+          "x-envoy-upstream-service-time": "1"
+        }
+      }
+    },
+    {
+      "name": "Headers de seguridad",
+      "passed": false,
+      "details": {
+        "ok": false,
+        "status": 0,
+        "statusText": "Network Error",
+        "data": null,
+        "error": "fetch failed",
+        "headers": {}
+      }
+    },
+    {
+      "name": "Rate limiting",
+      "passed": false,
+      "details": {
+        "rateLimited": false,
+        "responses": 10
+      }
+    }
+  ],
+  "performanceTests": [
+    {
+      "name": "Tiempo de respuesta API Properties",
+      "passed": true,
+      "details": {
+        "responseTime": 2,
+        "status": 0
+      }
+    },
+    {
+      "name": "Carga concurrente",
+      "passed": false,
+      "details": {
+        "totalTime": 8,
+        "successfulRequests": 0,
+        "totalRequests": 5
+      }
+    }
+  ],
+  "integrationTests": [
+    {
+      "name": "Flujo completo registro-login",
+      "passed": false,
+      "details": {
+        "step": "register",
+        "response": {
+          "ok": false,
+          "status": 0,
+          "statusText": "Network Error",
+          "data": null,
+          "error": "fetch failed",
+          "headers": {}
+        }
+      }
+    },
+    {
+      "name": "Integración Supabase-Backend",
+      "passed": false,
+      "details": {
+        "supabase": 403,
+        "backend": 0
+      }
+    }
+  ],
+  "overallScore": 14,
+  "criticalIssues": [
+    "Endpoint Health Check no accesible",
+    "Endpoint Properties API no accesible",
+    "Endpoint Auth Register no accesible",
+    "Endpoint Auth Login no accesible",
+    "Endpoint Stats API no accesible",
+    "Endpoint Favorites API no accesible"
+  ],
+  "recommendations": [
+    "🔴 CRÍTICO: 6 endpoints fallando",
+    "🟡 MEDIO: 4 tests de autenticación fallando",
+    "🟡 MEDIO: Revisar 2 aspectos de seguridad",
+    "🔴 CRÍTICO: 6 problemas críticos detectados",
+    "🔴 CRÍTICO: Backend requiere atención inmediata"
+  ]
+}

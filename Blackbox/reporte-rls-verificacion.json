@@ -1,0 +1,115 @@
+{
+  "timestamp": "2025-09-04T00:35:46.877Z",
+  "configuracion": "https://qfeyhaaxyemmnohqdele.supabase.co",
+  "resultados": {
+    "tablas_sin_rls": [],
+    "tablas_con_rls": [],
+    "politicas_encontradas": [],
+    "errores": [
+      {
+        "tabla": "profiles",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "users",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "properties",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "payments",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "user_profiles",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "messages",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "conversations",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "favorites",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "user_reviews",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "rental_history",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "search_history",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "payment_methods",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "subscriptions",
+        "tipo": "tabla_no_encontrada",
+        "error": "Could not find the table 'public.pg_class' in the schema cache"
+      },
+      {
+        "tabla": "users",
+        "tipo": "acceso_publico_permitido",
+        "gravedad": "CRITICO",
+        "datos_expuestos": 0
+      },
+      {
+        "tabla": "profiles",
+        "tipo": "acceso_publico_permitido",
+        "gravedad": "CRITICO",
+        "datos_expuestos": 0
+      },
+      {
+        "tabla": "payments",
+        "tipo": "acceso_publico_permitido",
+        "gravedad": "CRITICO",
+        "datos_expuestos": 0
+      },
+      {
+        "tabla": "messages",
+        "tipo": "acceso_publico_permitido",
+        "gravedad": "CRITICO",
+        "datos_expuestos": 0
+      }
+    ],
+    "resumen": {
+      "total_tablas": 13,
+      "tablas_con_rls": 0,
+      "tablas_sin_rls": 0,
+      "politicas_encontradas": 0,
+      "porcentaje_seguridad": 0,
+      "errores_criticos": 4
+    }
+  },
+  "recomendaciones": [
+    {
+      "prioridad": "ALTA",
+      "accion": "Crear políticas básicas",
+      "descripcion": "Implementar políticas de acceso por usuario"
+    }
+  ]
+}
