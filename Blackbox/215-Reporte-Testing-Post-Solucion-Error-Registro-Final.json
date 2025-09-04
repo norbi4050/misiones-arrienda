@@ -1,0 +1,154 @@
+{
+  "timestamp": "2025-09-04T15:58:14.950Z",
+  "tests_ejecutados": [
+    {
+      "test": "CONECTIVIDAD_BASICA",
+      "resultado": "FALLIDO",
+      "timestamp": "2025-09-04T15:58:11.297Z",
+      "descripcion": "Error de conectividad con Supabase",
+      "error": "Error de conectividad: permission denied for schema public",
+      "estado": "FALLIDO"
+    },
+    {
+      "test": "EXISTENCIA_TABLA",
+      "resultado": "PASADO",
+      "timestamp": "2025-09-04T15:58:11.959Z",
+      "descripcion": "Tabla users existe en Supabase",
+      "metodo_verificacion": "consulta_directa",
+      "estado": "EXITOSO"
+    },
+    {
+      "test": "ESTRUCTURA_TABLA",
+      "resultado": "FALLIDO",
+      "timestamp": "2025-09-04T15:58:12.476Z",
+      "descripcion": "Error verificando estructura de tabla users",
+      "error": "Error obteniendo estructura: Could not find the table 'public.information_schema.columns' in the schema cache",
+      "estado": "FALLIDO",
+      "solucion_recomendada": "Verificar y corregir estructura de tabla"
+    },
+    {
+      "test": "INSERCION_BASICA",
+      "resultado": "FALLIDO",
+      "timestamp": "2025-09-04T15:58:12.687Z",
+      "descripcion": "Error en inserción básica de usuario",
+      "error": "Error en inserción: permission denied for schema public",
+      "datos_intentados": {
+        "name": "Test Usuario Básico",
+        "email": "test-basico-1757001492477@test.com",
+        "phone": "+1234567890",
+        "password": "password123"
+      },
+      "estado": "FALLIDO"
+    },
+    {
+      "test": "INSERCION_COMPLETA",
+      "resultado": "FALLIDO",
+      "timestamp": "2025-09-04T15:58:13.180Z",
+      "descripcion": "Error en inserción completa de usuario",
+      "error": "Error en inserción completa: permission denied for schema public",
+      "datos_intentados": {
+        "name": "Test Usuario Completo",
+        "email": "test-completo-1757001492688@test.com",
+        "phone": "+1234567890",
+        "password": "password123",
+        "user_type": "inquilino",
+        "bio": "Usuario de prueba completo",
+        "occupation": "Desarrollador",
+        "age": 30,
+        "verified": false,
+        "email_verified": true
+      },
+      "estado": "FALLIDO"
+    },
+    {
+      "test": "POLITICAS_RLS",
+      "resultado": "PASADO",
+      "timestamp": "2025-09-04T15:58:13.929Z",
+      "descripcion": "RLS configurado (restrictivo)",
+      "estado": "RESTRICTIVO",
+      "nota": "Las políticas RLS están activas pero podrían ser muy restrictivas"
+    },
+    {
+      "test": "ENDPOINT_REGISTRO",
+      "resultado": "FALLIDO",
+      "timestamp": "2025-09-04T15:58:14.488Z",
+      "descripcion": "Error simulando endpoint de registro",
+      "error": "Error simulando endpoint: permission denied for schema public",
+      "estado": "FALLIDO"
+    },
+    {
+      "test": "CASOS_EDGE",
+      "resultado": "PASADO",
+      "timestamp": "2025-09-04T15:58:14.950Z",
+      "descripcion": "Algunos casos edge funcionan",
+      "casos_exitosos": 0,
+      "casos_fallidos": 2,
+      "estado": "PARCIAL"
+    }
+  ],
+  "errores_encontrados": [
+    {
+      "test": "CONECTIVIDAD_BASICA",
+      "descripcion": "Error de conectividad con Supabase",
+      "error": "Error de conectividad: permission denied for schema public",
+      "estado": "FALLIDO"
+    },
+    {
+      "test": "ESTRUCTURA_TABLA",
+      "descripcion": "Error verificando estructura de tabla users",
+      "error": "Error obteniendo estructura: Could not find the table 'public.information_schema.columns' in the schema cache",
+      "estado": "FALLIDO",
+      "solucion_recomendada": "Verificar y corregir estructura de tabla"
+    },
+    {
+      "test": "INSERCION_BASICA",
+      "descripcion": "Error en inserción básica de usuario",
+      "error": "Error en inserción: permission denied for schema public",
+      "datos_intentados": {
+        "name": "Test Usuario Básico",
+        "email": "test-basico-1757001492477@test.com",
+        "phone": "+1234567890",
+        "password": "password123"
+      },
+      "estado": "FALLIDO"
+    },
+    {
+      "test": "INSERCION_COMPLETA",
+      "descripcion": "Error en inserción completa de usuario",
+      "error": "Error en inserción completa: permission denied for schema public",
+      "datos_intentados": {
+        "name": "Test Usuario Completo",
+        "email": "test-completo-1757001492688@test.com",
+        "phone": "+1234567890",
+        "password": "password123",
+        "user_type": "inquilino",
+        "bio": "Usuario de prueba completo",
+        "occupation": "Desarrollador",
+        "age": 30,
+        "verified": false,
+        "email_verified": true
+      },
+      "estado": "FALLIDO"
+    },
+    {
+      "test": "ENDPOINT_REGISTRO",
+      "descripcion": "Error simulando endpoint de registro",
+      "error": "Error simulando endpoint: permission denied for schema public",
+      "estado": "FALLIDO"
+    }
+  ],
+  "resumen": {
+    "total_tests": 8,
+    "tests_pasados": 3,
+    "tests_fallidos": 5,
+    "porcentaje_exito": 38,
+    "estado_general": "CRÍTICO"
+  },
+  "estado_final": "PROBLEMA_PERSISTE",
+  "recomendaciones": [
+    "⚠️ El problema de registro no está completamente solucionado",
+    "🔧 Corregir estructura de tabla users",
+    "🔄 Ejecutar solución automática nuevamente",
+    "📞 Considerar configuración manual en Supabase Dashboard"
+  ]
+}
