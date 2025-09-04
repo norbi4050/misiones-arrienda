@@ -17,16 +17,16 @@ export function Navbar() {
 
   // Fix React Error #418: Invalid hook call - only call hooks at top level
   const authResult = useAuth()
-  const { user, isAuthenticated, logout, isLoading } = authResult || {
+  const { user, isAuthenticated, signOut, loading } = authResult || {
     user: null,
     isAuthenticated: false,
-    logout: () => {},
-    isLoading: true
+    signOut: () => {},
+    loading: true
   }
 
   const handleLogout = () => {
-    if (logout) {
-      logout()
+    if (signOut) {
+      signOut()
     }
     setIsMenuOpen(false)
   }
@@ -171,7 +171,7 @@ export function Navbar() {
             </Link>
             
             {/* Fix React Error #423: Cannot read properties - safe property access */}
-            {!isLoading && (
+            {!loading && (
               <>
                 {isAuthenticated ? (
                   // Usuario logueado - mostrar perfil y logout
@@ -283,7 +283,7 @@ export function Navbar() {
               </Link>
               
               {/* Mobile auth options - Safe property access */}
-              {!isLoading && (
+              {!loading && (
                 <>
                   {isAuthenticated ? (
                     // Usuario logueado - versión móvil
