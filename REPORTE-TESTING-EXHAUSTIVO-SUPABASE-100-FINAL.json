@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-09-03T19:00:58.038Z",
+  "puntuacionFinal": 33,
+  "estado": "REQUIERE_ATENCION",
+  "resultados": {
+    "backend": {
+      "conexionBasica": false,
+      "autenticacion": false,
+      "storage": true,
+      "endpoints": {
+        "properties": false,
+        "auth": true,
+        "users": false,
+        "admin": false
+      },
+      "integracion": false
+    },
+    "frontend": {
+      "navegacion": false,
+      "formularios": true,
+      "componentes": true,
+      "flujos": false
+    },
+    "database": {
+      "tablas": {
+        "profiles": false,
+        "properties": false,
+        "auth": true
+      },
+      "politicas": false,
+      "relaciones": false
+    },
+    "integracion": {
+      "flujoAutenticacion": false,
+      "gestionImagenes": true,
+      "busquedaPropiedades": false,
+      "integracionTotal": false
+    },
+    "puntuacionFinal": 33,
+    "estado": "REQUIERE_ATENCION"
+  },
+  "recomendaciones": {
+    "inmediatas": [
+      "Revisar configuración",
+      "Corregir errores críticos"
+    ],
+    "siguientesPasos": [
+      "Configuración manual",
+      "Re-testing"
+    ]
+  }
+}

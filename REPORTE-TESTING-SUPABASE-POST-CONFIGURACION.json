@@ -1,0 +1,210 @@
+{
+  "timestamp": "2025-09-03T16:12:39.946Z",
+  "duration": "77ms",
+  "summary": {
+    "total": 12,
+    "passed": 8,
+    "failed": 4,
+    "warnings": 0,
+    "successRate": "66.7%"
+  },
+  "status": "FAILED",
+  "details": [
+    {
+      "test": "Verificar archivos de configuración de Supabase",
+      "status": "PASSED",
+      "message": "Todos los archivos de configuración encontrados (3)",
+      "details": {
+        "existingFiles": [
+          "Backend/src/lib/supabase/client.ts",
+          "Backend/src/lib/supabase/server.ts",
+          "Backend/src/middleware.ts"
+        ],
+        "missingFiles": []
+      }
+    },
+    {
+      "test": "Verificar variables de entorno",
+      "status": "PASSED",
+      "message": "Todas las variables de entorno configuradas (3)",
+      "details": {
+        "foundVars": [
+          "NEXT_PUBLIC_SUPABASE_URL",
+          "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "SUPABASE_SERVICE_ROLE_KEY"
+        ],
+        "missingVars": []
+      }
+    },
+    {
+      "test": "Verificar estructura del cliente Supabase",
+      "status": "FAILED",
+      "message": "Cliente Supabase mal configurado",
+      "details": {
+        "hasRequiredImports": false,
+        "hasRequiredExports": true,
+        "content": "import { createBrowserClient } from '@supabase/ssr'\r\n\r\nexport function createClient() {\r\n  // Validate environment variables\r\n  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL\r\n  const supaba..."
+      }
+    },
+    {
+      "test": "Verificar estructura del servidor Supabase",
+      "status": "FAILED",
+      "message": "Servidor Supabase mal configurado",
+      "details": {
+        "hasRequiredImports": false,
+        "hasRequiredFunctions": false
+      }
+    },
+    {
+      "test": "Verificar middleware de autenticación",
+      "status": "FAILED",
+      "message": "Middleware de autenticación mal configurado",
+      "details": {
+        "hasRequiredElements": false,
+        "requiredElements": [
+          "createMiddlewareClient",
+          "NextResponse",
+          "matcher"
+        ]
+      }
+    },
+    {
+      "test": "Verificar endpoints API de autenticación",
+      "status": "PASSED",
+      "message": "Endpoints de autenticación encontrados (3/3)",
+      "details": {
+        "existingEndpoints": [
+          "Backend/src/app/api/auth/register/route.ts",
+          "Backend/src/app/api/auth/login/route.ts",
+          "Backend/src/app/auth/callback/route.ts"
+        ],
+        "missingEndpoints": []
+      }
+    },
+    {
+      "test": "Verificar endpoints API de propiedades",
+      "status": "PASSED",
+      "message": "Endpoints de propiedades encontrados (2/2)",
+      "details": {
+        "existingEndpoints": [
+          "Backend/src/app/api/properties/route.ts",
+          "Backend/src/app/api/properties/[id]/route.ts"
+        ],
+        "missingEndpoints": []
+      }
+    },
+    {
+      "test": "Verificar componentes de UI relacionados con Supabase",
+      "status": "PASSED",
+      "message": "Componentes UI encontrados (3/3)",
+      "details": {
+        "existingComponents": [
+          "Backend/src/app/login/page.tsx",
+          "Backend/src/app/register/page.tsx",
+          "Backend/src/app/dashboard/page.tsx"
+        ],
+        "missingComponents": []
+      }
+    },
+    {
+      "test": "Verificar hooks de autenticación",
+      "status": "PASSED",
+      "message": "Hooks de autenticación encontrados (2/3)",
+      "details": {
+        "existingHooks": [
+          "Backend/src/hooks/useAuth.ts",
+          "Backend/src/hooks/useSupabaseAuth.ts"
+        ],
+        "missingHooks": [
+          "Backend/src/hooks/useAuth-safe.ts"
+        ]
+      }
+    },
+    {
+      "test": "Verificar tipos TypeScript",
+      "status": "PASSED",
+      "message": "Archivos de tipos encontrados (1/2)",
+      "details": {
+        "existingTypes": [
+          "Backend/src/types/property.ts"
+        ],
+        "missingTypes": [
+          "Backend/src/types/supabase.ts"
+        ]
+      }
+    },
+    {
+      "test": "Verificar dependencias en package.json",
+      "status": "FAILED",
+      "message": "Dependencias faltantes: @supabase/auth-helpers-nextjs, @supabase/auth-helpers-react",
+      "details": {
+        "foundDeps": [
+          "@supabase/supabase-js"
+        ],
+        "missingDeps": [
+          "@supabase/auth-helpers-nextjs",
+          "@supabase/auth-helpers-react"
+        ],
+        "allDeps": [
+          "@hookform/resolvers",
+          "@prisma/client",
+          "@radix-ui/react-dialog",
+          "@radix-ui/react-select",
+          "@radix-ui/react-slot",
+          "@supabase/ssr",
+          "@supabase/supabase-js",
+          "bcryptjs",
+          "class-variance-authority",
+          "client-only",
+          "clsx",
+          "jsonwebtoken",
+          "lucide-react",
+          "mercadopago",
+          "next",
+          "next-themes",
+          "nodemailer",
+          "pg",
+          "react",
+          "react-dom",
+          "react-hook-form",
+          "react-hot-toast",
+          "server-only",
+          "tailwind-merge",
+          "zod",
+          "@testing-library/jest-dom",
+          "@testing-library/react",
+          "@types/bcryptjs",
+          "@types/jest",
+          "@types/jsonwebtoken",
+          "@types/node",
+          "@types/nodemailer",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "eslint",
+          "eslint-config-next",
+          "jest",
+          "jest-environment-jsdom",
+          "postcss",
+          "prisma",
+          "tailwindcss",
+          "typescript"
+        ]
+      }
+    },
+    {
+      "test": "Verificar archivos de configuración SQL",
+      "status": "PASSED",
+      "message": "Archivos SQL de configuración encontrados (2/3)",
+      "details": {
+        "existingFiles": [
+          "SUPABASE-CONFIGURACION-COMPLETA-100-PORCIENTO.sql",
+          "SUPABASE-CONFIGURACION-PERMISOS-ESQUEMA-PUBLICO.sql"
+        ],
+        "missingFiles": [
+          "Backend/supabase-setup.sql"
+        ]
+      }
+    }
+  ]
+}

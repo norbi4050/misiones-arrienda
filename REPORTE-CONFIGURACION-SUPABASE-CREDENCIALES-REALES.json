@@ -1,0 +1,169 @@
+{
+  "timestamp": "2025-09-03T16:03:29.697Z",
+  "proyecto": "qfeyhaaxyemmnohqdele.supabase.co",
+  "comandos": {
+    "total": 31,
+    "exitosos": 0,
+    "errores": 29,
+    "tasa_exito": 0
+  },
+  "tablas": {
+    "total": 9,
+    "creadas": 0,
+    "tasa_creacion": 0
+  },
+  "rls": {
+    "total": 4,
+    "habilitadas": 0,
+    "tasa_habilitacion": 0
+  },
+  "score_final": 0,
+  "errores": [
+    {
+      "command": 1,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated..."
+    },
+    {
+      "command": 2,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated..."
+    },
+    {
+      "command": 3,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated..."
+    },
+    {
+      "command": 4,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon, authenticated..."
+    },
+    {
+      "command": 5,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "RETURN 'SUCCESS'..."
+    },
+    {
+      "command": 6,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "EXCEPTION\r\n    WHEN OTHERS THEN\r\n        RETURN 'ERROR: ' || SQLERRM..."
+    },
+    {
+      "command": 9,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY..."
+    },
+    {
+      "command": 10,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY..."
+    },
+    {
+      "command": 11,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER TABLE public.search_history ENABLE ROW LEVEL SECURITY..."
+    },
+    {
+      "command": 12,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY..."
+    },
+    {
+      "command": 13,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY..."
+    },
+    {
+      "command": 14,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER TABLE public.property_images ENABLE ROW LEVEL SECURITY..."
+    },
+    {
+      "command": 15,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER TABLE public.user_limits ENABLE ROW LEVEL SECURITY..."
+    },
+    {
+      "command": 16,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "ALTER TABLE public.admin_activity ENABLE ROW LEVEL SECURITY..."
+    },
+    {
+      "command": 17,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE POLICY \"Users can update own profile\" ON public.profiles \r\n    FOR UPDATE USING (auth.uid() =..."
+    },
+    {
+      "command": 18,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE POLICY \"Users can insert own profile\" ON public.profiles \r\n    FOR INSERT WITH CHECK (auth.ui..."
+    },
+    {
+      "command": 19,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE POLICY \"Users can manage own properties\" ON public.properties \r\n    FOR ALL USING (auth.uid()..."
+    },
+    {
+      "command": 20,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE POLICY \"Users can send messages\" ON public.messages \r\n    FOR INSERT WITH CHECK (auth.uid() =..."
+    },
+    {
+      "command": 21,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE POLICY \"Users can create conversations\" ON public.conversations \r\n    FOR INSERT WITH CHECK (..."
+    },
+    {
+      "command": 22,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE POLICY \"Property owners can manage images\" ON public.property_images \r\n    FOR ALL USING (\r\n ..."
+    },
+    {
+      "command": 23,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE POLICY \"System can manage user limits\" ON public.user_limits \r\n    FOR ALL USING (true)..."
+    },
+    {
+      "command": 24,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE INDEX IF NOT EXISTS idx_properties_location ON public.properties(location)..."
+    },
+    {
+      "command": 25,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE INDEX IF NOT EXISTS idx_properties_price ON public.properties(price)..."
+    },
+    {
+      "command": 26,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE INDEX IF NOT EXISTS idx_properties_active ON public.properties(is_active)..."
+    },
+    {
+      "command": 27,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE INDEX IF NOT EXISTS idx_favorites_property_id ON public.favorites(property_id)..."
+    },
+    {
+      "command": 28,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON public.messages(sender_id)..."
+    },
+    {
+      "command": 29,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE INDEX IF NOT EXISTS idx_messages_receiver_id ON public.messages(receiver_id)..."
+    },
+    {
+      "command": 30,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE INDEX IF NOT EXISTS idx_conversations_user2_id ON public.conversations(user2_id)..."
+    },
+    {
+      "command": 31,
+      "error": "Could not find the function public.exec_sql(sql) in the schema cache",
+      "sql": "CREATE INDEX IF NOT EXISTS idx_conversations_property_id ON public.conversations(property_id)..."
+    }
+  ],
+  "duracion_segundos": 14
+}

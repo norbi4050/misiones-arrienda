@@ -1,0 +1,39 @@
+{
+  "supabase": {
+    "url": "https://qfeyhaaxyemmnohqdele.supabase.co",
+    "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXloYWF4eWVtbW5vaHFkZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MTY3MzgsImV4cCI6MjA3MTM5MjczOH0.vgrh055OkiBIJFBlRlEuEZAOF2FHo3LBUNitB09dSIE",
+    "serviceRoleKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZXloYWF4eWVtbW5vaHFkZWxlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTgxNjczOCwiZXhwIjoyMDcxMzkyNzM4fQ.5wJb1p0Rmg1dVIayIT4wZO_seDXTIwhVa36CyEgK-yM"
+  },
+  "configurado": true,
+  "fecha": "2025-09-03T14:44:58.561Z",
+  "tablas": [
+    "profiles",
+    "properties"
+  ],
+  "buckets": [
+    "property-images",
+    "avatars"
+  ],
+  "funciones": [
+    "update_updated_at_column"
+  ],
+  "politicas": {
+    "profiles": [
+      "view_own",
+      "update_own",
+      "insert_own"
+    ],
+    "properties": [
+      "view_active",
+      "create_own",
+      "update_own",
+      "delete_own"
+    ],
+    "storage": [
+      "view_images",
+      "upload_own",
+      "update_own",
+      "delete_own"
+    ]
+  }
+}

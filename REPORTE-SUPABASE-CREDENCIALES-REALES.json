@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-09-03T19:02:04.488Z",
+  "puntuacion": 35,
+  "porcentaje": 35,
+  "estado": "❌ CRÍTICO",
+  "recomendacion": "Requiere configuración completa de Supabase",
+  "detalles": {
+    "conexion": true,
+    "autenticacion": false,
+    "storage": false,
+    "tablaProperties": false,
+    "tablaProfiles": false,
+    "funcionalidadCompleta": false
+  }
+}

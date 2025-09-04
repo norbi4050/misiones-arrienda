@@ -1,3 +1,40 @@
+
+// Manejo mejorado de errores
+const handleApiError = (error: any, context: string) => {
+  console.error(`Error en ${context}:`, error);
+  
+  if (error.message?.includes('permission denied')) {
+    return NextResponse.json(
+      { 
+        error: 'Error de permisos de base de datos. Verifica la configuración de Supabase.',
+        details: 'Las políticas RLS pueden no estar configuradas correctamente.',
+        context 
+      },
+      { status: 403 }
+    );
+  }
+  
+  if (error.message?.includes('connection')) {
+    return NextResponse.json(
+      { 
+        error: 'Error de conexión a la base de datos.',
+        details: 'Verifica las credenciales de Supabase.',
+        context 
+      },
+      { status: 500 }
+    );
+  }
+  
+  return NextResponse.json(
+    { 
+      error: 'Error interno del servidor',
+      details: error.message || 'Error desconocido',
+      context 
+    },
+    { status: 500 }
+  );
+};
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -439,27 +476,6 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
     
   } catch (error) {
-    // ========================================
-    // 10. MANEJO DE ERRORES GENERALES
-    // ========================================
-    const endTime = Date.now();
-    const processingTime = endTime - startTime;
-    
-    console.error('❌ [REGISTRO] Error general en registro:', error);
-    
-    // Logging detallado del error
-    if (error instanceof Error) {
-      console.error('❌ [REGISTRO] Error name:', error.name);
-      console.error('❌ [REGISTRO] Error message:', error.message);
-      console.error('❌ [REGISTRO] Error stack:', error.stack);
-    }
-    
-    return NextResponse.json({
-      error: 'Database error saving new user',
-      details: process.env.NODE_ENV === 'development' ? String(error) : 'Error interno del servidor',
-      timestamp: new Date().toISOString(),
-      code: 'GENERAL_ERROR',
-      processingTime: `${processingTime}ms`
-    } as ErrorResponse, { status: 500 });
+    return handleApiError(error, 'registro de usuario');
   }
 }

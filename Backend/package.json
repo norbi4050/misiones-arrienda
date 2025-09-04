@@ -24,7 +24,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.38.5",
+    "@supabase/supabase-js": "^2.57.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "client-only": "^0.0.1",

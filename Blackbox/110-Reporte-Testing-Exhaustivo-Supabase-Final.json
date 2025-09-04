@@ -1,0 +1,518 @@
+{
+  "timestamp": "2025-09-03T14:24:41.236Z",
+  "status": "COMPLETADO",
+  "tests": [
+    {
+      "id": 1,
+      "category": "CONECTIVIDAD",
+      "description": "Conexión con Service Role Key",
+      "status": "FAILED",
+      "details": "Could not find the table 'public.information_schema.tables' in the schema cache",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:42.661Z"
+    },
+    {
+      "id": 2,
+      "category": "TABLAS",
+      "description": "Consultar tablas existentes",
+      "status": "FAILED",
+      "details": "Could not find the table 'public.information_schema.tables' in the schema cache",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.162Z"
+    },
+    {
+      "id": 3,
+      "category": "STORAGE",
+      "description": "Listar buckets de storage",
+      "status": "PASSED",
+      "details": "7 buckets encontrados",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.429Z"
+    },
+    {
+      "id": 4,
+      "category": "STORAGE",
+      "description": "Bucket property-images",
+      "status": "PASSED",
+      "details": "Bucket existe y está accesible",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.430Z"
+    },
+    {
+      "id": 5,
+      "category": "STORAGE",
+      "description": "Bucket avatars",
+      "status": "PASSED",
+      "details": "Bucket existe y está accesible",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.431Z"
+    },
+    {
+      "id": 6,
+      "category": "STORAGE",
+      "description": "Bucket community-photos",
+      "status": "FAILED",
+      "details": "Bucket no existe - requiere creación",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.431Z"
+    },
+    {
+      "id": 7,
+      "category": "STORAGE",
+      "description": "Bucket documents",
+      "status": "PASSED",
+      "details": "Bucket existe y está accesible",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.432Z"
+    },
+    {
+      "id": 8,
+      "category": "STORAGE",
+      "description": "Permisos bucket property-images",
+      "status": "PASSED",
+      "details": "Permisos de lectura correctos",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.700Z"
+    },
+    {
+      "id": 9,
+      "category": "STORAGE",
+      "description": "Permisos bucket avatars",
+      "status": "PASSED",
+      "details": "Permisos de lectura correctos",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:44.003Z"
+    },
+    {
+      "id": 10,
+      "category": "STORAGE",
+      "description": "Permisos bucket documents",
+      "status": "PASSED",
+      "details": "Permisos de lectura correctos",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:44.219Z"
+    },
+    {
+      "id": 11,
+      "category": "RLS",
+      "description": "Verificar estado RLS",
+      "status": "WARNING",
+      "details": "No se pudo verificar estado de RLS",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:44.732Z"
+    },
+    {
+      "id": 12,
+      "category": "RLS",
+      "description": "Políticas existentes",
+      "status": "WARNING",
+      "details": "No se encontraron políticas o acceso limitado",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:45.198Z"
+    },
+    {
+      "id": 13,
+      "category": "FUNCIONES",
+      "description": "Listar funciones",
+      "status": "WARNING",
+      "details": "No se pudo acceder a información de funciones",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:45.677Z"
+    },
+    {
+      "id": 14,
+      "category": "TRIGGERS",
+      "description": "Listar triggers",
+      "status": "WARNING",
+      "details": "No se pudo acceder a información de triggers",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:46.192Z"
+    },
+    {
+      "id": 15,
+      "category": "CRUD",
+      "description": "SELECT en profiles",
+      "status": "FAILED",
+      "details": "permission denied for schema public",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:46.412Z"
+    },
+    {
+      "id": 16,
+      "category": "CRUD",
+      "description": "INSERT en profiles",
+      "status": "FAILED",
+      "details": "permission denied for schema public",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:46.934Z"
+    },
+    {
+      "id": 17,
+      "category": "AUTH",
+      "description": "Configuración de autenticación",
+      "status": "PASSED",
+      "details": "Sistema de auth accesible",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:46.935Z"
+    },
+    {
+      "id": 18,
+      "category": "AUTH",
+      "description": "Tabla auth.users",
+      "status": "WARNING",
+      "details": "Acceso limitado a tabla auth.users",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:47.400Z"
+    },
+    {
+      "id": 19,
+      "category": "AUTH",
+      "description": "Providers de autenticación",
+      "status": "WARNING",
+      "details": "Verificación manual requerida en dashboard",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:47.400Z"
+    },
+    {
+      "id": 20,
+      "category": "PERFORMANCE",
+      "description": "Tiempo de respuesta",
+      "status": "FAILED",
+      "details": "Could not find the table 'public.information_schema.tables' in the schema cache",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:47.936Z"
+    },
+    {
+      "id": 21,
+      "category": "PERFORMANCE",
+      "description": "Límites de conexión",
+      "status": "WARNING",
+      "details": "Verificación manual requerida - depende del plan de Supabase",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:47.937Z"
+    },
+    {
+      "id": 22,
+      "category": "PERFORMANCE",
+      "description": "Información de tamaño DB",
+      "status": "WARNING",
+      "details": "No se pudo obtener información de tamaño",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:48.473Z"
+    }
+  ],
+  "passed": [
+    {
+      "id": 3,
+      "category": "STORAGE",
+      "description": "Listar buckets de storage",
+      "status": "PASSED",
+      "details": "7 buckets encontrados",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.429Z"
+    },
+    {
+      "id": 4,
+      "category": "STORAGE",
+      "description": "Bucket property-images",
+      "status": "PASSED",
+      "details": "Bucket existe y está accesible",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.430Z"
+    },
+    {
+      "id": 5,
+      "category": "STORAGE",
+      "description": "Bucket avatars",
+      "status": "PASSED",
+      "details": "Bucket existe y está accesible",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.431Z"
+    },
+    {
+      "id": 7,
+      "category": "STORAGE",
+      "description": "Bucket documents",
+      "status": "PASSED",
+      "details": "Bucket existe y está accesible",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.432Z"
+    },
+    {
+      "id": 8,
+      "category": "STORAGE",
+      "description": "Permisos bucket property-images",
+      "status": "PASSED",
+      "details": "Permisos de lectura correctos",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.700Z"
+    },
+    {
+      "id": 9,
+      "category": "STORAGE",
+      "description": "Permisos bucket avatars",
+      "status": "PASSED",
+      "details": "Permisos de lectura correctos",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:44.003Z"
+    },
+    {
+      "id": 10,
+      "category": "STORAGE",
+      "description": "Permisos bucket documents",
+      "status": "PASSED",
+      "details": "Permisos de lectura correctos",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:44.219Z"
+    },
+    {
+      "id": 17,
+      "category": "AUTH",
+      "description": "Configuración de autenticación",
+      "status": "PASSED",
+      "details": "Sistema de auth accesible",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:46.935Z"
+    }
+  ],
+  "failed": [
+    {
+      "id": 1,
+      "category": "CONECTIVIDAD",
+      "description": "Conexión con Service Role Key",
+      "status": "FAILED",
+      "details": "Could not find the table 'public.information_schema.tables' in the schema cache",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:42.661Z"
+    },
+    {
+      "id": 2,
+      "category": "TABLAS",
+      "description": "Consultar tablas existentes",
+      "status": "FAILED",
+      "details": "Could not find the table 'public.information_schema.tables' in the schema cache",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.162Z"
+    },
+    {
+      "id": 6,
+      "category": "STORAGE",
+      "description": "Bucket community-photos",
+      "status": "FAILED",
+      "details": "Bucket no existe - requiere creación",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:43.431Z"
+    },
+    {
+      "id": 15,
+      "category": "CRUD",
+      "description": "SELECT en profiles",
+      "status": "FAILED",
+      "details": "permission denied for schema public",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:46.412Z"
+    },
+    {
+      "id": 16,
+      "category": "CRUD",
+      "description": "INSERT en profiles",
+      "status": "FAILED",
+      "details": "permission denied for schema public",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:46.934Z"
+    },
+    {
+      "id": 20,
+      "category": "PERFORMANCE",
+      "description": "Tiempo de respuesta",
+      "status": "FAILED",
+      "details": "Could not find the table 'public.information_schema.tables' in the schema cache",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:47.936Z"
+    }
+  ],
+  "warnings": [
+    {
+      "id": 11,
+      "category": "RLS",
+      "description": "Verificar estado RLS",
+      "status": "WARNING",
+      "details": "No se pudo verificar estado de RLS",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:44.732Z"
+    },
+    {
+      "id": 12,
+      "category": "RLS",
+      "description": "Políticas existentes",
+      "status": "WARNING",
+      "details": "No se encontraron políticas o acceso limitado",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:45.198Z"
+    },
+    {
+      "id": 13,
+      "category": "FUNCIONES",
+      "description": "Listar funciones",
+      "status": "WARNING",
+      "details": "No se pudo acceder a información de funciones",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:45.677Z"
+    },
+    {
+      "id": 14,
+      "category": "TRIGGERS",
+      "description": "Listar triggers",
+      "status": "WARNING",
+      "details": "No se pudo acceder a información de triggers",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:46.192Z"
+    },
+    {
+      "id": 18,
+      "category": "AUTH",
+      "description": "Tabla auth.users",
+      "status": "WARNING",
+      "details": "Acceso limitado a tabla auth.users",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:47.400Z"
+    },
+    {
+      "id": 19,
+      "category": "AUTH",
+      "description": "Providers de autenticación",
+      "status": "WARNING",
+      "details": "Verificación manual requerida en dashboard",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:47.400Z"
+    },
+    {
+      "id": 21,
+      "category": "PERFORMANCE",
+      "description": "Límites de conexión",
+      "status": "WARNING",
+      "details": "Verificación manual requerida - depende del plan de Supabase",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:47.937Z"
+    },
+    {
+      "id": 22,
+      "category": "PERFORMANCE",
+      "description": "Información de tamaño DB",
+      "status": "WARNING",
+      "details": "No se pudo obtener información de tamaño",
+      "expected": null,
+      "actual": null,
+      "timestamp": "2025-09-03T14:24:48.473Z"
+    }
+  ],
+  "summary": {
+    "total": 22,
+    "passed": 8,
+    "failed": 6,
+    "warnings": 8,
+    "successRate": 36
+  },
+  "recommendations": [
+    {
+      "priority": "CRÍTICA",
+      "action": "Corregir errores críticos",
+      "description": "Hay componentes que no funcionan correctamente",
+      "items": [
+        "Conexión con Service Role Key",
+        "Consultar tablas existentes",
+        "Bucket community-photos",
+        "SELECT en profiles",
+        "INSERT en profiles",
+        "Tiempo de respuesta"
+      ]
+    },
+    {
+      "priority": "ALTA",
+      "action": "Revisar advertencias",
+      "description": "Hay configuraciones que requieren atención",
+      "items": [
+        "Verificar estado RLS",
+        "Políticas existentes",
+        "Listar funciones",
+        "Listar triggers",
+        "Tabla auth.users",
+        "Providers de autenticación",
+        "Límites de conexión",
+        "Información de tamaño DB"
+      ]
+    }
+  ],
+  "nextSteps": [
+    {
+      "step": 1,
+      "description": "Ejecutar scripts de configuración automática",
+      "command": "Blackbox/107-Ejecutar-Configuracion-Supabase-Con-Credenciales.bat",
+      "priority": "CRÍTICA"
+    },
+    {
+      "step": 2,
+      "description": "Crear tablas faltantes manualmente",
+      "file": "Blackbox/105-Scripts-SQL-Configuracion-Supabase-Completa.sql",
+      "priority": "CRÍTICA"
+    },
+    {
+      "step": 3,
+      "description": "Configurar políticas RLS",
+      "priority": "ALTA"
+    },
+    {
+      "step": 4,
+      "description": "Crear buckets de storage faltantes",
+      "priority": "ALTA"
+    },
+    {
+      "step": 5,
+      "description": "Implementar funciones y triggers",
+      "priority": "MEDIA"
+    }
+  ]
+}
