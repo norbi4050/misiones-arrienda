@@ -37,7 +37,7 @@ interface UnfurlData {
 }
 
 export default function PremiumPublishPage() {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, loading } = useAuth()
   const router = useRouter()
   
   const [url, setUrl] = useState("")
@@ -149,7 +149,7 @@ export default function PremiumPublishPage() {
     }
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -160,7 +160,7 @@ export default function PremiumPublishPage() {
     )
   }
 
-  if (!isAuthenticated || user?.userType !== 'inmobiliaria') {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -168,7 +168,7 @@ export default function PremiumPublishPage() {
             <Crown className="h-12 w-12 text-purple-600 mx-auto mb-4" />
             <CardTitle>Función Premium</CardTitle>
             <CardDescription>
-              Esta funcionalidad está disponible solo para inmobiliarias con plan premium
+              Esta funcionalidad está disponible solo para usuarios autenticados
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">

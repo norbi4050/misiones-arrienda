@@ -39,32 +39,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [
-    function({ addUtilities }: { addUtilities: any }) {
-      addUtilities({
-      // Utilidades optimizadas para elementos desplazables
-      '.performance-optimized': {
-        'will-change': 'transform',
-        'transform': 'translateZ(0)',
-        'backface-visibility': 'hidden',
-      },
-      '.dropdown-optimized': {
-        'background': 'white',
-        'border': '1px solid #e2e8f0',
-        'border-radius': '8px',
-        'box-shadow': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        'will-change': 'transform',
-        'transform': 'translateZ(0)',
-      },
-      '.scrollbar-native': {
-        'scrollbar-width': 'thin',
-        'scrollbar-color': '#cbd5e0 #f7fafc',
-      },
-      '.no-backdrop-blur': {
-        'backdrop-filter': 'none !important',
-        '-webkit-backdrop-filter': 'none !important',
-      },
-      })
-    }],
+  plugins: [],
 }
 export default config

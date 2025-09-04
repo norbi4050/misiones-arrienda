@@ -57,3 +57,117 @@
     @apply bg-white text-gray-900;
   }
 }
+
+
+
+/* ===== OPTIMIZACIONES PARA ELEMENTOS DESPLAZABLES ===== */
+
+/* Scrollbars nativos optimizados */
+.scrollbar-native {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.scrollbar-native::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-native::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 4px;
+}
+
+.scrollbar-native::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+  border: 2px solid #f7fafc;
+}
+
+.scrollbar-native::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Elementos desplazables optimizados */
+.dropdown-optimized {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.select-optimized {
+  background: white;
+  border: 1px solid #d1d5db;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.select-optimized:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+/* Optimizaciones de rendimiento */
+.performance-optimized {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Eliminación de efectos costosos */
+.no-backdrop-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Fondos sólidos para mejor rendimiento */
+.solid-bg-white {
+  background-color: white !important;
+  background-image: none !important;
+}
+
+.solid-bg-gray-50 {
+  background-color: #f9fafb !important;
+  background-image: none !important;
+}
+
+.solid-bg-gray-100 {
+  background-color: #f3f4f6 !important;
+  background-image: none !important;
+}
+
+/* Optimizaciones específicas para móviles */
+@media (max-width: 768px) {
+  .dropdown-optimized {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .performance-optimized {
+    transform: none;
+    will-change: auto;
+  }
+}
+
+/* Animaciones optimizadas */
+.smooth-transition {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-in-optimized {
+  animation: fadeInOptimized 0.2s ease-out;
+}
+
+@keyframes fadeInOptimized {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
