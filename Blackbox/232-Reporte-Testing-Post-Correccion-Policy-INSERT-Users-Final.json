@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-09-04T16:19:28.505Z",
+  "tests": [
+    {
+      "test": "Conexión Supabase",
+      "resultado": "FALLIDO",
+      "error": "\"failed to parse select parameter (count(*))\" (line 1, column 6)"
+    },
+    {
+      "test": "Estructura tabla users",
+      "resultado": "EXITOSO"
+    },
+    {
+      "test": "INSERT service role",
+      "resultado": "FALLIDO",
+      "error": "Could not find the 'full_name' column of 'users' in the schema cache"
+    },
+    {
+      "test": "INSERT anónimo",
+      "resultado": "FALLIDO",
+      "error": "Could not find the 'full_name' column of 'users' in the schema cache"
+    },
+    {
+      "test": "Registro usuario real",
+      "resultado": "FALLIDO",
+      "error": "Could not find the 'full_name' column of 'users' in the schema cache"
+    },
+    {
+      "test": "API registro backend",
+      "resultado": "FALLIDO",
+      "error": "fetch failed"
+    }
+  ],
+  "errores": [
+    "Test 1: \"failed to parse select parameter (count(*))\" (line 1, column 6)",
+    "Test 3: Could not find the 'full_name' column of 'users' in the schema cache",
+    "Test 4: Could not find the 'full_name' column of 'users' in the schema cache",
+    "Test 5: Could not find the 'full_name' column of 'users' in the schema cache",
+    "Test 6: fetch failed"
+  ],
+  "exito": false,
+  "resumen": {
+    "totalTests": 6,
+    "testsPasados": 1,
+    "testsFallidos": 5,
+    "errorRegistroResuelto": false
+  }
+}

@@ -374,9 +374,9 @@ export async function POST(request: NextRequest) {
     
     const userData = {
       id: authData.user.id,
-      name,
+      name: name,           // ✅ Usa 'name' que es NOT NULL en Supabase
       email,
-      phone,
+      phone: phone || '',   // ✅ Evita NULL en phone
       user_type: userType,
       company_name: userType === 'inmobiliaria' ? companyName : null,
       license_number: userType === 'inmobiliaria' ? licenseNumber : null,
