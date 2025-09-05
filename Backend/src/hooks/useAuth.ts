@@ -72,18 +72,19 @@ export function useAuth() {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data: profile, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const response = await fetch('/api/users/profile', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error) {
-        console.error('Error obteniendo perfil:', error);
-        setUser(null);
-      } else {
-        setUser(profile);
+      if (!response.ok) {
+        throw new Error('Error obteniendo perfil');
       }
+
+      const { profile } = await response.json();
+      setUser(profile);
     } catch (error) {
       console.error('Error en fetchUserProfile:', error);
       setUser(null);
