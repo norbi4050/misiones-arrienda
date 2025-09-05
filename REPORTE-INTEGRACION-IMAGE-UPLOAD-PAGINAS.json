@@ -1,0 +1,272 @@
+{
+  "fecha": "2025-09-05T18:07:39.917Z",
+  "resumen": {
+    "total": 50,
+    "exitosos": 31,
+    "fallidos": 19,
+    "porcentajeExito": 62
+  },
+  "integracion": {
+    "paginasConComponente": 1,
+    "paginasSinComponente": 6,
+    "cobertura": "14.29"
+  },
+  "detalles": [
+    {
+      "nombre": "Página de registro existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página de registro"
+    },
+    {
+      "nombre": "Import de ProfileImageUpload en registro",
+      "exitoso": false,
+      "mensaje": "No se encontró el import del componente"
+    },
+    {
+      "nombre": "Uso del componente en registro",
+      "exitoso": false,
+      "mensaje": "No se encontró el uso del componente"
+    },
+    {
+      "nombre": "Página de registro inmobiliaria existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página"
+    },
+    {
+      "nombre": "Componente en registro inmobiliaria",
+      "exitoso": false,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "Página de registro dueño directo existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página"
+    },
+    {
+      "nombre": "Componente en registro dueño directo",
+      "exitoso": false,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "Página de perfil dinámico existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página"
+    },
+    {
+      "nombre": "Componente en perfil dinámico",
+      "exitoso": false,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "Página de perfil inquilino existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página"
+    },
+    {
+      "nombre": "Componente en perfil inquilino",
+      "exitoso": true,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "Página de publicar comunidad existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página"
+    },
+    {
+      "nombre": "Componente en publicar comunidad",
+      "exitoso": false,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "Página principal de comunidad existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página"
+    },
+    {
+      "nombre": "Componente en página comunidad",
+      "exitoso": false,
+      "mensaje": "No se encontró el componente (puede ser normal si no se usa aquí)"
+    },
+    {
+      "nombre": "Página de publicar existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página"
+    },
+    {
+      "nombre": "Componente ImageUpload en publicar",
+      "exitoso": true,
+      "mensaje": "No se encontró el componente ImageUpload para propiedades"
+    },
+    {
+      "nombre": "Import correcto en publicar",
+      "exitoso": false,
+      "mensaje": "No se encontró el import del componente"
+    },
+    {
+      "nombre": "Página de publicar premium existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la página"
+    },
+    {
+      "nombre": "Componente en publicar premium",
+      "exitoso": false,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "Componente MatchCard existe",
+      "exitoso": true,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "MatchCard usa componente de imagen",
+      "exitoso": false,
+      "mensaje": "No usa el componente (puede ser normal)"
+    },
+    {
+      "nombre": "Componente ConversationCard existe",
+      "exitoso": true,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "ConversationCard usa componente de imagen",
+      "exitoso": false,
+      "mensaje": "No usa el componente (puede ser normal)"
+    },
+    {
+      "nombre": "Componente ChatMessage existe",
+      "exitoso": true,
+      "mensaje": "No se encontró el componente"
+    },
+    {
+      "nombre": "ChatMessage usa componente de imagen",
+      "exitoso": false,
+      "mensaje": "No usa el componente (puede ser normal)"
+    },
+    {
+      "nombre": "page.tsx tiene estructura de formulario",
+      "exitoso": true,
+      "mensaje": "No se encontró estructura de formulario"
+    },
+    {
+      "nombre": "page.tsx maneja estado de imagen",
+      "exitoso": false,
+      "mensaje": "No se encontró manejo de estado para imágenes"
+    },
+    {
+      "nombre": "page.tsx valida archivos",
+      "exitoso": false,
+      "mensaje": "No se encontró validación de archivos"
+    },
+    {
+      "nombre": "page.tsx tiene estructura de formulario",
+      "exitoso": true,
+      "mensaje": "No se encontró estructura de formulario"
+    },
+    {
+      "nombre": "page.tsx maneja estado de imagen",
+      "exitoso": true,
+      "mensaje": "No se encontró manejo de estado para imágenes"
+    },
+    {
+      "nombre": "page.tsx valida archivos",
+      "exitoso": false,
+      "mensaje": "No se encontró validación de archivos"
+    },
+    {
+      "nombre": "page.tsx tiene estructura de formulario",
+      "exitoso": true,
+      "mensaje": "No se encontró estructura de formulario"
+    },
+    {
+      "nombre": "page.tsx maneja estado de imagen",
+      "exitoso": true,
+      "mensaje": "No se encontró manejo de estado para imágenes"
+    },
+    {
+      "nombre": "page.tsx valida archivos",
+      "exitoso": false,
+      "mensaje": "No se encontró validación de archivos"
+    },
+    {
+      "nombre": "Archivo de tipos existe",
+      "exitoso": true,
+      "mensaje": "No se encontró el archivo de tipos"
+    },
+    {
+      "nombre": "Tipos para imágenes definidos",
+      "exitoso": true,
+      "mensaje": "No se encontraron tipos para imágenes"
+    },
+    {
+      "nombre": "Hook useAuth existe",
+      "exitoso": true,
+      "mensaje": "No se encontró el hook"
+    },
+    {
+      "nombre": "useAuth maneja perfil de usuario",
+      "exitoso": true,
+      "mensaje": "No maneja perfil de usuario"
+    },
+    {
+      "nombre": "Hook useSupabaseAuth existe",
+      "exitoso": true,
+      "mensaje": "No se encontró el hook"
+    },
+    {
+      "nombre": "useSupabaseAuth maneja perfil de usuario",
+      "exitoso": true,
+      "mensaje": "No maneja perfil de usuario"
+    },
+    {
+      "nombre": "API profile/route existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la API"
+    },
+    {
+      "nombre": "profile/route maneja archivos",
+      "exitoso": false,
+      "mensaje": "No maneja archivos (puede ser normal)"
+    },
+    {
+      "nombre": "API register/route existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la API"
+    },
+    {
+      "nombre": "register/route maneja archivos",
+      "exitoso": false,
+      "mensaje": "No maneja archivos (puede ser normal)"
+    },
+    {
+      "nombre": "API create/route existe",
+      "exitoso": true,
+      "mensaje": "No se encontró la API"
+    },
+    {
+      "nombre": "create/route maneja archivos",
+      "exitoso": false,
+      "mensaje": "No maneja archivos (puede ser normal)"
+    },
+    {
+      "nombre": "Configuración Next.js existe",
+      "exitoso": true,
+      "mensaje": "No se encontró next.config.js"
+    },
+    {
+      "nombre": "Configuración de imágenes en Next.js",
+      "exitoso": true,
+      "mensaje": "No se encontró configuración de imágenes"
+    },
+    {
+      "nombre": "Configuración Tailwind existe",
+      "exitoso": true,
+      "mensaje": "No se encontró tailwind.config.ts"
+    }
+  ],
+  "recomendaciones": [
+    "Verificar integración en páginas de registro",
+    "Probar funcionalidad en páginas de perfil",
+    "Validar comportamiento en formularios de publicación",
+    "Asegurar consistencia visual en toda la aplicación"
+  ]
+}

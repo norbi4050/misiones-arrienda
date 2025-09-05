@@ -275,42 +275,209 @@ export function ProfileImageUpload({
   disabled = false,
   className = ''
 }: ProfileImageUploadProps) {
+  const [isUploading, setIsUploading] = useState(false)
+  const [dragActive, setDragActive] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const validateFile = (file: File): string | null => {
+    // Validar tipo de archivo
+    const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!acceptedTypes.includes(file.type)) {
+      return `Tipo de archivo no válido. Solo se permiten: JPG, PNG, WEBP`
+    }
+
+    // Validar tamaño (2MB máximo)
+    const sizeMB = file.size / (1024 * 1024)
+    if (sizeMB > 2) {
+      return `El archivo es muy grande. Máximo 2MB permitido.`
+    }
+
+    return null
+  }
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = error => reject(error)
+    })
+  }
+
+  const processFile = async (file: File) => {
+    if (disabled) return
+
+    setIsUploading(true)
+
+    try {
+      // Validar archivo
+      const error = validateFile(file)
+      if (error) {
+        toast.error(error)
+        return
+      }
+
+      // Convertir a base64 para preview inmediato
+      const base64 = await convertToBase64(file)
+      onChange(base64)
+      toast.success('Foto de perfil actualizada')
+    } catch (error) {
+      console.error('Error processing file:', error)
+      toast.error('Error al procesar la imagen')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      processFile(file)
+    }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDragIn = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setDragActive(true)
+    }
+  }, [])
+
+  const handleDragOut = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    const file = e.dataTransfer.files?.[0]
+    if (file) {
+      processFile(file)
+    }
+  }, [disabled])
+
+  const openFileDialog = () => {
+    if (!disabled && fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  }
+
+  const removeImage = () => {
+    onChange('')
+    toast.success('Foto de perfil eliminada')
+  }
+
   return (
-    <div className={`space-y-4 ${className}`}>
-      <ImageUpload
-        value={value ? [value] : []}
-        onChange={(urls) => onChange(urls[0] || '')}
-        maxImages={1}
-        maxSizeMB={2}
-        uploadText="Subir foto de perfil"
-        showPreview={false}
-        disabled={disabled}
-      />
-      
-      {/* Profile Preview */}
-      {value && (
-        <div className="flex justify-center">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
+    <div className={`space-y-3 ${className}`}>
+      <div className="flex flex-col items-center space-y-4">
+        {/* Profile Image Preview */}
+        <div className="relative">
+          <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
+            {value ? (
               <img
                 src={value}
                 alt="Foto de perfil"
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik02NCA5NkM3Ni4xNTAzIDk2IDg2IDg2LjE1MDMgODYgNzRDODYgNjEuODQ5NyA3Ni4xNTAzIDUyIDY0IDUyQzUxLjg0OTcgNTIgNDIgNjEuODQ5NyA0MiA3NEM0MiA4Ni4xNTAzIDUxLjg0OTcgOTYgNjQgOTZaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yNiAxMTJDMjYgOTcuNjQwNiAzNy42NDA2IDg2IDUyIDg2SDc2Qzg5LjI1NDggODYgMTAwIDk2Ljc0NTIgMTAwIDExMEgxMDBIMjZaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo='
+                }}
               />
-            </div>
-            <button
-              onClick={() => {
-                onChange('')
-                toast.success('Foto de perfil eliminada')
-              }}
-              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-              disabled={disabled}
-            >
-              <X className="h-3 w-3" />
-            </button>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                  <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500">Sin foto</p>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Remove button - only show if there's an image */}
+          {value && (
+            <button
+              onClick={removeImage}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors shadow-lg"
+              disabled={disabled}
+              title="Eliminar foto"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+
+          {/* Upload overlay - only show when uploading */}
+          {isUploading && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Upload Button/Area */}
+        <div
+          className={`
+            relative border-2 border-dashed rounded-lg px-6 py-4 text-center cursor-pointer transition-all duration-200
+            ${dragActive 
+              ? 'border-blue-500 bg-blue-50 scale-105' 
+              : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+            }
+            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            ${isUploading ? 'pointer-events-none' : ''}
+          `}
+          onDragEnter={handleDragIn}
+          onDragLeave={handleDragOut}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          onClick={openFileDialog}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={disabled}
+          />
+
+          {isUploading ? (
+            <div className="flex items-center justify-center space-x-2">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+              <span className="text-sm text-gray-600">Subiendo...</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center space-x-2">
+              <Upload className="h-5 w-5 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-700">
+                  {value ? 'Cambiar foto' : 'Subir foto de perfil'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  JPG, PNG o WEBP (máx. 2MB)
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Help text */}
+        <p className="text-xs text-gray-500 text-center max-w-xs">
+          Arrastra una imagen aquí o haz clic para seleccionar desde tu dispositivo
+        </p>
+      </div>
     </div>
   )
 }

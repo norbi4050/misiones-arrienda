@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useRouter } from "next/navigation";
 import { User, Building2, Search } from "lucide-react";
+import { ProfileImageUpload } from "@/components/ui/image-upload";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -12,7 +13,8 @@ export default function RegisterPage() {
     confirmPassword: "",
     userType: "inquilino" as "inquilino" | "dueno_directo" | "inmobiliaria",
     companyName: "",
-    licenseNumber: ""
+    licenseNumber: "",
+    profileImage: ""
   });
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -59,6 +61,7 @@ export default function RegisterPage() {
       const userData = {
         name: formData.name,
         userType: formData.userType,
+        profileImage: formData.profileImage,
         ...(formData.userType === 'inmobiliaria' && {
           companyName: formData.companyName,
           licenseNumber: formData.licenseNumber
@@ -131,6 +134,19 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-6">
+          {/* Foto de perfil */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Foto de perfil (opcional)
+            </label>
+            <ProfileImageUpload
+              value={formData.profileImage}
+              onChange={(url) => setFormData(prev => ({ ...prev, profileImage: url }))}
+              disabled={loading}
+              className="mb-4"
+            />
+          </div>
+
           {/* Selector de tipo de usuario */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
