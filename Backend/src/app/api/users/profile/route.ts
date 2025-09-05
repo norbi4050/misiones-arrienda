@@ -149,7 +149,7 @@ async function handleProfileUpdate(request: NextRequest) {
     }
 
     // Agregar timestamp de actualización
-    validatedData.updatedAt = new Date().toISOString()
+    validatedData.updated_at = new Date().toISOString()
 
     console.log('Validated data for database:', {
       keys: Object.keys(validatedData),
