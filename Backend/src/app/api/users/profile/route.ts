@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-// Campos válidos del modelo User según el esquema real de Supabase
+// Campos válidos del modelo users según el esquema real de Supabase (snake_case)
 const validUserFields = [
   'name',
   'email', 
@@ -10,10 +10,10 @@ const validUserFields = [
   'bio',
   'occupation',
   'age',
-  'userType',
-  'companyName',
-  'licenseNumber',
-  'propertyCount',
+  'user_type',
+  'company_name',
+  'license_number',
+  'property_count',
   'full_name',
   'location',
   'search_type',
@@ -156,9 +156,9 @@ async function handleProfileUpdate(request: NextRequest) {
       data: validatedData
     })
 
-    // Actualizar el perfil del usuario en la tabla User (mayúscula)
+    // Actualizar el perfil del usuario en la tabla users (minúscula)
     const { data, error } = await supabase
-      .from('User')
+      .from('users')
       .update(validatedData)
       .eq('id', user.id)
       .select()
@@ -207,9 +207,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Obtener el perfil del usuario de la tabla User (mayúscula)
+    // Obtener el perfil del usuario de la tabla users (minúscula)
     const { data, error } = await supabase
-      .from('User')
+      .from('users')
       .select('*')
       .eq('id', user.id)
       .single()
