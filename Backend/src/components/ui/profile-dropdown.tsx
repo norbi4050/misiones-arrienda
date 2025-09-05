@@ -41,13 +41,24 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Debug logging para verificar el estado del dropdown
+  useEffect(() => {
+    console.log('ProfileDropdown State:', {
+      user: user ? { id: user.id, email: user.email, name: user.name } : null,
+      isOpen,
+      userExists: !!user
+    });
+  }, [user, isOpen]);
+
   const handleSignOut = () => {
+    console.log('ProfileDropdown: Signing out user');
     setIsOpen(false);
     onSignOut();
   };
 
   // Si no hay usuario, no renderizar el dropdown
   if (!user) {
+    console.log('ProfileDropdown: No user provided, not rendering');
     return null;
   }
 
@@ -67,40 +78,41 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   return (
     <div ref={dropdownRef} className={cn("relative", className)}>
-      {/* Trigger Button */}
+      {/* Trigger Button - Mejorado para mayor visibilidad */}
       <Button
         variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "flex items-center space-x-2 px-3 py-2 rounded-full",
-          "hover:bg-gray-100 transition-colors duration-200",
-          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          "hover:bg-gray-100 transition-colors duration-200 border border-gray-200",
+          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+          "bg-white shadow-sm"
         )}
       >
-        {/* Avatar */}
-        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+        {/* Avatar - Mejorado */}
+        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium shadow-sm">
           {initials}
         </div>
         
-        {/* User Name (hidden on mobile) */}
+        {/* User Name (hidden on mobile) - Mejorado */}
         <span className="hidden md:block text-sm font-medium text-gray-700 max-w-24 truncate">
           {displayName}
         </span>
         
-        {/* Chevron */}
+        {/* Chevron - Mejorado */}
         <ChevronDown className={cn(
           "w-4 h-4 text-gray-500 transition-transform duration-200",
           isOpen ? "rotate-180" : "rotate-0"
         )} />
       </Button>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu - Mejorado con mejor z-index y sombra */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-          {/* User Info Header */}
-          <div className="px-4 py-3 border-b border-gray-100">
+        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] animate-in slide-in-from-top-2 duration-200">
+          {/* User Info Header - Mejorado */}
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-lg">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+              <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium shadow-sm">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
@@ -114,71 +126,71 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
             </div>
           </div>
 
-          {/* Menu Items */}
+          {/* Menu Items - Mejorados */}
           <div className="py-1">
             {/* Mi Perfil */}
             <Link
               href="/profile"
               onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-50"
             >
               <User className="w-4 h-4 mr-3 text-gray-400" />
-              Mi Perfil
+              <span className="font-medium">Mi Perfil</span>
             </Link>
 
             {/* Favoritos */}
             <Link
               href="/dashboard?tab=favorites"
               onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-50"
             >
               <Heart className="w-4 h-4 mr-3 text-gray-400" />
-              Mis Favoritos
+              <span className="font-medium">Mis Favoritos</span>
             </Link>
 
             {/* Mensajes */}
             <Link
               href="/dashboard?tab=messages"
               onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-50"
             >
               <MessageCircle className="w-4 h-4 mr-3 text-gray-400" />
-              Mensajes
+              <span className="font-medium">Mensajes</span>
             </Link>
 
             {/* Notificaciones */}
             <Link
               href="/dashboard?tab=notifications"
               onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-50"
             >
               <Bell className="w-4 h-4 mr-3 text-gray-400" />
-              Notificaciones
+              <span className="font-medium">Notificaciones</span>
             </Link>
 
             {/* Divider */}
-            <div className="border-t border-gray-100 my-1"></div>
+            <div className="border-t border-gray-200 my-1"></div>
 
             {/* Configuración */}
             <Link
               href="/settings"
               onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >
               <Settings className="w-4 h-4 mr-3 text-gray-400" />
-              Configuración
+              <span className="font-medium">Configuración</span>
             </Link>
 
             {/* Divider */}
-            <div className="border-t border-gray-100 my-1"></div>
+            <div className="border-t border-gray-200 my-1"></div>
 
-            {/* Cerrar Sesión */}
+            {/* Cerrar Sesión - Mejorado */}
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
+              className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 rounded-b-lg"
             >
               <LogOut className="w-4 h-4 mr-3 text-red-500" />
-              Cerrar Sesión
+              <span className="font-medium">Cerrar Sesión</span>
             </button>
           </div>
         </div>
