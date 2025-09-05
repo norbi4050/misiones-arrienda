@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { PropertyCard } from '@/components/ui/property-card';
 import { PropertyFilters, PropertyFilters as PropertyFiltersType } from '@/components/ui/property-filters';
@@ -18,7 +18,13 @@ import {
   Download,
   Upload,
   Settings,
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Save,
+  RotateCcw
 } from 'lucide-react';
 
 interface Property {
@@ -69,36 +75,120 @@ interface PropertyStats {
       title: string;
       views: number;
       inquiries: number;
+      featured?: boolean;
+      rating?: number;
     }>;
     conversionRate?: number;
   };
+  detailedStates?: {
+    pending: number;
+    approved: number;
+    rejected: number;
+    draft: number;
+  };
+  featuredProperties?: Array<{
+    id: string;
+    title: string;
+    price: number;
+    views: number;
+    featured: boolean;
+    priority: 'high' | 'medium' | 'low';
+  }>;
 }
+
+interface PaginationState {
+  currentPage: number;
+  itemsPerPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+interface DashboardState {
+  filters: PropertyFiltersType;
+  selectedProperties: string[];
+  viewMode: 'grid' | 'list';
+  pagination: PaginationState;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  savedFilters: { [key: string]: PropertyFiltersType };
+}
+
+const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48, 96];
+const STORAGE_KEY = 'property-dashboard-state';
 
 export default function PropertiesManagementPage() {
   const { user } = useAuth();
+  
+  // State management optimizado
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+  const [paginatedProperties, setPaginatedProperties] = useState<Property[]>([]);
   const [stats, setStats] = useState<PropertyStats | null>(null);
-  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
-  const [filters, setFilters] = useState<PropertyFiltersType>({
-    search: '',
-    status: '',
-    propertyType: '',
-    minPrice: '',
-    maxPrice: '',
-    city: '',
-    province: '',
-    bedrooms: '',
-    bathrooms: '',
-    featured: null,
-    dateFrom: '',
-    dateTo: '',
-    sortBy: 'createdAt',
-    sortOrder: 'desc'
-  });
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Dashboard state con persistencia
+  const [dashboardState, setDashboardState] = useState<DashboardState>({
+    filters: {
+      search: '',
+      status: '',
+      propertyType: '',
+      minPrice: '',
+      maxPrice: '',
+      city: '',
+      province: '',
+      bedrooms: '',
+      bathrooms: '',
+      featured: null,
+      dateFrom: '',
+      dateTo: '',
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    },
+    selectedProperties: [],
+    viewMode: 'grid',
+    pagination: {
+      currentPage: 1,
+      itemsPerPage: 12,
+      totalItems: 0,
+      totalPages: 0
+    },
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    savedFilters: {}
+  });
+
+  // Load persisted state
+  useEffect(() => {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        setDashboardState(prev => ({
+          ...prev,
+          ...parsedState,
+          selectedProperties: [] // Reset selections on load
+        }));
+      } catch (error) {
+        console.error('Error loading dashboard state:', error);
+      }
+    }
+  }, []);
+
+  // Persist state changes
+  const updateDashboardState = useCallback((updates: Partial<DashboardState>) => {
+    setDashboardState(prev => {
+      const newState = { ...prev, ...updates };
+      // Save to localStorage (excluding selectedProperties for security)
+      const stateToSave = {
+        ...newState,
+        selectedProperties: []
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+      return newState;
+    });
+  }, []);
 
   // Fetch properties
   const fetchProperties = useCallback(async () => {
@@ -106,19 +196,23 @@ export default function PropertiesManagementPage() {
 
     try {
       setIsLoading(true);
+      setError(null);
       const response = await fetch(`/api/properties/user/${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setProperties(data.properties || []);
+      } else {
+        throw new Error('Error al cargar propiedades');
       }
     } catch (error) {
       console.error('Error fetching properties:', error);
+      setError(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setIsLoading(false);
     }
   }, [user?.id]);
 
-  // Fetch analytics/stats
+  // Fetch analytics/stats with enhanced data
   const fetchStats = useCallback(async () => {
     if (!user?.id) return;
 
@@ -127,16 +221,18 @@ export default function PropertiesManagementPage() {
       if (response.ok) {
         const data = await response.json();
         setStats(data);
+      } else {
+        // Generate enhanced mock stats
+        generateEnhancedMockStats();
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
-      // Generate mock stats from properties
-      generateMockStats();
+      generateEnhancedMockStats();
     }
   }, [user?.id, properties]);
 
-  // Generate mock stats from current properties
-  const generateMockStats = useCallback(() => {
+  // Generate enhanced mock stats
+  const generateEnhancedMockStats = useCallback(() => {
     if (properties.length === 0) return;
 
     const byStatus: Record<string, number> = {};
@@ -147,19 +243,15 @@ export default function PropertiesManagementPage() {
     let totalPrice = 0;
 
     properties.forEach(property => {
-      // Count by status
       byStatus[property.status] = (byStatus[property.status] || 0) + 1;
-      
-      // Count by type
       byType[property.propertyType] = (byType[property.propertyType] || 0) + 1;
-      
-      // Sum analytics
       totalViews += property.views || Math.floor(Math.random() * 100);
       totalInquiries += property.inquiries || Math.floor(Math.random() * 20);
       totalFavorites += property.favorites || Math.floor(Math.random() * 15);
       totalPrice += property.price;
     });
 
+    const featuredProps = properties.filter(p => p.featured);
     const mockStats: PropertyStats = {
       totalProperties: properties.length,
       byStatus,
@@ -175,23 +267,40 @@ export default function PropertiesManagementPage() {
       },
       performance: {
         topPerforming: properties
-          .slice(0, 3)
+          .slice(0, 5)
           .map(p => ({
             id: p.id,
             title: p.title,
             views: p.views || Math.floor(Math.random() * 100),
-            inquiries: p.inquiries || Math.floor(Math.random() * 20)
+            inquiries: p.inquiries || Math.floor(Math.random() * 20),
+            featured: p.featured,
+            rating: Math.floor(Math.random() * 5) + 1
           })),
         conversionRate: Math.random() * 10 + 5
-      }
+      },
+      detailedStates: {
+        pending: Math.floor(properties.length * 0.2),
+        approved: Math.floor(properties.length * 0.6),
+        rejected: Math.floor(properties.length * 0.1),
+        draft: Math.floor(properties.length * 0.1)
+      },
+      featuredProperties: featuredProps.slice(0, 3).map(p => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        views: p.views || Math.floor(Math.random() * 100),
+        featured: p.featured,
+        priority: Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low'
+      }))
     };
 
     setStats(mockStats);
   }, [properties]);
 
-  // Apply filters to properties
-  const applyFilters = useCallback(() => {
+  // Advanced filtering with memoization
+  const applyFilters = useMemo(() => {
     let filtered = [...properties];
+    const { filters } = dashboardState;
 
     // Search filter
     if (filters.search) {
@@ -263,13 +372,13 @@ export default function PropertiesManagementPage() {
 
     // Sorting
     filtered.sort((a, b) => {
-      let aValue: any = a[filters.sortBy as keyof Property];
-      let bValue: any = b[filters.sortBy as keyof Property];
+      let aValue: any = a[dashboardState.sortBy as keyof Property];
+      let bValue: any = b[dashboardState.sortBy as keyof Property];
 
-      if (filters.sortBy === 'price' || filters.sortBy === 'area') {
+      if (dashboardState.sortBy === 'price' || dashboardState.sortBy === 'area') {
         aValue = Number(aValue);
         bValue = Number(bValue);
-      } else if (filters.sortBy === 'createdAt' || filters.sortBy === 'updatedAt') {
+      } else if (dashboardState.sortBy === 'createdAt' || dashboardState.sortBy === 'updatedAt') {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
       } else {
@@ -277,39 +386,137 @@ export default function PropertiesManagementPage() {
         bValue = String(bValue).toLowerCase();
       }
 
-      if (filters.sortOrder === 'asc') {
+      if (dashboardState.sortOrder === 'asc') {
         return aValue > bValue ? 1 : -1;
       } else {
         return aValue < bValue ? 1 : -1;
       }
     });
 
-    setFilteredProperties(filtered);
-  }, [properties, filters]);
+    return filtered;
+  }, [properties, dashboardState.filters, dashboardState.sortBy, dashboardState.sortOrder]);
+
+  // Pagination logic
+  const applyPagination = useMemo(() => {
+    const { currentPage, itemsPerPage } = dashboardState.pagination;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    const totalItems = filteredProperties.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    // Update pagination state if needed
+    if (dashboardState.pagination.totalItems !== totalItems || 
+        dashboardState.pagination.totalPages !== totalPages) {
+      updateDashboardState({
+        pagination: {
+          ...dashboardState.pagination,
+          totalItems,
+          totalPages,
+          currentPage: currentPage > totalPages ? 1 : currentPage
+        }
+      });
+    }
+
+    return filteredProperties.slice(startIndex, endIndex);
+  }, [filteredProperties, dashboardState.pagination, updateDashboardState]);
+
+  // Update filtered and paginated properties
+  useEffect(() => {
+    setFilteredProperties(applyFilters);
+  }, [applyFilters]);
+
+  useEffect(() => {
+    setPaginatedProperties(applyPagination);
+  }, [applyPagination]);
+
+  // Handle filter changes
+  const handleFiltersChange = useCallback((newFilters: PropertyFiltersType) => {
+    updateDashboardState({
+      filters: newFilters,
+      pagination: { ...dashboardState.pagination, currentPage: 1 }
+    });
+  }, [dashboardState.pagination, updateDashboardState]);
 
   // Handle property selection
-  const handlePropertySelect = (propertyId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedProperties(prev => [...prev, propertyId]);
-    } else {
-      setSelectedProperties(prev => prev.filter(id => id !== propertyId));
-    }
-  };
+  const handlePropertySelect = useCallback((propertyId: string, selected: boolean) => {
+    const newSelected = selected 
+      ? [...dashboardState.selectedProperties, propertyId]
+      : dashboardState.selectedProperties.filter(id => id !== propertyId);
+    
+    updateDashboardState({ selectedProperties: newSelected });
+  }, [dashboardState.selectedProperties, updateDashboardState]);
 
-  const handleSelectAll = (selected: boolean) => {
-    if (selected) {
-      setSelectedProperties(filteredProperties.map(p => p.id));
-    } else {
-      setSelectedProperties([]);
-    }
-  };
+  const handleSelectAll = useCallback((selected: boolean) => {
+    const newSelected = selected ? paginatedProperties.map(p => p.id) : [];
+    updateDashboardState({ selectedProperties: newSelected });
+  }, [paginatedProperties, updateDashboardState]);
 
-  const handleClearSelection = () => {
-    setSelectedProperties([]);
-  };
+  const handleClearSelection = useCallback(() => {
+    updateDashboardState({ selectedProperties: [] });
+  }, [updateDashboardState]);
+
+  // Pagination handlers
+  const handlePageChange = useCallback((page: number) => {
+    updateDashboardState({
+      pagination: { ...dashboardState.pagination, currentPage: page }
+    });
+  }, [dashboardState.pagination, updateDashboardState]);
+
+  const handleItemsPerPageChange = useCallback((itemsPerPage: number) => {
+    updateDashboardState({
+      pagination: { 
+        ...dashboardState.pagination, 
+        itemsPerPage, 
+        currentPage: 1 
+      }
+    });
+  }, [dashboardState.pagination, updateDashboardState]);
+
+  // Save and load filter presets
+  const handleSaveFilterPreset = useCallback((name: string) => {
+    const newSavedFilters = {
+      ...dashboardState.savedFilters,
+      [name]: dashboardState.filters
+    };
+    updateDashboardState({ savedFilters: newSavedFilters });
+  }, [dashboardState.filters, dashboardState.savedFilters, updateDashboardState]);
+
+  const handleLoadFilterPreset = useCallback((name: string) => {
+    const preset = dashboardState.savedFilters[name];
+    if (preset) {
+      updateDashboardState({
+        filters: preset,
+        pagination: { ...dashboardState.pagination, currentPage: 1 }
+      });
+    }
+  }, [dashboardState.savedFilters, dashboardState.pagination, updateDashboardState]);
+
+  const handleResetFilters = useCallback(() => {
+    const defaultFilters: PropertyFiltersType = {
+      search: '',
+      status: '',
+      propertyType: '',
+      minPrice: '',
+      maxPrice: '',
+      city: '',
+      province: '',
+      bedrooms: '',
+      bathrooms: '',
+      featured: null,
+      dateFrom: '',
+      dateTo: '',
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    };
+    updateDashboardState({
+      filters: defaultFilters,
+      pagination: { ...dashboardState.pagination, currentPage: 1 }
+    });
+  }, [dashboardState.pagination, updateDashboardState]);
 
   // Handle bulk actions
-  const handleBulkAction = async (action: BulkAction) => {
+  const handleBulkAction = useCallback(async (action: BulkAction) => {
     try {
       const response = await fetch('/api/properties/bulk', {
         method: 'POST',
@@ -318,27 +525,26 @@ export default function PropertiesManagementPage() {
         },
         body: JSON.stringify({
           action: action.type,
-          propertyIds: selectedProperties,
+          propertyIds: dashboardState.selectedProperties,
           data: action.data
         }),
       });
 
       if (response.ok) {
-        // Refresh properties after bulk action
         await fetchProperties();
-        setSelectedProperties([]);
+        updateDashboardState({ selectedProperties: [] });
       }
     } catch (error) {
       console.error('Error performing bulk action:', error);
     }
-  };
+  }, [dashboardState.selectedProperties, fetchProperties, updateDashboardState]);
 
-  // Handle individual property actions
-  const handlePropertyEdit = (propertyId: string) => {
+  // Individual property actions
+  const handlePropertyEdit = useCallback((propertyId: string) => {
     window.location.href = `/publicar?edit=${propertyId}`;
-  };
+  }, []);
 
-  const handlePropertyDelete = async (propertyId: string) => {
+  const handlePropertyDelete = useCallback(async (propertyId: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar esta propiedad?')) {
       try {
         const response = await fetch(`/api/properties/${propertyId}`, {
@@ -352,17 +558,17 @@ export default function PropertiesManagementPage() {
         console.error('Error deleting property:', error);
       }
     }
-  };
+  }, [fetchProperties]);
 
-  const handlePropertyView = (propertyId: string) => {
+  const handlePropertyView = useCallback((propertyId: string) => {
     window.open(`/property/${propertyId}`, '_blank');
-  };
+  }, []);
 
-  const handlePropertyPromote = (propertyId: string) => {
+  const handlePropertyPromote = useCallback((propertyId: string) => {
     window.location.href = `/publicar/premium?propertyId=${propertyId}`;
-  };
+  }, []);
 
-  const handleToggleFeatured = async (propertyId: string) => {
+  const handleToggleFeatured = useCallback(async (propertyId: string) => {
     try {
       const property = properties.find(p => p.id === propertyId);
       if (!property) return;
@@ -383,13 +589,13 @@ export default function PropertiesManagementPage() {
     } catch (error) {
       console.error('Error toggling featured status:', error);
     }
-  };
+  }, [properties, fetchProperties]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await Promise.all([fetchProperties(), fetchStats()]);
     setIsRefreshing(false);
-  };
+  }, [fetchProperties, fetchStats]);
 
   // Effects
   useEffect(() => {
@@ -402,9 +608,70 @@ export default function PropertiesManagementPage() {
     }
   }, [fetchStats]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [applyFilters]);
+  // Render pagination controls
+  const renderPaginationControls = () => {
+    const { currentPage, totalPages, itemsPerPage } = dashboardState.pagination;
+    
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-between mt-6">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-600">Mostrar:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+            className="border rounded px-2 py-1 text-sm"
+          >
+            {ITEMS_PER_PAGE_OPTIONS.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <span className="text-sm text-gray-600">por página</span>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronsLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          
+          <span className="text-sm text-gray-600">
+            Página {currentPage} de {totalPages}
+          </span>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronsRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
 
   if (!user) {
     return (
@@ -470,17 +737,46 @@ export default function PropertiesManagementPage() {
 
           {/* Properties Tab */}
           <TabsContent value="properties" className="space-y-6">
-            {/* Filters */}
-            <PropertyFilters
-              onFiltersChange={setFilters}
-              initialFilters={filters}
-              totalCount={filteredProperties.length}
-            />
+            {/* Advanced Filters */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Filtros Avanzados</h3>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetFilters}
+                    className="flex items-center"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    Limpiar
+                  </Button>
+                  {Object.keys(dashboardState.savedFilters).length > 0 && (
+                    <select
+                      onChange={(e) => e.target.value && handleLoadFilterPreset(e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                      defaultValue=""
+                    >
+                      <option value="">Cargar filtro guardado</option>
+                      {Object.keys(dashboardState.savedFilters).map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+              
+              <PropertyFilters
+                onFiltersChange={handleFiltersChange}
+                initialFilters={dashboardState.filters}
+                totalCount={filteredProperties.length}
+              />
+            </div>
 
             {/* Bulk Actions */}
             <BulkActions
-              selectedItems={selectedProperties}
-              totalItems={filteredProperties.length}
+              selectedItems={dashboardState.selectedProperties}
+              totalItems={paginatedProperties.length}
               onSelectAll={handleSelectAll}
               onClearSelection={handleClearSelection}
               onBulkAction={handleBulkAction}
@@ -489,32 +785,63 @@ export default function PropertiesManagementPage() {
 
             {/* View Controls */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Vista:</span>
-                <div className="flex border rounded-lg">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="rounded-r-none"
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Vista:</span>
+                  <div className="flex border rounded-lg">
+                    <Button
+                      variant={dashboardState.viewMode === 'grid' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => updateDashboardState({ viewMode: 'grid' })}
+                      className="rounded-r-none"
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={dashboardState.viewMode === 'list' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => updateDashboardState({ viewMode: 'list' })}
+                      className="rounded-l-none"
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Ordenar por:</span>
+                  <select
+                    value={dashboardState.sortBy}
+                    onChange={(e) => updateDashboardState({ sortBy: e.target.value })}
+                    className="border rounded px-2 py-1 text-sm"
                   >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
+                    <option value="createdAt">Fecha de creación</option>
+                    <option value="updatedAt">Última actualización</option>
+                    <option value="price">Precio</option>
+                    <option value="title">Título</option>
+                    <option value="views">Vistas</option>
+                  </select>
                   <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    variant="outline"
                     size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="rounded-l-none"
+                    onClick={() => updateDashboardState({ 
+                      sortOrder: dashboardState.sortOrder === 'asc' ? 'desc' : 'asc' 
+                    })}
                   >
-                    <List className="w-4 h-4" />
+                    {dashboardState.sortOrder === 'asc' ? '↑' : '↓'}
                   </Button>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary">
-                  {filteredProperties.length} de {properties.length} propiedades
+                  {paginatedProperties.length} de {filteredProperties.length} propiedades
                 </Badge>
+                {filteredProperties.length !== properties.length && (
+                  <Badge variant="outline">
+                    {properties.length} total
+                  </Badge>
+                )}
               </div>
             </div>
 
@@ -524,6 +851,20 @@ export default function PropertiesManagementPage() {
                 <div className="text-center">
                   <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
                   <p className="text-gray-600">Cargando propiedades...</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Filter className="w-8 h-8 text-red-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar propiedades</h3>
+                  <p className="text-gray-600 mb-6">{error}</p>
+                  <Button onClick={handleRefresh} className="flex items-center mx-auto">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reintentar
+                  </Button>
                 </div>
               </div>
             ) : filteredProperties.length === 0 ? (
@@ -551,32 +892,43 @@ export default function PropertiesManagementPage() {
                 </div>
               </div>
             ) : (
-              <div className={
-                viewMode === 'grid' 
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : 'space-y-4'
-              }>
-                {filteredProperties.map((property) => (
-                  <PropertyCard
-                    key={property.id}
-                    property={property}
-                    onEdit={handlePropertyEdit}
-                    onDelete={handlePropertyDelete}
-                    onView={handlePropertyView}
-                    onPromote={handlePropertyPromote}
-                    onToggleFeatured={handleToggleFeatured}
-                    isSelected={selectedProperties.includes(property.id)}
-                    onSelect={handlePropertySelect}
-                  />
-                ))}
-              </div>
+              <>
+                <div className={
+                  dashboardState.viewMode === 'grid' 
+                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                    : 'space-y-4'
+                }>
+                  {paginatedProperties.map((property) => (
+                    <PropertyCard
+                      key={property.id}
+                      property={property}
+                      onEdit={handlePropertyEdit}
+                      onDelete={handlePropertyDelete}
+                      onView={handlePropertyView}
+                      onPromote={handlePropertyPromote}
+                      onToggleFeatured={handleToggleFeatured}
+                      isSelected={dashboardState.selectedProperties.includes(property.id)}
+                      onSelect={handlePropertySelect}
+                    />
+                  ))}
+                </div>
+                
+                {/* Pagination Controls */}
+                {renderPaginationControls()}
+              </>
             )}
           </TabsContent>
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             {stats ? (
-              <PropertyStats stats={stats} />
+              <PropertyStats 
+                stats={stats} 
+                loading={isLoading}
+                error={error}
+                onRefresh={handleRefresh}
+                onRetry={handleRefresh}
+              />
             ) : (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">

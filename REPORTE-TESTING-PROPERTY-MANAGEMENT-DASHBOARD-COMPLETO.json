@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-09-05T20:06:48.408Z",
+  "duration": 0,
+  "summary": {
+    "total": 11,
+    "passed": 9,
+    "failed": 2,
+    "successRate": 82
+  },
+  "details": [
+    {
+      "test": "BulkActions Component",
+      "status": "PASSED",
+      "message": "✅ Componente BulkActions completo con todas las funcionalidades (10 verificaciones)",
+      "timestamp": "2025-09-05T20:06:48.392Z"
+    },
+    {
+      "test": "PropertyStats Component",
+      "status": "FAILED",
+      "message": "Faltan funcionalidades críticas: Estados de propiedades, Propiedades destacadas, Loading states",
+      "timestamp": "2025-09-05T20:06:48.394Z"
+    },
+    {
+      "test": "PropertyFilters Component",
+      "status": "PASSED",
+      "message": "✅ Componente PropertyFilters implementado (8/9 funcionalidades)",
+      "timestamp": "2025-09-05T20:06:48.396Z"
+    },
+    {
+      "test": "Properties Analytics API",
+      "status": "PASSED",
+      "message": "✅ API Analytics completa (15/15 funcionalidades)",
+      "timestamp": "2025-09-05T20:06:48.398Z"
+    },
+    {
+      "test": "Properties Bulk API",
+      "status": "PASSED",
+      "message": "✅ API Bulk Operations completa (15/15 funcionalidades)",
+      "timestamp": "2025-09-05T20:06:48.400Z"
+    },
+    {
+      "test": "Dashboard Properties Page",
+      "status": "FAILED",
+      "message": "Faltan funcionalidades críticas: Estado de propiedades, Estado de selección, Estado de filtros, Manejo de filtros, Paginación",
+      "timestamp": "2025-09-05T20:06:48.402Z"
+    },
+    {
+      "test": "Component Integration",
+      "status": "PASSED",
+      "message": "✅ Integración de componentes: 83% (10/12)",
+      "timestamp": "2025-09-05T20:06:48.403Z"
+    },
+    {
+      "test": "API Integration",
+      "status": "PASSED",
+      "message": "✅ Integración de APIs: 80% (8/10)",
+      "timestamp": "2025-09-05T20:06:48.404Z"
+    },
+    {
+      "test": "Bulk Operations Functionality",
+      "status": "PASSED",
+      "message": "✅ Operaciones en lote: 100% (6/6)",
+      "timestamp": "2025-09-05T20:06:48.405Z"
+    },
+    {
+      "test": "Analytics Functionality",
+      "status": "PASSED",
+      "message": "✅ Métricas de analytics: 100% (14/14)",
+      "timestamp": "2025-09-05T20:06:48.405Z"
+    },
+    {
+      "test": "Code Quality",
+      "status": "PASSED",
+      "message": "✅ Calidad de código: 73% (22/30)",
+      "timestamp": "2025-09-05T20:06:48.407Z"
+    }
+  ],
+  "recommendations": [
+    "Revisar y corregir los tests fallidos antes del despliegue",
+    "Realizar testing manual adicional en diferentes navegadores",
+    "Verificar la integración con la base de datos en entorno de desarrollo",
+    "Implementar tests unitarios para funciones críticas"
+  ]
+}

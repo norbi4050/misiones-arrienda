@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -15,7 +15,13 @@ import {
   BarChart3,
   PieChart,
   Activity,
-  Users
+  Users,
+  Star,
+  AlertCircle,
+  Loader2,
+  RefreshCw,
+  Filter,
+  Search
 } from 'lucide-react';
 
 interface PropertyStatsProps {
@@ -38,11 +44,31 @@ interface PropertyStatsProps {
         title: string;
         views: number;
         inquiries: number;
+        featured?: boolean;
+        rating?: number;
       }>;
       conversionRate?: number;
     };
+    detailedStates?: {
+      pending: number;
+      approved: number;
+      rejected: number;
+      draft: number;
+    };
+    featuredProperties?: Array<{
+      id: string;
+      title: string;
+      price: number;
+      views: number;
+      featured: boolean;
+      priority: 'high' | 'medium' | 'low';
+    }>;
   };
   className?: string;
+  loading?: boolean;
+  error?: string | null;
+  onRefresh?: () => void;
+  onRetry?: () => void;
 }
 
 const getStatusLabel = (status: string) => {
@@ -119,7 +145,81 @@ const formatNumber = (num: number) => {
   return new Intl.NumberFormat('es-AR').format(num);
 };
 
-export function PropertyStats({ stats, className = '' }: PropertyStatsProps) {
+export function PropertyStats({ 
+  stats, 
+  className = '', 
+  loading = false, 
+  error = null, 
+  onRefresh, 
+  onRetry 
+}: PropertyStatsProps) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      setIsRefreshing(true);
+      try {
+        await onRefresh();
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className={`space-y-6 ${className}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+            <span className="text-lg font-semibold text-gray-900">Cargando estadísticas...</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="p-4 animate-pulse">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+                <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className={`space-y-6 ${className}`}>
+        <Card className="p-6 border-red-200 bg-red-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+              <div>
+                <h3 className="text-lg font-semibold text-red-900">Error al cargar estadísticas</h3>
+                <p className="text-red-700">{error}</p>
+              </div>
+            </div>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Reintentar
+              </button>
+            )}
+          </div>
+        </Card>
+      </div>
+    );
+  }
   const totalAvailable = stats.byStatus['AVAILABLE'] || stats.byStatus['available'] || 0;
   const totalRented = stats.byStatus['RENTED'] || stats.byStatus['rented'] || 0;
   const totalSold = stats.byStatus['SOLD'] || stats.byStatus['sold'] || 0;
@@ -140,6 +240,26 @@ export function PropertyStats({ stats, className = '' }: PropertyStatsProps) {
 
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Header with refresh button */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <BarChart3 className="w-6 h-6 text-blue-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Estadísticas de Propiedades</h2>
+        </div>
+        <div className="flex items-center space-x-2">
+          {onRefresh && (
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Actualizar</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Properties */}
@@ -286,32 +406,131 @@ export function PropertyStats({ stats, className = '' }: PropertyStatsProps) {
         </Card>
       </div>
 
-      {/* Performance Section */}
-      {stats.performance?.topPerforming && stats.performance.topPerforming.length > 0 && (
+      {/* Detailed States Section */}
+      {stats.detailedStates && (
         <Card className="p-6">
           <div className="flex items-center mb-4">
-            <Activity className="w-5 h-5 text-gray-600 mr-2" />
-            <h3 className="text-lg font-semibold text-gray-900">Propiedades Destacadas</h3>
+            <Filter className="w-5 h-5 text-gray-600 mr-2" />
+            <h3 className="text-lg font-semibold text-gray-900">Estados Detallados</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-yellow-50 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-600">{stats.detailedStates.pending}</div>
+              <div className="text-sm text-yellow-700">Pendientes</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{stats.detailedStates.approved}</div>
+              <div className="text-sm text-green-700">Aprobadas</div>
+            </div>
+            <div className="text-center p-4 bg-red-50 rounded-lg">
+              <div className="text-2xl font-bold text-red-600">{stats.detailedStates.rejected}</div>
+              <div className="text-sm text-red-700">Rechazadas</div>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-gray-600">{stats.detailedStates.draft}</div>
+              <div className="text-sm text-gray-700">Borradores</div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Featured Properties Section */}
+      {stats.featuredProperties && stats.featuredProperties.length > 0 && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Star className="w-5 h-5 text-yellow-500 mr-2" />
+              <h3 className="text-lg font-semibold text-gray-900">Propiedades Destacadas</h3>
+            </div>
+            <Badge variant="secondary" className="text-xs">
+              {stats.featuredProperties.length} destacadas
+            </Badge>
           </div>
           <div className="space-y-3">
-            {stats.performance.topPerforming.map((property, index) => (
-              <div key={property.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-xs font-semibold mr-3">
+            {stats.featuredProperties.map((property, index) => (
+              <div key={property.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-yellow-100 text-yellow-600 rounded-full text-sm font-semibold">
                     {index + 1}
                   </div>
-                  <span className="font-medium text-gray-900 truncate max-w-xs">
-                    {property.title}
-                  </span>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-900 truncate max-w-xs">
+                        {property.title}
+                      </span>
+                      {property.featured && (
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      )}
+                      <Badge 
+                        variant={property.priority === 'high' ? 'destructive' : property.priority === 'medium' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {property.priority === 'high' ? 'Alta' : property.priority === 'medium' ? 'Media' : 'Baja'}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {formatCurrency(property.price)}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                   <div className="flex items-center">
                     <Eye className="w-4 h-4 mr-1" />
-                    {property.views}
+                    {formatNumber(property.views)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Performance Section Enhanced */}
+      {stats.performance?.topPerforming && stats.performance.topPerforming.length > 0 && (
+        <Card className="p-6">
+          <div className="flex items-center mb-4">
+            <Activity className="w-5 h-5 text-gray-600 mr-2" />
+            <h3 className="text-lg font-semibold text-gray-900">Propiedades con Mejor Rendimiento</h3>
+          </div>
+          <div className="space-y-3">
+            {stats.performance.topPerforming.map((property, index) => (
+              <div key={property.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-xs font-semibold">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-900 truncate max-w-xs">
+                        {property.title}
+                      </span>
+                      {property.featured && (
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      )}
+                    </div>
+                    {property.rating && (
+                      <div className="flex items-center space-x-1 mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 ${
+                              i < property.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                        <span className="text-xs text-gray-600 ml-1">({property.rating}/5)</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <Eye className="w-4 h-4 mr-1" />
+                    {formatNumber(property.views)}
                   </div>
                   <div className="flex items-center">
                     <MessageSquare className="w-4 h-4 mr-1" />
-                    {property.inquiries}
+                    {formatNumber(property.inquiries)}
                   </div>
                 </div>
               </div>

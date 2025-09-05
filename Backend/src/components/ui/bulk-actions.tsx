@@ -65,6 +65,8 @@ export function BulkActions({
 
   const isAllSelected = selectedItems.length === totalItems && totalItems > 0;
   const isPartiallySelected = selectedItems.length > 0 && selectedItems.length < totalItems;
+  const hasSelection = selectedItems.length > 0;
+  const selectionPercentage = totalItems > 0 ? Math.round((selectedItems.length / totalItems) * 100) : 0;
 
   const handleSelectAll = () => {
     onSelectAll(!isAllSelected);
@@ -151,14 +153,15 @@ export function BulkActions({
 
   return (
     <>
-      <div className={`bg-white border rounded-lg p-4 shadow-sm ${className}`}>
-        <div className="flex items-center justify-between">
+      <div className={`bg-white border rounded-lg p-3 md:p-4 shadow-sm ${className}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           {/* Selection Info */}
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleSelectAll}
-                className="flex items-center justify-center w-5 h-5 border border-gray-300 rounded hover:bg-gray-50"
+                className="flex items-center justify-center w-5 h-5 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                aria-label={isAllSelected ? 'Deseleccionar todo' : 'Seleccionar todo'}
               >
                 {isAllSelected ? (
                   <CheckSquare className="w-4 h-4 text-blue-600" />
@@ -169,30 +172,67 @@ export function BulkActions({
                 )}
               </button>
               
-              <span className="text-sm font-medium text-gray-900">
-                {selectedItems.length} de {totalItems} seleccionados
-              </span>
-              
-              {selectedItems.length > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {selectedItems.length}
-                </Badge>
-              )}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <span className="text-sm font-medium text-gray-900">
+                  {selectedItems.length} de {totalItems} seleccionados
+                </span>
+                
+                <div className="flex items-center gap-2">
+                  {hasSelection && (
+                    <Badge variant="secondary" className="text-xs">
+                      {selectionPercentage}%
+                    </Badge>
+                  )}
+                  
+                  {selectedItems.length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      {selectedItems.length}
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearSelection}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Limpiar selección
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearSelection}
+                className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm"
+                aria-label="Limpiar selección"
+              >
+                <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span className="hidden sm:inline">Limpiar selección</span>
+                <span className="sm:hidden">Limpiar</span>
+              </Button>
+
+              {/* Select All/None Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onSelectAll(!isAllSelected)}
+                className="text-gray-600 hover:text-gray-900 text-xs sm:text-sm"
+                aria-label={isAllSelected ? 'Deseleccionar todo' : 'Seleccionar todo'}
+              >
+                {isAllSelected ? (
+                  <>
+                    <Square className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    <span className="hidden sm:inline">Deseleccionar todo</span>
+                    <span className="sm:hidden">Ninguno</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    <span className="hidden sm:inline">Seleccionar todo</span>
+                    <span className="sm:hidden">Todo</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Bulk Actions */}
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {bulkActions.map((action) => {
               if (action.type === 'update-status') {
                 return (
@@ -202,28 +242,31 @@ export function BulkActions({
                       size="sm"
                       onClick={() => setShowStatusMenu(!showStatusMenu)}
                       disabled={isLoading || actionInProgress !== null}
-                      className="flex items-center"
+                      className="flex items-center text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                     >
                       {actionInProgress === action.type ? (
-                        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mr-2" />
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mr-1 sm:mr-2" />
                       ) : (
-                        action.icon
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2">
+                          {action.icon}
+                        </div>
                       )}
-                      <span className="ml-1">{action.label}</span>
+                      <span className="hidden sm:inline">{action.label}</span>
+                      <span className="sm:hidden">Estado</span>
                     </Button>
 
                     {/* Status Dropdown */}
                     {showStatusMenu && (
-                      <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                      <div className="absolute top-full left-0 mt-1 w-40 sm:w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                         <div className="py-1">
                           {statusOptions.map((status) => (
                             <button
                               key={status.value}
                               onClick={() => handleStatusChange(status.value)}
-                              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center justify-between"
+                              className="w-full px-3 sm:px-4 py-2 text-left text-xs sm:text-sm hover:bg-gray-50 flex items-center justify-between"
                             >
                               <span>{status.label}</span>
-                              <Badge className={status.color}>
+                              <Badge className={`${status.color} text-xs`}>
                                 {status.label}
                               </Badge>
                             </button>
@@ -242,14 +285,23 @@ export function BulkActions({
                   size="sm"
                   onClick={() => handleBulkAction(action)}
                   disabled={isLoading || actionInProgress !== null}
-                  className="flex items-center"
+                  className="flex items-center text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                 >
                   {actionInProgress === action.type ? (
-                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mr-2" />
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mr-1 sm:mr-2" />
                   ) : (
-                    action.icon
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2">
+                      {action.icon}
+                    </div>
                   )}
-                  <span className="ml-1">{action.label}</span>
+                  <span className="hidden sm:inline">{action.label}</span>
+                  <span className="sm:hidden">
+                    {action.type === 'delete' ? 'Del' : 
+                     action.type === 'toggle-featured' ? 'Star' :
+                     action.type === 'archive' ? 'Arch' :
+                     action.type === 'export' ? 'Exp' :
+                     action.type === 'duplicate' ? 'Dup' : action.label}
+                  </span>
                 </Button>
               );
             })}
@@ -259,11 +311,41 @@ export function BulkActions({
         {/* Progress Indicator */}
         {actionInProgress && (
           <div className="mt-3 pt-3 border-t">
-            <div className="flex items-center text-sm text-gray-600">
-              <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mr-2" />
+            <div className="flex items-center text-xs sm:text-sm text-gray-600">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mr-2" />
               <span>
                 Procesando {selectedItems.length} propiedades...
               </span>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
+              <div 
+                className="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all duration-300 animate-pulse"
+                style={{ width: `${selectionPercentage}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Selection Summary */}
+        {hasSelection && !actionInProgress && (
+          <div className="mt-3 pt-3 border-t">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs sm:text-sm text-gray-600">
+              <div className="flex items-center gap-4">
+                <span>
+                  <strong>{selectedItems.length}</strong> elementos seleccionados
+                </span>
+                <span>
+                  <strong>{selectionPercentage}%</strong> del total
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">
+                  {totalItems - selectedItems.length} sin seleccionar
+                </span>
+              </div>
             </div>
           </div>
         )}
