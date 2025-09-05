@@ -3,10 +3,12 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Search, User, Heart, MessageCircle } from "lucide-react"
+import { Menu, X, Search, Heart, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ProfileDropdown } from "@/components/ui/profile-dropdown"
+import { useAuth } from "@/hooks/useAuth"
 
 const navigation = [
   { name: 'Inicio', href: '/' },
@@ -19,6 +21,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
+  const { user, loading, isAuthenticated, signOut } = useAuth()
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -82,16 +85,43 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Quick Actions */}
-            <Button variant="ghost" size="sm">
-              <Heart className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <MessageCircle className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <User className="h-4 w-4" />
-            </Button>
+            {/* Authentication Section */}
+            {!loading && (
+              <>
+                {isAuthenticated && user ? (
+                  <>
+                    {/* Quick Actions for authenticated users */}
+                    <Link href="/dashboard?tab=favorites">
+                      <Button variant="ghost" size="sm" title="Mis Favoritos">
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Link href="/dashboard?tab=messages">
+                      <Button variant="ghost" size="sm" title="Mensajes">
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    
+                    {/* Profile Dropdown */}
+                    <ProfileDropdown user={user} onSignOut={signOut} />
+                  </>
+                ) : (
+                  <>
+                    {/* Login/Register buttons for non-authenticated users */}
+                    <Link href="/login">
+                      <Button variant="ghost" size="sm">
+                        Iniciar Sesión
+                      </Button>
+                    </Link>
+                    <Link href="/register">
+                      <Button variant="default" size="sm">
+                        Registrarse
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -139,6 +169,76 @@ export function Navbar() {
                 icon={<Search className="h-4 w-4" />}
               />
             </div>
+
+            {/* Mobile Authentication Section */}
+            {!loading && (
+              <div className="px-3 py-2 border-t border-gray-200">
+                {isAuthenticated && user ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-3 py-2">
+                      <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                        {user.name?.slice(0, 2).toUpperCase() || user.email?.slice(0, 2).toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {user.name || user.email?.split('@')[0] || 'Usuario'}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Mi Perfil
+                    </Link>
+                    <Link
+                      href="/dashboard?tab=favorites"
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Mis Favoritos
+                    </Link>
+                    <Link
+                      href="/dashboard?tab=messages"
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Mensajes
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        signOut();
+                      }}
+                      className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                    >
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      href="/login"
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md text-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Iniciar Sesión
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="block px-3 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md text-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Registrarse
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
