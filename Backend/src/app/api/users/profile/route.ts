@@ -15,7 +15,40 @@ const fieldMapping = {
   petFriendly: 'pet_friendly',
   moveInDate: 'move_in_date',
   employmentStatus: 'employment_status',
-  monthlyIncome: 'monthly_income'
+  monthlyIncome: 'monthly_income',
+  age: 'age',
+  income: 'income'
+}
+
+// Campos que deben ser INTEGER en la base de datos
+const integerFields = ['age', 'income', 'family_size', 'monthly_income']
+
+// Función para validar y convertir tipos de datos
+function validateAndConvertData(data: any): any {
+  const convertedData: any = {}
+  
+  Object.keys(data).forEach(key => {
+    const value = data[key]
+    
+    // Si es un campo INTEGER y el valor es string vacío, convertir a null
+    if (integerFields.includes(key)) {
+      if (value === '' || value === null || value === undefined) {
+        convertedData[key] = null
+      } else if (typeof value === 'string') {
+        const numValue = parseInt(value, 10)
+        convertedData[key] = isNaN(numValue) ? null : numValue
+      } else if (typeof value === 'number') {
+        convertedData[key] = value
+      } else {
+        convertedData[key] = null
+      }
+    } else {
+      // Para otros campos, mantener el valor original
+      convertedData[key] = value
+    }
+  })
+  
+  return convertedData
 }
 
 async function handleProfileUpdate(request: NextRequest) {
@@ -37,7 +70,8 @@ async function handleProfileUpdate(request: NextRequest) {
       method: request.method,
       path: request.url,
       userId: user.id,
-      bodyKeys: Object.keys(body)
+      bodyKeys: Object.keys(body),
+      bodyData: body
     })
 
     // Mapear campos del frontend al formato de la base de datos
@@ -52,15 +86,21 @@ async function handleProfileUpdate(request: NextRequest) {
       }
     })
 
-    // Agregar timestamp de actualización
-    mappedData.updated_at = new Date().toISOString()
+    // Validar y convertir tipos de datos (especialmente campos INTEGER)
+    const validatedData = validateAndConvertData(mappedData)
 
-    console.log('Mapped data for database:', Object.keys(mappedData))
+    // Agregar timestamp de actualización
+    validatedData.updated_at = new Date().toISOString()
+
+    console.log('Validated data for database:', {
+      keys: Object.keys(validatedData),
+      data: validatedData
+    })
 
     // Actualizar el perfil del usuario en la tabla users
     const { data, error } = await supabase
       .from('users')
-      .update(mappedData)
+      .update(validatedData)
       .eq('id', user.id)
       .select()
       .single()
@@ -70,7 +110,8 @@ async function handleProfileUpdate(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Error al actualizar el perfil: ' + error.message,
         details: error.details || 'No additional details',
-        hint: error.hint || 'No hint available'
+        hint: error.hint || 'No hint available',
+        code: error.code || 'No error code'
       }, { status: 500 })
     }
 
