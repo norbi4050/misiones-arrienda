@@ -1,36 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-// Mapeo de campos entre frontend (camelCase) y database (snake_case)
-const fieldMapping = {
-  name: 'name',
-  phone: 'phone', 
-  location: 'location',
-  searchType: 'search_type',
-  budgetRange: 'budget_range',
-  bio: 'bio',
-  profileImage: 'profile_image',
-  preferredAreas: 'preferred_areas',
-  familySize: 'family_size',
-  petFriendly: 'pet_friendly',
-  moveInDate: 'move_in_date',
-  employmentStatus: 'employment_status',
-  monthlyIncome: 'monthly_income',
-  age: 'age',
-  income: 'income'
-}
+// Campos válidos del modelo User según el esquema real de Supabase
+const validUserFields = [
+  'name',
+  'email', 
+  'phone',
+  'avatar',
+  'bio',
+  'occupation',
+  'age',
+  'userType',
+  'companyName',
+  'licenseNumber',
+  'propertyCount',
+  'full_name',
+  'location',
+  'search_type',
+  'budget_range',
+  'profile_image',
+  'preferred_areas',
+  'family_size',
+  'pet_friendly',
+  'move_in_date',
+  'employment_status',
+  'monthly_income'
+]
 
 // Campos que deben ser INTEGER en la base de datos
-const integerFields = ['age', 'income', 'family_size', 'monthly_income']
+const integerFields = ['age', 'family_size', 'review_count']
+
+// Campos que deben ser NUMERIC en la base de datos
+const numericFields = ['monthly_income', 'rating']
+
+// Campos que deben ser BOOLEAN en la base de datos
+const booleanFields = ['pet_friendly', 'verified', 'email_verified']
+
+// Campos que deben ser DATE en la base de datos
+const dateFields = ['move_in_date']
 
 // Función para validar y convertir tipos de datos
 function validateAndConvertData(data: any): any {
   const convertedData: any = {}
   
   Object.keys(data).forEach(key => {
+    // Solo procesar campos válidos
+    if (!validUserFields.includes(key)) {
+      console.warn(`Campo no válido ignorado: ${key}`)
+      return
+    }
+    
     const value = data[key]
     
-    // Si es un campo INTEGER y el valor es string vacío, convertir a null
+    // Campos INTEGER
     if (integerFields.includes(key)) {
       if (value === '' || value === null || value === undefined) {
         convertedData[key] = null
@@ -42,9 +64,50 @@ function validateAndConvertData(data: any): any {
       } else {
         convertedData[key] = null
       }
-    } else {
-      // Para otros campos, mantener el valor original
-      convertedData[key] = value
+    }
+    // Campos NUMERIC
+    else if (numericFields.includes(key)) {
+      if (value === '' || value === null || value === undefined) {
+        convertedData[key] = null
+      } else if (typeof value === 'string') {
+        const numValue = parseFloat(value)
+        convertedData[key] = isNaN(numValue) ? null : numValue
+      } else if (typeof value === 'number') {
+        convertedData[key] = value
+      } else {
+        convertedData[key] = null
+      }
+    }
+    // Campos BOOLEAN
+    else if (booleanFields.includes(key)) {
+      if (value === '' || value === null || value === undefined) {
+        convertedData[key] = null
+      } else if (typeof value === 'boolean') {
+        convertedData[key] = value
+      } else if (typeof value === 'string') {
+        convertedData[key] = value.toLowerCase() === 'true'
+      } else {
+        convertedData[key] = Boolean(value)
+      }
+    }
+    // Campos DATE
+    else if (dateFields.includes(key)) {
+      if (value === '' || value === null || value === undefined) {
+        convertedData[key] = null
+      } else if (typeof value === 'string') {
+        // Validar formato de fecha
+        const dateValue = new Date(value)
+        convertedData[key] = isNaN(dateValue.getTime()) ? null : value
+      } else {
+        convertedData[key] = value
+      }
+    }
+    // Campos TEXT (string)
+    else {
+      // Para campos de texto, mantener el valor original (pero no vacío)
+      if (value !== '' && value !== null && value !== undefined) {
+        convertedData[key] = String(value)
+      }
     }
   })
   
@@ -74,32 +137,28 @@ async function handleProfileUpdate(request: NextRequest) {
       bodyData: body
     })
 
-    // Mapear campos del frontend al formato de la base de datos
-    const mappedData: any = {}
-    
-    Object.keys(body).forEach(key => {
-      if (fieldMapping[key as keyof typeof fieldMapping]) {
-        const dbField = fieldMapping[key as keyof typeof fieldMapping]
-        mappedData[dbField] = body[key]
-      } else {
-        console.warn(`Campo no mapeado: ${key}`)
-      }
-    })
+    // Validar y convertir tipos de datos usando los campos reales del modelo User
+    const validatedData = validateAndConvertData(body)
 
-    // Validar y convertir tipos de datos (especialmente campos INTEGER)
-    const validatedData = validateAndConvertData(mappedData)
+    // Solo proceder si hay datos válidos para actualizar
+    if (Object.keys(validatedData).length === 0) {
+      return NextResponse.json({ 
+        error: 'No se proporcionaron campos válidos para actualizar',
+        validFields: validUserFields
+      }, { status: 400 })
+    }
 
     // Agregar timestamp de actualización
-    validatedData.updated_at = new Date().toISOString()
+    validatedData.updatedAt = new Date().toISOString()
 
     console.log('Validated data for database:', {
       keys: Object.keys(validatedData),
       data: validatedData
     })
 
-    // Actualizar el perfil del usuario en la tabla users
+    // Actualizar el perfil del usuario en la tabla User (mayúscula)
     const { data, error } = await supabase
-      .from('users')
+      .from('User')
       .update(validatedData)
       .eq('id', user.id)
       .select()
@@ -148,9 +207,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Obtener el perfil del usuario
+    // Obtener el perfil del usuario de la tabla User (mayúscula)
     const { data, error } = await supabase
-      .from('users')
+      .from('User')
       .select('*')
       .eq('id', user.id)
       .single()
@@ -163,24 +222,8 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Mapear campos de la base de datos al formato del frontend
-    const mappedUser: any = {}
-    
-    Object.keys(data).forEach(key => {
-      // Buscar el campo correspondiente en el mapeo inverso
-      const frontendField = Object.keys(fieldMapping).find(
-        frontendKey => fieldMapping[frontendKey as keyof typeof fieldMapping] === key
-      )
-      
-      if (frontendField) {
-        mappedUser[frontendField] = data[key]
-      } else {
-        // Mantener campos que no necesitan mapeo
-        mappedUser[key] = data[key]
-      }
-    })
-
-    return NextResponse.json({ user: mappedUser })
+    // Retornar los datos tal como están (ya están en el formato correcto)
+    return NextResponse.json({ user: data })
 
   } catch (error) {
     console.error('Profile fetch error:', error)
