@@ -3,7 +3,7 @@ import logger from '@/lib/simple-logger';
 // Extender el tipo Error para incluir captureStackTrace
 declare global {
   interface ErrorConstructor {
-    captureStackTrace?(targetObject: object, constructorOpt?: Function): void;
+    captureStackTrace(targetObject: object, constructorOpt: Function): void;
   }
 }
 
