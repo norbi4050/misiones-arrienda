@@ -161,13 +161,34 @@ function validateAndConvertData(data: any): any {
 async function handleProfileUpdate(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
+    // DEBUG: Log de cookies y headers para debugging
+    console.log('🔍 DEBUG - Profile Update Request:');
+    console.log('- Method:', request.method);
+    console.log('- URL:', request.url);
+    console.log('- Headers:', Object.fromEntries(request.headers.entries()));
+
     // Verificar autenticación
+    console.log('🔍 DEBUG - Verificando autenticación...');
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
+    console.log('🔍 DEBUG - Resultado autenticación:');
+    console.log('- User:', user ? { id: user.id, email: user.email } : 'null');
+    console.log('- Auth Error:', authError ? authError.message : 'null');
+
     if (authError || !user) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      console.log('❌ DEBUG - Autenticación fallida, retornando 401');
+      return NextResponse.json({
+        error: 'No autorizado',
+        debug: {
+          authError: authError?.message,
+          hasUser: !!user,
+          userId: user?.id
+        }
+      }, { status: 401 })
     }
+
+    console.log('✅ DEBUG - Autenticación exitosa para user:', user.id);
 
     // Obtener datos del cuerpo de la solicitud
     const body = await request.json()
@@ -244,14 +265,35 @@ export async function PATCH(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
+    // DEBUG: Log de cookies y headers para debugging
+    console.log('🔍 DEBUG - Profile GET Request:');
+    console.log('- Method:', request.method);
+    console.log('- URL:', request.url);
+    console.log('- Headers:', Object.fromEntries(request.headers.entries()));
+
     // Verificar autenticación
+    console.log('🔍 DEBUG - Verificando autenticación GET...');
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
+    console.log('🔍 DEBUG - Resultado autenticación GET:');
+    console.log('- User:', user ? { id: user.id, email: user.email } : 'null');
+    console.log('- Auth Error:', authError ? authError.message : 'null');
+
     if (authError || !user) {
       console.error('Auth error:', authError)
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      console.log('❌ DEBUG - Autenticación GET fallida, retornando 401');
+      return NextResponse.json({
+        error: 'No autorizado',
+        debug: {
+          authError: authError?.message,
+          hasUser: !!user,
+          userId: user?.id
+        }
+      }, { status: 401 })
     }
+
+    console.log('✅ DEBUG - Autenticación GET exitosa para user:', user.id);
 
     console.log('GET Profile request for user:', user.id)
 
