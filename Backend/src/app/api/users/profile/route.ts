@@ -166,7 +166,13 @@ async function handleProfileUpdate(request: NextRequest) {
     console.log('🔍 DEBUG - Profile Update Request:');
     console.log('- Method:', request.method);
     console.log('- URL:', request.url);
-    console.log('- Headers:', Object.fromEntries(request.headers.entries()));
+
+    // Log headers safely for Next.js compatibility
+    const headersObj: { [key: string]: string } = {};
+    request.headers.forEach((value: string, key: string) => {
+      headersObj[key] = value;
+    });
+    console.log('- Headers:', headersObj);
 
     // Verificar autenticación
     console.log('🔍 DEBUG - Verificando autenticación...');
@@ -270,7 +276,13 @@ export async function GET(request: NextRequest) {
     console.log('🔍 DEBUG - Profile GET Request:');
     console.log('- Method:', request.method);
     console.log('- URL:', request.url);
-    console.log('- Headers:', Object.fromEntries(request.headers.entries()));
+
+    // Log headers safely for Next.js compatibility
+    const headersObj: { [key: string]: string } = {};
+    request.headers.forEach((value: string, key: string) => {
+      headersObj[key] = value;
+    });
+    console.log('- Headers:', headersObj);
 
     // Verificar autenticación
     console.log('🔍 DEBUG - Verificando autenticación GET...');
