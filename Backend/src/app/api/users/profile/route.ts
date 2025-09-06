@@ -157,11 +157,12 @@ async function handleProfileUpdate(request: NextRequest) {
     })
 
     // Actualizar el perfil del usuario en la tabla users (minúscula)
+    // CORRECCIÓN: Especificar campos en select() para evitar error 406
     const { data, error } = await supabase
       .from('users')
       .update(validatedData)
       .eq('id', user.id)
-      .select()
+      .select('id,name,email,phone,avatar,bio,occupation,age,user_type,company_name,license_number,property_count,full_name,location,search_type,budget_range,profile_image,preferred_areas,family_size,pet_friendly,move_in_date,employment_status,monthly_income,verified,email_verified,rating,review_count,created_at,updated_at')
       .single()
 
     if (error) {
