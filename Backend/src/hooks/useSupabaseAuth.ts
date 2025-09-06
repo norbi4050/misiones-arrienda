@@ -101,44 +101,51 @@ export function useSupabaseAuth() {
   }
 
   useEffect(() => {
+    let isMounted = true
+
     // Obtener sesión inicial
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
-        
+
         if (error) {
           console.error('Error getting session:', error)
-          setIsLoading(false)
+          if (isMounted) setIsLoading(false)
           return
         }
 
-        setSession(session)
-        
-        if (session?.user) {
-          // Obtener datos completos de la tabla users
-          const userProfile = await fetchUserProfile(session.user.id)
-          
-          if (userProfile) {
-            setUser(userProfile)
-          } else {
-            // Fallback a user_metadata si no hay datos en tabla users
-            const authUser: AuthUser = {
-              id: session.user.id,
-              name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
-              email: session.user.email || '',
-              userType: session.user.user_metadata?.userType || 'inquilino',
-              companyName: session.user.user_metadata?.companyName,
-              licenseNumber: session.user.user_metadata?.licenseNumber
+        if (isMounted) {
+          setSession(session)
+
+          if (session?.user) {
+            // Obtener datos completos de la tabla users
+            const userProfile = await fetchUserProfile(session.user.id)
+
+            if (userProfile && isMounted) {
+              setUser(userProfile)
+            } else if (isMounted) {
+              // Fallback a user_metadata si no hay datos en tabla users
+              const authUser: AuthUser = {
+                id: session.user.id,
+                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuario',
+                email: session.user.email || '',
+                userType: session.user.user_metadata?.userType || 'inquilino',
+                companyName: session.user.user_metadata?.companyName,
+                licenseNumber: session.user.user_metadata?.licenseNumber
+              }
+              setUser(authUser)
             }
-            setUser(authUser)
+          } else {
+            setUser(null)
           }
-        } else {
-          setUser(null)
+
+          setIsLoading(false)
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error)
-      } finally {
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
 
@@ -148,16 +155,18 @@ export function useSupabaseAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
         console.log('Auth state changed:', event, session?.user?.email)
-        
+
+        if (!isMounted) return
+
         setSession(session)
-        
+
         if (session?.user) {
           // Obtener datos completos de la tabla users
           const userProfile = await fetchUserProfile(session.user.id)
-          
-          if (userProfile) {
+
+          if (userProfile && isMounted) {
             setUser(userProfile)
-          } else {
+          } else if (isMounted) {
             // Fallback a user_metadata
             const authUser: AuthUser = {
               id: session.user.id,
@@ -169,15 +178,18 @@ export function useSupabaseAuth() {
             }
             setUser(authUser)
           }
-        } else {
+        } else if (isMounted) {
           setUser(null)
         }
-        
-        setIsLoading(false)
+
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     )
 
     return () => {
+      isMounted = false
       subscription.unsubscribe()
     }
   }, [])
