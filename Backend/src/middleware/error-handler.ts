@@ -1,4 +1,11 @@
-import logger from '@/lib/logger';
+import logger from '@/lib/simple-logger';
+
+// Extender el tipo Error para incluir captureStackTrace
+declare global {
+  interface ErrorConstructor {
+    captureStackTrace?(targetObject: object, constructorOpt?: Function): void;
+  }
+}
 
 // Clases de error personalizadas
 export class AppError extends Error {
