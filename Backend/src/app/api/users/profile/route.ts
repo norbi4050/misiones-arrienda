@@ -27,6 +27,50 @@ const validUserFields = [
   'monthly_income'
 ]
 
+// Función para crear usuario en tabla users si no existe
+async function ensureUserExists(supabase: any, userId: string, userEmail?: string) {
+  try {
+    // Verificar si el usuario existe en la tabla users
+    const { data: existingUser, error: checkError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single();
+
+    if (checkError && checkError.code === 'PGRST116') {
+      // Usuario no existe, crearlo
+      console.log('Usuario no existe en tabla users, creando...');
+      
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .insert({
+          id: userId,
+          email: userEmail || 'unknown@example.com',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creando usuario:', createError);
+        return { success: false, error: createError };
+      }
+
+      console.log('Usuario creado exitosamente:', newUser);
+      return { success: true, user: newUser };
+    } else if (checkError) {
+      console.error('Error verificando usuario:', checkError);
+      return { success: false, error: checkError };
+    }
+
+    return { success: true, user: existingUser };
+  } catch (error) {
+    console.error('Error en ensureUserExists:', error);
+    return { success: false, error };
+  }
+}
+
 // Campos que deben ser INTEGER en la base de datos
 const integerFields = ['age', 'family_size', 'review_count']
 
@@ -205,25 +249,63 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
+      console.error('Auth error:', authError)
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Obtener el perfil del usuario de la tabla users (minúscula)
+    console.log('GET Profile request for user:', user.id)
+
+    // Asegurar que el usuario existe en la tabla users
+    const userExistsResult = await ensureUserExists(supabase, user.id, user.email)
+    
+    if (!userExistsResult.success) {
+      console.error('Error ensuring user exists:', userExistsResult.error)
+      return NextResponse.json({ 
+        error: 'Error verificando usuario',
+        details: userExistsResult.error?.message || 'Unknown error'
+      }, { status: 500 })
+    }
+
+    // Obtener el perfil del usuario de la tabla users con campos específicos
     const { data, error } = await supabase
       .from('users')
-      .select('*')
+      .select('id,name,email,phone,avatar,bio,occupation,age,user_type,company_name,license_number,property_count,full_name,location,search_type,budget_range,profile_image,preferred_areas,family_size,pet_friendly,move_in_date,employment_status,monthly_income,verified,email_verified,rating,review_count,created_at,updated_at')
       .eq('id', user.id)
       .single()
 
     if (error) {
       console.error('Error fetching profile:', error)
+      
+      // Si es error 406, intentar con menos campos
+      if (error.code === 'PGRST406') {
+        console.log('Error 406 detectado, intentando con campos básicos...')
+        
+        const { data: basicData, error: basicError } = await supabase
+          .from('users')
+          .select('id,name,email,user_type,created_at')
+          .eq('id', user.id)
+          .single()
+
+        if (basicError) {
+          console.error('Error con campos básicos:', basicError)
+          return NextResponse.json({ 
+            error: 'Error al obtener el perfil',
+            details: basicError.message,
+            code: basicError.code
+          }, { status: 500 })
+        }
+
+        return NextResponse.json({ user: basicData })
+      }
+
       return NextResponse.json({ 
         error: 'Error al obtener el perfil',
-        details: error.message
+        details: error.message,
+        code: error.code
       }, { status: 500 })
     }
 
-    // Retornar los datos tal como están (ya están en el formato correcto)
+    // Retornar los datos tal como están
     return NextResponse.json({ user: data })
 
   } catch (error) {
