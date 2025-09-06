@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 
 export default function InquilinoProfilePage() {
-  const { user, isAuthenticated, isLoading } = useSupabaseAuth()
+  const { user, isAuthenticated, isLoading, refreshUserProfile } = useSupabaseAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -119,10 +119,17 @@ export default function InquilinoProfilePage() {
       if (response.ok) {
         toast.success("Perfil actualizado exitosamente")
         setIsEditing(false)
+        
+        // Refrescar datos del usuario para sincronizar con la base de datos
+        if (refreshUserProfile) {
+          await refreshUserProfile()
+        }
       } else {
-        toast.error("Error al actualizar el perfil")
+        const errorData = await response.json()
+        toast.error(errorData.error || "Error al actualizar el perfil")
       }
     } catch (error) {
+      console.error('Error saving profile:', error)
       toast.error("Error al actualizar el perfil")
     } finally {
       setIsSaving(false)
