@@ -50,23 +50,41 @@
    - El endpoint ya maneja correctamente los select fields
    - Tiene manejo de errores para PGRST406
 
-2. **Error 400 Properties:** ❌ PENDIENTE
+2. **Error 400 Properties:** ❌ PENDIENTE - PRIORIDAD ALTA
    - Tabla "properties" no existe en Supabase
    - Se requiere crear estructura completa de BD
+   - **Script SQL disponible:** `Blackbox/crear-tablas-properties-completas.sql`
 
-3. **Spinners Infinitos:** ❌ PENDIENTE
+3. **Spinners Infinitos:** ❌ PENDIENTE - PRIORIDAD ALTA
    - Múltiples causas posibles identificadas
    - Requiere verificación de configuración
 
-### Recomendaciones Inmediatas:
+### PLAN DE ACCIÓN INMEDIATA:
 
-1. **Prioridad Alta:** Crear tabla properties en Supabase
-2. **Prioridad Media:** Verificar configuración de variables de entorno
-3. **Prioridad Media:** Revisar políticas RLS para tabla users
-4. **Prioridad Baja:** Optimizar manejo de errores en endpoints
+## 🚨 TAREAS CRÍTICAS PENDIENTES
+
+### 1. **CREAR TABLA PROPERTIES** (Prioridad Máxima)
+- [ ] Ejecutar script SQL: `Blackbox/crear-tablas-properties-completas.sql`
+- [ ] Verificar creación exitosa de tablas
+- [ ] Probar endpoint properties después de creación
+- [ ] Confirmar que error 400 se resuelve
+
+### 2. **DIAGNOSTICAR SPINNERS INFINITOS** (Prioridad Alta)
+- [ ] Verificar variables de entorno en `.env.local`
+- [ ] Comprobar existencia y accesibilidad de tabla users
+- [ ] Revisar políticas RLS para tabla users
+- [ ] Verificar configuración del middleware
+- [ ] Analizar dependencias del hook useSupabaseAuth
+
+### 3. **VERIFICACIÓN FINAL** (Después de soluciones)
+- [ ] Probar aplicación completa localmente
+- [ ] Verificar que no hay errores 400/406
+- [ ] Confirmar que spinners se resuelven
+- [ ] Validar funcionamiento de autenticación
 
 ## 📊 ESTADO GENERAL
 - ✅ Investigación completada
 - ✅ Análisis detallado realizado
 - ✅ Evidencia recopilada
-- ❌ Soluciones pendientes de implementación
+- ❌ Soluciones críticas pendientes de implementación
+- 🎯 **PRÓXIMO PASO:** Crear tabla properties en Supabase
