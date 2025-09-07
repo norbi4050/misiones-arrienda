@@ -32,13 +32,33 @@ export async function GET(_req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const { data, error } = await supabase
-    .from("profiles")
+    .from("users")
     .select("*")
     .eq("id", session.user.id)
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  return NextResponse.json({ profile: data }, { status: 200 });
+}
+
+export async function PUT(req: NextRequest) {
+  const supabase = getServerSupabase();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  let body: any = {};
+  try { body = await req.json(); } catch {}
+
+  const payload = { id: session.user.id, ...body };
+
+  const { data, error } = await supabase
+    .from("users")
+    .upsert(payload, { onConflict: "id" })
+    .select()
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ profile: data }, { status: 200 });
 }
 
@@ -53,7 +73,7 @@ export async function PATCH(req: NextRequest) {
   const payload = { id: session.user.id, ...body };
 
   const { data, error } = await supabase
-    .from("profiles")
+    .from("users")
     .upsert(payload, { onConflict: "id" })
     .select()
     .maybeSingle();
