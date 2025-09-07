@@ -11,12 +11,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const supabase = createClient()
 
   useEffect(() => {
-    const { data: subscription } = supabase.auth.onAuthStateChange(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       router.refresh()
     })
 
     return () => {
-      subscription?.unsubscribe()
+      subscription.unsubscribe()
     }
   }, [router, supabase])
 
