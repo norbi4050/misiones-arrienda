@@ -7,6 +7,7 @@ import { AIChatbot } from '@/components/ai-chatbot'
 import WhatsAppButton from '@/components/whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from '@/components/auth-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 

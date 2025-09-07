@@ -23,12 +23,14 @@ export default function LoginPage() {
     e.preventDefault();
     setMsg(null);
     setLoading(true);
-    
+
     try {
       const result = await login(email, password);
-      
+
       if (result.success) {
         setMsg("¡Login exitoso! Redirigiendo...");
+        // Refresh router to update server components after login
+        router.refresh();
         // Redirección explícita al dashboard después del login exitoso
         setTimeout(() => {
           router.replace("/dashboard");

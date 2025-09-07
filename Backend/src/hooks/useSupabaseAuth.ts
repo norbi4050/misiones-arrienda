@@ -57,7 +57,7 @@ export function useSupabaseAuth() {
           verified, email_verified, rating, review_count, created_at, updated_at
         `)
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error('Error fetching user profile:', error)
