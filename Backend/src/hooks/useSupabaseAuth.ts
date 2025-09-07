@@ -1,7 +1,8 @@
-"use client"
+p"use client"
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 
 const supabase = createClient()
@@ -41,6 +42,7 @@ export function useSupabaseAuth() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState<Session | null>(null)
+  const router = useRouter()
 
   // Función para obtener datos completos del usuario desde la tabla users
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
@@ -213,6 +215,9 @@ export function useSupabaseAuth() {
 
       if (error) throw error
 
+      // Refresh router to update server components after login
+      router.refresh()
+
       return { success: true, data }
     } catch (error: any) {
       console.error('Login error:', error)
@@ -224,11 +229,14 @@ export function useSupabaseAuth() {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
-      
+
       // Limpiar estado local
       setUser(null)
       setSession(null)
-      
+
+      // Refresh router to update server components after logout
+      router.refresh()
+
       // Redirigir a la página principal
       window.location.href = '/'
     } catch (error: any) {
@@ -273,13 +281,17 @@ export function useSupabaseAuth() {
 
       // Verificar si el usuario fue creado pero necesita confirmación
       if (data.user && !data.user.email_confirmed_at) {
-        return { 
-          success: true, 
+        // Refresh router to update server components after registration
+        router.refresh()
+        return {
+          success: true,
           data,
           message: 'Cuenta creada exitosamente. Revisa tu email para confirmar tu cuenta.'
         }
       }
 
+      // Refresh router to update server components after registration
+      router.refresh()
       return { success: true, data }
     } catch (error: any) {
       console.error('Register error:', error)
