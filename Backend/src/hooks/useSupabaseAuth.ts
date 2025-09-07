@@ -64,6 +64,10 @@ export function useSupabaseAuth() {
         return null
       }
 
+      if (!data) {
+        return null
+      }
+
       // Convertir snake_case a camelCase para el frontend
       const userProfile: AuthUser = {
         id: data.id,
