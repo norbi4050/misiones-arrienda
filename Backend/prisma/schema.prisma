@@ -45,7 +45,8 @@ model Property {
   floor       Int?
   totalFloors Int?
   featured    Boolean  @default(false)
-  
+  isActive    Boolean  @default(true)
+
   // Campos de contacto agregados para alinear con API
   contact_name  String?
   contact_phone String

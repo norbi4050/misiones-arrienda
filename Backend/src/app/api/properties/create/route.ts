@@ -93,8 +93,7 @@ export async function POST(req: NextRequest) {
         city,
         province: province || 'Misiones',
         postalCode: '3300', // Código postal por defecto para Misiones
-        featured: featured || false,
-        status: status || 'AVAILABLE',
+        status: 'PUBLISHED',
         images: JSON.stringify(images.length > 0 ? images : [
           '/images/properties/default-1.jpg',
           '/images/properties/default-2.jpg',
@@ -115,7 +114,9 @@ export async function POST(req: NextRequest) {
         contact_name: contact_name || authenticatedUser.name,
         contact_email: contact_email || authenticatedUser.email,
         userId: authenticatedUser.id, // Guardar automáticamente el ID del usuario autenticado
-        agentId: defaultAgent.id
+        agentId: defaultAgent.id,
+        isPaid: false,
+        featured: false
       }
     })
 
@@ -127,8 +128,20 @@ export async function POST(req: NextRequest) {
       }
 
       const selectedPlan = planConfig[plan as keyof typeof planConfig]
-      
+
       if (selectedPlan) {
+        // Actualizar propiedad con flags premium
+        await prisma.property.update({
+          where: { id: property.id },
+          data: {
+            status: 'PUBLISHED',
+            isPaid: true,
+            featured: true,
+            highlightedUntil: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000),
+            expiresAt: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000)
+          }
+        })
+
         // Crear suscripción con el userId del usuario autenticado
         await prisma.subscription.create({
           data: {

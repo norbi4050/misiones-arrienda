@@ -1,0 +1,59 @@
+# Archivo: Backend/src/app/api/properties/user/[userId]/route.ts
+# ORM: Prisma (camelCase)
+# Descripción: Filtrar por userId directamente en DB; camelCase
+
+diff --git a/Backend/src/app/api/properties/user/[userId]/route.ts b/Backend/src/app/api/properties/user/[userId]/route.ts
+index abc123..def456 100644
+--- a/Backend/src/app/api/properties/user/[userId]/route.ts
++++ b/Backend/src/app/api/properties/user/[userId]/route.ts
+@@ -44,7 +44,8 @@ export async function GET(
+     // Construir filtros - usar el campo correcto del esquema
+     const where: any = {}
+ 
+-    // Filtrar por el campo que existe en el esquema
++    // Filtrar por userId directamente en la base de datos
++    where.userId = userId
+     // Como no podemos usar userId directamente, buscaremos todas las propiedades
+     // y filtraremos por el usuario autenticado en el código
+ 
+@@ -52,7 +53,7 @@ export async function GET(
+       where.status = status
+     }
+ 
+     if (propertyType) {
+       where.propertyType = propertyType
+     }
+ 
+     // Construir ordenamiento
+     const orderBy: any = {}
+     orderBy[sortBy] = sortOrder
+ 
+     // Calcular offset para paginación
+     const skip = (page - 1) * limit
+ 
+-    // Obtener todas las propiedades y filtrar por userId después
++    // Obtener propiedades filtradas directamente por userId en la DB
+     const allProperties = await prisma.property.findMany({
+       where,
+       orderBy,
+       include: {
+         agent: {
+           select: {
+             id: true,
+             name: true,
+             email: true,
+             phone: true
+           }
+         }
+       }
+     })
+ 
+-    // Filtrar propiedades por userId (asumiendo que existe en el objeto)
+-    const userProperties = allProperties.filter((property: any) => 
+-      property.userId === userId
+-    )
++    // Ya filtrado en la DB, usar directamente
++    const userProperties = allProperties
+ 
+     // Aplicar paginación manualmente
+     const totalCount = userProperties.length

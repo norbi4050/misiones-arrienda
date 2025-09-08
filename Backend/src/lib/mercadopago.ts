@@ -1,8 +1,24 @@
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 
+// Fallback robusto para baseUrl
+const baseUrl =
+  process.env.NEXT_PUBLIC_BASE_URL ??
+  process.env.NEXT_PUBLIC_APP_URL ??
+  'http://localhost:3000';
+
+if (!baseUrl.startsWith('http')) {
+  throw new Error('Invalid base URL');
+}
+
+// Compatibilidad de tokens
+const accessToken = process.env.MP_ACCESS_TOKEN ?? process.env.MERCADOPAGO_ACCESS_TOKEN;
+if (!accessToken) {
+  throw new Error('MP access token missing');
+}
+
 // Configuración de MercadoPago con credenciales reales
 const client = new MercadoPagoConfig({
-  accessToken: 'APP_USR-3647290553297438-082512-ea1978cb2f7b9768080ad2bab3df7600-77412419',
+  accessToken,
   options: {
     timeout: 5000,
     idempotencyKey: 'abc'
@@ -47,11 +63,10 @@ export async function createPaymentPreference(data: {
         name: data.userName
       },
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/success`,
-        failure: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/failure`,
-        pending: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/pending`
+        success: `${baseUrl}/payment/success`,
+        failure: `${baseUrl}/payment/failure`,
+        pending: `${baseUrl}/payment/pending`
       },
-      auto_return: 'approved' as const,
       notification_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/payments/webhook`,
       external_reference: data.propertyId,
       expires: true,

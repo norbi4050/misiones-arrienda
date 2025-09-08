@@ -1,0 +1,116 @@
+=======
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+const { user, isAuthenticated, loading } = useAuth()
+=======
+const { user, isAuthenticated, isLoading } = useSupabaseAuth()
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+if (loading) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Cargando...</p>
+      </div>
+    </div>
+  )
+}
+
+if (!isAuthenticated) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <Crown className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+          <CardTitle>Función Premium</CardTitle>
+          <CardDescription>
+            Esta funcionalidad está disponible solo para usuarios autenticados
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-center">
+          <Button onClick={() => router.push('/login')} className="w-full">
+            Iniciar Sesión
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+=======
+if (isLoading) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Cargando...</p>
+      </div>
+    </div>
+  )
+}
+
+if (!isAuthenticated) {
+  router.push('/login')
+  return null
+}
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+import { useAuth } from '@/hooks/useAuth';
+=======
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+const { user } = useAuth();
+=======
+const { user, isAuthenticated, isLoading } = useSupabaseAuth();
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+if (!user) {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Acceso Requerido</h2>
+        <p className="text-gray-600 mb-4">Debes iniciar sesión para ver tus propiedades.</p>
+        <Button onClick={() => window.location.href = '/login'}>
+          Iniciar Sesión
+        </Button>
+      </div>
+    </div>
+  );
+}
+=======
+if (isLoading) {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Cargando...</h2>
+      </div>
+    </div>
+  );
+}
+
+if (!isAuthenticated) {
+  window.location.href = '/login';
+  return null;
+}
+>>>>>>> REPLACE
+
+# Imports affected:
+# - Backend/src/app/publicar/premium/page.tsx
+# - Backend/src/app/dashboard/properties/page.tsx
+
+# Checklist for testing after migration:
+# PremiumPublishPage.tsx:
+# - Given user is authenticated, when loading page, then page loads with user data.
+# - Given user is not authenticated, when loading page, then user is redirected to login.
+# - Loading spinner shows while isLoading is true.
+#
+# PropertiesManagementPage.tsx:
+# - Given user is authenticated, when loading page, then properties load correctly.
+# - Given user is not authenticated, when loading page, then user is redirected to login.
+# - Loading spinner shows while isLoading is true.
+#
+# Notes:
+# - user object shape remains compatible.
+# - Removed redundant calls to /api/users/profile in favor of hook user.

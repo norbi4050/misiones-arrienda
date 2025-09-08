@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Link, Sparkles, AlertCircle, CheckCircle, ExternalLink, Loader2, Crown, Zap } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 
@@ -37,7 +37,7 @@ interface UnfurlData {
 }
 
 export default function PremiumPublishPage() {
-  const { user, isAuthenticated, loading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useSupabaseAuth()
   const router = useRouter()
   
   const [url, setUrl] = useState("")
@@ -149,7 +149,7 @@ export default function PremiumPublishPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

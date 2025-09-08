@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerSupabase } from '@/lib/supabase/server';
 import { propertySchema } from '@/lib/validations/property';
 
 // Mock data para desarrollo y testing (se puede remover en producción)
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     // Intentar conectar con Supabase primero
-    const supabase = createClient();
+    const supabase = createServerSupabase();
     let useSupabase = true;
     let properties = [];
     let totalCount = 0;
@@ -105,7 +105,8 @@ export async function GET(request: NextRequest) {
       let query = supabase
         .from('Property')
         .select('*', { count: 'exact' })
-        .eq('status', 'AVAILABLE');
+      .eq('status', 'PUBLISHED')
+      .eq('is_active', true);
 
       // Aplicar filtros avanzados
       if (city) {
@@ -300,7 +301,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Intentar usar Supabase primero
-    const supabase = createClient();
+    const supabase = createServerSupabase();
     let useSupabase = true;
     let newProperty = null;
 

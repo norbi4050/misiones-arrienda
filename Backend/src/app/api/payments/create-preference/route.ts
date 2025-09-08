@@ -40,14 +40,26 @@ export async function POST(req: NextRequest) {
 
     // Si viene en el formato legacy (propertyId, amount, etc.)
     if (propertyId && amount && title && userEmail && userName) {
+      // Unificar legacy con el helper real y construir body idéntico al new format
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL ??
+        process.env.NEXT_PUBLIC_APP_URL ??
+        'http://localhost:3000';
+
+      if (!baseUrl.startsWith('http')) {
+        throw new Error('Invalid base URL');
+      }
+
       const preference = await createPaymentPreference({
-        title,
+        title: `Propiedad ${propertyId}`,
         description: description || `Pago por propiedad: ${title}`,
         price: amount,
         quantity: 1,
         propertyId,
         userEmail,
-        userName
+        userName,
+        userId: 'legacy-user',
+        planType: 'legacy'
       });
 
       return NextResponse.json({

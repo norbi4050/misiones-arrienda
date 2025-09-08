@@ -1,30 +1,21 @@
-# 🔧 Solución Problema Autenticación Perfil de Usuario
+# Property Status Migration Plan
 
-## ❌ Problema Identificado
-El usuario reporta que aunque tiene sesión iniciada, la página de perfil le indica que debe iniciar sesión. Los logs muestran warnings de Supabase sobre el uso inseguro de `getSession()`.
+## Information Gathered
+- **Current State**: Properties are being created with 'PUBLISHED' status but the API is filtering by 'AVAILABLE' status
+- **Issue Found**: Inconsistent status values between creation and retrieval
+- **Database Schema**: Uses 'PUBLISHED' as the active status for properties
 
-## 🔍 Análisis del Problema
-- **Causa raíz**: Uso de `supabase.auth.getSession()` en lugar de `supabase.auth.getUser()`
-- **Impacto**: `getSession()` devuelve datos de cookies/storage que pueden no estar autenticados
-- **Solución**: Reemplazar `getSession()` con `getUser()` que valida con el servidor de Supabase
+## Plan
+1. **Fix property creation endpoint** to use 'PUBLISHED' status ✅ COMPLETED
+2. **Update property listing endpoint** to filter by 'PUBLISHED' status ✅ COMPLETED
+3. **Remove invalid schema fields** (like 'isActive') ✅ COMPLETED
+4. **Test the changes** to ensure properties are properly visible
 
-## 📋 Plan de Solución
+## Files to be edited
+- `Backend/src/app/api/properties/create/route.ts` - Fixed duplicate lines and removed invalid fields ✅ COMPLETED
+- `Backend/src/app/api/properties/route.ts` - Updated filter to use 'PUBLISHED' status ✅ COMPLETED
 
-### ✅ Tareas Completadas
-- [x] Identificar archivos afectados
-- [x] Analizar código problemático
-
-### 🔄 Tareas Pendientes
-- [ ] Actualizar página de perfil (`/profile/inquilino/page.tsx`)
-- [ ] Actualizar API route (`/api/users/profile/route.ts`)
-- [ ] Probar cambios en navegador
-- [ ] Verificar que warnings desaparezcan
-
-## 📁 Archivos a Modificar
-1. `Backend/src/app/profile/inquilino/page.tsx` - Reemplazar `getSession()` con `getUser()`
-2. `Backend/src/app/api/users/profile/route.ts` - Reemplazar `getSession()` con `getUser()` en métodos GET, PUT, PATCH
-
-## 🧪 Plan de Testing
-- [ ] Verificar que el perfil cargue correctamente con sesión activa
-- [ ] Confirmar que warnings de Supabase desaparezcan
-- [ ] Probar flujo completo de autenticación
+## Followup steps
+- Test property creation and retrieval
+- Verify properties appear in listings
+- Check for any remaining status inconsistencies
