@@ -23,10 +23,10 @@ export default async function Page() {
   );
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) redirect("/login");
+  if (!user) redirect("/login");
 
-  return <InquilinoProfilePage userId={session.user.id} />;
+  return <InquilinoProfilePage userId={user.id} />;
 }

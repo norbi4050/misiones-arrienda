@@ -28,13 +28,13 @@ function getServerSupabase() {
 
 export async function GET(_req: NextRequest) {
   const supabase = getServerSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const { data, error } = await supabase
     .from("users")
     .select("*")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -44,8 +44,8 @@ export async function GET(_req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   const supabase = getServerSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   let body: any = {};
   try { body = await req.json(); } catch {}
@@ -121,7 +121,7 @@ export async function PUT(req: NextRequest) {
     delete transformedBody.employmentStatus;
   }
 
-  const payload = { id: session.user.id, ...transformedBody };
+  const payload = { id: user.id, ...transformedBody };
 
   const { data, error } = await supabase
     .from("users")
@@ -138,8 +138,8 @@ export async function PUT(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const supabase = getServerSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   let body: any = {};
   try { body = await req.json(); } catch {}
@@ -215,7 +215,7 @@ export async function PATCH(req: NextRequest) {
     delete transformedBody.employmentStatus;
   }
 
-  const payload = { id: session.user.id, ...transformedBody };
+  const payload = { id: user.id, ...transformedBody };
 
   const { data, error } = await supabase
     .from("users")

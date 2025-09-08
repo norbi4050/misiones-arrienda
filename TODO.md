@@ -1,29 +1,30 @@
-# 🧹 Project Cleanup Audit - COMPLETED ✅
+# 🔧 Solución Problema Autenticación Perfil de Usuario
 
-## ✅ Phase 1: Root Directory Cleanup
-- [x] Delete all report/audit .md files (35+ files)
-- [x] Delete diagnostic/test .js files (5 files)
-- [x] Delete .bat files (1 file)
+## ❌ Problema Identificado
+El usuario reporta que aunque tiene sesión iniciada, la página de perfil le indica que debe iniciar sesión. Los logs muestran warnings de Supabase sobre el uso inseguro de `getSession()`.
 
-## ✅ Phase 2: Backend Directory Cleanup
-- [x] Delete test/diagnostic scripts (10 files)
+## 🔍 Análisis del Problema
+- **Causa raíz**: Uso de `supabase.auth.getSession()` en lugar de `supabase.auth.getUser()`
+- **Impacto**: `getSession()` devuelve datos de cookies/storage que pueden no estar autenticados
+- **Solución**: Reemplazar `getSession()` con `getUser()` que valida con el servidor de Supabase
 
-## ✅ Phase 3: Blackbox Directory Removal
-- [x] Delete entire Blackbox directory (130+ files)
+## 📋 Plan de Solución
 
-## ✅ Phase 4: Git Cleanup
-- [x] Delete temporary git files
-- [x] Remove cleanup script
+### ✅ Tareas Completadas
+- [x] Identificar archivos afectados
+- [x] Analizar código problemático
 
-## 📊 Final Results
-- **Total files removed**: ~180+
-- **Space savings**: ~90%
-- **Status**: ✅ COMPLETELY CLEANED
-- **Final directory structure**:
-  - `README.md` (kept)
-  - `TODO.md` (kept)
-  - `.git/` (kept)
-  - `Backend/` (kept - main application)
+### 🔄 Tareas Pendientes
+- [ ] Actualizar página de perfil (`/profile/inquilino/page.tsx`)
+- [ ] Actualizar API route (`/api/users/profile/route.ts`)
+- [ ] Probar cambios en navegador
+- [ ] Verificar que warnings desaparezcan
 
-## 🎉 Cleanup Summary
-The project has been successfully cleaned of all temporary files, diagnostic scripts, reports, and the entire Blackbox directory. The repository is now clean and optimized, containing only the essential project files.
+## 📁 Archivos a Modificar
+1. `Backend/src/app/profile/inquilino/page.tsx` - Reemplazar `getSession()` con `getUser()`
+2. `Backend/src/app/api/users/profile/route.ts` - Reemplazar `getSession()` con `getUser()` en métodos GET, PUT, PATCH
+
+## 🧪 Plan de Testing
+- [ ] Verificar que el perfil cargue correctamente con sesión activa
+- [ ] Confirmar que warnings de Supabase desaparezcan
+- [ ] Probar flujo completo de autenticación
