@@ -43,7 +43,7 @@ export function FavoriteButton({
 
       if (response.ok) {
         const data = await response.json();
-        const isPropertyFavorite = data.favorites.some(
+        const isPropertyFavorite = (data.items || []).some(
           (fav: any) => fav.property.id === propertyId
         );
         setIsFavorite(isPropertyFavorite);

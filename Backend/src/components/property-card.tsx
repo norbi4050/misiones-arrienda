@@ -2,7 +2,6 @@
 
 import { MapPin, Bed, Bath, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/favorite-button"
 import Image from "next/image"
 import Link from "next/link"
@@ -11,99 +10,85 @@ interface PropertyCardProps {
   id: string
   title: string
   price: number
-  type: string
-  location: string
+  images: unknown
+  city: string
+  province: string
   bedrooms: number
   bathrooms: number
   area: number
-  image: string
-  featured?: boolean
 }
 
 export function PropertyCard({
   id,
   title,
   price,
-  type,
-  location,
+  images,
+  city,
+  province,
   bedrooms,
   bathrooms,
   area,
-  image,
-  featured = false
 }: PropertyCardProps) {
+  // --- FIX imágenes: parseo defensivo + normalización para next/image ---
+  const parseImages = (val: unknown): string[] => {
+    if (Array.isArray(val)) return val as string[];
+    if (typeof val === 'string') {
+      const s = val.trim();
+      if (!s) return [];
+      try {
+        const maybe = JSON.parse(s);
+        return Array.isArray(maybe) ? (maybe as string[]) : [s];
+      } catch {
+        return [s];
+      }
+    }
+    return [];
+  };
+  const normalizeSrc = (s: string): string =>
+    s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/') ? s : `/${s}`;
+  const safeImages = parseImages(images);
+  const cover = normalizeSrc(safeImages[0] ?? '/placeholder-apartment-1.jpg');
+  console.log('PropertyCard cover:', { id, cover, raw: images });
+
   return (
-    <Link href={`/property/${id}`} className="block">
+    <Link href={`/properties/${id}`} className="block">
       <div className="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
-        <div className="aspect-[4/3] overflow-hidden relative">
+        {/* Contenedor con altura fija para que la imagen no sea gigante */}
+        <div className="relative w-full h-56 sm:h-56 md:h-60 lg:h-64 overflow-hidden rounded-md">
           <Image
-            src={image}
+            src={cover}
             alt={title}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-110"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              // fallback de runtime si la URL falla
+              const img = e.currentTarget as any;
+              if (img?.src !== '/placeholder-apartment-1.jpg') {
+                img.src = '/placeholder-apartment-1.jpg';
+              }
+            }}
           />
-          {featured && (
-            <Badge className="absolute top-2 left-2 bg-red-500 text-white z-10">
-              Destacado
-            </Badge>
-          )}
+
           <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <FavoriteButton 
+            <FavoriteButton
               propertyId={id}
               size="sm"
               className="bg-white/80 backdrop-blur-sm hover:bg-white"
             />
           </div>
-          
+
           {/* Overlay gradient on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
-        
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Badge variant="secondary" className="group-hover:bg-blue-100 transition-colors duration-300">
-              {type}
-            </Badge>
-            <span className="text-2xl font-bold text-blue-600 group-hover:text-blue-700 transition-colors duration-300">
-              ${price.toLocaleString()}
-            </span>
+
+        {/* Más contenido visible para validar */}
+        <div className="p-3">
+          <div className="text-base font-semibold text-gray-900">{title}</div>
+          <div className="text-sm text-gray-600">
+            {city}, {province}
           </div>
-          
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300">
-            {title}
-          </h3>
-          
-          <div className="flex items-center text-sm text-gray-600 mb-3">
-            <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-            {location}
-          </div>
-          
-          <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-            <div className="flex items-center">
-              <Bed className="h-4 w-4 mr-1 text-gray-400" />
-              {bedrooms} hab
-            </div>
-            <div className="flex items-center">
-              <Bath className="h-4 w-4 mr-1 text-gray-400" />
-              {bathrooms} baños
-            </div>
-            <div className="flex items-center">
-              <Square className="h-4 w-4 mr-1 text-gray-400" />
-              {area} m²
-            </div>
-          </div>
-          
-          <Button 
-            className="w-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0" 
-            variant="default"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              window.location.href = `/property/${id}`
-            }}
-          >
-            Ver detalles
-          </Button>
+          <div className="text-blue-600 font-bold mt-1">${Number(price ?? 0).toLocaleString()}</div>
         </div>
       </div>
     </Link>

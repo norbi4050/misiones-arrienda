@@ -105,8 +105,7 @@ export async function GET(request: NextRequest) {
       let query = supabase
         .from('Property')
         .select('*', { count: 'exact' })
-      .eq('status', 'PUBLISHED')
-      .eq('is_active', true);
+      .eq('status', 'PUBLISHED');
 
       // Aplicar filtros avanzados
       if (city) {
@@ -141,8 +140,36 @@ export async function GET(request: NextRequest) {
         query = query.lte('area', parseFloat(maxArea));
       }
 
-      // Ordenamiento
-      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+      // Ordenamiento seguro con allowlist
+      // Usar safeOrderMap para evitar columnas CamelCase que causan error 500
+      const safeOrderMap: Record<string, string> = {
+        id: 'id',
+        price: 'price',
+        bedrooms: 'bedrooms',
+        bathrooms: 'bathrooms',
+        garages: 'garages',
+        area: 'area',
+        status: 'status'
+      };
+      let orderColumn = 'id';
+      let orderAscending = false; // default desc
+
+      // Log temporal para debug
+      console.log('sortBy:', sortBy, 'sortOrder:', sortOrder);
+
+      if (sortBy && safeOrderMap[sortBy]) {
+        orderColumn = safeOrderMap[sortBy];
+        orderAscending = sortOrder === 'asc';
+      } else {
+        // Fallback a id si sortBy no está en safeOrderMap
+        orderColumn = 'id';
+        orderAscending = false;
+      }
+
+      // Log temporal para debug
+      console.log('orderColumn:', orderColumn, 'orderAscending:', orderAscending);
+
+      query = query.order(orderColumn, { ascending: orderAscending });
 
       // Aplicar paginación
       const startIndex = (page - 1) * limit;

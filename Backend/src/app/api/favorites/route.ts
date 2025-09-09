@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
   try {
     const userId = await getUserFromToken(request);
     if (!userId) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+      // Return empty favorites list instead of 401 error
+      return NextResponse.json({ items: [] }, { status: 200 });
     }
 
     const favorites = await prisma.favorite.findMany({
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json({ favorites });
+    return NextResponse.json({ items: favorites });
   } catch (error) {
     console.error('Error al obtener favoritos:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });

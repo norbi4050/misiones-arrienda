@@ -1,25 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'images.unsplash.com',
-      'via.placeholder.com',
-      'localhost'
-    ],
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-        port: '',
-        pathname: '/**',
-      }
-    ]
+      // Supabase storage / CDN (ajustá si usás otro dominio)
+      { protocol: 'https', hostname: '**.supabase.co' },
+      // Si usás bancos de imágenes externos, dejalos:
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
+    ],
   },
   typescript: {
     ignoreBuildErrors: false,

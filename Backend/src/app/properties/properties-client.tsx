@@ -13,7 +13,7 @@ export function PropertiesPageClient() {
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
+  const [view, setView] = useState<'list' | 'map'>('list') // aseguramos LISTA por defecto
   const [currentFilters, setCurrentFilters] = useState<PropertyFilters>({})
 
   // Load properties on component mount
@@ -26,14 +26,16 @@ export function PropertiesPageClient() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/api/properties')
+      const response = await fetch('/api/properties?sortBy=id&sortOrder=desc&limit=12')
       if (!response.ok) {
         throw new Error('Error al cargar las propiedades')
       }
       
       const data = await response.json()
-      setProperties(data.properties || [])
-      setFilteredProperties(data.properties || [])
+      const arr = Array.isArray(data?.properties) ? data.properties : []
+      console.log('PROPERTIES LEN:', arr.length, data)
+      setProperties(arr)
+      setFilteredProperties(arr)
     } catch (err) {
       console.error('Error loading properties:', err)
       setError('Error al cargar las propiedades. Por favor, intenta nuevamente.')
@@ -295,15 +297,15 @@ export function PropertiesPageClient() {
             {/* View Mode Toggle */}
             <div className="flex gap-2">
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                onClick={() => setViewMode('grid')}
+                variant={view === 'list' ? 'default' : 'outline'}
+                onClick={() => setView('list')}
                 size="sm"
               >
                 📋 Lista
               </Button>
               <Button
-                variant={viewMode === 'map' ? 'default' : 'outline'}
-                onClick={() => setViewMode('map')}
+                variant={view === 'map' ? 'default' : 'outline'}
+                onClick={() => setView('map')}
                 size="sm"
               >
                 🗺️ Mapa
@@ -354,25 +356,28 @@ export function PropertiesPageClient() {
               </Badge>
             </div>
 
-            {/* Content based on view mode */}
-            {viewMode === 'grid' ? (
-              <PropertyGrid initialProperties={filteredProperties} />
+            {/* Content based on view mode - FORZAMOS LISTA */}
+            {view === 'list' ? (
+              <>
+                {console.log('RENDERING LIST VIEW:', filteredProperties.length, 'properties')}
+                <PropertyGrid properties={filteredProperties} />
+              </>
             ) : (
               <div className="space-y-6">
-                <PropertyMap 
+                <PropertyMap
                   properties={filteredProperties}
                   height="600px"
                   onPropertyClick={(property) => {
                     window.location.href = `/property/${property.id}`
                   }}
                 />
-                
+
                 {/* Properties list below map */}
                 <div>
                   <h3 className="text-xl font-semibold mb-4">
                     Propiedades en el mapa ({filteredProperties.length})
                   </h3>
-                  <PropertyGrid initialProperties={filteredProperties} />
+                  <PropertyGrid properties={filteredProperties} />
                 </div>
               </div>
             )}

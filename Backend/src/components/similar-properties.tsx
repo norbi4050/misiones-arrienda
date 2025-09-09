@@ -186,18 +186,17 @@ export function SimilarProperties({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
           {visible.map((property) => (
-            <PropertyCard 
+            <PropertyCard
               key={property.id}
               id={property.id}
               title={property.title}
               price={property.price}
-              type={property.propertyType}
-              location={`${property.city}, ${property.province}`}
+              images={property.images}
+              city={property.city}
+              province={property.province}
               bedrooms={property.bedrooms}
               bathrooms={property.bathrooms}
               area={property.area}
-              image={property.images?.[0] ?? "/placeholder-apartment-1.jpg"}
-              featured={property.featured}
             />
           ))}
         </div>

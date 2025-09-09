@@ -75,7 +75,7 @@ export default function DashboardEnhanced() {
 
       if (response.ok) {
         const data = await response.json()
-        setFavorites(data.favorites)
+        setFavorites(data.items || [])
       } else {
         throw new Error('Error al cargar favoritos')
       }
