@@ -55,27 +55,11 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  // Rutas que requieren autenticación
-  const protectedRoutes = ['/profile', '/dashboard', '/publicar'];
-  const isProtectedRoute = protectedRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  );
-
-  if (isProtectedRoute) {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error || !session) {
-        // Redirigir a login si no está autenticado
-        const redirectUrl = new URL('/login', req.url);
-        redirectUrl.searchParams.set('redirect', req.nextUrl.pathname);
-        return NextResponse.redirect(redirectUrl);
-      }
-    } catch (error) {
-      console.error('Error en middleware:', error);
-      const redirectUrl = new URL('/login', req.url);
-      return NextResponse.redirect(redirectUrl);
-    }
+  // Soft middleware: Solo sincronizar sesión sin redirecciones
+  try {
+    await supabase.auth.getSession();
+  } catch (error) {
+    console.error('Error syncing session:', error);
   }
 
   return res;

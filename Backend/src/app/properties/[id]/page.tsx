@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Property } from '@/types/property'
+import { fetchPropertyImages, parseLegacyImages } from '@/lib/property-images'
 
 export default function PropertyDetailPage() {
   const params = useParams()
@@ -13,10 +14,12 @@ export default function PropertyDetailPage() {
   const [agent, setAgent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [bucketImages, setBucketImages] = useState<string[]>([])
 
   useEffect(() => {
     if (params.id) {
       loadProperty(params.id as string)
+      loadBucketImages(params.id as string)
     }
   }, [params.id])
 
@@ -44,18 +47,18 @@ export default function PropertyDetailPage() {
     }
   }
 
+  const loadBucketImages = async (propertyId: string) => {
+    try {
+      const images = await fetchPropertyImages(propertyId)
+      setBucketImages(images)
+    } catch (error) {
+      console.error('Error loading bucket images:', error)
+      setBucketImages([])
+    }
+  }
+
   const parseImages = (images: any): string[] => {
-    if (Array.isArray(images)) {
-      return images
-    }
-    if (typeof images === 'string') {
-      try {
-        return JSON.parse(images)
-      } catch {
-        return [images]
-      }
-    }
-    return []
+    return parseLegacyImages(images)
   }
 
   const parseAmenities = (amenities: any): string[] => {
@@ -127,7 +130,7 @@ export default function PropertyDetailPage() {
     )
   }
 
-  const images = parseImages(property.images)
+  const imagesToShow = bucketImages.length > 0 ? bucketImages : parseImages(property.images)
   const amenities = parseAmenities(property.amenities)
   const features = parseFeatures(property.features)
 
@@ -149,10 +152,10 @@ export default function PropertyDetailPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Images */}
-          {images.length > 0 && (
+          {imagesToShow.length > 0 ? (
             <div className="mb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {images.slice(0, 4).map((image, index) => (
+                {imagesToShow.slice(0, 4).map((image, index) => (
                   <div key={index} className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
                     <img
                       src={image}
@@ -165,6 +168,10 @@ export default function PropertyDetailPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="mb-8 text-center text-gray-500">
+              No hay imágenes disponibles
             </div>
           )}
 

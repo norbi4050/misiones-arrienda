@@ -91,17 +91,17 @@ export function Navbar() {
                 {isAuthenticated && user ? (
                   <>
                     {/* Quick Actions for authenticated users */}
-                    <Link href="/dashboard?tab=favorites">
+                    <Link href="/profile/inquilino?tab=favoritos">
                       <Button variant="ghost" size="sm" title="Mis Favoritos">
                         <Heart className="h-4 w-4" />
                       </Button>
                     </Link>
-                    <Link href="/dashboard?tab=messages">
+                    <Link href="/profile/inquilino?tab=mensajes">
                       <Button variant="ghost" size="sm" title="Mensajes">
                         <MessageCircle className="h-4 w-4" />
                       </Button>
                     </Link>
-                    
+
                     {/* Profile Dropdown */}
                     <ProfileDropdown user={user} onSignOut={signOut} />
                   </>
@@ -160,7 +160,7 @@ export function Navbar() {
                 {item.name}
               </Link>
             ))}
-            
+
             {/* Mobile Search */}
             <div className="px-3 py-2">
               <Input
@@ -189,21 +189,21 @@ export function Navbar() {
                       </div>
                     </div>
                     <Link
-                      href="/profile"
+                      href="/profile/inquilino"
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
                       Mi Perfil
                     </Link>
                     <Link
-                      href="/dashboard?tab=favorites"
+                      href="/profile/inquilino?tab=favoritos"
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
                       Mis Favoritos
                     </Link>
                     <Link
-                      href="/dashboard?tab=messages"
+                      href="/profile/inquilino?tab=mensajes"
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >

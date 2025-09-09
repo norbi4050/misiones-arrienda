@@ -5,8 +5,16 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, isLoading, logout } = useSupabaseAuth();
+  const { user, loading } = useSupabaseAuth();
   const router = useRouter();
+  const isAuthenticated = !!user;
+  const isLoading = loading;
+
+  const logout = async () => {
+    const { supabase } = await import('@/lib/supabaseClient');
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     name: "",
@@ -16,12 +24,7 @@ export default function DashboardPage() {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
 
-  // Redirigir si no está autenticado
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, isLoading, router]);
+  // Soft-guard: No redirects, just show CTA if not authenticated
 
   // Inicializar datos de edición cuando el usuario esté disponible
   useEffect(() => {
@@ -107,9 +110,50 @@ export default function DashboardPage() {
     );
   }
 
-  // Si no está autenticado, no mostrar nada (se redirigirá)
-  if (!isAuthenticated || !user) {
-    return null;
+  // Soft-guard: Show login CTA for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Accede a tu Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Para acceder a tu panel de control, gestionar tu perfil y ver tus propiedades,
+              necesitas iniciar sesión en tu cuenta.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              Iniciar Sesión
+            </button>
+
+            <button
+              onClick={() => router.push('/register')}
+              className="w-full border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-lg transition-colors"
+            >
+              Crear Cuenta Nueva
+            </button>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-sm text-gray-500">
+              ¿No tienes cuenta? Regístrate gratis y comienza a gestionar tus propiedades.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

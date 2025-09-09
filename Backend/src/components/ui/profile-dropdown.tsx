@@ -118,7 +118,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           <div className="py-1">
             {/* Mi Perfil */}
             <Link
-              href="/profile"
+              href="/profile/inquilino"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >
@@ -128,7 +128,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
             {/* Favoritos */}
             <Link
-              href="/dashboard?tab=favorites"
+              href="/profile/inquilino?favoritos"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >
@@ -138,7 +138,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
             {/* Mensajes */}
             <Link
-              href="/dashboard?tab=messages"
+              href="/profile/inquilino?mensajes"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >
@@ -148,7 +148,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
             {/* Notificaciones */}
             <Link
-              href="/dashboard?tab=notifications"
+              href="/profile/inquilino?notificaciones"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >

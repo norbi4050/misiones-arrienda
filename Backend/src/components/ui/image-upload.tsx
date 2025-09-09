@@ -1,9 +1,17 @@
 "use client"
 
 import { useState, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import React from 'react'
+import { ImageUploadUniversal } from './image-upload-universal'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 interface ImageUploadProps {
   value?: string[]
@@ -60,7 +68,7 @@ export function ImageUpload({
     if (disabled) return
 
     const fileArray = Array.from(files)
-    
+
     // Verificar límite de imágenes
     if (value.length + fileArray.length > maxImages) {
       toast.error(`Máximo ${maxImages} imágenes permitidas`)
@@ -131,7 +139,7 @@ export function ImageUpload({
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       processFiles(e.dataTransfer.files)
     }
@@ -215,7 +223,7 @@ export function ImageUpload({
                     }}
                   />
                 </div>
-                
+
                 {/* Remove button */}
                 <button
                   onClick={(e) => {
@@ -267,217 +275,94 @@ interface ProfileImageUploadProps {
   onChange: (url: string) => void
   disabled?: boolean
   className?: string
+  userId: string
 }
 
 export function ProfileImageUpload({
   value,
   onChange,
   disabled = false,
-  className = ''
+  className = '',
+  userId
 }: ProfileImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false)
-  const [dragActive, setDragActive] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const router = useRouter()
 
-  const validateFile = (file: File): string | null => {
-    // Validar tipo de archivo
-    const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-    if (!acceptedTypes.includes(file.type)) {
-      return `Tipo de archivo no válido. Solo se permiten: JPG, PNG, WEBP`
-    }
+  const handleUploadComplete = async (urls: string[]) => {
+    if (urls.length > 0) {
+      const imageUrl = urls[0]
+      const oldAvatarUrl = value // Store the current avatar URL before updating
 
-    // Validar tamaño (2MB máximo)
-    const sizeMB = file.size / (1024 * 1024)
-    if (sizeMB > 2) {
-      return `El archivo es muy grande. Máximo 2MB permitido.`
-    }
+      try {
+        // Make PATCH request to /api/users/profile
+        const response = await fetch('/api/users/profile', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ profileImage: imageUrl }),
+        })
 
-    return null
-  }
+        if (response.ok) {
+          onChange(imageUrl)
+          toast.success('✅ Avatar guardado')
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = error => reject(error)
-    })
-  }
+          // Clean up old avatar from storage if it exists
+          if (oldAvatarUrl) {
+            try {
+              // Extract file path from Supabase URL
+              // URL format: https://[project].supabase.co/storage/v1/object/public/avatars/[userId]/[filename]
+              const urlParts = oldAvatarUrl.split('/storage/v1/object/public/avatars/')
+              if (urlParts.length === 2) {
+                const filePath = urlParts[1] // This will be [userId]/[filename]
 
-  const processFile = async (file: File) => {
-    if (disabled) return
+                const { error } = await supabase.storage
+                  .from('avatars')
+                  .remove([filePath])
 
-    setIsUploading(true)
+                if (error) {
+                  console.error('Error deleting old avatar:', error)
+                } else {
+                  console.log('✅ Old avatar deleted successfully:', filePath)
+                }
+              }
+            } catch (deleteError) {
+              console.error('Error during old avatar cleanup:', deleteError)
+            }
+          }
 
-    try {
-      // Validar archivo
-      const error = validateFile(file)
-      if (error) {
-        toast.error(error)
-        return
+          // Refresh the page to update header avatar
+          router.refresh()
+        } else {
+          throw new Error('Error al guardar el avatar')
+        }
+      } catch (error) {
+        console.error('Error saving profile image:', error)
+        toast.error('Error al guardar el avatar')
       }
-
-      // Convertir a base64 para preview inmediato
-      const base64 = await convertToBase64(file)
-      onChange(base64)
-      toast.success('Foto de perfil actualizada')
-    } catch (error) {
-      console.error('Error processing file:', error)
-      toast.error('Error al procesar la imagen')
-    } finally {
-      setIsUploading(false)
     }
+    setUploading(false)
   }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      processFile(file)
-    }
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }, [])
-
-  const handleDragIn = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      setDragActive(true)
-    }
-  }, [])
-
-  const handleDragOut = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    
-    const file = e.dataTransfer.files?.[0]
-    if (file) {
-      processFile(file)
-    }
-  }, [disabled])
-
-  const openFileDialog = () => {
-    if (!disabled && fileInputRef.current) {
-      fileInputRef.current.click()
-    }
-  }
-
-  const removeImage = () => {
-    onChange('')
-    toast.success('Foto de perfil eliminada')
+  const handleUploadError = (error: string) => {
+    toast.error(error)
+    setUploading(false)
   }
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      <div className="flex flex-col items-center space-y-4">
-        {/* Profile Image Preview */}
-        <div className="relative">
-          <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
-            {value ? (
-              <img
-                src={value}
-                alt="Foto de perfil"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik02NCA5NkM3Ni4xNTAzIDk2IDg2IDg2LjE1MDMgODYgNzRDODYgNjEuODQ5NyA3Ni4xNTAzIDUyIDY0IDUyQzUxLjg0OTcgNTIgNDIgNjEuODQ5NyA0MiA3NEM0MiA4Ni4xNTAzIDUxLjg0OTcgOTYgNjQgOTZaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxwYXRoIGQ9Ik0yNiAxMTJDMjYgOTcuNjQwNiAzNy42NDA2IDg2IDUyIDg2SDc2Qzg5LjI1NDggODYgMTAwIDk2Ljc0NTIgMTAwIDExMEgxMDBIMjZaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo='
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                  <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-xs text-gray-500">Sin foto</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Remove button - only show if there's an image */}
-          {value && (
-            <button
-              onClick={removeImage}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors shadow-lg"
-              disabled={disabled}
-              title="Eliminar foto"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-
-          {/* Upload overlay - only show when uploading */}
-          {isUploading && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-white" />
-            </div>
-          )}
-        </div>
-
-        {/* Upload Button/Area */}
-        <div
-          className={`
-            relative border-2 border-dashed rounded-lg px-6 py-4 text-center cursor-pointer transition-all duration-200
-            ${dragActive 
-              ? 'border-blue-500 bg-blue-50 scale-105' 
-              : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
-            }
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-            ${isUploading ? 'pointer-events-none' : ''}
-          `}
-          onDragEnter={handleDragIn}
-          onDragLeave={handleDragOut}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={openFileDialog}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp"
-            onChange={handleFileSelect}
-            className="hidden"
-            disabled={disabled}
-          />
-
-          {isUploading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-              <span className="text-sm text-gray-600">Subiendo...</span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center space-x-2">
-              <Upload className="h-5 w-5 text-gray-400" />
-              <div>
-                <p className="text-sm font-medium text-gray-700">
-                  {value ? 'Cambiar foto' : 'Subir foto de perfil'}
-                </p>
-                <p className="text-xs text-gray-500">
-                  JPG, PNG o WEBP (máx. 2MB)
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Help text */}
-        <p className="text-xs text-gray-500 text-center max-w-xs">
-          Arrastra una imagen aquí o haz clic para seleccionar desde tu dispositivo
-        </p>
-      </div>
+    <div className={className}>
+      <ImageUploadUniversal
+        bucket="avatars"
+        userId={userId}
+        onUploadComplete={handleUploadComplete}
+        onUploadError={handleUploadError}
+        maxFiles={1}
+        maxSizeMB={2}
+        acceptedTypes={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+        multiple={false}
+        showPreview={true}
+        existingImages={value ? [value] : []}
+      />
     </div>
   )
 }

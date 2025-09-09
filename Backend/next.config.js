@@ -1,20 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: '/dashboard', destination: '/profile/inquilino', permanent: true },
+    ];
+  },
   images: {
-    remotePatterns: [
-      // Supabase storage / CDN (ajustá si usás otro dominio)
-      { protocol: 'https', hostname: '**.supabase.co' },
-      // Si usás bancos de imágenes externos, dejalos:
-      { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: 'picsum.photos' },
-    ],
+    remotePatterns: [{ protocol: 'https', hostname: '**.supabase.co' }],
   },
-  typescript: {
-    ignoreBuildErrors: false,
-  },
-  eslint: {
-    ignoreDuringBuilds: false,
-  }
-}
-
-module.exports = nextConfig
+};
+module.exports = nextConfig;

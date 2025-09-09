@@ -3,7 +3,7 @@ import { getProperties } from '@/lib/api'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://misionesarrienda.com.ar'
-  
+
   // Páginas estáticas principales
   const staticPages = [
     {
@@ -64,10 +64,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Obtener todas las propiedades para generar URLs dinámicas
   let propertyPages: MetadataRoute.Sitemap = []
-  
+
   try {
     const response = await getProperties({ limit: 1000 }) // Obtener todas las propiedades
-    
+
     propertyPages = response.properties.map((property) => ({
       url: `${baseUrl}/property/${property.id}`,
       lastModified: new Date(property.updatedAt || property.createdAt || new Date()),
@@ -78,19 +78,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error generating sitemap for properties:', error)
   }
 
-  // Páginas adicionales del sitio
+  // Páginas adicionales del sitio (sin /dashboard)
   const additionalPages = [
     {
       url: `${baseUrl}/profiles`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/dashboard`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.4,
     },
   ]
 

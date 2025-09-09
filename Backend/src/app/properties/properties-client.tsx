@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { FilterSectionWrapper } from '@/components/filter-section-wrapper'
 import { PropertyGrid } from '@/components/property-grid'
 import { PropertyMap } from '@/components/property-map'

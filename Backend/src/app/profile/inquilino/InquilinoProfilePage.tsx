@@ -13,11 +13,13 @@ import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import { fetchUserProfile } from "@/lib/apiClient"
 
+import type { Session } from "@supabase/supabase-js"
+
 interface InquilinoProfilePageProps {
-  userId: string;
+  session?: Session | null
 }
 
-export default function InquilinoProfilePage({ userId }: InquilinoProfilePageProps) {
+export default function InquilinoProfilePage({ session }: InquilinoProfilePageProps) {
   const { user, isAuthenticated, isLoading, refreshUserProfile } = useSupabaseAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
@@ -30,6 +32,11 @@ export default function InquilinoProfilePage({ userId }: InquilinoProfilePagePro
     activeAlerts: 0,
     memberSince: 'Reciente'
   })
+
+  // Log session data for debugging
+  console.log("InquilinoProfilePage - Session prop:", session?.user?.id)
+  console.log("InquilinoProfilePage - useSupabaseAuth user:", user?.id)
+  console.log("InquilinoProfilePage - isAuthenticated:", isAuthenticated)
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -77,12 +84,8 @@ export default function InquilinoProfilePage({ userId }: InquilinoProfilePagePro
   }
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login')
-      return
-    }
-
-    if (user && user.userType !== 'inquilino') {
+    // Soft-guard: No redirects, just check user type for wrong profile access
+    if (!isLoading && user && user.userType !== 'inquilino') {
       router.push(`/profile/${user.userType}`)
       return
     }
@@ -206,6 +209,49 @@ export default function InquilinoProfilePage({ userId }: InquilinoProfilePagePro
     )
   }
 
+  // Soft-guard: Show login CTA for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-6">
+            <Search className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Accede a tu Perfil de Inquilino
+            </h1>
+            <p className="text-gray-600">
+              Para gestionar tu perfil, guardar favoritos y acceder a todas las funcionalidades,
+              necesitas iniciar sesión en tu cuenta.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <Button
+              onClick={() => router.push('/login')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium"
+            >
+              Iniciar Sesión
+            </Button>
+
+            <Button
+              onClick={() => router.push('/register')}
+              variant="outline"
+              className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-3 px-6 rounded-lg font-medium"
+            >
+              Crear Cuenta Nueva
+            </Button>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-sm text-gray-500">
+              ¿No tienes cuenta? Regístrate gratis y comienza a buscar tu hogar ideal.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -221,6 +267,7 @@ export default function InquilinoProfilePage({ userId }: InquilinoProfilePagePro
                       onChange={(url) => setProfileData({...profileData, profileImage: url})}
                       disabled={!isEditing}
                       className="w-full"
+                      userId={user?.id || ''}
                     />
                   </div>
                 ) : (

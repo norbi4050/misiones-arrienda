@@ -59,12 +59,12 @@ export function Navbar() {
               >
                 Propiedades
               </Link>
-              <Link 
-                href="/profiles" 
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Perfiles
-              </Link>
+            <Link
+              href="/profile/inquilino"
+              className="text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              Perfiles
+            </Link>
               <Link 
                 href="/publicar" 
                 className="text-gray-700 hover:text-blue-600 transition-colors"
@@ -145,8 +145,8 @@ export function Navbar() {
             >
               Propiedades
             </Link>
-            <Link 
-              href="/profiles" 
+            <Link
+              href="/profile/inquilino"
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
               Perfiles
@@ -176,8 +176,8 @@ export function Navbar() {
                 {isAuthenticated ? (
                   // Usuario logueado - mostrar perfil y logout
                   <>
-                    <Link 
-                      href="/dashboard" 
+                    <Link
+                      href="/profile/inquilino"
                       className="text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-1"
                     >
                       <User className="h-4 w-4" />
@@ -254,7 +254,7 @@ export function Navbar() {
                 Propiedades
               </Link>
               <Link
-                href="/profiles"
+                href="/profile/inquilino"
                 className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -294,7 +294,7 @@ export function Navbar() {
                         </div>
                       )}
                       <Link
-                        href="/dashboard"
+                        href="/profile/inquilino"
                         className="block px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
