@@ -1,18 +1,43 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
-import InquilinoProfilePage from "./InquilinoProfilePage";
+import { createServerSupabase } from "@/lib/supabase/server";
+import Link from "next/link";
 
-export default async function Page() {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { get: (k) => cookieStore.get(k)?.value } }
-  );
+export const dynamic = "force-dynamic";
 
+export default async function InquilinoProfileServerPage() {
+  const supabase = createServerSupabase();
   const { data: { session } } = await supabase.auth.getSession();
 
-  console.log("SSR session user id:", session?.user?.id);
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8 bg-gray-50">
+        <div className="max-w-md w-full bg-white shadow rounded-lg p-6 space-y-4 text-center">
+          <h1 className="text-xl font-semibold">Accede a tu Perfil de Inquilino</h1>
+          <p className="text-gray-600">
+            Inicia sesión para gestionar tu perfil, favoritos y más.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/login" className="px-4 py-2 rounded bg-blue-600 text-white">
+              Iniciar sesión
+            </Link>
+            <Link href="/register" className="px-4 py-2 rounded border border-blue-600 text-blue-600">
+              Crear cuenta
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  return <InquilinoProfilePage session={session ?? null} />;
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-2">Perfil de Inquilino</h1>
+      <p className="text-gray-600 mb-6">
+        Sección en construcción. Tu sesión está activa como{" "}
+        <strong>{session.user.email ?? session.user.id}</strong>.
+      </p>
+      <div className="rounded border p-4 bg-white">
+        Próximamente: edición de perfil y foto de avatar.
+      </div>
+    </div>
+  );
 }

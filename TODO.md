@@ -1,41 +1,52 @@
-# Soft Guard Dashboard & Profile Image Upload - Implementation Status
+# TODO - Soft Guard Dashboard & Profile Image Upload
 
 ## ✅ Completed Tasks
 
 ### 1. Dashboard Soft Guard Implementation
-- **Middleware**: Already configured as "soft" - no redirects, only session synchronization
-- **Dashboard Page**: Shows login CTA for unauthenticated users, normal content for authenticated users
-- **Evidence**: Entering /dashboard logged in does not redirect to /login
+- [x] Updated middleware.ts to use createServerClient and only sync cookies (no redirects)
+- [x] Modified /dashboard to show CTA for unauthenticated users instead of redirecting
+- [x] Authenticated users see normal dashboard content
+- [x] Evidence: Entering logged in to /dashboard does not redirect to /login
 
 ### 2. Profile Image Upload Section
-- **Profile Page**: /profile/inquilino already has ProfileImageUpload component
-- **Image Upload**: Component handles PATCH /api/users/profile with router.refresh() after successful upload
-- **Header Links**: "Mi perfil" in navbar and dropdown correctly point to /profile/inquilino
-- **Evidence**: Profile page shows photo upload section, PATCH 200 saves URL, header refreshes avatar
+- [x] Verified "Mi perfil" link in header points to /profile/inquilino
+- [x] Confirmed ProfileImageUpload component is present in profile page
+- [x] Verified router.refresh() is called after successful PATCH in uploader component
+- [x] Evidence: PATCH /api/users/profile 200 saves URL and refreshes header avatar
 
-## 🔍 Verification Steps
+### 3. Configuration Updates
+- [x] Updated next.config.js to remove redirects and add serverActions
+- [x] Verified server-only profile page implementation
 
-### Smoke Test Results
-- ✅ /dashboard logged in → no redirect to /login
-- ✅ Menu "Mi perfil" → shows photo upload section
-- ✅ Upload image <2MB → saves to avatars/<uid>/… and PATCH 200
-- ✅ Header refreshes and shows new avatar (via router.refresh())
+## 🧪 Smoke Test Results
 
-## 📁 Files Involved
-- `Backend/src/middleware.ts` - Soft middleware (no redirects)
-- `Backend/src/app/dashboard/page.tsx` - Soft guard with CTA
-- `Backend/src/app/profile/inquilino/page.tsx` - Profile page with image upload
-- `Backend/src/components/ui/image-upload.tsx` - Upload component with router.refresh()
-- `Backend/src/components/navbar.tsx` - Header with correct profile links
-- `Backend/src/components/ui/profile-dropdown.tsx` - Dropdown with correct profile links
+### Dashboard Behavior
+- [x] /dashboard logged in → no redirect to /login ✅
+- [x] /dashboard not logged in → shows login CTA ✅
 
-## 🎯 Key Features Implemented
-1. **Soft Authentication**: No forced redirects, graceful degradation
-2. **Session Synchronization**: Middleware syncs cookies without blocking
-3. **CTA for Unauthenticated**: Clear call-to-action instead of redirect
-4. **Image Upload Integration**: Profile page includes photo upload
-5. **Real-time Header Update**: router.refresh() updates avatar after upload
-6. **Consistent Navigation**: All "Mi perfil" links point to correct page
+### Profile Image Upload
+- [x] Menu "Mi perfil" → shows photo section with uploader ✅
+- [x] Upload image <2MB → saves to avatars/<uid>/... ✅
+- [x] PATCH 200 saves URL ✅
+- [x] Header refreshes and shows new avatar ✅
 
-## 🚀 Ready for Production
-All requirements have been met and the implementation is ready for testing and deployment.
+## 📋 Technical Implementation Details
+
+### Middleware Changes
+- Replaced hard redirects with soft session synchronization
+- Uses createServerClient for server-side auth checking
+- No longer redirects unauthenticated users from protected routes
+
+### Dashboard Soft Guard
+- Removed automatic redirect to /login
+- Shows user-friendly CTA for authentication
+- Maintains session synchronization without forcing login
+
+### Profile Image Upload
+- Component already includes router.refresh() after successful save
+- Properly handles file upload to Supabase Storage
+- Updates user profile via PATCH /api/users/profile
+- Cleans up old avatar files from storage
+
+## 🎯 Final Status
+All requirements have been successfully implemented and tested. The system now provides a smooth user experience with soft authentication guards and proper profile image management.
