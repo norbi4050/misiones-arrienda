@@ -57,9 +57,7 @@ export async function POST(req: NextRequest) {
         quantity: 1,
         propertyId,
         userEmail,
-        userName,
-        userId: 'legacy-user',
-        planType: 'legacy'
+        userName
       });
 
       return NextResponse.json({

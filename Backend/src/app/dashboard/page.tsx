@@ -30,9 +30,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       setEditData({
-        name: user.name || "",
-        companyName: user.companyName || "",
-        licenseNumber: user.licenseNumber || ""
+        name: user.user_metadata?.name || "",
+        companyName: user.user_metadata?.companyName || "",
+        licenseNumber: user.user_metadata?.licenseNumber || ""
       });
     }
   }, [user]);
@@ -46,9 +46,9 @@ export default function DashboardPage() {
     setUpdateMessage(null);
     if (user) {
       setEditData({
-        name: user.name || "",
-        companyName: user.companyName || "",
-        licenseNumber: user.licenseNumber || ""
+        name: user.user_metadata?.name || "",
+        companyName: user.user_metadata?.companyName || "",
+        licenseNumber: user.user_metadata?.licenseNumber || ""
       });
     }
   };

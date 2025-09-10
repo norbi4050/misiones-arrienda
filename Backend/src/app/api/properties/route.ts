@@ -78,111 +78,130 @@ const mockProperties = [
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
-    // Parámetros de búsqueda mejorados
-    const city = searchParams.get('city');
-    const type = searchParams.get('type');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
-    const bedrooms = searchParams.get('bedrooms');
-    const bathrooms = searchParams.get('bathrooms');
-    const minArea = searchParams.get('minArea');
-    const maxArea = searchParams.get('maxArea');
-    const amenities = searchParams.get('amenities');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
-    const sortBy = searchParams.get('sortBy') || 'createdAt';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+
+    // Parse params según especificaciones exactas
+    const city = searchParams.get('city') ?? '';
+    const province = searchParams.get('province') ?? '';
+    const propertyType = searchParams.get('propertyType') ?? '';
+    const priceMin = Number(searchParams.get('priceMin') ?? '');
+    const priceMax = Number(searchParams.get('priceMax') ?? '');
+    const bedroomsMin = Number(searchParams.get('bedroomsMin') ?? '');
+    const bathroomsMin = Number(searchParams.get('bathroomsMin') ?? '');
+    const minArea = Number(searchParams.get('minArea') ?? '');
+    const maxArea = Number(searchParams.get('maxArea') ?? '');
+    const amenities = searchParams.get('amenities') ?? '';
+    const orderByRaw = searchParams.get('orderBy') ?? 'createdAt';
+    const orderRaw = (searchParams.get('order') ?? 'desc').toLowerCase();
+    const limit = Math.max(1, Math.min(50, Number(searchParams.get('limit') ?? 12)));
+    const offset = Math.max(0, Number(searchParams.get('offset') ?? 0));
+
+    // Validación priceMin <= priceMax
+    const n = (v:any) => (v === null || v === undefined || v === '') ? undefined : Number(v);
+    const priceMinN = n(searchParams.get('priceMin'));
+    const priceMaxN = n(searchParams.get('priceMax'));
+
+    if (
+      priceMinN !== undefined &&
+      priceMaxN !== undefined &&
+      Number.isFinite(priceMinN) &&
+      Number.isFinite(priceMaxN) &&
+      priceMinN > priceMaxN
+    ) {
+      return NextResponse.json({ error: 'priceMin must be <= priceMax' }, { status: 400 });
+    }
+
+    // Whitelist orden expandida + orderMap para columnas DB
+    const allowedOrderBy = ['createdAt', 'price', 'id', 'bedrooms', 'bathrooms', 'area'] as const;
+    const orderMap: Record<(typeof allowedOrderBy)[number], string> = {
+      createdAt: 'created_at',
+      price: 'price',
+      id: 'id',
+      bedrooms: 'bedrooms',
+      bathrooms: 'bathrooms',
+      area: 'area',
+    };
+    const safeOrderBy = (allowedOrderBy as readonly string[]).includes(orderByRaw!)
+      ? orderMap[orderByRaw as (typeof allowedOrderBy)[number]]
+      : 'created_at';
+    const safeAscending = orderRaw === 'asc';
 
     // Intentar conectar con Supabase primero
     const supabase = createServerSupabase();
     let useSupabase = true;
-    let properties = [];
-    let totalCount = 0;
+    let items = [];
+    let count = 0;
 
     try {
       // Construir query de Supabase
       let query = supabase
         .from('Property')
         .select('*', { count: 'exact' })
-      .eq('status', 'PUBLISHED');
+        .eq('status', 'PUBLISHED'); // Siempre forzar status='PUBLISHED'
 
-      // Aplicar filtros avanzados
-      if (city) {
-        query = query.ilike('city', `%${city}%`);
-      }
-      
-      if (type) {
-        query = query.eq('propertyType', type);
-      }
-      
-      if (minPrice) {
-        query = query.gte('price', parseInt(minPrice));
-      }
-      
-      if (maxPrice) {
-        query = query.lte('price', parseInt(maxPrice));
-      }
-      
-      if (bedrooms) {
-        query = query.eq('bedrooms', parseInt(bedrooms));
-      }
-      
-      if (bathrooms) {
-        query = query.eq('bathrooms', parseInt(bathrooms));
+      // Aplicar filtros con validaciones seguras
+      const norm = (s?: string) => (s ?? '').trim();
+      if (norm(city).length >= 2) {
+        query = query.ilike('city', `%${norm(city)}%`);
       }
 
-      if (minArea) {
-        query = query.gte('area', parseFloat(minArea));
+      if (norm(province).length >= 2) {
+        query = query.ilike('province', `%${norm(province)}%`);
       }
 
-      if (maxArea) {
-        query = query.lte('area', parseFloat(maxArea));
+      if (propertyType) {
+        query = query.eq('propertyType', propertyType);
       }
 
-      // Ordenamiento seguro con allowlist
-      // Usar safeOrderMap para evitar columnas CamelCase que causan error 500
-      const safeOrderMap: Record<string, string> = {
-        id: 'id',
-        price: 'price',
-        bedrooms: 'bedrooms',
-        bathrooms: 'bathrooms',
-        garages: 'garages',
-        area: 'area',
-        status: 'status'
-      };
-      let orderColumn = 'id';
-      let orderAscending = false; // default desc
-
-      // Log temporal para debug
-      console.log('sortBy:', sortBy, 'sortOrder:', sortOrder);
-
-      if (sortBy && safeOrderMap[sortBy]) {
-        orderColumn = safeOrderMap[sortBy];
-        orderAscending = sortOrder === 'asc';
-      } else {
-        // Fallback a id si sortBy no está en safeOrderMap
-        orderColumn = 'id';
-        orderAscending = false;
+      if (!Number.isNaN(priceMin)) {
+        query = query.gte('price', priceMin);
       }
 
-      // Log temporal para debug
-      console.log('orderColumn:', orderColumn, 'orderAscending:', orderAscending);
+      if (!Number.isNaN(priceMax)) {
+        query = query.lte('price', priceMax);
+      }
 
-      query = query.order(orderColumn, { ascending: orderAscending });
+      if (!Number.isNaN(bedroomsMin)) {
+        query = query.gte('bedrooms', bedroomsMin);
+      }
 
-      // Aplicar paginación
-      const startIndex = (page - 1) * limit;
-      query = query.range(startIndex, startIndex + limit - 1);
+      if (!Number.isNaN(bathroomsMin)) {
+        query = query.gte('bathrooms', bathroomsMin);
+      }
 
-      const { data: supabaseProperties, error, count } = await query;
+      if (!Number.isNaN(minArea)) {
+        query = query.gte('area', minArea);
+      }
+
+      if (!Number.isNaN(maxArea)) {
+        query = query.lte('area', maxArea);
+      }
+
+      if (amenities) {
+        const amenitiesArray = amenities.split(',').map(a => a.trim()).filter(a => a.length > 0);
+        if (amenitiesArray.length > 0) {
+          // Filter properties that contain at least one of the specified amenities
+          query = query.or(amenitiesArray.map(amenity => `amenities.ilike.%${amenity}%`).join(','));
+        }
+      }
+
+      // Aplicar ordenamiento
+      query = query.order(safeOrderBy, { ascending: safeAscending });
+
+      // Aplicar paginación con offset/limit
+      query = query.range(offset, offset + limit - 1);
+
+      const { data: supabaseProperties, error, count: totalCount } = await query;
 
       if (error) {
         console.warn('Supabase error, falling back to mock data:', error);
         useSupabase = false;
       } else {
-        properties = supabaseProperties || [];
-        totalCount = count || 0;
+        // Filtrar activo en memoria (isActive vs is_active)
+        items = (supabaseProperties || []).filter((row: any) => {
+          const active = row.isActive ?? row.is_active ?? true;
+          return active === true;
+        });
+        count = totalCount || 0;
       }
 
     } catch (supabaseError) {
@@ -196,52 +215,64 @@ export async function GET(request: NextRequest) {
 
       // Aplicar filtros a datos mock
       if (city) {
-        filteredProperties = filteredProperties.filter(p => 
+        filteredProperties = filteredProperties.filter(p =>
           p.city.toLowerCase().includes(city.toLowerCase())
         );
       }
 
-      if (type) {
-        filteredProperties = filteredProperties.filter(p => p.propertyType === type);
+      if (province) {
+        filteredProperties = filteredProperties.filter(p =>
+          p.province.toLowerCase().includes(province.toLowerCase())
+        );
       }
 
-      if (minPrice) {
-        filteredProperties = filteredProperties.filter(p => p.price >= parseInt(minPrice));
+      if (propertyType) {
+        filteredProperties = filteredProperties.filter(p => p.propertyType === propertyType);
       }
 
-      if (maxPrice) {
-        filteredProperties = filteredProperties.filter(p => p.price <= parseInt(maxPrice));
+      if (!Number.isNaN(priceMin)) {
+        filteredProperties = filteredProperties.filter(p => p.price >= priceMin);
       }
 
-      if (bedrooms) {
-        filteredProperties = filteredProperties.filter(p => p.bedrooms === parseInt(bedrooms));
+      if (!Number.isNaN(priceMax)) {
+        filteredProperties = filteredProperties.filter(p => p.price <= priceMax);
       }
 
-      if (bathrooms) {
-        filteredProperties = filteredProperties.filter(p => p.bathrooms === parseInt(bathrooms));
+      if (!Number.isNaN(bedroomsMin)) {
+        filteredProperties = filteredProperties.filter(p => p.bedrooms >= bedroomsMin);
       }
 
-      if (minArea) {
-        filteredProperties = filteredProperties.filter(p => p.area >= parseFloat(minArea));
+      if (!Number.isNaN(bathroomsMin)) {
+        filteredProperties = filteredProperties.filter(p => p.bathrooms >= bathroomsMin);
       }
 
-      if (maxArea) {
-        filteredProperties = filteredProperties.filter(p => p.area <= parseFloat(maxArea));
+      if (!Number.isNaN(minArea)) {
+        filteredProperties = filteredProperties.filter(p => p.area >= minArea);
+      }
+
+      if (!Number.isNaN(maxArea)) {
+        filteredProperties = filteredProperties.filter(p => p.area <= maxArea);
       }
 
       if (amenities) {
-        const amenityList = amenities.split(',');
-        filteredProperties = filteredProperties.filter(p => 
-          amenityList.some(amenity => p.amenities.includes(amenity.trim()))
-        );
+        const amenitiesArray = amenities.split(',').map(a => a.trim()).filter(a => a.length > 0);
+        if (amenitiesArray.length > 0) {
+          filteredProperties = filteredProperties.filter(p =>
+            amenitiesArray.some(amenity =>
+              p.amenities.some((propAmenity: string) =>
+                propAmenity.toLowerCase().includes(amenity.toLowerCase())
+              )
+            )
+          );
+        }
       }
 
       // Ordenamiento para datos mock
       filteredProperties.sort((a, b) => {
-        const aValue = a[sortBy as keyof typeof a];
-        const bValue = b[sortBy as keyof typeof b];
-        
-        if (sortOrder === 'asc') {
+        const aValue = a[orderByRaw as keyof typeof a];
+        const bValue = b[orderByRaw as keyof typeof b];
+
+        if (safeAscending) {
           return aValue > bValue ? 1 : -1;
         } else {
           return aValue < bValue ? 1 : -1;
@@ -249,36 +280,32 @@ export async function GET(request: NextRequest) {
       });
 
       // Aplicar paginación a datos mock
-      totalCount = filteredProperties.length;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      properties = filteredProperties.slice(startIndex, endIndex);
+      count = filteredProperties.length;
+      items = filteredProperties.slice(offset, offset + limit);
     }
 
+    // Responder preservando el contrato actual
     return NextResponse.json({
-      properties,
-      pagination: {
-        page,
-        limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit)
-      },
+      items,
+      count,
       meta: {
         dataSource: useSupabase ? 'supabase' : 'mock',
         filters: {
           city,
-          type,
-          minPrice,
-          maxPrice,
-          bedrooms,
-          bathrooms,
-          minArea,
-          maxArea,
-          amenities
+          province,
+          propertyType,
+          priceMin: !Number.isNaN(priceMin) ? priceMin : undefined,
+          priceMax: !Number.isNaN(priceMax) ? priceMax : undefined,
+          bedroomsMin: !Number.isNaN(bedroomsMin) ? bedroomsMin : undefined,
+          bathroomsMin: !Number.isNaN(bathroomsMin) ? bathroomsMin : undefined
         },
         sorting: {
-          sortBy,
-          sortOrder
+          orderBy: orderByRaw,
+          order: safeAscending ? 'asc' : 'desc'
+        },
+        pagination: {
+          limit,
+          offset
         }
       }
     });
@@ -286,8 +313,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error in properties API:', error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
+      {
+        error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
       },

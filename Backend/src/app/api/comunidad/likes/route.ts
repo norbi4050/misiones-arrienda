@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { z } from 'zod'
 
 // Schema de validación para likes
@@ -16,7 +16,7 @@ const getLikesSchema = z.object({
 // POST /api/comunidad/likes - Dar like a un perfil
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createServerSupabase()
     
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 // GET /api/comunidad/likes - Obtener likes del usuario
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createServerSupabase()
     
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -241,7 +241,7 @@ export async function GET(request: NextRequest) {
 // DELETE /api/comunidad/likes - Quitar like
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createServerSupabase()
     
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()

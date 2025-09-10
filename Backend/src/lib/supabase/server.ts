@@ -21,3 +21,6 @@ export function createServerSupabase() {
     }
   );
 }
+
+// Alias for backward compatibility
+export const createClient = createServerSupabase;

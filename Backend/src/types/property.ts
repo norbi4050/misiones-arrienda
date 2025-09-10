@@ -64,16 +64,27 @@ export type ListingType = 'SALE' | 'RENT' | 'BOTH'
 // Tipo para filtros de propiedades
 export interface PropertyFilters {
   city?: string
-  province?: string // Campo faltante agregado
+  province?: string
   propertyType?: Property['propertyType']
-  listingType?: ListingType // Campo faltante agregado
+  listingType?: ListingType
   minPrice?: number
   maxPrice?: number
+  priceMin?: number // Alias para minPrice para compatibilidad API
+  priceMax?: number // Alias para maxPrice para compatibilidad API
   minBedrooms?: number
-  maxBedrooms?: number // Campo faltante agregado
+  maxBedrooms?: number
+  bedroomsMin?: number // Alias para minBedrooms para compatibilidad API
   minBathrooms?: number
+  bathroomsMin?: number // Alias para minBathrooms para compatibilidad API
+  minArea?: number
+  maxArea?: number
+  amenities?: string
   featured?: boolean
   status?: Property['status']
+  orderBy?: 'createdAt' | 'price' | 'id' | 'bedrooms' | 'bathrooms' | 'area'
+  order?: 'asc' | 'desc'
+  limit?: number
+  offset?: number
 }
 
 // Tipo para datos de consulta/inquiry

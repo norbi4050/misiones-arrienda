@@ -128,7 +128,9 @@ export function ImageUploadUniversal({
     const { file } = uploadFile
     const timestamp = Date.now()
     const fileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-    const filePath = `${config.folder}/${fileName}`
+    const filePath = bucket === 'avatars'
+      ? `${userId}/avatar/${fileName}`
+      : `${config.folder}/${fileName}`
 
     // Actualizar estado a uploading
     setFiles(prev => prev.map((f, i) => 

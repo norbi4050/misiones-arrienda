@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -32,8 +33,18 @@ export function FilterSection({
     listingType: "all",
     price: "all",
     location: "all",
+    province: "all", // Nuevo filtro
+    priceMin: "", // Nuevo filtro
+    priceMax: "", // Nuevo filtro
     bedrooms: "all",
+    bedroomsMin: "", // Nuevo filtro
     bathrooms: "all",
+    bathroomsMin: "", // Nuevo filtro
+    minArea: "", // Nuevo filtro
+    maxArea: "", // Nuevo filtro
+    amenities: "", // Nuevo filtro
+    orderBy: "createdAt", // Nuevo filtro
+    order: "desc", // Nuevo filtro
     featured: "all"
   })
 
@@ -46,8 +57,18 @@ export function FilterSection({
       listingType: searchParams.get('listingType') || 'all',
       price: searchParams.get('price') || 'all',
       location: searchParams.get('city') || 'all',
+      province: searchParams.get('province') || 'all',
+      priceMin: searchParams.get('priceMin') || '',
+      priceMax: searchParams.get('priceMax') || '',
       bedrooms: searchParams.get('bedrooms') || 'all',
+      bedroomsMin: searchParams.get('bedroomsMin') || '',
       bathrooms: searchParams.get('bathrooms') || 'all',
+      bathroomsMin: searchParams.get('bathroomsMin') || '',
+      minArea: searchParams.get('minArea') || '',
+      maxArea: searchParams.get('maxArea') || '',
+      amenities: searchParams.get('amenities') || '',
+      orderBy: searchParams.get('orderBy') || 'createdAt',
+      order: searchParams.get('order') || 'desc',
       featured: searchParams.get('featured') || 'all'
     }
     
@@ -65,9 +86,9 @@ export function FilterSection({
     if (!enableUrlPersistence) return
 
     const params = new URLSearchParams()
-    
+
     Object.entries(newFilters).forEach(([key, value]) => {
-      if (value !== 'all') {
+      if (value !== 'all' && value !== '') {
         // Map internal keys to URL-friendly keys
         const urlKey = key === 'location' ? 'city' : key
         params.set(urlKey, value)
@@ -105,23 +126,23 @@ export function FilterSection({
     if (filters.price !== "all") {
       switch (filters.price) {
         case "0-50000":
-          apiFilters.minPrice = 0
-          apiFilters.maxPrice = 50000
+          apiFilters.priceMin = 0
+          apiFilters.priceMax = 50000
           break
         case "50000-100000":
-          apiFilters.minPrice = 50000
-          apiFilters.maxPrice = 100000
+          apiFilters.priceMin = 50000
+          apiFilters.priceMax = 100000
           break
         case "100000-200000":
-          apiFilters.minPrice = 100000
-          apiFilters.maxPrice = 200000
+          apiFilters.priceMin = 100000
+          apiFilters.priceMax = 200000
           break
         case "200000-300000":
-          apiFilters.minPrice = 200000
-          apiFilters.maxPrice = 300000
+          apiFilters.priceMin = 200000
+          apiFilters.priceMax = 300000
           break
         case "300000+":
-          apiFilters.minPrice = 300000
+          apiFilters.priceMin = 300000
           break
       }
     }
@@ -146,19 +167,52 @@ export function FilterSection({
       apiFilters.city = filters.location
     }
 
+    // Convert province filter - Nuevo
+    if (filters.province !== "all") {
+      apiFilters.province = filters.province
+    }
+
+    // Convert price min/max filters - Nuevos
+    if (filters.priceMin && filters.priceMin !== "") {
+      apiFilters.priceMin = parseInt(filters.priceMin)
+    }
+    
+    if (filters.priceMax && filters.priceMax !== "") {
+      apiFilters.priceMax = parseInt(filters.priceMax)
+    }
+
     // Convert bedrooms filter
     if (filters.bedrooms !== "all") {
-      apiFilters.minBedrooms = parseInt(filters.bedrooms)
+      apiFilters.bedroomsMin = parseInt(filters.bedrooms)
+    }
+
+    // Convert bedroomsMin filter - Nuevo
+    if (filters.bedroomsMin && filters.bedroomsMin !== "") {
+      apiFilters.bedroomsMin = parseInt(filters.bedroomsMin)
     }
 
     // Convert bathrooms filter
     if (filters.bathrooms !== "all") {
-      apiFilters.minBathrooms = parseInt(filters.bathrooms)
+      apiFilters.bathroomsMin = parseInt(filters.bathrooms)
+    }
+
+    // Convert bathroomsMin filter - Nuevo
+    if (filters.bathroomsMin && filters.bathroomsMin !== "") {
+      apiFilters.bathroomsMin = parseInt(filters.bathroomsMin)
     }
 
     // Convert featured filter
     if (filters.featured !== "all") {
       apiFilters.featured = filters.featured === "true"
+    }
+
+    // Convert orderBy and order filters - Nuevos
+    if (filters.orderBy && filters.orderBy !== "createdAt") {
+      apiFilters.orderBy = filters.orderBy as 'createdAt' | 'price' | 'id'
+    }
+    
+    if (filters.order && filters.order !== "desc") {
+      apiFilters.order = filters.order as 'asc' | 'desc'
     }
 
     onFilterChange(apiFilters)
@@ -176,8 +230,18 @@ export function FilterSection({
       listingType: "all",
       price: "all",
       location: "all",
+      province: "all",
+      priceMin: "",
+      priceMax: "",
       bedrooms: "all",
+      bedroomsMin: "",
       bathrooms: "all",
+      bathroomsMin: "",
+      minArea: "",
+      maxArea: "",
+      amenities: "",
+      orderBy: "createdAt",
+      order: "desc",
       featured: "all"
     }
     setFilters(clearedFilters)
@@ -185,7 +249,10 @@ export function FilterSection({
   }
 
   const getActiveFiltersCount = () => {
-    return Object.values(filters).filter(value => value !== "all").length
+    return Object.entries(filters).filter(([key, value]) => {
+      if (value === "all" || value === "") return false;
+      return true;
+    }).length;
   }
 
   const getFilterLabel = (key: string, value: string) => {
@@ -258,21 +325,8 @@ export function FilterSection({
           )}
         </div>
 
-        {/* Filter Controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
-          {/* Listing Type */}
-          <Select value={filters.listingType} onValueChange={(value) => updateFilter('listingType', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Alquiler/Venta" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alquiler y Venta</SelectItem>
-              <SelectItem value="rent">🏠 Solo Alquiler</SelectItem>
-              <SelectItem value="sale">💰 Solo Venta</SelectItem>
-              <SelectItem value="both">🔄 Ambos</SelectItem>
-            </SelectContent>
-          </Select>
-
+        {/* Filter Controls - Primera fila */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4">
           {/* Property Type */}
           <Select value={filters.type} onValueChange={(value) => updateFilter('type', value)}>
             <SelectTrigger>
@@ -287,63 +341,125 @@ export function FilterSection({
             </SelectContent>
           </Select>
 
-          {/* Location */}
-          <Select value={filters.location} onValueChange={(value) => updateFilter('location', value)}>
+          {/* Location (City) */}
+          <Input
+            placeholder="🏙️ Ciudad"
+            value={filters.location === "all" ? "" : filters.location}
+            onChange={(e) => updateFilter('location', e.target.value || "all")}
+            className="h-10"
+          />
+
+          {/* Province - Nuevo filtro */}
+          <Input
+            placeholder="🗺️ Provincia"
+            value={filters.province === "all" ? "" : filters.province}
+            onChange={(e) => updateFilter('province', e.target.value || "all")}
+            className="h-10"
+          />
+
+          {/* Price Min - Nuevo filtro */}
+          <Input
+            type="number"
+            placeholder="💰 Precio mín"
+            value={filters.priceMin}
+            onChange={(e) => updateFilter('priceMin', e.target.value)}
+            className="h-10"
+          />
+
+          {/* Price Max - Nuevo filtro */}
+          <Input
+            type="number"
+            placeholder="💰 Precio máx"
+            value={filters.priceMax}
+            onChange={(e) => updateFilter('priceMax', e.target.value)}
+            className="h-10"
+          />
+
+          {/* Bedrooms Min - Nuevo filtro */}
+          <Input
+            type="number"
+            placeholder="🛏️ Dorm. mín"
+            value={filters.bedroomsMin}
+            onChange={(e) => updateFilter('bedroomsMin', e.target.value)}
+            className="h-10"
+            min="0"
+            max="10"
+          />
+
+          {/* Bathrooms Min - Nuevo filtro */}
+          <Input
+            type="number"
+            placeholder="🚿 Baños mín"
+            value={filters.bathroomsMin}
+            onChange={(e) => updateFilter('bathroomsMin', e.target.value)}
+            className="h-10"
+            min="0"
+            max="10"
+          />
+
+          {/* Min Area - Nuevo filtro */}
+          <Input
+            type="number"
+            placeholder="📐 Área mín (m²)"
+            value={filters.minArea}
+            onChange={(e) => updateFilter('minArea', e.target.value)}
+            className="h-10"
+            min="0"
+          />
+
+          {/* Max Area - Nuevo filtro */}
+          <Input
+            type="number"
+            placeholder="📐 Área máx (m²)"
+            value={filters.maxArea}
+            onChange={(e) => updateFilter('maxArea', e.target.value)}
+            className="h-10"
+            min="0"
+          />
+
+          {/* Amenities - Nuevo filtro */}
+          <Input
+            placeholder="🏊‍♂️ Amenidades (ej: piscina, gimnasio)"
+            value={filters.amenities}
+            onChange={(e) => updateFilter('amenities', e.target.value)}
+            className="h-10"
+          />
+        </div>
+
+        {/* Filter Controls - Segunda fila */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
+          {/* Order By - Nuevo filtro */}
+          <Select value={filters.orderBy} onValueChange={(value) => updateFilter('orderBy', value)}>
             <SelectTrigger>
-              <SelectValue placeholder="Ciudad" />
+              <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las ciudades</SelectItem>
-              <SelectItem value="Posadas">📍 Posadas</SelectItem>
-              <SelectItem value="Oberá">📍 Oberá</SelectItem>
-              <SelectItem value="Eldorado">📍 Eldorado</SelectItem>
-              <SelectItem value="Puerto Iguazú">📍 Puerto Iguazú</SelectItem>
-              <SelectItem value="Apóstoles">📍 Apóstoles</SelectItem>
-              <SelectItem value="Leandro N. Alem">📍 L.N. Alem</SelectItem>
-              <SelectItem value="Montecarlo">📍 Montecarlo</SelectItem>
-              <SelectItem value="Puerto Rico">📍 Puerto Rico</SelectItem>
+              <SelectItem value="createdAt">📅 Fecha</SelectItem>
+              <SelectItem value="price">💰 Precio</SelectItem>
             </SelectContent>
           </Select>
 
-          {/* Price Range */}
-          <Select value={filters.price} onValueChange={(value) => updateFilter('price', value)}>
+          {/* Order - Nuevo filtro */}
+          <Select value={filters.order} onValueChange={(value) => updateFilter('order', value)}>
             <SelectTrigger>
-              <SelectValue placeholder="Precio" />
+              <SelectValue placeholder="Orden" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los precios</SelectItem>
-              <SelectItem value="0-50000">💰 $0 - $50k</SelectItem>
-              <SelectItem value="50000-100000">💰 $50k - $100k</SelectItem>
-              <SelectItem value="100000-200000">💰 $100k - $200k</SelectItem>
-              <SelectItem value="200000-300000">💰 $200k - $300k</SelectItem>
-              <SelectItem value="300000+">💰 $300k+</SelectItem>
+              <SelectItem value="desc">⬇️ Descendente</SelectItem>
+              <SelectItem value="asc">⬆️ Ascendente</SelectItem>
             </SelectContent>
           </Select>
 
-          {/* Bedrooms */}
-          <Select value={filters.bedrooms} onValueChange={(value) => updateFilter('bedrooms', value)}>
+          {/* Listing Type */}
+          <Select value={filters.listingType} onValueChange={(value) => updateFilter('listingType', value)}>
             <SelectTrigger>
-              <SelectValue placeholder="Dormitorios" />
+              <SelectValue placeholder="Alquiler/Venta" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Cualquier cantidad</SelectItem>
-              <SelectItem value="1">🛏️ 1+ dormitorio</SelectItem>
-              <SelectItem value="2">🛏️ 2+ dormitorios</SelectItem>
-              <SelectItem value="3">🛏️ 3+ dormitorios</SelectItem>
-              <SelectItem value="4">🛏️ 4+ dormitorios</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Bathrooms */}
-          <Select value={filters.bathrooms} onValueChange={(value) => updateFilter('bathrooms', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Baños" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Cualquier cantidad</SelectItem>
-              <SelectItem value="1">🚿 1+ baño</SelectItem>
-              <SelectItem value="2">🚿 2+ baños</SelectItem>
-              <SelectItem value="3">🚿 3+ baños</SelectItem>
+              <SelectItem value="all">Alquiler y Venta</SelectItem>
+              <SelectItem value="rent">🏠 Solo Alquiler</SelectItem>
+              <SelectItem value="sale">💰 Solo Venta</SelectItem>
+              <SelectItem value="both">🔄 Ambos</SelectItem>
             </SelectContent>
           </Select>
 
@@ -357,6 +473,17 @@ export function FilterSection({
               <SelectItem value="true">⭐ Solo destacadas</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Clear Filters Button */}
+          {getActiveFiltersCount() > 0 && (
+            <Button 
+              variant="outline" 
+              onClick={clearAllFilters}
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              🗑️ Limpiar
+            </Button>
+          )}
         </div>
 
         {/* Active Filters Display */}
@@ -364,11 +491,11 @@ export function FilterSection({
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="text-sm text-gray-600 font-medium">Filtros activos:</span>
             {Object.entries(filters).map(([key, value]) => {
-              if (value === "all") return null
+              if (value === "all" || value === "") return null
               return (
-                <Badge 
-                  key={`${key}-${value}`} 
-                  variant="secondary" 
+                <Badge
+                  key={`${key}-${value}`}
+                  variant="secondary"
                   className="bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer"
                   onClick={() => updateFilter(key, "all")}
                 >

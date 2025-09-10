@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FilterSectionWrapper } from '@/components/filter-section-wrapper'
 import { PropertyGrid } from '@/components/property-grid'
@@ -8,47 +8,139 @@ import { PropertyMap } from '@/components/property-map'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Property, PropertyFilters } from '@/types/property'
+import Pagination from '@/components/ui/pagination'
 
 export function PropertiesPageClient() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [properties, setProperties] = useState<Property[]>([])
-  const [filteredProperties, setFilteredProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [view, setView] = useState<'list' | 'map'>('list') // aseguramos LISTA por defecto
+  const [view, setView] = useState<'list' | 'map'>('list')
   const [currentFilters, setCurrentFilters] = useState<PropertyFilters>({})
+  const [totalCount, setTotalCount] = useState(0)
 
-  // Load properties on component mount
-  useEffect(() => {
-    loadProperties()
-  }, [])
+  // Parse URL params to filters
+  const parseUrlFilters = useCallback((): PropertyFilters => {
+    const filters: PropertyFilters = {}
 
-  const loadProperties = async () => {
+    const city = searchParams.get('city')
+    if (city) filters.city = city
+
+    const province = searchParams.get('province')
+    if (province) filters.province = province
+
+    const propertyType = searchParams.get('propertyType')
+    if (propertyType && ['APARTMENT', 'HOUSE', 'COMMERCIAL', 'LAND', 'OFFICE', 'WAREHOUSE', 'PH', 'STUDIO'].includes(propertyType)) {
+      filters.propertyType = propertyType as Property['propertyType']
+    }
+
+    // Handle both priceMin/priceMax and minPrice/maxPrice for backward compatibility
+    const priceMin = searchParams.get('priceMin') || searchParams.get('minPrice')
+    if (priceMin && !isNaN(Number(priceMin))) filters.priceMin = Number(priceMin)
+
+    const priceMax = searchParams.get('priceMax') || searchParams.get('maxPrice')
+    if (priceMax && !isNaN(Number(priceMax))) filters.priceMax = Number(priceMax)
+
+    // Handle both bedroomsMin and bedrooms for backward compatibility
+    const bedroomsMin = searchParams.get('bedroomsMin') || searchParams.get('bedrooms')
+    if (bedroomsMin && !isNaN(Number(bedroomsMin))) filters.bedroomsMin = Number(bedroomsMin)
+
+    // Handle both bathroomsMin and bathrooms for backward compatibility
+    const bathroomsMin = searchParams.get('bathroomsMin') || searchParams.get('bathrooms')
+    if (bathroomsMin && !isNaN(Number(bathroomsMin))) filters.bathroomsMin = Number(bathroomsMin)
+
+    // Handle both orderBy and sortBy for backward compatibility
+    const orderBy = searchParams.get('orderBy') || searchParams.get('sortBy')
+    if (orderBy && ['createdAt', 'price', 'id', 'bedrooms', 'bathrooms', 'area'].includes(orderBy)) {
+      filters.orderBy = orderBy as 'createdAt' | 'price' | 'id' | 'bedrooms' | 'bathrooms' | 'area'
+    }
+
+    // Handle both order and sortOrder for backward compatibility
+    const order = searchParams.get('order') || searchParams.get('sortOrder')
+    if (order && ['asc', 'desc'].includes(order)) {
+      filters.order = order as 'asc' | 'desc'
+    }
+
+    const minArea = searchParams.get('minArea')
+    if (minArea && !isNaN(Number(minArea))) filters.minArea = Number(minArea)
+
+    const maxArea = searchParams.get('maxArea')
+    if (maxArea && !isNaN(Number(maxArea))) filters.maxArea = Number(maxArea)
+
+    const amenities = searchParams.get('amenities')
+    if (amenities) filters.amenities = amenities
+
+    const limit = searchParams.get('limit')
+    if (limit && !isNaN(Number(limit))) filters.limit = Number(limit)
+
+    const offset = searchParams.get('offset')
+    if (offset && !isNaN(Number(offset))) filters.offset = Number(offset)
+
+    return filters
+  }, [searchParams])
+
+  // Load properties with current filters
+  const loadProperties = useCallback(async (filters: PropertyFilters = {}) => {
     try {
       setLoading(true)
       setError(null)
-      
-      const response = await fetch('/api/properties?sortBy=id&sortOrder=desc&limit=12')
+
+      // Build query string with new API parameters
+      const params = new URLSearchParams()
+
+      if (filters.city) params.set('city', filters.city)
+      if (filters.province) params.set('province', filters.province)
+      if (filters.propertyType) params.set('propertyType', filters.propertyType)
+      if (filters.priceMin !== undefined) params.set('priceMin', filters.priceMin.toString())
+      if (filters.priceMax !== undefined) params.set('priceMax', filters.priceMax.toString())
+      if (filters.bedroomsMin !== undefined) params.set('bedroomsMin', filters.bedroomsMin.toString())
+      if (filters.bathroomsMin !== undefined) params.set('bathroomsMin', filters.bathroomsMin.toString())
+      if (filters.minArea !== undefined) params.set('minArea', filters.minArea.toString())
+      if (filters.maxArea !== undefined) params.set('maxArea', filters.maxArea.toString())
+      if (filters.amenities) params.set('amenities', filters.amenities)
+      if (filters.orderBy) params.set('orderBy', filters.orderBy)
+      if (filters.order) params.set('order', filters.order)
+      if (filters.limit !== undefined) params.set('limit', filters.limit.toString())
+      if (filters.offset !== undefined) params.set('offset', filters.offset.toString())
+
+      const queryString = params.toString()
+      const url = `/api/properties${queryString ? `?${queryString}` : ''}`
+
+      console.log('Loading properties with URL:', url)
+
+      const response = await fetch(url)
       if (!response.ok) {
         throw new Error('Error al cargar las propiedades')
       }
-      
+
       const data = await response.json()
-      const arr = Array.isArray(data?.properties) ? data.properties : []
-      console.log('PROPERTIES LEN:', arr.length, data)
-      setProperties(arr)
-      setFilteredProperties(arr)
+      const items = Array.isArray(data?.items) ? data.items : []
+      const count = data?.count || 0
+
+      console.log('Loaded properties:', items.length, 'total:', count)
+      setProperties(items)
+      setTotalCount(count)
     } catch (err) {
       console.error('Error loading properties:', err)
       setError('Error al cargar las propiedades. Por favor, intenta nuevamente.')
-      
+
       // Fallback to mock data for development
       const mockProperties = generateMockProperties()
       setProperties(mockProperties)
-      setFilteredProperties(mockProperties)
+      setTotalCount(mockProperties.length)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  // Load properties when URL params change
+  useEffect(() => {
+    const filters = parseUrlFilters()
+    setCurrentFilters(filters)
+    loadProperties(filters)
+  }, [parseUrlFilters, loadProperties])
 
   const generateMockProperties = (): Property[] => {
     return [
@@ -203,50 +295,60 @@ export function PropertiesPageClient() {
   }
 
   const handleFilterChange = (filters: PropertyFilters) => {
-    setCurrentFilters(filters)
-    
-    let filtered = [...properties]
+    // Instead of filtering locally, update URL params to trigger reload
+    const params = new URLSearchParams()
 
-    // Apply filters
-    if (filters.city) {
-      filtered = filtered.filter(p => p.city.toLowerCase().includes(filters.city!.toLowerCase()))
-    }
-    
-    if (filters.propertyType) {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType)
-    }
-    
-    if (filters.listingType) {
-      filtered = filtered.filter(p => p.listingType === filters.listingType)
-    }
-    
-    if (filters.minPrice !== undefined) {
-      filtered = filtered.filter(p => p.price >= filters.minPrice!)
-    }
-    
-    if (filters.maxPrice !== undefined) {
-      filtered = filtered.filter(p => p.price <= filters.maxPrice!)
-    }
-    
-    if (filters.minBedrooms !== undefined) {
-      filtered = filtered.filter(p => p.bedrooms >= filters.minBedrooms!)
-    }
-    
-    if (filters.minBathrooms !== undefined) {
-      filtered = filtered.filter(p => p.bathrooms >= filters.minBathrooms!)
-    }
-    
-    if (filters.featured !== undefined) {
-      filtered = filtered.filter(p => p.featured === filters.featured)
-    }
+    if (filters.city) params.set('city', filters.city)
+    if (filters.province) params.set('province', filters.province)
+    if (filters.propertyType) params.set('propertyType', filters.propertyType)
+    if (filters.priceMin !== undefined) params.set('priceMin', filters.priceMin.toString())
+    if (filters.priceMax !== undefined) params.set('priceMax', filters.priceMax.toString())
+    if (filters.bedroomsMin !== undefined) params.set('bedroomsMin', filters.bedroomsMin.toString())
+    if (filters.bathroomsMin !== undefined) params.set('bathroomsMin', filters.bathroomsMin.toString())
+    if (filters.minArea !== undefined) params.set('minArea', filters.minArea.toString())
+    if (filters.maxArea !== undefined) params.set('maxArea', filters.maxArea.toString())
+    if (filters.amenities) params.set('amenities', filters.amenities)
+    if (filters.orderBy) params.set('orderBy', filters.orderBy)
+    if (filters.order) params.set('order', filters.order)
+    if (filters.limit !== undefined) params.set('limit', filters.limit.toString())
+    if (filters.offset !== undefined) params.set('offset', filters.offset.toString())
 
-    setFilteredProperties(filtered)
+    const newUrl = `/properties${params.toString() ? `?${params.toString()}` : ''}`
+    router.push(newUrl)
   }
 
   const getActiveFiltersCount = () => {
-    return Object.values(currentFilters).filter(value => 
+    return Object.values(currentFilters).filter(value =>
       value !== undefined && value !== null && value !== ''
     ).length
+  }
+
+  // Pagination calculations
+  const limit = Math.max(1, Math.min(50, Number(searchParams.get('limit') ?? 12)))
+  const offset = Math.max(0, Number(searchParams.get('offset') ?? 0))
+  const currentPage = Math.floor(offset / limit) + 1
+  const totalPages = totalCount > 0 ? Math.ceil(totalCount / limit) : 0
+
+  // Update URL params helper
+  const updateParams = (next: Record<string, string | number | undefined>) => {
+    const params = new URLSearchParams(searchParams.toString())
+    Object.entries(next).forEach(([k, v]) => {
+      if (v === undefined || v === '' || v === null) params.delete(k)
+      else params.set(k, String(v))
+    })
+    router.replace(`/properties?${params.toString()}`)
+  }
+
+  // Pagination handlers
+  const onPageChange = (page: number) => {
+    const safe = Math.max(1, page)
+    const nextOffset = (safe - 1) * limit
+    updateParams({ offset: nextOffset })
+  }
+
+  const onItemsPerPageChange = (n: number) => {
+    const nextLimit = Math.max(1, Math.min(50, n))
+    updateParams({ limit: nextLimit, offset: 0 }) // reset to page 1
   }
 
   if (loading) {
@@ -267,7 +369,7 @@ export function PropertiesPageClient() {
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Error al cargar</h2>
           <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={loadProperties}>
+          <Button onClick={() => loadProperties()}>
             🔄 Intentar nuevamente
           </Button>
         </div>
@@ -286,7 +388,7 @@ export function PropertiesPageClient() {
                 Propiedades en Misiones
               </h1>
               <p className="text-gray-600">
-                {filteredProperties.length} propiedad{filteredProperties.length !== 1 ? 'es' : ''} encontrada{filteredProperties.length !== 1 ? 's' : ''}
+                {properties.length} propiedad{properties.length !== 1 ? 'es' : ''} encontrada{properties.length !== 1 ? 's' : ''}
                 {getActiveFiltersCount() > 0 && (
                   <span className="ml-2">
                     con {getActiveFiltersCount()} filtro{getActiveFiltersCount() > 1 ? 's' : ''} aplicado{getActiveFiltersCount() > 1 ? 's' : ''}
@@ -325,7 +427,7 @@ export function PropertiesPageClient() {
 
       {/* Results Section */}
       <div className="container mx-auto px-4 py-8">
-        {filteredProperties.length === 0 ? (
+        {properties.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
@@ -343,30 +445,30 @@ export function PropertiesPageClient() {
             {/* Results Summary */}
             <div className="flex flex-wrap items-center gap-4 mb-6">
               <Badge variant="secondary" className="text-sm">
-                📊 {filteredProperties.length} resultado{filteredProperties.length !== 1 ? 's' : ''}
+                📊 {properties.length} resultado{properties.length !== 1 ? 's' : ''}
               </Badge>
-              
-              {filteredProperties.some(p => p.featured) && (
+
+              {properties.some(p => p.featured) && (
                 <Badge variant="secondary" className="text-sm bg-yellow-100 text-yellow-800">
-                  ⭐ {filteredProperties.filter(p => p.featured).length} destacada{filteredProperties.filter(p => p.featured).length !== 1 ? 's' : ''}
+                  ⭐ {properties.filter(p => p.featured).length} destacada{properties.filter(p => p.featured).length !== 1 ? 's' : ''}
                 </Badge>
               )}
-              
+
               <Badge variant="secondary" className="text-sm">
-                💰 Desde ${Math.min(...filteredProperties.map(p => p.price)).toLocaleString()}
+                💰 Desde ${Math.min(...properties.map(p => p.price)).toLocaleString()}
               </Badge>
             </div>
 
             {/* Content based on view mode - FORZAMOS LISTA */}
             {view === 'list' ? (
               <>
-                {console.log('RENDERING LIST VIEW:', filteredProperties.length, 'properties')}
-                <PropertyGrid properties={filteredProperties} />
+                {console.log('RENDERING LIST VIEW:', properties.length, 'properties')}
+                <PropertyGrid properties={properties} />
               </>
             ) : (
               <div className="space-y-6">
                 <PropertyMap
-                  properties={filteredProperties}
+                  properties={properties}
                   height="600px"
                   onPropertyClick={(property) => {
                     window.location.href = `/property/${property.id}`
@@ -376,15 +478,28 @@ export function PropertiesPageClient() {
                 {/* Properties list below map */}
                 <div>
                   <h3 className="text-xl font-semibold mb-4">
-                    Propiedades en el mapa ({filteredProperties.length})
+                    Propiedades en el mapa ({properties.length})
                   </h3>
-                  <PropertyGrid properties={filteredProperties} />
+                  <PropertyGrid properties={properties} />
                 </div>
               </div>
             )}
           </>
-        )}
+      )}
       </div>
+      {/* Pagination Section */}
+      {totalPages > 1 && (
+        <div className="container mx-auto px-4 py-4 flex justify-center">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalCount}
+            onPageChange={onPageChange}
+            itemsPerPage={limit}
+            onItemsPerPageChange={onItemsPerPageChange}
+          />
+        </div>
+      )}
     </div>
   )
 }
