@@ -192,6 +192,7 @@ export default function EldoradoClient({ initial, initialProperties }: EldoradoC
                 bedrooms={property.bedrooms}
                 bathrooms={property.bathrooms}
                 area={Number(property.area)}
+                userId={property.userId}
               />
             ))}
           </div>

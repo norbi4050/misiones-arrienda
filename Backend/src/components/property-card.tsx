@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { FavoriteButton } from "@/components/favorite-button"
 import Image from "next/image"
 import Link from "next/link"
+import { useState, useEffect } from "react"
+import { fetchBucketImages, parseImagesText, resolveImages } from "@/lib/propertyImages"
 
 interface PropertyCardProps {
   id: string
@@ -16,6 +18,7 @@ interface PropertyCardProps {
   bedrooms: number
   bathrooms: number
   area: number
+  userId: string
 }
 
 export function PropertyCard({
@@ -28,27 +31,41 @@ export function PropertyCard({
   bedrooms,
   bathrooms,
   area,
+  userId,
 }: PropertyCardProps) {
-  // --- FIX imágenes: parseo defensivo + normalización para next/image ---
-  const parseImages = (val: unknown): string[] => {
-    if (Array.isArray(val)) return val as string[];
-    if (typeof val === 'string') {
-      const s = val.trim();
-      if (!s) return [];
+  const [bucketImages, setBucketImages] = useState<string[]>([])
+  const [resolvedImages, setResolvedImages] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadImages() {
+      if (!id || !userId) {
+        setLoading(false)
+        return
+      }
       try {
-        const maybe = JSON.parse(s);
-        return Array.isArray(maybe) ? (maybe as string[]) : [s];
-      } catch {
-        return [s];
+        const fetchedBucketImages = await fetchBucketImages(userId, id)
+        setBucketImages(fetchedBucketImages)
+      } catch (error) {
+        console.error('Error fetching bucket images:', error)
+        setBucketImages([])
+      } finally {
+        setLoading(false)
       }
     }
-    return [];
-  };
+    loadImages()
+  }, [id, userId])
+
+  useEffect(() => {
+    const apiImages = parseImagesText(images)
+    const combinedImages = resolveImages(bucketImages, apiImages)
+    setResolvedImages(combinedImages)
+  }, [bucketImages, images])
+
   const normalizeSrc = (s: string): string =>
-    s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/') ? s : `/${s}`;
-  const safeImages = parseImages(images);
-  const cover = normalizeSrc(safeImages[0] ?? '/placeholder-apartment-1.jpg');
-  console.log('PropertyCard cover:', { id, cover, raw: images });
+    s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/') ? s : `/${s}`
+
+  const cover = normalizeSrc(resolvedImages[0] ?? '/placeholder-apartment-1.jpg')
 
   return (
     <Link href={`/properties/${id}`} className="block">
@@ -61,11 +78,11 @@ export function PropertyCard({
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => {
+            onError={() => {
               // fallback de runtime si la URL falla
-              const img = e.currentTarget as any;
-              if (img?.src !== '/placeholder-apartment-1.jpg') {
-                img.src = '/placeholder-apartment-1.jpg';
+              const img = document.querySelector(`img[alt="${title}"]`) as HTMLImageElement
+              if (img && img.src !== '/placeholder-apartment-1.jpg') {
+                img.src = '/placeholder-apartment-1.jpg'
               }
             }}
           />
@@ -88,6 +105,29 @@ export function PropertyCard({
           <div className="text-sm text-gray-600">
             {city}, {province}
           </div>
+
+          {/* Property details with icons */}
+          <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+            {bedrooms > 0 && (
+              <div className="flex items-center gap-1">
+                <Bed className="w-4 h-4" />
+                <span>{bedrooms}</span>
+              </div>
+            )}
+            {bathrooms > 0 && (
+              <div className="flex items-center gap-1">
+                <Bath className="w-4 h-4" />
+                <span>{bathrooms}</span>
+              </div>
+            )}
+            {area > 0 && (
+              <div className="flex items-center gap-1">
+                <Square className="w-4 h-4" />
+                <span>{area}m²</span>
+              </div>
+            )}
+          </div>
+
           <div className="text-blue-600 font-bold mt-1">${Number(price ?? 0).toLocaleString()}</div>
         </div>
       </div>

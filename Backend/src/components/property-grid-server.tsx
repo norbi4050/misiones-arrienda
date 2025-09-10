@@ -103,6 +103,7 @@ export function PropertyGridServer({ initialProperties = [], searchParams = {} }
             bedrooms={property.bedrooms}
             bathrooms={property.bathrooms}
             area={Number(property.area)}
+            userId={property.userId}
           />
         ))}
       </div>

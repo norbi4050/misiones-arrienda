@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Property } from '@/types/property'
-import { fetchPropertyImages, parseLegacyImages } from '@/lib/property-images'
+import { fetchBucketImages } from '@/lib/propertyImages/fetchBucketImages'
+import { parseImagesText, resolveImages } from '@/lib/propertyImages'
 
 export default function PropertyDetailClient({ initialProperty }: { initialProperty: any }) {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [bucketImages, setBucketImages] = useState<string[]>([])
+  const [debugMode, setDebugMode] = useState(false)
 
   useEffect(() => {
     if (initialProperty) {
@@ -24,7 +26,9 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
 
   const loadBucketImages = async (propertyId: string) => {
     try {
-      const images = await fetchPropertyImages(propertyId)
+      // Assuming userId is available in property.userId
+      const userId = property?.userId || ''
+      const images = await fetchBucketImages(userId, propertyId)
       setBucketImages(images)
     } catch (error) {
       console.error('Error loading bucket images:', error)
@@ -33,7 +37,7 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
   }
 
   const parseImages = (images: any): string[] => {
-    return parseLegacyImages(images)
+    return parseImagesText(images)
   }
 
   const parseAmenities = (amenities: any): string[] => {
@@ -105,7 +109,22 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
     )
   }
 
-  const imagesToShow = bucketImages.length > 0 ? bucketImages : parseImages(property.images)
+  // Lógica de priorización según especificaciones:
+  // Priorizar bucketImages sobre apiImages, combinando sin duplicados
+  const apiImages = parseImages(property.images)
+  const imagesToShow = resolveImages({ apiImages, bucketImages })
+
+  // DEBUG LOGS - TEMPORALES PARA TESTING
+  console.log('=== DEBUG PROPERTY IMAGES ===')
+  console.log('Property ID:', property.id)
+  console.log('Property User ID:', property.userId)
+  console.log('API Images length:', apiImages.length)
+  console.log('Bucket Images length:', bucketImages.length)
+  console.log('Images to show length:', imagesToShow.length)
+  console.log('API Images:', apiImages)
+  console.log('Bucket Images:', bucketImages)
+  console.log('Final Images to show:', imagesToShow)
+  console.log('=== END DEBUG ===')
   const amenities = parseAmenities(property.amenities)
   const features = parseFeatures(property.features)
 
@@ -114,18 +133,89 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/properties')}
-            className="mb-4"
-          >
-            ← Volver a Propiedades
-          </Button>
+          <div className="flex justify-between items-center mb-4">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/properties')}
+            >
+              ← Volver a Propiedades
+            </Button>
+            <Button
+              variant={debugMode ? "destructive" : "secondary"}
+              onClick={() => setDebugMode(!debugMode)}
+              size="sm"
+            >
+              {debugMode ? "🔧 Desactivar Debug" : "🔧 Activar Debug"}
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Debug Panel */}
+          {debugMode && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-3">🔍 Debug Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2">Property Data:</h4>
+                  <ul className="space-y-1 text-gray-600">
+                    <li><strong>ID:</strong> {property.id}</li>
+                    <li><strong>User ID:</strong> {property.userId || 'N/A'}</li>
+                    <li><strong>Title:</strong> {property.title}</li>
+                    <li><strong>Type:</strong> {property.propertyType}</li>
+                    <li><strong>Listing:</strong> {property.listingType || 'N/A'}</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2">Image Sources:</h4>
+                  <ul className="space-y-1 text-gray-600">
+                    <li><strong>API Images:</strong> {apiImages.length}</li>
+                    <li><strong>Bucket Images:</strong> {bucketImages.length}</li>
+                    <li><strong>Total Images:</strong> {imagesToShow.length}</li>
+                    <li><strong>Source Priority:</strong> {bucketImages.length > 0 ? 'Bucket → API' : 'API only'}</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-medium text-gray-700 mb-2">API Images URLs:</h4>
+                <div className="bg-white p-2 rounded text-xs font-mono max-h-32 overflow-y-auto">
+                  {apiImages.length > 0 ? (
+                    apiImages.map((url, idx) => (
+                      <div key={idx} className="truncate">{url}</div>
+                    ))
+                  ) : (
+                    <span className="text-gray-500">No API images</span>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-medium text-gray-700 mb-2">Bucket Images URLs:</h4>
+                <div className="bg-white p-2 rounded text-xs font-mono max-h-32 overflow-y-auto">
+                  {bucketImages.length > 0 ? (
+                    bucketImages.map((url, idx) => (
+                      <div key={idx} className="truncate">{url}</div>
+                    ))
+                  ) : (
+                    <span className="text-gray-500">No bucket images</span>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-medium text-gray-700 mb-2">Final Images to Show:</h4>
+                <div className="bg-white p-2 rounded text-xs font-mono max-h-32 overflow-y-auto">
+                  {imagesToShow.length > 0 ? (
+                    imagesToShow.map((url, idx) => (
+                      <div key={idx} className="truncate">{url}</div>
+                    ))
+                  ) : (
+                    <span className="text-gray-500">No images to show</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           {/* Images */}
           {imagesToShow.length > 0 ? (
             <div className="mb-8">
@@ -287,6 +377,8 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
                   >
                     <a
                       href={`mailto:${agent.email}?subject=Consulta%20${encodeURIComponent(property.title)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       ✉️ Email
                     </a>

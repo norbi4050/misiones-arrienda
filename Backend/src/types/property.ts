@@ -22,6 +22,7 @@ export interface Property {
   status: 'AVAILABLE' | 'RENTED' | 'SOLD' | 'MAINTENANCE' | 'RESERVED' | 'EXPIRED'
   listingType?: 'SALE' | 'RENT' // Campo faltante agregado
   images: string[] // Array de URLs de imágenes
+  coverImagePath?: string // Nueva propiedad para portada
   virtualTourUrl?: string
   amenities: string[] // Array de amenidades
   features: string[] // Array de características

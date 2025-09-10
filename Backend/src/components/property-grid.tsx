@@ -37,6 +37,7 @@ export function PropertyGrid({ properties }: { properties: any[] }) {
             bedrooms={p.bedrooms}
             bathrooms={p.bathrooms}
             area={area}
+            userId={p.userId}
           />
         )
       })}

@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import PropertyDetailClient from './PropertyDetailClient';
 import PropertySeo from './PropertySeo';
 import { createServerSupabase } from '../../../lib/supabase/server';
+import { resolveImagesServer } from '../../../lib/propertyImages/fetchBucketImagesServer';
+import type { Metadata } from 'next';
 
 async function fetchBucketImages(propertyId: string): Promise<string[]> {
   try {
@@ -50,41 +52,85 @@ async function getProperty(id: string) {
 export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
   const property = await getProperty(params.id);
   if (!property) return notFound();
+
+  // Resolve images for JSON-LD
+  const resolvedImages = await resolveImagesServer({
+    imagesText: property.images,
+    userId: property.userId,
+    propertyId: params.id,
+  });
+
+  // JSON-LD RealEstateListing schema
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: property.title ?? 'Propiedad',
+    description: (property.description ?? '').toString().slice(0, 160) || 'Detalle de propiedad en Misiones Arrienda',
+    image: resolvedImages,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: property.city ?? '',
+      addressRegion: property.province ?? '',
+      postalCode: property.postalCode ?? '',
+      addressCountry: 'AR',
+    },
+    offers: {
+      '@type': 'Offer',
+      price: property.price ?? '',
+      priceCurrency: 'USD',
+    },
+    numberOfRooms: property.bedrooms ?? undefined,
+    floorSize: {
+      '@type': 'QuantitativeValue',
+      value: property.area ?? undefined,
+      unitCode: 'MTK',
+    },
+    datePosted: property.createdAt ?? undefined,
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
+      />
       <PropertySeo property={property} />
       <PropertyDetailClient initialProperty={property} />
     </>
   );
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   try {
     const property = await getProperty(params.id);
-    if (!property) return { title: 'Propiedad no encontrada' };
+    if (!property) return { title: 'Propiedad no encontrada', robots: { index: false } };
 
-    const title = `${property.title ?? 'Propiedad'} · ${property.city ?? ''}`.trim();
+    const title = `${property.title} – Misiones Arrienda`;
     const rawDesc = (property.description ?? '').toString();
     const description = rawDesc.slice(0, 160) || 'Detalle de propiedad en Misiones Arrienda';
 
-    // Get first image with fallback to bucket images
-    const images: string[] = Array.isArray(property.images) ? property.images : [];
-    let firstImage = images[0];
+    // Resolve images with priority bucket > API
+    const resolvedImages = await resolveImagesServer({
+      imagesText: property.images,
+      userId: property.userId,
+      propertyId: params.id,
+    });
 
-    // If no images in property.images, try to fetch from bucket
-    if (!firstImage) {
-      const bucketImages = await fetchBucketImages(params.id);
-      firstImage = bucketImages[0];
-    }
+    const firstImage = resolvedImages.length > 0 ? resolvedImages[0] : undefined;
 
     return {
       title,
       description,
+      metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL!),
+      alternates: { canonical: `/properties/${params.id}` },
       openGraph: {
+        type: 'website',
+        url: `/properties/${params.id}`,
         title,
         description,
-        type: 'article',
-        images: firstImage ? [{ url: firstImage }] : undefined,
+        images: firstImage ? [{ url: firstImage, width: 1200, height: 630 }] : undefined,
       },
       twitter: {
         card: firstImage ? 'summary_large_image' : 'summary',
@@ -92,8 +138,12 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
         description,
         images: firstImage ? [firstImage] : undefined,
       },
+      robots: {
+        index: true,
+        follow: true,
+      },
     };
   } catch {
-    return { title: 'Propiedad | Misiones Arrienda' };
+    return { title: 'Propiedad | Misiones Arrienda', robots: { index: false } };
   }
 }

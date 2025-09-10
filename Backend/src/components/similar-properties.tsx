@@ -197,6 +197,7 @@ export function SimilarProperties({
               bedrooms={property.bedrooms}
               bathrooms={property.bathrooms}
               area={property.area}
+              userId={property.userId}
             />
           ))}
         </div>

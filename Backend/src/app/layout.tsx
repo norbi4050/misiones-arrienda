@@ -12,9 +12,10 @@ import { AuthProvider } from '@/components/auth-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.misionesarrienda.com.ar'),
-  title: 'MisionesArrienda',
+  title: { default: 'Misiones Arrienda', template: '%s | Misiones Arrienda' },
   description: 'Casas, departamentos y locales en Misiones',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  robots: { index: true, follow: true },
 }
 
 export default function RootLayout({
