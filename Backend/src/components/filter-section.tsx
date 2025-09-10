@@ -20,31 +20,31 @@ interface FilterSectionProps {
   enableRealTimeFiltering?: boolean
 }
 
-export function FilterSection({ 
-  onFilterChange, 
+export function FilterSection({
+  onFilterChange,
   enableUrlPersistence = true,
-  enableRealTimeFiltering = true 
+  enableRealTimeFiltering = true
 }: FilterSectionProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
+
   const [filters, setFilters] = useState({
     type: "all",
     listingType: "all",
     price: "all",
     location: "all",
-    province: "all", // Nuevo filtro
-    priceMin: "", // Nuevo filtro
-    priceMax: "", // Nuevo filtro
+    province: "all",
+    priceMin: "",
+    priceMax: "",
     bedrooms: "all",
-    bedroomsMin: "", // Nuevo filtro
+    bedroomsMin: "",
     bathrooms: "all",
-    bathroomsMin: "", // Nuevo filtro
-    minArea: "", // Nuevo filtro
-    maxArea: "", // Nuevo filtro
-    amenities: "", // Nuevo filtro
-    orderBy: "createdAt", // Nuevo filtro
-    order: "desc", // Nuevo filtro
+    bathroomsMin: "",
+    minArea: "",
+    maxArea: "",
+    amenities: "",
+    orderBy: "createdAt",
+    order: "desc",
     featured: "all"
   })
 
@@ -249,7 +249,10 @@ export function FilterSection({
   }
 
   const getActiveFiltersCount = () => {
+    // Exclude sorting filters from count
+    const filterKeys = ['type', 'listingType', 'price', 'location', 'province', 'priceMin', 'priceMax', 'bedrooms', 'bedroomsMin', 'bathrooms', 'bathroomsMin', 'minArea', 'maxArea', 'amenities', 'featured'];
     return Object.entries(filters).filter(([key, value]) => {
+      if (!filterKeys.includes(key)) return false; // Exclude sorting filters
       if (value === "all" || value === "") return false;
       return true;
     }).length;

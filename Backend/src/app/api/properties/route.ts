@@ -1,223 +1,127 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabaseClient'
 
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
+  const url = new URL(request.url)
+  const params = url.searchParams
 
-    // Debug flag para logging
-    const debug = searchParams.get('debug') === '1';
-    const dataSource = 'supabase';
+  // Parse filters
+  const city = params.get('city') || ''
+  const province = params.get('province') || ''
+  const propertyType = params.get('propertyType') || ''
+  const priceMin = params.get('priceMin') ? Number(params.get('priceMin')) : null
+  const priceMax = params.get('priceMax') ? Number(params.get('priceMax')) : null
+  const bedroomsMin = params.get('bedroomsMin') ? Number(params.get('bedroomsMin')) : null
+  const bathroomsMin = params.get('bathroomsMin') ? Number(params.get('bathroomsMin')) : null
+  const minArea = params.get('minArea') ? Number(params.get('minArea')) : null
+  const maxArea = params.get('maxArea') ? Number(params.get('maxArea')) : null
+  const amenitiesCsv = params.get('amenities') || ''
+  const amenities = amenitiesCsv ? amenitiesCsv.split(',').map(a => a.trim()) : []
 
-    // Parse pagination params
-    const limit = Math.max(1, Math.min(50, Number(searchParams.get('limit') ?? 12)));
-    const offset = Math.max(0, Number(searchParams.get('offset') ?? 0));
+  // Sorting and pagination
+  const orderBy = params.get('orderBy') || 'createdAt'
+  const order = params.get('order') || 'desc'
+  const limit = params.get('limit') ? Number(params.get('limit')) : 10
+  const offset = params.get('offset') ? Number(params.get('offset')) : 0
 
-    // Parse filter params (solo para debug, no aplicar si debug=1)
-    const filters = {
-      city: searchParams.get('city') ?? '',
-      province: searchParams.get('province') ?? '',
-      propertyType: searchParams.get('propertyType') ?? '',
-      priceMin: searchParams.get('priceMin') ?? '',
-      priceMax: searchParams.get('priceMax') ?? '',
-      bedroomsMin: searchParams.get('bedroomsMin') ?? '',
-      bathroomsMin: searchParams.get('bathroomsMin') ?? '',
-      minArea: searchParams.get('minArea') ?? '',
-      maxArea: searchParams.get('maxArea') ?? '',
-      amenities: searchParams.get('amenities') ?? ''
-    };
+  let query = supabase
+    .from('properties')
+    .select('id, userId, title, city, province, price, propertyType, images, createdAt, updatedAt', { count: 'exact' })
+    .eq('status', 'PUBLISHED')
 
-    // Parse sorting params
-    const orderBy = searchParams.get('orderBy') ?? 'createdAt';
-    const order = (searchParams.get('order') ?? 'desc').toLowerCase();
+  if (city) {
+    query = query.ilike('city', `%${city}%`)
+  }
+  if (province) {
+    query = query.ilike('province', `%${province}%`)
+  }
+  if (propertyType) {
+    query = query.eq('propertyType', propertyType)
+  }
+  if (priceMin !== null) {
+    query = query.gte('price', priceMin)
+  }
+  if (priceMax !== null) {
+    query = query.lte('price', priceMax)
+  }
+  if (bedroomsMin !== null) {
+    query = query.gte('bedrooms', bedroomsMin)
+  }
+  if (bathroomsMin !== null) {
+    query = query.gte('bathrooms', bathroomsMin)
+  }
+  if (minArea !== null) {
+    query = query.gte('area', minArea)
+  }
+  if (maxArea !== null) {
+    query = query.lte('area', maxArea)
+  }
 
-    // Usar el mismo cliente Supabase que en /api/properties/[id]
-    const supabase = createServerSupabase();
-
-    // Query mínimo a Supabase
-    let query = supabase
-      .from('Property')
-      .select('id,title,city,province,price,propertyType,userId,images,coverImagePath,createdAt,updatedAt,bedrooms,bathrooms,area')
+  // Handle amenities filtering
+  if (amenities.length > 0) {
+    // Assuming amenities column is JSON text, fetch all and filter in memory
+    // For performance, if amenities column is array, use contains
+    // Here we do fallback in memory filtering
+    const { data: allProperties, error: fetchError } = await supabase
+      .from('properties')
+      .select('id, userId, title, city, province, price, propertyType, images, createdAt, updatedAt, amenities')
       .eq('status', 'PUBLISHED')
-      .order('createdAt', { ascending: false })
-      .range(offset, offset + limit - 1);
 
-    // Agregar is_active si existe (try/catch para no romper si no existe)
-    try {
-      query = query.eq('is_active', true);
-    } catch (error) {
-      // Si la columna no existe, continuar sin ella
-      if (debug) {
-        console.log('[LIST API] is_active column not found, continuing without it');
-      }
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 500 })
     }
 
-    // NO aplicar otros filtros si debug=1 (ignorar ciudad/provincia/etc)
-    if (!debug) {
-      // Aplicar filtros básicos si no es debug mode
-      if (filters.city && filters.city.length >= 2) {
-        query = query.ilike('city', `%${filters.city}%`);
+  const filtered = allProperties.filter((prop: any) => {
+      if (!prop.amenities) return false
+      let propAmenities = []
+      try {
+        propAmenities = typeof prop.amenities === 'string' ? JSON.parse(prop.amenities) : prop.amenities
+      } catch {
+        propAmenities = []
       }
-      if (filters.province && filters.province.length >= 2) {
-        query = query.ilike('province', `%${filters.province}%`);
-      }
-      if (filters.propertyType) {
-        query = query.eq('propertyType', filters.propertyType);
-      }
-      // Agregar más filtros según sea necesario...
-    }
+      return amenities.every((a: string) => propAmenities.includes(a))
+    })
 
-    const { data, error } = await query;
+    // Apply sorting and pagination manually
+    const sorted = filtered.sort((a: any, b: any) => {
+      let aVal = a[orderBy]
+      let bVal = b[orderBy]
+      if (aVal < bVal) return order === 'asc' ? -1 : 1
+      if (aVal > bVal) return order === 'asc' ? 1 : -1
+      return 0
+    })
 
-    // Logging solo en dev o debug=1
-    if (debug || process.env.NODE_ENV === 'development') {
-      console.log('[LIST API]', { dataSource, rows: data?.length, error });
-    }
-
-    if (error) {
-      console.error('Supabase query error:', error);
-      return NextResponse.json(
-        {
-          error: 'Database query failed',
-          details: error.message,
-          timestamp: new Date().toISOString()
-        },
-        { status: 500 }
-      );
-    }
+    const paged = sorted.slice(offset, offset + limit)
 
     return NextResponse.json({
-      items: data ?? [],
-      count: data?.length ?? 0,
+      items: paged,
+      count: filtered.length,
       meta: {
-        dataSource,
-        filters,
+        dataSource: 'supabase',
+        filters: { city, province, propertyType, priceMin, priceMax, bedroomsMin, bathroomsMin, minArea, maxArea, amenities },
         sorting: { orderBy, order },
-        pagination: { limit, offset },
+        pagination: { limit, offset }
       }
-    });
-
-  } catch (error) {
-    console.error('Error in properties API:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
+    })
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+  // If no amenities filter, apply orderBy, order, limit, offset in query
+  query = query.order(orderBy, { ascending: order === 'asc' }).range(offset, offset + limit - 1)
 
-    // Validación básica de campos requeridos
-    const requiredFields = ['title', 'price', 'propertyType', 'city', 'province'];
-    const missingFields = requiredFields.filter(field => !body[field]);
+  const { data, count, error } = await query
 
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: `Missing required fields: ${missingFields.join(', ')}`,
-          timestamp: new Date().toISOString()
-        },
-        { status: 400 }
-      );
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    items: data,
+    count,
+    meta: {
+      dataSource: 'supabase',
+      filters: { city, province, propertyType, priceMin, priceMax, bedroomsMin, bathroomsMin, minArea, maxArea, amenities },
+      sorting: { orderBy, order },
+      pagination: { limit, offset }
     }
-
-    // Usar el mismo cliente Supabase que en GET
-    const supabase = createServerSupabase();
-
-    // Obtener usuario actual (si está autenticado)
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // Preparar datos para inserción
-    const insertData = {
-      ...body,
-      userId: user?.id || null,
-      images: JSON.stringify(body.images || []),
-      amenities: JSON.stringify(body.amenities || []),
-      features: JSON.stringify(body.features || []),
-      contact_name: body.contact_name || 'Sin nombre',
-      contact_phone: body.contact_phone || '',
-      contact_email: body.contact_email || '',
-      country: body.country || 'Argentina',
-      status: 'PUBLISHED', // Forzar status PUBLISHED según requerimientos
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // Insertar en Supabase
-    const { data: newProperty, error } = await supabase
-      .from('Property')
-      .insert([insertData])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase insert error:', error);
-      return NextResponse.json(
-        {
-          error: 'Database insert failed',
-          details: error.message,
-          timestamp: new Date().toISOString()
-        },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        message: 'Property created successfully',
-        property: newProperty,
-        meta: {
-          dataSource: 'supabase',
-          timestamp: new Date().toISOString()
-        }
-      },
-      { status: 201 }
-    );
-
-  } catch (error) {
-    console.error('Error in POST properties API:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// Función auxiliar para validar parámetros de consulta
-function validateQueryParams(searchParams: URLSearchParams) {
-  const errors = [];
-  
-  const page = searchParams.get('page');
-  if (page && (isNaN(parseInt(page)) || parseInt(page) < 1)) {
-    errors.push('Page must be a positive integer');
-  }
-  
-  const limit = searchParams.get('limit');
-  if (limit && (isNaN(parseInt(limit)) || parseInt(limit) < 1 || parseInt(limit) > 100)) {
-    errors.push('Limit must be between 1 and 100');
-  }
-  
-  const minPrice = searchParams.get('minPrice');
-  if (minPrice && (isNaN(parseInt(minPrice)) || parseInt(minPrice) < 0)) {
-    errors.push('MinPrice must be a non-negative number');
-  }
-  
-  const maxPrice = searchParams.get('maxPrice');
-  if (maxPrice && (isNaN(parseInt(maxPrice)) || parseInt(maxPrice) < 0)) {
-    errors.push('MaxPrice must be a non-negative number');
-  }
-  
-  return errors;
+  })
 }

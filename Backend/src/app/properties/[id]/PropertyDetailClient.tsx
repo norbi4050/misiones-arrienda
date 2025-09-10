@@ -7,6 +7,32 @@ import { Badge } from '@/components/ui/badge'
 import { Property } from '@/types/property'
 import { fetchBucketImages } from '@/lib/propertyImages/fetchBucketImages'
 import { parseImagesText, resolveImages } from '@/lib/propertyImages'
+import ImageCarousel from '@/components/ImageCarousel'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import toast from 'react-hot-toast'
+import { MessageCircle } from 'lucide-react'
+
+function ContactButton({ userId, propertyId }: { userId: string; propertyId: string }) {
+  const { user } = useSupabaseAuth()
+  const router = useRouter()
+
+  const handleContact = () => {
+    if (!user) {
+      toast.error('Iniciá sesión para enviar un mensaje')
+      return
+    }
+    router.push(`/messages/new?to=${userId}&propertyId=${propertyId}`)
+  }
+
+  return (
+    <Button onClick={handleContact} className="bg-blue-600 hover:bg-blue-700 text-white">
+      <span className="flex items-center gap-2">
+        <MessageCircle size={16} />
+        Contactar
+      </span>
+    </Button>
+  )
+}
 
 export default function PropertyDetailClient({ initialProperty }: { initialProperty: any }) {
   const router = useRouter()
@@ -16,6 +42,27 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
   const [error, setError] = useState<string | null>(null)
   const [bucketImages, setBucketImages] = useState<string[]>([])
   const [debugMode, setDebugMode] = useState(false)
+
+  // Helper function to map property types to human-readable labels
+  const getPropertyTypeLabel = (propertyType: string): string => {
+    const typeMap: { [key: string]: string } = {
+      'HOUSE': 'Casa',
+      'APARTMENT': 'Departamento',
+      'DUPLEX': 'Dúplex',
+      'PENTHOUSE': 'Penthouse',
+      'STUDIO': 'Monoambiente',
+      'LOFT': 'Loft',
+      'TOWNHOUSE': 'Casa en Condominio',
+      'VILLA': 'Villa',
+      'COMMERCIAL': 'Comercial',
+      'OFFICE': 'Oficina',
+      'WAREHOUSE': 'Depósito',
+      'LAND': 'Terreno',
+      'FARM': 'Campo',
+      'OTHER': 'Otro'
+    }
+    return typeMap[propertyType] || propertyType
+  }
 
   useEffect(() => {
     if (initialProperty) {
@@ -219,20 +266,7 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
           {/* Images */}
           {imagesToShow.length > 0 ? (
             <div className="mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {imagesToShow.slice(0, 4).map((image, index) => (
-                  <div key={index} className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
-                    <img
-                      src={image}
-                      alt={`${property.title} - Imagen ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              <ImageCarousel images={imagesToShow} altBase={property.title} />
             </div>
           ) : (
             <div className="mb-8 text-center text-gray-500">
@@ -252,7 +286,7 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
                 </p>
                 <div className="flex items-center gap-4">
                   <Badge variant="secondary">
-                    {property.propertyType}
+                    {getPropertyTypeLabel(property.propertyType)}
                   </Badge>
                   {property?.listingType ? (
                     <Badge variant="secondary">
@@ -311,9 +345,9 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
 
           {/* Description */}
           {property.description && (
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className={`bg-white rounded-lg shadow-sm p-6 mb-6 ${property.description.length < 100 ? 'leading-relaxed' : ''}`}>
               <h2 className="text-xl font-semibold mb-4">Descripción</h2>
-              <p className="text-gray-700 leading-relaxed">
+              <p className={`${property.description.length < 100 ? 'leading-relaxed' : ''}`}>
                 {property.description}
               </p>
             </div>
@@ -356,20 +390,6 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
                 <p className="text-gray-600">Agente Inmobiliario</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                {agent.phone && (
-                  <Button
-                    asChild
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <a
-                      href={`https://wa.me/${agent.phone.replace(/[^0-9]/g, '')}?text=Hola%20me%20interesa%20la%20propiedad%20${encodeURIComponent(property.title)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      📱 WhatsApp
-                    </a>
-                  </Button>
-                )}
                 {agent.email && (
                   <Button
                     asChild
@@ -384,6 +404,7 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
                     </a>
                   </Button>
                 )}
+                <ContactButton userId={property.userId} propertyId={property.id} />
               </div>
             </div>
           )}

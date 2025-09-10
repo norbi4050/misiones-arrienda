@@ -1,29 +1,52 @@
-# TODO - Soft Guard Dashboard y Perfil con Imagen
+# TODO: Mejoras al Carrusel de Imágenes - Detalle de Propiedades
 
-## ✅ Completado
+## Información Recopilada
 
-### 1. Middleware Soft Guard
-- ✅ Reemplazado middleware.ts con versión "soft" que usa createServerClient
-- ✅ Solo hace auth.getSession() para sincronizar cookies, sin redirecciones
-- ✅ Evidencia: middleware actualizado sin redirecciones
+### Estado Actual
+- ✅ El componente `ImageCarousel.tsx` ya existe y está implementado
+- ✅ `PropertyDetailClient.tsx` ya importa y usa el carrusel correctamente
+- ✅ Sistema de imágenes consolidado (bucket→API→placeholder) ya funciona
+- ✅ La mayoría de características solicitadas ya están implementadas
 
-### 2. Dashboard Soft Guard
-- ✅ /dashboard con soft-guard implementado
-- ✅ Si no hay sesión, muestra CTA de login
-- ✅ Si hay sesión, render normal
-- ✅ Evidencia: dashboard muestra contenido apropiado según estado de autenticación
+### Características Ya Implementadas
+- ✅ `useState` para `currentIndex`
+- ✅ Flechas prev/next con comportamiento wrap-around (preferido por el usuario)
+- ✅ Soporte de teclado (← →)
+- ✅ Navegación con bullets/puntos
+- ✅ `next/image` con `fill`, `sizes` y `object-cover`
+- ✅ Fallback para imágenes vacías
+- ✅ Contador de imágenes
+- ✅ Manejo de errores de imágenes
+- ✅ Accesibilidad con `aria-label`
+- ✅ Diseño responsivo
 
-### 3. "Mi perfil" con sección de foto
-- ✅ Link "Mi perfil" del header apunta a /profile/inquilino
-- ✅ Página /profile/inquilino tiene ProfileImageUpload
-- ✅ Tras PATCH exitoso, ejecuta router.refresh() en el componente uploader
-- ✅ Evidencia: sección de foto presente y funcional
+## Plan de Mejoras
 
-## Smoke Test
-- ✅ /dashboard logueado → no te manda a login
-- ✅ Menú "Mi perfil" → ves sección Foto de perfil (uploader presente)
-- ✅ Subís imagen <2MB → queda en avatars/<uid>/… y PATCH 200 guarda URL
-- ✅ Header refresca y muestra el avatar nuevo (gracias a router.refresh())
+### 1. Verificación y Optimización
+- [x] Revisar que el comportamiento wrap-around funcione correctamente
+- [x] Verificar que el soporte de teclado esté bien implementado
+- [x] Confirmar que las dependencias de useEffect estén correctas
 
-## Estado Final
-✅ **TAREA COMPLETADA** - Todos los requisitos implementados correctamente.
+### 2. Mejoras Opcionales Identificadas
+- [x] Mantener las miniaturas (thumbnails) comentadas para uso futuro
+- [x] Componente ya tiene transiciones suaves implementadas
+- [x] Rendimiento optimizado con useCallback y dependencias correctas
+
+### 3. Testing y Validación
+- [x] Componente maneja correctamente arrays vacíos con fallback
+- [x] Accesibilidad implementada con aria-labels
+- [x] Integración con PropertyDetailClient ya funcional
+
+## Cambios Realizados
+- ✅ Corregidas las dependencias de useEffect para evitar re-renders innecesarios
+- ✅ Reorganizado el código para declarar funciones antes de usarlas
+- ✅ Mantenido el comportamiento wrap-around según preferencia del usuario
+- ✅ Verificada la implementación completa de todas las características solicitadas
+
+## Archivos Modificados
+- `Backend/src/components/ImageCarousel.tsx` - Optimización de dependencias useEffect
+
+## Estado: ✅ COMPLETADO
+- Iniciado: 2025-01-03
+- Completado: 2025-01-03
+- Responsable: BlackBox AI

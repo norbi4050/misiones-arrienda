@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { FavoriteButton } from "@/components/favorite-button"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useEffect } from "react"
-import { fetchBucketImages, parseImagesText, resolveImages } from "@/lib/propertyImages"
+import { useEffect, useMemo, useState } from "react"
+import { fetchBucketImages } from "@/lib/propertyImages/fetchBucketImages"
+import { resolveImages } from "@/lib/propertyImages/resolveImages"
+import { parseImagesText } from "@/lib/propertyImages/parseImagesText"
 
 interface PropertyCardProps {
   id: string
@@ -33,39 +35,25 @@ export function PropertyCard({
   area,
   userId,
 }: PropertyCardProps) {
-  const [bucketImages, setBucketImages] = useState<string[]>([])
-  const [resolvedImages, setResolvedImages] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-
+  const [bucketImages, setBucketImages] = useState<string[] | null>(null)
+  const apiImages = useMemo(() => parseImagesText(images), [images])
   useEffect(() => {
-    async function loadImages() {
-      if (!id || !userId) {
-        setLoading(false)
-        return
-      }
+    let active = true
+    ;(async () => {
       try {
-        const fetchedBucketImages = await fetchBucketImages(userId, id)
-        setBucketImages(fetchedBucketImages)
-      } catch (error) {
-        console.error('Error fetching bucket images:', error)
-        setBucketImages([])
-      } finally {
-        setLoading(false)
+        const urls = await fetchBucketImages(userId, id)
+        if (active) setBucketImages(urls)
+      } catch {
+        if (active) setBucketImages([])
       }
-    }
-    loadImages()
-  }, [id, userId])
-
-  useEffect(() => {
-    const apiImages = parseImagesText(images)
-    const combinedImages = resolveImages(bucketImages, apiImages)
-    setResolvedImages(combinedImages)
-  }, [bucketImages, images])
-
-  const normalizeSrc = (s: string): string =>
-    s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/') ? s : `/${s}`
-
-  const cover = normalizeSrc(resolvedImages[0] ?? '/placeholder-apartment-1.jpg')
+    })()
+    return () => { active = false }
+  }, [userId, id])
+  const finalImages = useMemo(
+    () => resolveImages({ apiImages, bucketImages: bucketImages ?? [] }),
+    [apiImages, bucketImages]
+  )
+  const coverSrc = finalImages[0] ?? '/placeholder-house-1.jpg'
 
   return (
     <Link href={`/properties/${id}`} className="block">
@@ -73,7 +61,7 @@ export function PropertyCard({
         {/* Contenedor con altura fija para que la imagen no sea gigante */}
         <div className="relative w-full h-56 sm:h-56 md:h-60 lg:h-64 overflow-hidden rounded-md">
           <Image
-            src={cover}
+            src={coverSrc}
             alt={title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -81,8 +69,8 @@ export function PropertyCard({
             onError={() => {
               // fallback de runtime si la URL falla
               const img = document.querySelector(`img[alt="${title}"]`) as HTMLImageElement
-              if (img && img.src !== '/placeholder-apartment-1.jpg') {
-                img.src = '/placeholder-apartment-1.jpg'
+              if (img && img.src !== '/placeholder-house-1.jpg') {
+                img.src = '/placeholder-house-1.jpg'
               }
             }}
           />

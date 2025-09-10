@@ -4,7 +4,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { AIChatbot } from '@/components/ai-chatbot'
-import WhatsAppButton from '@/components/whatsapp-button'
+import { ConditionalWhatsAppButton } from '@/components/conditional-whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/components/auth-provider'
@@ -62,8 +62,8 @@ export default function RootLayout({
             <Navbar />
             {children}
 
-            {/* WhatsApp Button Global - Siempre visible */}
-            <WhatsAppButton type="fixed" />
+            {/* WhatsApp Button Condicional - No en páginas de propiedades */}
+            <ConditionalWhatsAppButton />
 
             {/* AI Chatbot */}
             <AIChatbot />
