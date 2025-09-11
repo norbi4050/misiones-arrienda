@@ -6,18 +6,10 @@ import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell } from 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  phone?: string;
-  bio?: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface ProfileDropdownProps {
-  user: User | null;
+  user: SupabaseUser | null;
   onSignOut: () => void;
   className?: string;
 }
@@ -52,18 +44,15 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   }
 
   // Obtener las iniciales del usuario
-  const getInitials = (name?: string, email?: string) => {
-    if (name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
+  const getInitials = (email?: string) => {
     if (email) {
       return email.slice(0, 2).toUpperCase();
     }
     return 'U';
   };
 
-  const initials = getInitials(user.name, user.email);
-  const displayName = user.name || user.email?.split('@')[0] || 'Usuario';
+  const initials = getInitials(user.email);
+  const displayName = user.email?.split('@')[0] || 'Usuario';
 
   return (
     <div ref={dropdownRef} className={cn("relative", className)}>

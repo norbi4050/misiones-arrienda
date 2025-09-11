@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabase } from '@/lib/supabase/server'
+
 
 // Mapeo de campos entre frontend (camelCase) y database (snake_case)
 const fieldMapping = {
@@ -51,7 +52,7 @@ function validateAndSanitizeData(data: any): { isValid: boolean; sanitizedData: 
 
 async function handleProfileUpdate(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createServerSupabase()
     
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -197,7 +198,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createServerSupabase()
     
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()

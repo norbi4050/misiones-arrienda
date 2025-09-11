@@ -8,6 +8,7 @@ import { ConditionalWhatsAppButton } from '@/components/conditional-whatsapp-but
 import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/components/auth-provider'
+import { createServerSupabase } from '@/lib/supabase/server'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,11 +19,15 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Obtener sesión del servidor para hidratación
+  const supabase = createServerSupabase()
+  const { data: { session } } = await supabase.auth.getSession()
+
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
@@ -52,7 +57,7 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
+        <AuthProvider initialSession={session}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

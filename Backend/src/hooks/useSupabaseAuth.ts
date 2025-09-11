@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { User, Session } from "@supabase/supabase-js";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
 
 export function useSupabaseAuth() {
   const supabase = getBrowserSupabase();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,5 +37,20 @@ export function useSupabaseAuth() {
     };
   }, [supabase]);
 
-  return { user, loading };
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  return { 
+    user, 
+    loading, 
+    signOut,
+    isAuthenticated: !!user 
+  };
 }
