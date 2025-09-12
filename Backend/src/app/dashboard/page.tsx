@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { getBrowserSupabase } from "@/lib/supabaseClient";
 
 export default function DashboardPage() {
   const { user, loading } = useSupabaseAuth();
@@ -11,7 +11,8 @@ export default function DashboardPage() {
   const isLoading = loading;
 
   const logout = async () => {
-    const { supabase } = await import('@/lib/supabaseClient');
+    const { getBrowserSupabase } = await import('@/lib/supabaseClient');
+    const supabase = getBrowserSupabase();
     await supabase.auth.signOut();
     router.push('/login');
   };
@@ -69,11 +70,12 @@ export default function DashboardPage() {
 
     try {
       // Actualizar metadatos del usuario en Supabase
+      const supabase = getBrowserSupabase();
       const { error } = await supabase.auth.updateUser({
         data: {
           name: editData.name,
-          userType: user.userType,
-          ...(user.userType === 'inmobiliaria' && {
+          userType: user.user_metadata?.userType,
+          ...(user.user_metadata?.userType === 'inmobiliaria' && {
             companyName: editData.companyName,
             licenseNumber: editData.licenseNumber
           })
@@ -180,7 +182,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">
-                    ¡Bienvenido, {user.name}!
+                    ¡Bienvenido, {user.user_metadata?.name || user.email}!
                   </h3>
                   <div className="mt-2 text-sm text-green-700">
                     <p>Has iniciado sesión correctamente. Tu sesión se mantiene activa entre pestañas.</p>
@@ -223,7 +225,7 @@ export default function DashboardPage() {
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                       />
                     ) : (
-                      <p className="text-sm text-gray-900 mt-1">{user.name}</p>
+                      <p className="text-sm text-gray-900 mt-1">{user.user_metadata?.name || user.email}</p>
                     )}
                   </div>
 
@@ -236,13 +238,13 @@ export default function DashboardPage() {
                   <div>
                     <label className="text-sm font-medium text-gray-500">Tipo de usuario:</label>
                     <p className="text-sm text-gray-900 mt-1 capitalize">
-                      {user.userType === 'dueno_directo' ? 'Dueño Directo' : 
-                       user.userType === 'inmobiliaria' ? 'Inmobiliaria' : 
-                       user.userType || 'Inquilino'}
+                      {user.user_metadata?.userType === 'dueno_directo' ? 'Dueño Directo' : 
+                       user.user_metadata?.userType === 'inmobiliaria' ? 'Inmobiliaria' : 
+                       user.user_metadata?.userType || 'Inquilino'}
                     </p>
                   </div>
 
-                  {user.userType === 'inmobiliaria' && (
+                  {user.user_metadata?.userType === 'inmobiliaria' && (
                     <>
                       <div>
                         <label className="text-sm font-medium text-gray-500">Empresa:</label>
@@ -255,7 +257,7 @@ export default function DashboardPage() {
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                           />
                         ) : (
-                          <p className="text-sm text-gray-900 mt-1">{user.companyName || 'No especificado'}</p>
+                          <p className="text-sm text-gray-900 mt-1">{user.user_metadata?.companyName || 'No especificado'}</p>
                         )}
                       </div>
 
@@ -270,7 +272,7 @@ export default function DashboardPage() {
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                           />
                         ) : (
-                          <p className="text-sm text-gray-900 mt-1">{user.licenseNumber || 'No especificado'}</p>
+                          <p className="text-sm text-gray-900 mt-1">{user.user_metadata?.licenseNumber || 'No especificado'}</p>
                         )}
                       </div>
                     </>
@@ -317,7 +319,7 @@ export default function DashboardPage() {
                     Publicar propiedad
                   </a>
                   <a
-                    href={`/profile/${user.userType || 'inquilino'}`}
+                    href={`/profile/${user.user_metadata?.userType || 'inquilino'}`}
                     className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
                   >
                     Mi perfil

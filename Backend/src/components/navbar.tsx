@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ProfileDropdown } from "@/components/ui/profile-dropdown"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import type { Session } from "@supabase/supabase-js"
 
 const navigation = [
   { name: 'Inicio', href: '/' },
@@ -17,11 +18,21 @@ const navigation = [
   { name: 'Publicar', href: '/publicar' },
 ]
 
-export function Navbar() {
+interface NavbarProps {
+  initialSession?: Session | null
+}
+
+export function Navbar({ initialSession }: NavbarProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, loading, isAuthenticated, signOut } = useSupabaseAuth()
+
+  // Usar sesión inicial del servidor para evitar flicker
+  const hasInitialSession = !!initialSession?.user
+  const shouldShowAuth = !loading || hasInitialSession
+  const isUserAuthenticated = isAuthenticated || hasInitialSession
+  const currentUser = user || initialSession?.user
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -86,9 +97,9 @@ export function Navbar() {
             </div>
 
             {/* Authentication Section */}
-            {!loading && (
+            {shouldShowAuth && (
               <>
-                {isAuthenticated && user ? (
+                {isUserAuthenticated && currentUser ? (
                   <>
                     {/* Quick Actions for authenticated users */}
                     <Link href="/profile/inquilino?tab=favoritos">
@@ -103,7 +114,7 @@ export function Navbar() {
                     </Link>
 
                     {/* Profile Dropdown */}
-                    <ProfileDropdown user={user} onSignOut={signOut} />
+                    <ProfileDropdown user={currentUser} onSignOut={signOut} />
                   </>
                 ) : (
                   <>
@@ -171,20 +182,20 @@ export function Navbar() {
             </div>
 
             {/* Mobile Authentication Section */}
-            {!loading && (
+            {shouldShowAuth && (
               <div className="px-3 py-2 border-t border-gray-200">
-                {isAuthenticated && user ? (
+                {isUserAuthenticated && currentUser ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 py-2">
                       <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                        {user.email?.slice(0, 2).toUpperCase() || 'U'}
+                        {currentUser.email?.slice(0, 2).toUpperCase() || 'U'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {user.email?.split('@')[0] || 'Usuario'}
+                          {currentUser.email?.split('@')[0] || 'Usuario'}
                         </p>
                         <p className="text-xs text-gray-500 truncate">
-                          {user.email}
+                          {currentUser.email}
                         </p>
                       </div>
                     </div>

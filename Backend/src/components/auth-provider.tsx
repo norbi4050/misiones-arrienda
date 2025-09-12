@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { Session } from "@supabase/supabase-js";
-import { getBrowserSupabase } from "@/lib/supabase/browser";
+import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
+import { getBrowserSupabase } from "@/lib/supabaseClient";
 
 export function AuthProvider({
   children,
@@ -29,7 +29,7 @@ export function AuthProvider({
       hydratedRef.current = true;
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
       // Debounce para que no haya refresh en cascada
       if (["SIGNED_IN", "SIGNED_OUT", "TOKEN_REFRESHED", "USER_UPDATED"].includes(event)) {
         if (refreshLock.current) return;

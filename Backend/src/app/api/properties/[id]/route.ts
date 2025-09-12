@@ -18,7 +18,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  const supabase = createServerSupabase();
+  const supabase = await createServerSupabase();
 
   const cols = [
     'id','title','description','price','bedrooms','bathrooms','area','address','city','province',

@@ -27,12 +27,14 @@ export async function GET(request: NextRequest) {
     const offset = params.get('offset') ? Number(params.get('offset')) : 0
 
     // Create server-side Supabase client
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
 
+    // Use correct table name "Property" and column names based on schema
     let query = supabase
-      .from('properties')
-      .select('id, user_id, title, city, province, price, property_type, images, created_at, updated_at', { count: 'exact' })
-      .eq('status', 'AVAILABLE')
+      .from('Property')
+      .select('id, userId, title, city, province, price, propertyType, images, createdAt, updatedAt', { count: 'exact' })
+      .eq('status', 'PUBLISHED')
+      .eq('is_active', true)
 
     if (city) {
       query = query.ilike('city', `%${city}%`)
@@ -40,9 +42,9 @@ export async function GET(request: NextRequest) {
     if (province) {
       query = query.ilike('province', `%${province}%`)
     }
-  if (propertyType) {
-    query = query.eq('property_type', propertyType)
-  }
+    if (propertyType) {
+      query = query.eq('propertyType', propertyType)
+    }
     if (priceMin !== null) {
       query = query.gte('price', priceMin)
     }
@@ -67,13 +69,12 @@ export async function GET(request: NextRequest) {
 
     // Handle amenities filtering
     if (amenities.length > 0) {
-      // Assuming amenities column is JSON text, fetch all and filter in memory
-      // For performance, if amenities column is array, use contains
-      // Here we do fallback in memory filtering
+      // Fetch all properties and filter in memory for amenities
       const { data: allProperties, error: fetchError } = await supabase
-        .from('properties')
-        .select('id, user_id, title, city, province, price, property_type, images, created_at, updated_at, amenities')
-        .eq('status', 'AVAILABLE')
+        .from('Property')
+        .select('id, userId, title, city, province, price, propertyType, images, createdAt, updatedAt, amenities')
+        .eq('status', 'PUBLISHED')
+        .eq('is_active', true)
 
       if (fetchError) {
         return NextResponse.json({ error: fetchError.message }, { status: 500 })
@@ -113,9 +114,9 @@ export async function GET(request: NextRequest) {
       })
     }
 
-  // If no amenities filter, apply orderBy, order, limit, offset in query
-  const dbOrderBy = orderBy === 'createdAt' ? 'created_at' : orderBy === 'updatedAt' ? 'updated_at' : orderBy === 'propertyType' ? 'property_type' : orderBy
-  query = query.order(dbOrderBy, { ascending: order === 'asc' }).range(offset, offset + limit - 1)
+    // If no amenities filter, apply orderBy, order, limit, offset in query
+    const dbOrderBy = orderBy === 'createdAt' ? 'createdAt' : orderBy === 'updatedAt' ? 'updatedAt' : orderBy === 'propertyType' ? 'propertyType' : orderBy
+    query = query.order(dbOrderBy, { ascending: order === 'asc' }).range(offset, offset + limit - 1)
 
     const { data, count, error } = await query
 

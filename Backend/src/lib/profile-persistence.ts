@@ -104,7 +104,55 @@ export class ProfilePersistence {
       });
 
       if (!response.ok) {
-        throw new Error(`Profile sync failed: ${response.status}`);
+        // Handle different error cases
+        if (response.status === 404) {
+          console.log('Profile not found, will be created automatically by API');
+          // The API will now create the profile automatically, so retry once
+          const retryResponse = await fetch('/api/users/profile', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (retryResponse.ok) {
+            const { profile } = await retryResponse.json();
+            if (profile) {
+              this.saveProfile(profile);
+              console.log('Profile created and synced with server:', profile.id);
+              return profile;
+            }
+          }
+        } else if (response.status === 500) {
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.error && errorData.error.includes('permission denied')) {
+            console.log('Permission denied error detected, retrying profile sync...');
+            // Wait a moment and retry once for permission issues
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const retryResponse = await fetch('/api/users/profile', {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (retryResponse.ok) {
+              const { profile } = await retryResponse.json();
+              if (profile) {
+                this.saveProfile(profile);
+                console.log('Profile synced successfully after permission retry:', profile.id);
+                return profile;
+              }
+            } else {
+              console.warn('Profile sync retry also failed, using cached profile if available');
+            }
+          }
+        }
+        
+        const errorData = await response.json().catch(() => ({}));
+        console.warn(`Profile sync failed: ${response.status} - ${errorData.error || 'Unknown error'}`);
+        return null;
       }
 
       const { profile } = await response.json();

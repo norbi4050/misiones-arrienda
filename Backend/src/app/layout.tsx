@@ -7,8 +7,9 @@ import { AIChatbot } from '@/components/ai-chatbot'
 import { ConditionalWhatsAppButton } from '@/components/conditional-whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
-import { AuthProvider } from '@/components/auth-provider'
-import { createServerSupabase } from '@/lib/supabase/server'
+// TEMPORAL: AuthProvider deshabilitado para resolver error 500
+// import { AuthProvider } from '@/components/auth-provider'
+// import { createServerSupabase } from '@/lib/supabase/server'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,9 +25,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Obtener sesión del servidor para hidratación
-  const supabase = createServerSupabase()
-  const { data: { session } } = await supabase.auth.getSession()
+  // TEMPORAL: Sesión deshabilitada para resolver error 500
+  // const supabase = await createServerSupabase()
+  // const { data: { session } } = await supabase.auth.getSession()
+  const session = null;
 
   return (
     <html lang="es" suppressHydrationWarning>
@@ -57,14 +59,15 @@ export default async function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <AuthProvider initialSession={session}>
+        {/* TEMPORAL: AuthProvider deshabilitado */}
+        {/* <AuthProvider initialSession={session}> */}
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar />
+            <Navbar initialSession={session} />
             {children}
 
             {/* WhatsApp Button Condicional - No en páginas de propiedades */}
@@ -124,7 +127,7 @@ export default async function RootLayout({
               }}
             />
           </ThemeProvider>
-        </AuthProvider>
+        {/* </AuthProvider> */}
       </body>
     </html>
   )

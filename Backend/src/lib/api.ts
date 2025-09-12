@@ -80,6 +80,8 @@ export async function getPropertyById(id: string): Promise<Property | null> {
 
 // Función legacy para compatibilidad
 export async function fetchRealProperties(params: any): Promise<Property[]> {
-  const result = await getProperties(params);
+  // Filtrar el parámetro 'featured' que no es soportado por la API actual
+  const { featured, ...validParams } = params || {};
+  const result = await getProperties(validParams);
   return result.properties;
 }

@@ -11,6 +11,7 @@ export interface User {
   name?: string;
   phone?: string;
   bio?: string;
+  profile_image?: string;
   created_at: string;
   updated_at: string;
 }
@@ -50,8 +51,23 @@ export function useAuth() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error obteniendo perfil');
+        const errorData = await response.json().catch(() => ({}));
+        let errorMessage = errorData.error || `HTTP ${response.status}: Error obteniendo perfil`;
+        
+        // Handle specific permission errors more gracefully
+        if (response.status === 500 && errorMessage.includes('permission denied')) {
+          console.warn('Permission denied error detected, this may be resolved automatically:', errorMessage);
+          errorMessage = 'Configurando perfil de usuario...';
+        } else if (response.status === 404) {
+          console.log('Profile not found, will be created automatically');
+          errorMessage = 'Creando perfil de usuario...';
+        } else if (response.status === 401) {
+          console.warn('Authentication error:', errorMessage);
+          errorMessage = 'Error de autenticación';
+        }
+        
+        console.warn('Profile fetch failed:', errorMessage);
+        throw new Error(errorMessage);
       }
 
       const { profile } = await response.json();
@@ -64,9 +80,19 @@ export function useAuth() {
       return profile;
     } catch (error) {
       console.error('Error en fetchUserProfile:', error);
-      setError(error instanceof Error ? error.message : 'Error obteniendo perfil');
+      const errorMessage = error instanceof Error ? error.message : 'Error obteniendo perfil';
       
-      // Try to get cached profile as last resort
+      // Handle permission denied errors specifically
+      if (errorMessage.includes('permission denied') || errorMessage.includes('Permission denied')) {
+        setError('Permission denied: Unable to create or access user profile. This may be due to database permissions.');
+        
+        // Don't try cache for permission errors - they need to be resolved
+        return null;
+      }
+      
+      setError(errorMessage);
+      
+      // Try to get cached profile as last resort for other errors
       if (useCache) {
         const cachedProfile = ProfilePersistence.getCachedProfile();
         if (cachedProfile) {
