@@ -40,7 +40,7 @@ export async function GET(_req: NextRequest) {
     try {
       // Llamar a la función SQL que calcula estadísticas reales
       const { data: statsData, error: statsError } = await supabase
-        .rpc('get_user_profile_stats', { target_user_id: user.id });
+        .rpc('get_user_stats', { target_user_id: user.id });
 
       if (statsError) {
         console.error('Error calling get_user_profile_stats:', statsError);

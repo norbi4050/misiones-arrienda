@@ -3,10 +3,11 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import ProfileAvatar from "@/components/ui/profile-avatar-enhanced";
 import { ProfileForm } from "@/components/ui/profile-form";
 import { QuickActionsGrid } from "@/components/ui/quick-actions-grid";
-import { ProfileStats } from "@/components/ui/profile-stats";
+import { ProfileStatsImproved as ProfileStats } from "@/components/ui/profile-stats-improved";
+import { RecentActivity } from "@/components/ui/recent-activity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -167,11 +168,9 @@ export default function InquilinoProfilePage() {
                   <ProfileAvatar
                     src={profileData.profile_image}
                     name={profileData.name}
-                    email={profileData.email}
                     userId={user.id}
                     size="xl"
-                    verified={profileData.verified}
-                    onImageChange={handleAvatarChange}
+                    onUploadComplete={handleAvatarChange}
                     className="ring-4 ring-white shadow-xl"
                   />
                 </div>
@@ -253,30 +252,8 @@ export default function InquilinoProfilePage() {
               <div className="lg:col-span-2 space-y-6">
                 <QuickActionsGrid userId={user.id} />
                 
-                {/* Recent Activity */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Actividad Reciente</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                        <Heart className="w-5 h-5 text-red-500" />
-                        <div>
-                          <p className="text-sm font-medium">Agregaste una propiedad a favoritos</p>
-                          <p className="text-xs text-gray-500">Hace 2 horas</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                        <Settings className="w-5 h-5 text-green-500" />
-                        <div>
-                          <p className="text-sm font-medium">Actualizaste tu perfil</p>
-                          <p className="text-xs text-gray-500">Hace 1 día</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Recent Activity - Now using real data */}
+                <RecentActivity maxItems={5} />
               </div>
 
               <div className="space-y-6">
@@ -291,6 +268,7 @@ export default function InquilinoProfilePage() {
                     responseRate: undefined, // Will be loaded by useUserStats hook
                     verificationLevel: profileData.verified ? 'email' : 'none'
                   }}
+                  showRefresh={true}
                 />
               </div>
             </div>

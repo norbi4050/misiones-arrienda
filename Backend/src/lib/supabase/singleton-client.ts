@@ -1,11 +1,16 @@
 'use client';
 
 // Adaptador seguro: NO instanciar en scope de módulo
-import { createClient } from './client';
+import { createClient, SupabaseClient } from './client';
 
-/** Usa SIEMPRE llamada bajo demanda */
-export function getSupabaseClient() {
-  return createClient();
+let supabaseClient: SupabaseClient | null = null;
+
+/** Usa SIEMPRE la misma instancia singleton */
+export function getSupabaseClient(): SupabaseClient {
+  if (!supabaseClient) {
+    supabaseClient = createClient();
+  }
+  return supabaseClient;
 }
 
 // (Opcional) Marcá obsoleto cualquier export previo:
