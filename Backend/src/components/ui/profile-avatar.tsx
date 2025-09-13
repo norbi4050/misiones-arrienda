@@ -1,59 +1,54 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from './button';
-import { Card } from './card';
 import { Badge } from './badge';
 import { 
   Camera, 
   Upload, 
-  X, 
-  Check, 
   AlertCircle, 
   Loader2,
   User,
-  Edit3,
-  Trash2,
-  RotateCcw,
-  Crop,
-  Download
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
-interface ProfileAvatarEnhancedProps {
+interface ProfileAvatarProps {
   src?: string;
   name?: string;
   userId?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  editable?: boolean;
-  showUploadProgress?: boolean;
+  showUpload?: boolean;
   allowedFormats?: string[];
   maxSizeInMB?: number;
-  onUploadComplete?: (url: string) => void;
-  onUploadError?: (error: string) => void;
+  onImageChange?: (url: string) => void;
   className?: string;
 }
 
-export function ProfileAvatarEnhanced({
+export function ProfileAvatar({
   src,
   name = 'Usuario',
   userId,
   size = 'lg',
-  editable = true,
-  showUploadProgress = true,
+  showUpload = true,
   allowedFormats = ['image/jpeg', 'image/png', 'image/webp'],
   maxSizeInMB = 5,
-  onUploadComplete,
-  onUploadError,
+  onImageChange,
   className
-}: ProfileAvatarEnhancedProps) {
+}: ProfileAvatarProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(src || null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Actualizar imagen cuando cambie la prop src
+  useEffect(() => {
+    setCurrentImageUrl(src || null);
+  }, [src]);
 
   // Tamaños del avatar
   const sizeClasses = {
@@ -143,7 +138,6 @@ export function ProfileAvatarEnhanced({
     const validationError = validateFile(file);
     if (validationError) {
       setError(validationError);
-      onUploadError?.(validationError);
       toast.error(validationError);
       return;
     }
@@ -190,18 +184,21 @@ export function ProfileAvatarEnhanced({
       
       setUploadProgress(100);
       
+      // Actualizar estado local inmediatamente
+      setCurrentImageUrl(imageUrl);
+      
       // Limpiar preview
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
       
-      onUploadComplete?.(imageUrl);
+      // Notificar al componente padre
+      onImageChange?.(imageUrl);
       toast.success('Avatar actualizado correctamente');
 
     } catch (error) {
       console.error('Error uploading avatar:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       setError(errorMessage);
-      onUploadError?.(errorMessage);
       toast.error(errorMessage);
       
       // Limpiar preview en caso de error
@@ -213,7 +210,7 @@ export function ProfileAvatarEnhanced({
       setUploading(false);
       setUploadProgress(0);
     }
-  }, [userId, allowedFormats, maxSizeInMB, onUploadComplete, onUploadError, previewUrl]);
+  }, [userId, allowedFormats, maxSizeInMB, onImageChange, previewUrl]);
 
   // Manejar drag & drop
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -251,7 +248,7 @@ export function ProfileAvatarEnhanced({
 
   // Eliminar avatar
   const handleRemoveAvatar = async () => {
-    if (!src) return;
+    if (!currentImageUrl) return;
     
     try {
       setUploading(true);
@@ -268,7 +265,11 @@ export function ProfileAvatarEnhanced({
         throw new Error('Error al eliminar avatar');
       }
 
-      onUploadComplete?.('');
+      // Actualizar estado local inmediatamente
+      setCurrentImageUrl(null);
+      
+      // Notificar al componente padre
+      onImageChange?.('');
       toast.success('Avatar eliminado');
     } catch (error) {
       console.error('Error removing avatar:', error);
@@ -278,7 +279,7 @@ export function ProfileAvatarEnhanced({
     }
   };
 
-  const currentImageUrl = previewUrl || src;
+  const displayImageUrl = previewUrl || currentImageUrl;
 
   return (
     <div className={cn("relative", className)}>
@@ -287,20 +288,23 @@ export function ProfileAvatarEnhanced({
         className={cn(
           "relative rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-blue-400 to-purple-500",
           sizeClasses[size],
-          dragOver && editable && "border-blue-400 scale-105",
+          dragOver && showUpload && "border-blue-400 scale-105",
           uploading && "opacity-75",
           "transition-all duration-200"
         )}
-        onDragOver={editable ? handleDragOver : undefined}
-        onDragLeave={editable ? handleDragLeave : undefined}
-        onDrop={editable ? handleDrop : undefined}
+        onDragOver={showUpload ? handleDragOver : undefined}
+        onDragLeave={showUpload ? handleDragLeave : undefined}
+        onDrop={showUpload ? handleDrop : undefined}
       >
-        {currentImageUrl ? (
+        {displayImageUrl ? (
           <img
-            src={currentImageUrl}
+            src={displayImageUrl}
             alt={`Avatar de ${name}`}
             className="w-full h-full object-cover"
-            onError={() => setError('Error al cargar la imagen')}
+            onError={() => {
+              setError('Error al cargar la imagen');
+              setCurrentImageUrl(null);
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
@@ -313,15 +317,13 @@ export function ProfileAvatarEnhanced({
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="text-center text-white">
               <Loader2 className={cn("animate-spin mx-auto mb-1", iconSizes[size])} />
-              {showUploadProgress && (
-                <div className="text-xs">{uploadProgress}%</div>
-              )}
+              <div className="text-xs">{uploadProgress}%</div>
             </div>
           </div>
         )}
 
         {/* Overlay de drag */}
-        {dragOver && editable && (
+        {dragOver && showUpload && (
           <div className="absolute inset-0 bg-blue-500 bg-opacity-75 flex items-center justify-center">
             <Upload className={cn("text-white", iconSizes[size])} />
           </div>
@@ -346,7 +348,7 @@ export function ProfileAvatarEnhanced({
       </div>
 
       {/* Controles de edición */}
-      {editable && !uploading && (
+      {showUpload && !uploading && (
         <div className="absolute -bottom-2 -right-2 flex gap-1">
           <Button
             size="sm"
@@ -358,7 +360,7 @@ export function ProfileAvatarEnhanced({
             <Camera className="w-4 h-4" />
           </Button>
           
-          {src && (
+          {currentImageUrl && (
             <Button
               size="sm"
               variant="outline"
@@ -382,7 +384,7 @@ export function ProfileAvatarEnhanced({
       />
 
       {/* Barra de progreso */}
-      {uploading && showUploadProgress && (
+      {uploading && (
         <div className="absolute -bottom-8 left-0 right-0">
           <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
             <div 
@@ -403,7 +405,7 @@ export function ProfileAvatarEnhanced({
       )}
 
       {/* Zona de drop para tamaños grandes */}
-      {editable && size === 'xl' && !currentImageUrl && (
+      {showUpload && size === 'xl' && !displayImageUrl && (
         <div 
           className={cn(
             "absolute inset-0 border-2 border-dashed border-gray-300 rounded-full flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors",
@@ -421,72 +423,4 @@ export function ProfileAvatarEnhanced({
   );
 }
 
-// Componente compacto para listas
-export function ProfileAvatarCompact({ 
-  src, 
-  name, 
-  className 
-}: { 
-  src?: string; 
-  name?: string; 
-  className?: string; 
-}) {
-  return (
-    <ProfileAvatarEnhanced
-      src={src}
-      name={name}
-      size="sm"
-      editable={false}
-      className={className}
-    />
-  );
-}
-
-// Componente con información adicional
-export function ProfileAvatarWithInfo({
-  src,
-  name,
-  subtitle,
-  verified = false,
-  online = false,
-  className
-}: {
-  src?: string;
-  name?: string;
-  subtitle?: string;
-  verified?: boolean;
-  online?: boolean;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <div className="relative">
-        <ProfileAvatarEnhanced
-          src={src}
-          name={name}
-          size="md"
-          editable={false}
-        />
-        
-        {/* Indicador online */}
-        {online && (
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
-        )}
-      </div>
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h4 className="font-medium text-gray-900 truncate">{name}</h4>
-          {verified && (
-            <Check className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          )}
-        </div>
-        {subtitle && (
-          <p className="text-sm text-gray-500 truncate">{subtitle}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default ProfileAvatarEnhanced;
+export default ProfileAvatar;

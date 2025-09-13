@@ -152,6 +152,11 @@ export default function InquilinoProfilePage() {
 
   const handleAvatarChange = (url: string) => {
     setProfileData(prev => ({ ...prev, profile_image: url }));
+    // Forzar actualización del usuario en useAuth para refrescar datos
+    if (typeof window !== 'undefined') {
+      // Forzar recarga de la página para obtener datos actualizados
+      window.location.reload();
+    }
   };
 
   return (
