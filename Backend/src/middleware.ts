@@ -8,6 +8,29 @@ export async function middleware(request: NextRequest) {
   // Rutas públicas que no requieren autenticación
   const publicRoutes = ['/login', '/register', '/properties', '/', '/terms', '/privacy'];
   const adminRoutes = ['/admin', '/api/admin'];
+
+  // Añadir protección para ruta /admin en middleware
+  if (pathname.startsWith('/admin')) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+    try {
+      const { data: user } = await supabase
+        .from('users')
+        .select('isAdmin')
+        .eq('id', session.user.id)
+        .single();
+      if (!user?.isAdmin) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    } catch (error) {
+      console.error('Error verificando admin:', error);
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
   
   // Verificar si es ruta pública
   const isPublicRoute = publicRoutes.some(route => 
