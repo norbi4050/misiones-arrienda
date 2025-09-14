@@ -19,7 +19,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from "@/utils";
 import { useUserStats } from '@/hooks/useUserStats';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 import toast from 'react-hot-toast';

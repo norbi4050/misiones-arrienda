@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import { Button } from './button'
 import { Progress } from './progress'
 import { X, Upload, Image as ImageIcon, FileText, AlertCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from "@/utils"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from './card';
 import { Badge } from './badge';
-import { cn } from '@/lib/utils';
+import { cn } from "@/utils";
 import { useUserStats } from '@/hooks/useUserStats';
 import { useUserFavorites } from '@/hooks/useUserFavorites';
 

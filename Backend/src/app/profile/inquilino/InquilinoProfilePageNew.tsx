@@ -23,7 +23,7 @@ import {
   Users,
   Heart
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import toast from "react-hot-toast";
 
 interface ProfileData {

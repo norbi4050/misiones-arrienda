@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from "@/utils";
 import { Button } from '@/components/ui/button';
 
 import type { User as SupabaseUser } from "@supabase/supabase-js";

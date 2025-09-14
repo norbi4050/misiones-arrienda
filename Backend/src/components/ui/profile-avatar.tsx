@@ -11,7 +11,7 @@ import {
   User,
   Trash2
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from "@/utils";
 import toast from 'react-hot-toast';
 
 interface ProfileAvatarProps {

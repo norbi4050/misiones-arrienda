@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 'use client'
 
-import { cn } from '@/lib/utils'
+import { cn } from "@/utils"
 import { Clock } from 'lucide-react'
 
 // Función simple para formatear tiempo relativo
