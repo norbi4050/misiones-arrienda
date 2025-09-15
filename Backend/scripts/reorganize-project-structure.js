@@ -1,482 +1,482 @@
 /**
- * 📁 SCRIPT DE REORGANIZACIÓN DE ESTRUCTURA DEL PROYECTO
+ * 🏗️ SCRIPT DE REORGANIZACIÓN DE ESTRUCTURA DEL PROYECTO
  * 
- * Este script reorganiza la estructura de archivos del proyecto según los estándares
- * establecidos en la Fase 3, creando una estructura limpia y mantenible.
+ * Reorganiza la estructura de archivos y componentes según mejores prácticas
+ * FASE 3: LIMPIEZA Y ESTRUCTURA
  */
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
-// Configuración de reorganización
-const PROJECT_ROOT = path.join(__dirname, '..');
-const DRY_RUN = process.argv.includes('--dry-run');
-
-// Nueva estructura objetivo
-const TARGET_STRUCTURE = {
-  'src/types': 'Definiciones TypeScript',
-  'src/utils': 'Utilidades compartidas',
-  'src/components/ui': 'Componentes reutilizables',
-  'src/components/forms': 'Formularios específicos',
-  'src/components/layout': 'Componentes de layout',
-  'src/lib/config': 'Configuraciones centralizadas',
-  'scripts/migration': 'Scripts de migración',
-  'scripts/testing': 'Scripts de testing',
-  'scripts/maintenance': 'Scripts de mantenimiento',
-  'sql-migrations/core': 'Migraciones principales',
-  'sql-migrations/data': 'Datos de prueba',
-  'sql-migrations/fixes': 'Correcciones específicas',
-  'docs/api': 'Documentación de APIs',
-  'docs/components': 'Documentación de componentes',
-  'docs/deployment': 'Guías de despliegue',
-  'docs/development': 'Guías de desarrollo'
+// Configuración
+const config = {
+  projectRoot: path.join(__dirname, '..'),
+  srcDir: path.join(__dirname, '..', 'src'),
+  backupDir: path.join(__dirname, '..', '_backups', `reorganize-${Date.now()}`),
+  dryRun: process.argv.includes('--dry-run'),
+  verbose: process.argv.includes('--verbose')
 };
 
-// Mapeo de archivos a mover
-const FILE_MAPPINGS = [
-  // Tipos TypeScript
-  {
-    from: 'src/lib/types.ts',
-    to: 'src/types/index.ts',
-    create: true
+// Estadísticas de reorganización
+const stats = {
+  filesAnalyzed: 0,
+  filesMoved: 0,
+  directoriesCreated: 0,
+  importsUpdated: 0,
+  errors: [],
+  startTime: new Date()
+};
+
+/**
+ * Nueva estructura de directorios propuesta
+ */
+const newStructure = {
+  // Componentes UI genéricos
+  'src/components/ui/forms': [
+    'src/components/ui/profile-form.tsx'
+  ],
+  'src/components/ui/buttons': [],
+  'src/components/ui/modals': [],
+  'src/components/ui/layout': [
+    'src/components/user-menu.tsx'
+  ],
+  'src/components/ui/stats': [
+    'src/components/ui/profile-stats-improved.tsx',
+    'src/components/ui/profile-stats-enhanced.tsx',
+    'src/components/ui/profile-stats-auditoria.tsx'
+  ],
+  'src/components/ui/grids': [
+    'src/components/ui/quick-actions-grid.tsx'
+  ],
+  'src/components/ui/activity': [
+    'src/components/ui/recent-activity.tsx'
+  ],
+  'src/components/ui/avatars': [
+    'src/components/ui/profile-avatar.tsx',
+    'src/components/ui/profile-avatar-enhanced.tsx'
+  ],
+
+  // Componentes por funcionalidad
+  'src/components/features/auth': [
+    'src/components/auth-provider.tsx'
+  ],
+  'src/components/features/properties': [],
+  'src/components/features/profile': [
+    'src/app/profile/inquilino/InquilinoProfilePage.tsx',
+    'src/app/profile/inquilino/InquilinoProfilePageNew.tsx',
+    'src/app/profile/inquilino/InquilinoProfilePageFixed.tsx'
+  ],
+  'src/components/features/community': [
+    'src/components/comunidad'  // Mover todo el directorio
+  ],
+
+  // Hooks organizados
+  'src/hooks/auth': [
+    'src/hooks/useSupabaseAuth.ts'
+  ],
+  'src/hooks/api': [
+    'src/hooks/useUserFavorites.ts',
+    'src/hooks/useUserActivity.ts',
+    'src/hooks/useUserStatsImproved.ts'
+  ],
+
+  // Librerías organizadas
+  'src/lib/supabase': [
+    'src/lib/supabase/server.ts',
+    'src/lib/supabase/browser.ts',
+    'src/lib/supabaseClient.ts'
+  ],
+  'src/lib/utils': [
+    'src/lib/api.ts'
+  ],
+
+  // APIs organizadas por funcionalidad
+  'src/app/api/auth': [],
+  'src/app/api/properties': [
+    'src/app/api/properties/route.ts',
+    'src/app/api/properties/[id]/route.ts'
+  ],
+  'src/app/api/users': [
+    'src/app/api/users/favorites/route.ts',
+    'src/app/api/users/activity/route.ts',
+    'src/app/api/users/stats/route.ts',
+    'src/app/api/users/stats/route-fixed.ts',
+    'src/app/api/users/stats/route-auditoria.ts',
+    'src/app/api/users/profile-view/route.ts'
+  ],
+  'src/app/api/admin': [
+    'src/app/api/admin/stats/route-secured.ts'
+  ]
+};
+
+/**
+ * Archivos a consolidar (eliminar duplicados)
+ */
+const filesToConsolidate = {
+  // Mantener el mejor, eliminar los demás
+  'profile-stats': {
+    keep: 'src/components/ui/profile-stats-enhanced.tsx',
+    remove: [
+      'src/components/ui/profile-stats-improved.tsx',
+      'src/components/ui/profile-stats-auditoria.tsx'
+    ]
   },
-  
-  // Utilidades
-  {
-    from: 'src/lib/utils.ts',
-    to: 'src/utils/index.ts',
-    create: true
+  'profile-pages': {
+    keep: 'src/app/profile/inquilino/InquilinoProfilePage.tsx',
+    remove: [
+      'src/app/profile/inquilino/InquilinoProfilePageNew.tsx',
+      'src/app/profile/inquilino/InquilinoProfilePageFixed.tsx'
+    ]
   },
-  
-  // Componentes de formularios
-  {
-    pattern: 'src/components/ui/*form*.tsx',
-    to: 'src/components/forms/'
+  'user-stats-routes': {
+    keep: 'src/app/api/users/stats/route.ts',
+    remove: [
+      'src/app/api/users/stats/route-fixed.ts',
+      'src/app/api/users/stats/route-auditoria.ts'
+    ]
   },
-  
-  // Scripts de testing
+  'profile-avatars': {
+    keep: 'src/components/ui/profile-avatar-enhanced.tsx',
+    remove: [
+      'src/components/ui/profile-avatar.tsx'
+    ]
+  }
+};
+
+/**
+ * Patrones de imports a actualizar
+ */
+const importPatterns = [
   {
-    pattern: 'test-*.js',
-    to: 'scripts/testing/'
-  },
-  {
-    pattern: 'verify-*.js',
-    to: 'scripts/testing/'
-  },
-  
-  // Scripts de migración
-  {
-    pattern: 'scripts/migrate-*.js',
-    to: 'scripts/migration/'
-  },
-  {
-    pattern: 'scripts/cleanup-*.js',
-    to: 'scripts/maintenance/'
-  },
-  
-  // Migraciones SQL por categoría
-  {
-    pattern: 'sql-migrations/create-*.sql',
-    to: 'sql-migrations/core/'
+    from: /from ['"]@\/components\/ui\/profile-stats-improved['"]/, 
+    to: "from '@/components/ui/stats/profile-stats'"
   },
   {
-    pattern: 'sql-migrations/CREAR-DATOS-*.sql',
-    to: 'sql-migrations/data/'
+    from: /from ['"]@\/components\/auth-provider['"]/, 
+    to: "from '@/components/features/auth/auth-provider'"
   },
   {
-    pattern: 'sql-migrations/FIX-*.sql',
-    to: 'sql-migrations/fixes/'
+    from: /from ['"]@\/hooks\/useSupabaseAuth['"]/, 
+    to: "from '@/hooks/auth/useSupabaseAuth'"
   },
   {
-    pattern: 'sql-migrations/fix-*.sql',
-    to: 'sql-migrations/fixes/'
+    from: /from ['"]@\/lib\/supabaseClient['"]/, 
+    to: "from '@/lib/supabase/client'"
   }
 ];
 
-// Archivos de configuración a crear
-const CONFIG_FILES = [
-  {
-    path: 'src/lib/config/index.ts',
-    content: `/**
- * 🔧 CONFIGURACIÓN CENTRALIZADA DEL PROYECTO
+/**
+ * Crea backup de archivos antes de mover
  */
+function createBackup(filePath) {
+  if (config.dryRun) return;
 
-// Validar variables de entorno requeridas
-const requiredEnvVars = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY'
-];
-
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(\`Variable de entorno requerida faltante: \${envVar}\`);
-  }
-}
-
-// Configuración de Supabase
-export const supabaseConfig = {
-  url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-} as const;
-
-// Configuración de la aplicación
-export const appConfig = {
-  name: 'Misiones Arrienda',
-  version: '1.0.0',
-  environment: process.env.NODE_ENV || 'development',
-  isDevelopment: process.env.NODE_ENV === 'development',
-  isProduction: process.env.NODE_ENV === 'production',
-} as const;
-
-// Configuración de características
-export const featureFlags = {
-  enableAnalytics: process.env.ENABLE_ANALYTICS === 'true',
-  enablePayments: process.env.ENABLE_PAYMENTS === 'true',
-  enableTesting: process.env.ENABLE_TESTING === 'true',
-  enableDebugLogs: process.env.ENABLE_DEBUG_LOGS === 'true',
-} as const;
-
-// URLs de API
-export const apiEndpoints = {
-  users: '/api/users',
-  properties: '/api/properties',
-  admin: '/api/admin',
-  auth: '/api/auth',
-} as const;
-
-// Configuración de Storage
-export const storageConfig = {
-  buckets: {
-    properties: 'properties',
-    avatars: 'avatars',
-    documents: 'documents',
-  },
-  maxFileSizes: {
-    image: 10 * 1024 * 1024, // 10MB
-    avatar: 2 * 1024 * 1024,  // 2MB
-    document: 50 * 1024 * 1024, // 50MB
-  },
-  allowedMimeTypes: {
-    images: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-    avatars: ['image/jpeg', 'image/png', 'image/webp'],
-    documents: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-  },
-} as const;
-
-// Configuración por defecto
-export const config = {
-  supabase: supabaseConfig,
-  app: appConfig,
-  features: featureFlags,
-  api: apiEndpoints,
-  storage: storageConfig,
-} as const;
-
-export default config;
-`
-  },
-  
-  {
-    path: 'src/types/index.ts',
-    content: `/**
- * 📝 DEFINICIONES DE TIPOS TYPESCRIPT
- */
-
-// Tipos de usuario
-export type UserRole = 'USER' | 'ADMIN' | 'MODERATOR';
-export type UserType = 'inquilino' | 'dueno_directo' | 'inmobiliaria';
-
-export interface User {
-  id: string;
-  email: string;
-  name?: string;
-  role: UserRole;
-  user_type?: UserType;
-  avatar_url?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// Tipos de propiedad
-export type PropertyStatus = 'AVAILABLE' | 'UNAVAILABLE' | 'PENDING' | 'EXPIRED';
-export type PropertyType = 'APARTMENT' | 'HOUSE' | 'ROOM' | 'STUDIO' | 'COMMERCIAL' | 'OTHER';
-
-export interface Property {
-  id: string;
-  title: string;
-  description?: string;
-  type?: PropertyType;
-  status: PropertyStatus;
-  price: number;
-  currency: string;
-  images?: string[];
-  featured: boolean;
-  userId: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// Tipos de API
-export interface ApiResponse<T = any> {
-  data?: T;
-  error?: string;
-  message?: string;
-  success: boolean;
-}
-
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-// Tipos de formularios
-export interface LoginForm {
-  email: string;
-  password: string;
-}
-
-export interface RegisterForm extends LoginForm {
-  name: string;
-  user_type: UserType;
-}
-
-export interface PropertyForm {
-  title: string;
-  description: string;
-  type: PropertyType;
-  price: number;
-  currency: string;
-  images: File[];
-}
-
-// Tipos de configuración
-export interface Config {
-  supabase: {
-    url: string;
-    anonKey: string;
-    serviceRoleKey: string;
-  };
-  app: {
-    name: string;
-    version: string;
-    environment: string;
-    isDevelopment: boolean;
-    isProduction: boolean;
-  };
-  features: {
-    enableAnalytics: boolean;
-    enablePayments: boolean;
-    enableTesting: boolean;
-    enableDebugLogs: boolean;
-  };
-}
-
-// Tipos de hooks
-export interface UseAuthReturn {
-  user: User | null;
-  loading: boolean;
-  error: string | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
-  signOut: () => Promise<void>;
-}
-
-export interface UseApiReturn<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-}
-
-// Tipos de eventos
-export interface AnalyticsEvent {
-  name: string;
-  properties?: Record<string, any>;
-  timestamp: string;
-}
-
-// Exportar todos los tipos
-export type * from './api';
-export type * from './components';
-export type * from './database';
-`
-  },
-  
-  {
-    path: 'src/utils/index.ts',
-    content: `/**
- * 🛠️ UTILIDADES COMPARTIDAS
- */
-
-// Utilidades de formato
-export const formatCurrency = (amount: number, currency = 'ARS'): string => {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency,
-  }).format(amount);
-};
-
-export const formatDate = (date: string | Date): string => {
-  return new Intl.DateTimeFormat('es-AR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(date));
-};
-
-export const formatRelativeTime = (date: string | Date): string => {
-  const now = new Date();
-  const target = new Date(date);
-  const diffInSeconds = Math.floor((now.getTime() - target.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'hace unos segundos';
-  if (diffInSeconds < 3600) return \`hace \${Math.floor(diffInSeconds / 60)} minutos\`;
-  if (diffInSeconds < 86400) return \`hace \${Math.floor(diffInSeconds / 3600)} horas\`;
-  return \`hace \${Math.floor(diffInSeconds / 86400)} días\`;
-};
-
-// Utilidades de validación
-export const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$/;
-  return emailRegex.test(email);
-};
-
-export const isValidPassword = (password: string): boolean => {
-  return password.length >= 8;
-};
-
-export const isValidUrl = (url: string): boolean => {
   try {
-    new URL(url);
+    const relativePath = path.relative(config.projectRoot, filePath);
+    const backupPath = path.join(config.backupDir, relativePath);
+    const backupDir = path.dirname(backupPath);
+
+    fs.mkdirSync(backupDir, { recursive: true });
+    fs.copyFileSync(filePath, backupPath);
+
+    if (config.verbose) {
+      console.log(`   📦 Backup: ${relativePath}`);
+    }
+  } catch (error) {
+    stats.errors.push(`Error creando backup de ${filePath}: ${error.message}`);
+  }
+}
+
+/**
+ * Crea directorio si no existe
+ */
+function ensureDirectory(dirPath) {
+  if (!fs.existsSync(dirPath)) {
+    if (!config.dryRun) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    stats.directoriesCreated++;
+    
+    if (config.verbose) {
+      console.log(`   📁 Directorio creado: ${path.relative(config.projectRoot, dirPath)}`);
+    }
+  }
+}
+
+/**
+ * Mueve archivo a nueva ubicación
+ */
+function moveFile(fromPath, toPath) {
+  try {
+    const fromRelative = path.relative(config.projectRoot, fromPath);
+    const toRelative = path.relative(config.projectRoot, toPath);
+    
+    if (!fs.existsSync(fromPath)) {
+      if (config.verbose) {
+        console.log(`   ⚠️  Archivo no existe: ${fromRelative}`);
+      }
+      return false;
+    }
+
+    // Crear backup
+    createBackup(fromPath);
+    
+    // Asegurar que el directorio destino existe
+    ensureDirectory(path.dirname(toPath));
+    
+    console.log(`   📦 Moviendo: ${fromRelative} → ${toRelative}`);
+    
+    if (!config.dryRun) {
+      fs.renameSync(fromPath, toPath);
+    }
+    
+    stats.filesMoved++;
     return true;
-  } catch {
+  } catch (error) {
+    stats.errors.push(`Error moviendo ${fromPath} a ${toPath}: ${error.message}`);
     return false;
   }
-};
+}
 
-// Utilidades de texto
-export const truncateText = (text: string, maxLength: number): string => {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength).trim() + '...';
-};
+/**
+ * Consolida archivos duplicados
+ */
+function consolidateFiles() {
+  console.log('\n🔄 Consolidando archivos duplicados...');
+  
+  Object.entries(filesToConsolidate).forEach(([name, config]) => {
+    console.log(`\n   📋 Consolidando ${name}:`);
+    
+    const keepPath = path.join(config.projectRoot, config.keep);
+    const keepRelative = path.relative(config.projectRoot, keepPath);
+    
+    console.log(`   ✅ Mantener: ${keepRelative}`);
+    
+    config.remove.forEach(removePath => {
+      const fullRemovePath = path.join(config.projectRoot, removePath);
+      const removeRelative = path.relative(config.projectRoot, fullRemovePath);
+      
+      if (fs.existsSync(fullRemovePath)) {
+        console.log(`   🗑️  Eliminar: ${removeRelative}`);
+        
+        if (!config.dryRun) {
+          createBackup(fullRemovePath);
+          fs.unlinkSync(fullRemovePath);
+        }
+      }
+    });
+  });
+}
 
-export const slugify = (text: string): string => {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\\u0300-\\u036f]/g, '')
-    .replace(/[^a-z0-9\\s-]/g, '')
-    .replace(/\\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim();
-};
+/**
+ * Reorganiza archivos según nueva estructura
+ */
+function reorganizeFiles() {
+  console.log('\n🏗️  Reorganizando estructura de archivos...');
+  
+  Object.entries(newStructure).forEach(([newDir, files]) => {
+    if (files.length === 0) return;
+    
+    console.log(`\n   📁 Procesando directorio: ${newDir}`);
+    
+    const fullNewDir = path.join(config.projectRoot, newDir);
+    ensureDirectory(fullNewDir);
+    
+    files.forEach(filePath => {
+      const fullFromPath = path.join(config.projectRoot, filePath);
+      const fileName = path.basename(filePath);
+      const fullToPath = path.join(fullNewDir, fileName);
+      
+      stats.filesAnalyzed++;
+      
+      if (moveFile(fullFromPath, fullToPath)) {
+        // Archivo movido exitosamente
+      }
+    });
+  });
+}
 
-export const capitalizeFirst = (text: string): string => {
-  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-};
-
-// Utilidades de arrays
-export const groupBy = <T>(array: T[], key: keyof T): Record<string, T[]> => {
-  return array.reduce((groups, item) => {
-    const group = String(item[key]);
-    groups[group] = groups[group] || [];
-    groups[group].push(item);
-    return groups;
-  }, {} as Record<string, T[]>);
-};
-
-export const unique = <T>(array: T[]): T[] => {
-  return Array.from(new Set(array));
-};
-
-export const chunk = <T>(array: T[], size: number): T[][] => {
-  const chunks: T[][] = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
-  }
-  return chunks;
-};
-
-// Utilidades de objetos
-export const omit = <T extends Record<string, any>, K extends keyof T>(
-  obj: T,
-  keys: K[]
-): Omit<T, K> => {
-  const result = { ...obj };
-  keys.forEach(key => delete result[key]);
-  return result;
-};
-
-export const pick = <T extends Record<string, any>, K extends keyof T>(
-  obj: T,
-  keys: K[]
-): Pick<T, K> => {
-  const result = {} as Pick<T, K>;
-  keys.forEach(key => {
-    if (key in obj) {
-      result[key] = obj[key];
+/**
+ * Actualiza imports en archivos
+ */
+function updateImports() {
+  console.log('\n🔗 Actualizando imports...');
+  
+  const findFiles = (dir, extensions = ['.ts', '.tsx', '.js', '.jsx']) => {
+    let files = [];
+    
+    try {
+      const items = fs.readdirSync(dir);
+      
+      items.forEach(item => {
+        const fullPath = path.join(dir, item);
+        const stat = fs.statSync(fullPath);
+        
+        if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+          files = files.concat(findFiles(fullPath, extensions));
+        } else if (stat.isFile() && extensions.some(ext => item.endsWith(ext))) {
+          files.push(fullPath);
+        }
+      });
+    } catch (error) {
+      stats.errors.push(`Error leyendo directorio ${dir}: ${error.message}`);
+    }
+    
+    return files;
+  };
+  
+  const files = findFiles(config.srcDir);
+  
+  files.forEach(filePath => {
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      let updatedContent = content;
+      let hasChanges = false;
+      
+      importPatterns.forEach(pattern => {
+        if (pattern.from.test(content)) {
+          updatedContent = updatedContent.replace(pattern.from, pattern.to);
+          hasChanges = true;
+        }
+      });
+      
+      if (hasChanges) {
+        const relativePath = path.relative(config.projectRoot, filePath);
+        console.log(`   🔗 Actualizando imports: ${relativePath}`);
+        
+        if (!config.dryRun) {
+          createBackup(filePath);
+          fs.writeFileSync(filePath, updatedContent);
+        }
+        
+        stats.importsUpdated++;
+      }
+    } catch (error) {
+      stats.errors.push(`Error actualizando imports en ${filePath}: ${error.message}`);
     }
   });
-  return result;
-};
+}
 
-// Utilidades de archivos
-export const getFileExtension = (filename: string): string => {
-  return filename.split('.').pop()?.toLowerCase() || '';
-};
-
-export const formatFileSize = (bytes: number): string => {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  if (bytes === 0) return '0 Bytes';
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-};
-
-export const isImageFile = (file: File): boolean => {
-  return file.type.startsWith('image/');
-};
-
-// Utilidades de desarrollo
-export const logger = {
-  info: (message: string, ...args: any[]) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(\`[INFO] \${message}\`, ...args);
+/**
+ * Limpia directorios vacíos
+ */
+function cleanupEmptyDirectories() {
+  console.log('\n🧹 Limpiando directorios vacíos...');
+  
+  const cleanEmptyDirs = (dir) => {
+    try {
+      const items = fs.readdirSync(dir);
+      
+      if (items.length === 0) {
+        const relativePath = path.relative(config.projectRoot, dir);
+        console.log(`   🗑️  Eliminando directorio vacío: ${relativePath}`);
+        
+        if (!config.dryRun) {
+          fs.rmdirSync(dir);
+        }
+        return true;
+      }
+      
+      let isEmpty = true;
+      items.forEach(item => {
+        const fullPath = path.join(dir, item);
+        const stat = fs.statSync(fullPath);
+        
+        if (stat.isDirectory()) {
+          if (!cleanEmptyDirs(fullPath)) {
+            isEmpty = false;
+          }
+        } else {
+          isEmpty = false;
+        }
+      });
+      
+      if (isEmpty && items.length === 0) {
+        const relativePath = path.relative(config.projectRoot, dir);
+        console.log(`   🗑️  Eliminando directorio vacío: ${relativePath}`);
+        
+        if (!config.dryRun) {
+          fs.rmdirSync(dir);
+        }
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      return false;
     }
-  },
-  warn: (message: string, ...args: any[]) => {
-    console.warn(\`[WARN] \${message}\`, ...args);
-  },
-  error: (message: string, ...args: any[]) => {
-    console.error(\`[ERROR] \${message}\`, ...args);
-  },
-  debug: (message: string, ...args: any[]) => {
-    if (process.env.ENABLE_DEBUG_LOGS === 'true') {
-      console.debug(\`[DEBUG] \${message}\`, ...args);
-    }
-  },
-};
-
-// Utilidades de performance
-export const debounce = <T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
   };
-};
+  
+  // Limpiar directorios específicos
+  const dirsToCheck = [
+    path.join(config.srcDir, 'components'),
+    path.join(config.srcDir, 'hooks'),
+    path.join(config.srcDir, 'lib'),
+    path.join(config.srcDir, 'app')
+  ];
+  
+  dirsToCheck.forEach(dir => {
+    if (fs.existsSync(dir)) {
+      cleanEmptyDirs(dir);
+    }
+  });
+}
 
-export const throttle = <T extends (...args: any[]) => any>(
-  func: T,
-  limit: number
+/**
+ * Crea archivo de índice para cada directorio
+ */
+function createIndexFiles() {
+  console.log('\n📄 Creando archivos de índice...');
+  
+  const indexesToCreate = {
+    'src/components/ui/index.ts': [
+      'export * from "./forms"',
+      'export * from "./buttons"',
+      'export * from "./modals"',
+      'export * from "./layout"',
+      'export * from "./stats"',
+      'export * from "./grids"',
+      'export * from "./activity"',
+      'export * from "./avatars"'
+    ],
+    'src/components/features/index.ts': [
+      'export * from "./auth"',
+      'export * from "./properties"',
+      'export * from "./profile"',
+      'export * from "./community"'
+    ],
+    'src/hooks/index.ts': [
+      'export * from "./auth"',
+      'export * from "./api"'
+    ],
+    'src/lib/index.ts': [
+      'export * from "./supabase"',
+      'export * from "./utils"'
+    ]
+  };
+  
+  Object.entries(indexesToCreate).forEach(([indexPath, exports]) => {
+    const fullPath = path.join(config.projectRoot, indexPath);
+    const content = exports.join(';\n') + ';\n';
+    
+    console.log(`   📄 Creando: ${indexPath}`);
+    
+    if (!config.dryRun) {
+      ensureDirectory(path.dirname(fullPath));
+      fs.writeFileSync(fullPath, content);
+    }
+  });
+}
+
+/**
+ * Genera reporte de reorganización
+ */
+function generateReport() {
+  const endTime = new Date();
+  const duration = (endTime - stats.startTime) / 1000;
+  
+  console.log('\n' + '='.repeat(60));
 ): ((...args: Parameters<T>) => void) => {
   let inThrottle: boolean;
   return (...args: Parameters<T>) => {

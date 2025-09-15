@@ -7,30 +7,12 @@ export async function middleware(request: NextRequest) {
   
   // Rutas públicas que no requieren autenticación
   const publicRoutes = ['/login', '/register', '/properties', '/', '/terms', '/privacy'];
+  
+  // Rutas que requieren autenticación
+  const protectedRoutes = ['/profile', '/dashboard', '/publicar', '/admin'];
+  
+  // Rutas que requieren rol admin
   const adminRoutes = ['/admin', '/api/admin'];
-
-  // Añadir protección para ruta /admin en middleware
-  if (pathname.startsWith('/admin')) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      const redirectUrl = new URL('/login', request.url);
-      redirectUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
-    try {
-      const { data: user } = await supabase
-        .from('users')
-        .select('isAdmin')
-        .eq('id', session.user.id)
-        .single();
-      if (!user?.isAdmin) {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-    } catch (error) {
-      console.error('Error verificando admin:', error);
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-  }
   
   // Verificar si es ruta pública
   const isPublicRoute = publicRoutes.some(route => 
@@ -40,6 +22,11 @@ export async function middleware(request: NextRequest) {
   if (isPublicRoute) {
     return NextResponse.next();
   }
+
+  // Verificar si es ruta protegida
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname === route || pathname.startsWith(route)
+  );
   
   // Crear cliente Supabase
   const response = NextResponse.next();
@@ -63,8 +50,8 @@ export async function middleware(request: NextRequest) {
   
   const { data: { session } } = await supabase.auth.getSession();
   
-  // Redirigir a login si no hay sesión
-  if (!session) {
+  // Redirigir a login si no hay sesión en ruta protegida
+  if (isProtectedRoute && !session) {
     const redirectUrl = new URL('/login', request.url);
     redirectUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(redirectUrl);
@@ -72,14 +59,20 @@ export async function middleware(request: NextRequest) {
   
   // Verificar admin para rutas admin
   if (adminRoutes.some(route => pathname.startsWith(route))) {
+    if (!session) {
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+    
     try {
-      const { data: user } = await supabase
-        .from('users')
-        .select('isAdmin')
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('role')
         .eq('id', session.user.id)
         .single();
         
-      if (!user?.isAdmin) {
+      if (!userProfile || userProfile.role !== 'ADMIN') {
         return NextResponse.redirect(new URL('/dashboard', request.url));
       }
     } catch (error) {

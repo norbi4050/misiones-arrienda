@@ -25,12 +25,18 @@ const client = new MercadoPagoConfig({
   }
 })
 
-// Configuración de credenciales
+// Configuración de credenciales desde variables de entorno
 export const MERCADOPAGO_CONFIG = {
-  publicKey: 'APP_USR-5abed961-c23a-4458-82c7-0f564bf7b9d5',
-  accessToken: 'APP_USR-3647290553297438-082512-ea1978cb2f7b9768080ad2bab3df7600-77412419',
-  clientId: '3647290553297438',
-  clientSecret: 'ENlqoDJIZ0fffS8QftXGYfvePfMDd8NO'
+  publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || process.env.MP_PUBLIC_KEY,
+  accessToken: accessToken, // Ya definido arriba desde env
+  clientId: process.env.MERCADOPAGO_CLIENT_ID || process.env.MP_CLIENT_ID,
+  clientSecret: process.env.MERCADOPAGO_CLIENT_SECRET || process.env.MP_CLIENT_SECRET
+}
+
+// Validar que las credenciales estén configuradas
+if (!MERCADOPAGO_CONFIG.publicKey || !MERCADOPAGO_CONFIG.accessToken) {
+  console.warn('⚠️ ADVERTENCIA: Credenciales de MercadoPago no configuradas correctamente');
+  console.warn('Variables requeridas: MERCADOPAGO_ACCESS_TOKEN, MERCADOPAGO_PUBLIC_KEY');
 }
 
 // Cliente de preferencias
@@ -92,7 +98,7 @@ export async function getPaymentInfo(paymentId: string) {
   try {
     const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: {
-        'Authorization': `Bearer ${MERCADOPAGO_CONFIG.accessToken}`
+        'Authorization': `Bearer ${accessToken}`
       }
     })
     

@@ -1,0 +1,1348 @@
+{
+  "timestamp": "2025-09-15T13:29:55.857Z",
+  "summary": {
+    "totalFiles": 576,
+    "criticalFiles": 314,
+    "filesToDelete": 238,
+    "filesToReview": 24,
+    "totalSizeMB": "10.32",
+    "deletableSizeMB": "1.37"
+  },
+  "filesToDelete": [
+    {
+      "path": "ANALISIS-AUDITORIA-SUPABASE-RESULTADO-2025.md",
+      "size": 4647,
+      "category": "auditoria"
+    },
+    {
+      "path": "ANALISIS-IMPACTO-CORRECCIONES-SUPABASE-2025.md",
+      "size": 10015,
+      "category": "otros"
+    },
+    {
+      "path": "analisis-limpieza-proyecto-final.js",
+      "size": 16806,
+      "category": "otros"
+    },
+    {
+      "path": "AUDITORIA-COMPLETA-PROYECTO-MISIONES-ARRIENDA-2025.md",
+      "size": 10850,
+      "category": "auditoria"
+    },
+    {
+      "path": "AUDITORIA-DIRECTA-CODIGO-FUENTE-2025.md",
+      "size": 13320,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\analisis-error-403-supabase.js",
+      "size": 5230,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\ANALISIS-RENDIMIENTO-SITIO-WEB-2025.js",
+      "size": 7539,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\AUDITORIA-COMPLETA-SUPABASE-2025.sql",
+      "size": 8338,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\check-database-schema.sql",
+      "size": 1250,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Backend\\cleanup-report.json",
+      "size": 544,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\CORRECCION-ERROR-GETBROWSERSUPABASE-COMPLETADA.md",
+      "size": 3388,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\CORRECCION-ERROR-RUNTIME-COMPLETADA.md",
+      "size": 2952,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\create-demo-property-published.js",
+      "size": 5140,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\create-demo-property.js",
+      "size": 6309,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\create-demo-property.sql",
+      "size": 2249,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Backend\\INVESTIGACION-SUPABASE-DIAGNOSTICO.sql",
+      "size": 7142,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Backend\\run-create-demo-property.bat",
+      "size": 63,
+      "category": "ejecutable"
+    },
+    {
+      "path": "Backend\\run-dev-server.bat",
+      "size": 39,
+      "category": "ejecutable"
+    },
+    {
+      "path": "Backend\\run-get-property-from-supabase.bat",
+      "size": 69,
+      "category": "ejecutable"
+    },
+    {
+      "path": "Backend\\run-get-property-id.bat",
+      "size": 58,
+      "category": "ejecutable"
+    },
+    {
+      "path": "Backend\\run-test-api-config.bat",
+      "size": 63,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\run-test-api-properties-filters.bat",
+      "size": 70,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\run-test-api-properties-id.bat",
+      "size": 248,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\run-test-new-filters.bat",
+      "size": 74,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\run-test-property-detail-fix.bat",
+      "size": 67,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\run-verificar-env.bat",
+      "size": 77,
+      "category": "ejecutable"
+    },
+    {
+      "path": "Backend\\scripts\\db-check.mjs",
+      "size": 3449,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\scripts\\runIndexTests.ts",
+      "size": 2674,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\scripts\\setup-structured-testing.js",
+      "size": 27829,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\simple-check-properties.js",
+      "size": 5198,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\sql-migrations\\AUDITORIA-ESTADO-ACTUAL-SUPABASE-2025.sql",
+      "size": 8951,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\sql-migrations\\AUDITORIA-FINAL-PERFIL-USUARIO-2025.sql",
+      "size": 10709,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\sql-migrations\\AUDITORIA-SIMPLE-SUPABASE-2025.sql",
+      "size": 3610,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\sql-migrations\\core\\create-profile-tables-2025-AUDITORIA.sql",
+      "size": 16044,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\sql-migrations\\data\\CREAR-DATOS-PRUEBA-DIRECTO-2025.sql",
+      "size": 6213,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Backend\\sql-migrations\\data\\CREAR-DATOS-PRUEBA-PERFIL-2025.sql",
+      "size": 9621,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Backend\\sql-migrations\\DIAGNOSTICO-Y-CORRECCION-AUTH-2025.sql",
+      "size": 9357,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-FINAL-FAVORITOS-Y-PRUEBA-2025.sql",
+      "size": 10712,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Backend\\sql-migrations\\verify-profile-tables-phase-4.sql",
+      "size": 10570,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Backend\\src\\app\\api\\users\\stats\\route-auditoria.ts",
+      "size": 7874,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\src\\components\\comunidad\\__tests__\\ProfileCard.test.tsx",
+      "size": 5206,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\src\\components\\ui\\checkbox.tsx",
+      "size": 1141,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\src\\components\\ui\\profile-stats-auditoria.tsx",
+      "size": 17479,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\test-component-structure-report.json",
+      "size": 2302,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\test-component-structure.js",
+      "size": 18639,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\test-database-normalization.js",
+      "size": 19250,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\test-detail-seo-fallback.mjs",
+      "size": 7132,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\TODO.md",
+      "size": 1179,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\ANALISIS-COMPLETO-ERRORES-PERFIL-2025.md",
+      "size": 8057,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\audit-critico-especifico.js",
+      "size": 2265,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\audit-error-readlink-comunidad.js",
+      "size": 4471,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\audit-proyecto-completo.js",
+      "size": 7915,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\audit-supabase-imports-completo.js",
+      "size": 4036,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\check-properties-data.js",
+      "size": 4629,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\check-properties.js",
+      "size": 1629,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\check-property-exists.js",
+      "size": 991,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\check-tables.js",
+      "size": 1703,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\diagnostico-avatar-upload-problema-2025.js",
+      "size": 4527,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\INSTRUCCIONES-APLICAR-RLS-POLICIES.md",
+      "size": 4810,
+      "category": "instrucciones"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\INSTRUCCIONES-AUDITORIA-SUPABASE-2025.md",
+      "size": 7201,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\INSTRUCCIONES-FASE-2-OPTIMIZACION-RENDIMIENTO-2025.md",
+      "size": 3472,
+      "category": "instrucciones"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\INSTRUCCIONES-FASE-3-LIMPIEZA-Y-ESTRUCTURA-2025.md",
+      "size": 0,
+      "category": "instrucciones"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\INSTRUCCIONES-MIGRACION-PERFIL-2025.md",
+      "size": 3989,
+      "category": "instrucciones"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\INSTRUCCIONES-URGENTES-FIX-RLS-2025.md",
+      "size": 3844,
+      "category": "instrucciones"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\PLAN-ARREGLO-MINIMO-SUPABASE.md",
+      "size": 1516,
+      "category": "plan"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\PLAN-CORRECCION-ERROR-RUNTIME.md",
+      "size": 1277,
+      "category": "plan"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\PLAN-REFACTOR-SUPABASE.md",
+      "size": 1399,
+      "category": "plan"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-api-properties-filters.js",
+      "size": 3447,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-api-properties-id.js",
+      "size": 2573,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-api-simple.js",
+      "size": 1097,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-api-with-config.js",
+      "size": 1851,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-auditoria-perfil-completo-2025.js",
+      "size": 12147,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-auth-hydration.js",
+      "size": 2023,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-auth-provider-error-fix.js",
+      "size": 3473,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-auth-provider-fix.js",
+      "size": 2678,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-auth-ui-fix.js",
+      "size": 5444,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-avatar-upload-complete-2025.js",
+      "size": 5218,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-avatar-upload-fix-2025.js",
+      "size": 5270,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-exhaustivo-permission-fix.js",
+      "size": 12228,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-fetch-bucket-images.js",
+      "size": 1484,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-getbrowsersupabase.js",
+      "size": 1076,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-import.js",
+      "size": 374,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-neutralizacion-final-preciso.js",
+      "size": 5204,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-neutralizacion-legacy-exhaustivo.js",
+      "size": 6443,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-new-filters-comprehensive.js",
+      "size": 5638,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-new-filters-implementation.js",
+      "size": 4563,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-payment-preference.js",
+      "size": 3131,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-perfil-datos-reales-2025.js",
+      "size": 8177,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-permission-denied-fix.js",
+      "size": 8882,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-phase-2-quick-actions-improvements.js",
+      "size": 6868,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-phase-3-profile-stats-improvements.js",
+      "size": 4419,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-phase-4-api-verification.js",
+      "size": 8698,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-profile-activity-improvements.js",
+      "size": 6474,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-profile-complete-2025.js",
+      "size": 7805,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-profile-errors-fix.js",
+      "size": 5832,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-profile-improvements-2025.js",
+      "size": 8320,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-profile-inquilino-auth-fix.js",
+      "size": 8736,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-properties-api-fix.js",
+      "size": 926,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-properties-fix-verification.js",
+      "size": 3361,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-property-creation.js",
+      "size": 1444,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-property-detail-fix-pack.js",
+      "size": 2249,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-property-detail-fix.js",
+      "size": 820,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-property-filters.js",
+      "size": 5508,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-property-images-fallback-comprehensive.js",
+      "size": 9301,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-property-images-fallback-enhanced.js",
+      "size": 12541,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-property-images-fallback.js",
+      "size": 1967,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-resolve-images.js",
+      "size": 2957,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-security-fixes-phase-1.js",
+      "size": 6644,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-seo-implementation.js",
+      "size": 4013,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-seo-property-detail.js",
+      "size": 2948,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-server-status-and-performance.js",
+      "size": 6981,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-session-prop.js",
+      "size": 1399,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-smoke-e2e.js",
+      "size": 5929,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-soft-guard-dashboard.js",
+      "size": 5126,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\test-sql-supabase-corregido-2025.js",
+      "size": 11129,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\verify-legacy-neutralization.js",
+      "size": 2244,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\verify-refactor-success.js",
+      "size": 1360,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\scripts\\testing\\verify-runtime-error-fix.js",
+      "size": 2596,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\SOLUCION-ERROR-RUNTIME-AUTH-PROVIDER.md",
+      "size": 2430,
+      "category": "solucion"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\SOLUCION-ERROR-RUNTIME-COMPLETADA.md",
+      "size": 4294,
+      "category": "solucion"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\SOLUCION-PERMISSION-DENIED-USER-TABLE-COMPLETADA.md",
+      "size": 8296,
+      "category": "solucion"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\SOLUCION-PROFILE-INQUILINO-AUTH-COMPLETADA.md",
+      "size": 8258,
+      "category": "solucion"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\test-auditoria-fase-1-exhaustivo.js",
+      "size": 7450,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\test-exhaustivo-auditoria-completa-2025.js",
+      "size": 17153,
+      "category": "auditoria"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\test-exhaustivo-completo-2025.js",
+      "size": 12345,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\test-exhaustivo-fase-2-storage-completo.js",
+      "size": 21662,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\test-fase-2-storage-setup.js",
+      "size": 13903,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\_backups\\cleanup-1757899821654\\TODO-FIX-PERMISSION-DENIED-USER-TABLE.md",
+      "size": 1075,
+      "category": "otros"
+    },
+    {
+      "path": "Backend\\__tests__\\components\\comunidad\\ChatInput.test.tsx",
+      "size": 1299,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\__tests__\\components\\comunidad\\ProfileCard.test.tsx",
+      "size": 1631,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\__tests__\\helpers\\test-utils.tsx",
+      "size": 2434,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\__tests__\\hooks\\useSupabaseAuth.test.ts",
+      "size": 4202,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\__tests__\\integration\\api\\properties.test.ts",
+      "size": 2448,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\__tests__\\unit\\hooks\\useSupabaseAuth.test.tsx",
+      "size": 2341,
+      "category": "testing"
+    },
+    {
+      "path": "Backend\\__tests__\\unit\\utils\\format.test.ts",
+      "size": 1960,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\check-avatar-paths.js",
+      "size": 1336,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\check-database-performance-2025.sql",
+      "size": 4450,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Blackbox\\check-properties-table-data.sql",
+      "size": 642,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Blackbox\\insertar-datos-prueba-published.sql",
+      "size": 1962,
+      "category": "sql-desarrollo"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-BLACKBOX-CORRECCION-ERROR-TYPESCRIPT-PROPERTY-DETAIL-2025.md",
+      "size": 2783,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-BLACKBOX-FALLBACK-IMAGENES-PROPIEDADES-2025.md",
+      "size": 7756,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-BLACKBOX-ORDERING.md",
+      "size": 2790,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-BLACKBOX-PROFILE-IMAGE-UPLOAD-2025.md",
+      "size": 3726,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-BLACKBOX-PROPERTIES-DATA.md",
+      "size": 5563,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-BLACKBOX-PROPERTY-CARD-UPDATES-2025.md",
+      "size": 4570,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-BLACKBOX-SUPABASE-STORAGE-PERMISSIONS-2025.md",
+      "size": 5913,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-CONTACT-AGENT-2025.md",
+      "size": 19738,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-FINAL-PROPERTIES-API-2025.md",
+      "size": 7921,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-FINAL-PROPERTY-ROBUSTEZ-2025.md",
+      "size": 6966,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-FINAL-SEED-PROPERTIES-2025.md",
+      "size": 5938,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-FIX-500-REST-API-2025.md",
+      "size": 4253,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-FIX-PROPERTY-CARD-IMAGE-ERROR-2025.md",
+      "size": 4652,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-FRONTEND-PROPERTIES-2025.md",
+      "size": 3807,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-PROPERTY-DETAIL-2025.md",
+      "size": 15407,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\RESPUESTA-PROPIEDADES-VISIBLES.md",
+      "size": 3656,
+      "category": "otros"
+    },
+    {
+      "path": "Blackbox\\run-thorough-e2e-test.bat",
+      "size": 196,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-api-patch-price-validation.js",
+      "size": 3256,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-api-properties-published.js",
+      "size": 4040,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-frontend-filters-2025.js",
+      "size": 15832,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-permissions-comprehensive.js",
+      "size": 7314,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-permissions-curl.js",
+      "size": 4901,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-permissions-simple.js",
+      "size": 5022,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-permissions-supabase-storage.js",
+      "size": 3411,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-profile-image-integration.js",
+      "size": 3413,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-profile-image-simple.js",
+      "size": 3340,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-profile-image-upload.js",
+      "size": 6728,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-properties-api.js",
+      "size": 1355,
+      "category": "testing"
+    },
+    {
+      "path": "Blackbox\\test-thorough-e2e-filters-2025.js",
+      "size": 7592,
+      "category": "testing"
+    },
+    {
+      "path": "BLACKBOX-RESPUESTA-ERROR-500-PROPERTIES-PAGE-2025.md",
+      "size": 4878,
+      "category": "otros"
+    },
+    {
+      "path": "BLACKBOX-RESPUESTA-SOFT-GUARD-INQUILINO-PROFILE-2025.md",
+      "size": 6630,
+      "category": "otros"
+    },
+    {
+      "path": "BLACKBOX-RESPUESTA-SOFT-GUARD-PERFIL-IMAGEN-2025.md",
+      "size": 8306,
+      "category": "otros"
+    },
+    {
+      "path": "BLACKBOX-RESPUESTA-USERID-PROPERTYCARD-ELDORADO-2025.md",
+      "size": 5584,
+      "category": "otros"
+    },
+    {
+      "path": "Chatgpt-auditoria.md",
+      "size": 87337,
+      "category": "auditoria"
+    },
+    {
+      "path": "CHECKLIST-MAESTRO-AUDITORIA-MISIONES-ARRIENDA-2025.md",
+      "size": 5312,
+      "category": "auditoria"
+    },
+    {
+      "path": "ESTADO-PROGRESO-PERFIL-USUARIO-2025.md",
+      "size": 4230,
+      "category": "otros"
+    },
+    {
+      "path": "INSTRUCCIONES-AUDITORIA-SUPABASE-FASE-1.md",
+      "size": 4633,
+      "category": "auditoria"
+    },
+    {
+      "path": "INSTRUCCIONES-COMPLETAR-FASE-3-LIMPIEZA-2025.md",
+      "size": 6663,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-EJECUCION-NORMALIZACION-BD-SUPABASE.md",
+      "size": 1411,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-FASE-2-OPTIMIZACION-RENDIMIENTO-2025.md",
+      "size": 5860,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-FASE-3-LIMPIEZA-Y-ESTRUCTURA-2025.md",
+      "size": 6313,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-FASE-4-VERIFICACION-APIS.md",
+      "size": 7576,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-FINALES-FASE-2-STORAGE-COMPLETADA-2025.md",
+      "size": 7301,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-FINALES-PERFIL-DATOS-REALES-2025.md",
+      "size": 5624,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-IMPLEMENTACION-AUDITORIA-PERFIL-2025.md",
+      "size": 8613,
+      "category": "auditoria"
+    },
+    {
+      "path": "INSTRUCCIONES-IMPLEMENTACION-FASE-1-OPTIMIZADA-2025.md",
+      "size": 6736,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-IMPLEMENTACION-FINAL-2025.md",
+      "size": 6132,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-PASO-A-PASO-FASE-2-2025.md",
+      "size": 8384,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-SQL-SUPABASE-CORREGIDO-2025.md",
+      "size": 6216,
+      "category": "instrucciones"
+    },
+    {
+      "path": "INSTRUCCIONES-URGENTES-SOLUCIONAR-AVATAR-2025.md",
+      "size": 4012,
+      "category": "instrucciones"
+    },
+    {
+      "path": "PASOS-FINALES-IMPLEMENTACION-2025.md",
+      "size": 2675,
+      "category": "otros"
+    },
+    {
+      "path": "PLAN-AUDITORIA-COMPLETA-MISIONES-ARRIENDA-2025.md",
+      "size": 3227,
+      "category": "auditoria"
+    },
+    {
+      "path": "PLAN-AUDITORIA-PERFIL-USUARIO-2025.md",
+      "size": 5399,
+      "category": "auditoria"
+    },
+    {
+      "path": "PLAN-COMPLETO-PERFIL-USUARIO-2025.md",
+      "size": 8307,
+      "category": "plan"
+    },
+    {
+      "path": "PLAN-CONTINUACION-FASE-2-OPTIMIZACION-2025.md",
+      "size": 6876,
+      "category": "plan"
+    },
+    {
+      "path": "PLAN-IMPLEMENTACION-COMPLETA-PERFIL-2025.md",
+      "size": 7081,
+      "category": "plan"
+    },
+    {
+      "path": "PLAN-INTEGRAL-FINALIZACION-PROYECTO-2025.md",
+      "size": 11815,
+      "category": "plan"
+    },
+    {
+      "path": "PROGRESO-AUDITORIA-PERFIL-GUARDADO-2025.md",
+      "size": 4452,
+      "category": "auditoria"
+    },
+    {
+      "path": "PROYECTO-LIMPIO-LISTO-PARA-MANANA-2025.md",
+      "size": 3837,
+      "category": "otros"
+    },
+    {
+      "path": "REPORTE-AISLAMIENTO-ERROR-500-HOME-2025.md",
+      "size": 2160,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-ANALISIS-FILTROS-PROPERTIES-CLIENT-2025.md",
+      "size": 5362,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-AUDITORIA-PERFIL-USUARIO-ESTADO-ACTUAL-2025.md",
+      "size": 5012,
+      "category": "auditoria"
+    },
+    {
+      "path": "REPORTE-FASE-1-ACTIVIDAD-RECIENTE-COMPLETADA.md",
+      "size": 6542,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FASE-1-AUDITORIA-COMPLETADA-2025.md",
+      "size": 5183,
+      "category": "auditoria"
+    },
+    {
+      "path": "REPORTE-FASE-1-SEGURIDAD-CRITICA-COMPLETADA.md",
+      "size": 2997,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FASE-2-OPTIMIZACION-RENDIMIENTO-COMPLETADA.md",
+      "size": 5167,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FASE-2-QUICK-ACTIONS-GRID-COMPLETADA.md",
+      "size": 9935,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FASE-3-PROFILE-STATS-COMPLETADA.md",
+      "size": 6940,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-AUDITORIA-COMPLETA-MISIONES-ARRIENDA-2025.md",
+      "size": 7456,
+      "category": "auditoria"
+    },
+    {
+      "path": "REPORTE-FINAL-AUDITORIA-SUPABASE-PROBLEMAS-IDENTIFICADOS-2025.md",
+      "size": 12188,
+      "category": "auditoria"
+    },
+    {
+      "path": "REPORTE-FINAL-CORRECCION-DATOS-REALES-2025.md",
+      "size": 7421,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-FASE-1-SEGURIDAD-COMPLETADA-2025.md",
+      "size": 5727,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-FASE-2-STORAGE-OPTIMIZACION-COMPLETADA-2025.md",
+      "size": 9030,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-FASE-3-LIMPIEZA-ESTRUCTURA-COMPLETADA-2025.md",
+      "size": 8554,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-FIX-AVATAR-UPLOAD-RLS-2025.md",
+      "size": 6360,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-MEJORA-PERFIL-INQUILINO-2025.md",
+      "size": 7257,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-MIGRACION-IMAGENES-COMPLETADA-2025.md",
+      "size": 8318,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-PERFIL-DATOS-REALES-COMPLETADO-2025.md",
+      "size": 4103,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-PERFIL-USUARIO-COMPLETO-2025.md",
+      "size": 7244,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-PERFIL-USUARIO-DATOS-REALES-2025.md",
+      "size": 7918,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-PERFIL-USUARIO-FUNCIONAL-2025.md",
+      "size": 8076,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-FINAL-PROYECTO-PERFIL-USUARIO-COMPLETADO.md",
+      "size": 11297,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-IMPLEMENTACION-CARRUSEL-IMAGENES-DETALLE-PROPIEDADES-2025.md",
+      "size": 11171,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-IMPLEMENTACION-CARRUSEL-IMAGENES-DETALLE.md",
+      "size": 2085,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-INVESTIGACION-SUPABASE-CREATE-SERVER-2025.md",
+      "size": 9299,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-MEJORAS-COPY-UX-DETALLE-PROPIEDADES.md",
+      "size": 2195,
+      "category": "reporte"
+    },
+    {
+      "path": "REPORTE-TESTING-COMPLETO-AVATAR-UPLOAD-FIX-2025.md",
+      "size": 6986,
+      "category": "testing"
+    },
+    {
+      "path": "REPORTE-TESTING-EXHAUSTIVO-FASE-2-COMPLETADO-2025.md",
+      "size": 9229,
+      "category": "testing"
+    },
+    {
+      "path": "REPORTE-TESTING-FASE-2-OPTIMIZACION-2025.md",
+      "size": 6809,
+      "category": "testing"
+    },
+    {
+      "path": "REPORTE-VERIFICACION-USERID-PROPERTYCARD-2025.md",
+      "size": 6353,
+      "category": "reporte"
+    },
+    {
+      "path": "RESUMEN-PROGRESO-FASES-1-2-3-COMPLETADAS.md",
+      "size": 6738,
+      "category": "otros"
+    },
+    {
+      "path": "SOLUCION-ERROR-INDICES-PROFILE-VIEWS-2025.md",
+      "size": 4456,
+      "category": "solucion"
+    },
+    {
+      "path": "SOLUCION-ERROR-TIPOS-SUPABASE-2025.md",
+      "size": 3339,
+      "category": "solucion"
+    },
+    {
+      "path": "TODO-CONTINUACION-PERFIL-USUARIO-MANANA-2025.md",
+      "size": 5041,
+      "category": "otros"
+    },
+    {
+      "path": "TODO-FILTROS-PROFESIONALES-2025.md",
+      "size": 1600,
+      "category": "otros"
+    },
+    {
+      "path": "TODO-FIX-AVATAR-UPLOAD-RLS-2025.md",
+      "size": 2466,
+      "category": "otros"
+    },
+    {
+      "path": "TODO-MEJORA-PERFIL-INQUILINO-2025.md",
+      "size": 3601,
+      "category": "otros"
+    },
+    {
+      "path": "TODO-PERFIL-USUARIO-COMPLETO-2025.md",
+      "size": 3054,
+      "category": "otros"
+    },
+    {
+      "path": "TODO.md",
+      "size": 7665,
+      "category": "otros"
+    }
+  ],
+  "filesToReview": [
+    {
+      "path": "Backend\\FIX-CRITICO-RLS-USER-TABLE-2025.sql",
+      "size": 3043,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\core\\create-profile-tables-2025-FIXED.sql",
+      "size": 12321,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\data\\CREAR-DATOS-CON-USUARIOS-REALES-2025.sql",
+      "size": 7254,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\data\\CREAR-DATOS-FINAL-CORREGIDO-2025.sql",
+      "size": 9565,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\data\\CREAR-DATOS-FINAL-SIMPLE-2025.sql",
+      "size": 7521,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\data\\CREAR-DATOS-SIMPLE-2025.sql",
+      "size": 8211,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-ABSOLUTO-FINAL-PERFECTO-2025.sql",
+      "size": 7592,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-DEFINITIVO-FAVORITOS-SIN-ERRORES-2025.sql",
+      "size": 6749,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-DEFINITIVO-TIPOS-USER-2025.sql",
+      "size": 13797,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-FINAL-ABSOLUTO-SIN-ERRORES-2025.sql",
+      "size": 15399,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-FOREIGN-KEY-CONSTRAINT-2025.sql",
+      "size": 9982,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-FOREIGN-KEY-CONSTRAINT-FINAL-2025.sql",
+      "size": 11450,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-INDICES-PROFILE-VIEWS-2025.sql",
+      "size": 8872,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-INDICES-PROFILE-VIEWS-DEFINITIVO-2025.sql",
+      "size": 15247,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-INDICES-PROFILE-VIEWS-FINAL-2025.sql",
+      "size": 13194,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-PERFECTO-FINAL-2025.sql",
+      "size": 15440,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-SCHEMA-USER-MESSAGES-2025.sql",
+      "size": 14958,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-ULTRA-FINAL-SIN-ERRORES-2025.sql",
+      "size": 7523,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\fixes\\FIX-ULTRA-FINAL-TODOS-LOS-TIPOS-2025.sql",
+      "size": 11100,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "Backend\\sql-migrations\\VERIFICAR-ESTRUCTURA-PROFILE-VIEWS-2025.sql",
+      "size": 8703,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "FIX-CRITICO-INMEDIATO-SUPABASE-2025.sql",
+      "size": 11998,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "FIX-FINAL-SEGURO-COMPATIBLE-SUPABASE-2025.sql",
+      "size": 10069,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "FIX-SUPABASE-ULTRA-SEGURO-2025.sql",
+      "size": 5816,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    },
+    {
+      "path": "VERIFICAR-ESTADO-MIGRACION-SUPABASE-2025.sql",
+      "size": 8860,
+      "reason": "SQL de desarrollo - verificar si es necesario"
+    }
+  ],
+  "protectedFiles": [
+    "Auditoria CHATGPT14\\09\\2025.md",
+    "Backend\\.env",
+    "Backend\\.env.example",
+    "Backend\\.env.local",
+    "Backend\\.github\\workflows\\deploy.yml",
+    "Backend\\.gitignore",
+    "Backend\\.storybook\\main.js",
+    "Backend\\apply-rls-policies.js",
+    "Backend\\docs\\api\\README.md",
+    "Backend\\docs\\components\\comunidad\\README.md",
+    "Backend\\docs\\components\\README.md",
+    "Backend\\docs\\deployment\\README.md",
+    "Backend\\docs\\README.md",
+    "Backend\\fix-user-table-rls-policies.sql",
+    "Backend\\get-evidencias-finales.js",
+    "Backend\\get-property-from-supabase.js",
+    "Backend\\get-property-id.js",
+    "Backend\\INSTRUCCIONES-SQL-SUPABASE-CORREGIDO-2025.sql",
+    "Backend\\jest.config.js",
+    "Backend\\jest.setup.js"
+  ],
+  "errors": []
+}
