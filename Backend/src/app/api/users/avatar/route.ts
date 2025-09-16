@@ -104,10 +104,10 @@ export async function POST(request: NextRequest) {
 
     // Actualizar perfil del usuario con la nueva URL
     const { error: updateError } = await supabase
-      .from('users')
+      .from('User')
       .update({ 
-        profile_image: imageUrl,
-        updated_at: new Date().toISOString()
+        avatar: imageUrl,
+        updatedAt: new Date()
       })
       .eq('id', user.id);
 
@@ -127,14 +127,14 @@ export async function POST(request: NextRequest) {
     // Eliminar avatar anterior si existe
     try {
       const { data: userData } = await supabase
-        .from('users')
-        .select('profile_image')
+        .from('User')
+        .select('avatar')
         .eq('id', user.id)
         .single();
 
-      if (userData?.profile_image && userData.profile_image !== imageUrl) {
+      if (userData?.avatar && userData.avatar !== imageUrl) {
         // Extraer path del avatar anterior
-        const oldUrl = userData.profile_image;
+        const oldUrl = userData.avatar;
         
         // Manejar tanto el formato antiguo como el nuevo
         let oldPath = '';
@@ -192,8 +192,8 @@ export async function DELETE(request: NextRequest) {
 
     // Obtener URL actual del avatar
     const { data: userData, error: fetchError } = await supabase
-      .from('users')
-      .select('profile_image')
+      .from('User')
+      .select('avatar')
       .eq('id', user.id)
       .single();
 
@@ -204,9 +204,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Eliminar archivo del storage si existe
-    if (userData?.profile_image) {
+    if (userData?.avatar) {
       try {
-        const oldUrl = userData.profile_image;
+        const oldUrl = userData.avatar;
         
         // Manejar tanto el formato antiguo como el nuevo
         let oldPath = '';
@@ -230,10 +230,10 @@ export async function DELETE(request: NextRequest) {
 
     // Actualizar perfil del usuario removiendo la URL
     const { error: updateError } = await supabase
-      .from('users')
+      .from('User')
       .update({ 
-        profile_image: null,
-        updated_at: new Date().toISOString()
+        avatar: null,
+        updatedAt: new Date()
       })
       .eq('id', user.id);
 
@@ -270,8 +270,8 @@ export async function GET() {
 
     // Obtener URL actual del avatar
     const { data: userData, error: fetchError } = await supabase
-      .from('users')
-      .select('profile_image, name')
+      .from('User')
+      .select('avatar, name')
       .eq('id', user.id)
       .single();
 
@@ -282,7 +282,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ 
-      imageUrl: userData?.profile_image || null,
+      imageUrl: userData?.avatar || null,
       name: userData?.name || 'Usuario'
     }, { status: 200 });
 

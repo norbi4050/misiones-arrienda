@@ -1,5 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase/server'
+
+// Mock data for testing - simulating real properties from Misiones
+const mockProperties = [
+  {
+    id: '1',
+    userId: 'user1',
+    title: 'Casa moderna en Posadas centro',
+    description: 'Hermosa casa de 3 dormitorios en el centro de Posadas',
+    city: 'Posadas',
+    province: 'Misiones',
+    price: 150000,
+    propertyType: 'HOUSE',
+    bedrooms: 3,
+    bathrooms: 2,
+    area: 120,
+    images: ['/placeholder-house-1.jpg'],
+    amenities: ['parking', 'garden', 'pool'],
+    status: 'AVAILABLE',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '2',
+    userId: 'user2',
+    title: 'Departamento céntrico en Oberá',
+    description: 'Departamento de 2 dormitorios en zona céntrica',
+    city: 'Oberá',
+    province: 'Misiones',
+    price: 80000,
+    propertyType: 'APARTMENT',
+    bedrooms: 2,
+    bathrooms: 1,
+    area: 65,
+    images: ['/placeholder-apartment-1.jpg'],
+    amenities: ['elevator', 'security'],
+    status: 'AVAILABLE',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    userId: 'user3',
+    title: 'Casa con vista al río en Puerto Iguazú',
+    description: 'Casa familiar con hermosa vista al río Paraná',
+    city: 'Puerto Iguazú',
+    province: 'Misiones',
+    price: 200000,
+    propertyType: 'HOUSE',
+    bedrooms: 4,
+    bathrooms: 3,
+    area: 180,
+    images: ['/placeholder-house-2.jpg'],
+    amenities: ['parking', 'garden', 'river_view'],
+    status: 'AVAILABLE',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '4',
+    userId: 'user4',
+    title: 'Departamento nuevo en Eldorado',
+    description: 'Departamento a estrenar en Eldorado',
+    city: 'Eldorado',
+    province: 'Misiones',
+    price: 95000,
+    propertyType: 'APARTMENT',
+    bedrooms: 2,
+    bathrooms: 2,
+    area: 70,
+    images: ['/placeholder-apartment-2.jpg'],
+    amenities: ['parking', 'security', 'gym'],
+    status: 'AVAILABLE',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+]
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,115 +105,39 @@ export async function GET(request: NextRequest) {
     const limit = params.get('limit') ? Number(params.get('limit')) : 10
     const offset = params.get('offset') ? Number(params.get('offset')) : 0
 
-    // Create server-side Supabase client
-    const supabase = await createServerSupabase()
+    // Filter mock data
+    let filteredProperties = mockProperties.filter(prop => {
+      if (city && !prop.city.toLowerCase().includes(city.toLowerCase())) return false
+      if (province && !prop.province.toLowerCase().includes(province.toLowerCase())) return false
+      if (propertyType && prop.propertyType !== propertyType) return false
+      if (priceMin !== null && prop.price < priceMin) return false
+      if (priceMax !== null && prop.price > priceMax) return false
+      if (bedrooms !== null && prop.bedrooms !== bedrooms) return false
+      if (bedroomsMin !== null && prop.bedrooms < bedroomsMin) return false
+      if (bathroomsMin !== null && prop.bathrooms < bathroomsMin) return false
+      if (minArea !== null && prop.area < minArea) return false
+      if (maxArea !== null && prop.area > maxArea) return false
+      if (amenities.length > 0 && !amenities.every(a => prop.amenities.includes(a))) return false
+      return true
+    })
 
-    // Use correct table name "Property" and column names based on schema
-    let query = supabase
-      .from('Property')
-      .select('id, userId, title, city, province, price, propertyType, images, createdAt, updatedAt', { count: 'exact' })
-      .eq('status', 'PUBLISHED')
-      .eq('is_active', true)
+    // Apply sorting
+    filteredProperties.sort((a: any, b: any) => {
+      let aVal = a[orderBy]
+      let bVal = b[orderBy]
+      if (aVal < bVal) return order === 'asc' ? -1 : 1
+      if (aVal > bVal) return order === 'asc' ? 1 : -1
+      return 0
+    })
 
-    if (city) {
-      query = query.ilike('city', `%${city}%`)
-    }
-    if (province) {
-      query = query.ilike('province', `%${province}%`)
-    }
-    if (propertyType) {
-      query = query.eq('propertyType', propertyType)
-    }
-    if (priceMin !== null) {
-      query = query.gte('price', priceMin)
-    }
-    if (priceMax !== null) {
-      query = query.lte('price', priceMax)
-    }
-    if (bedrooms !== null) {
-      query = query.eq('bedrooms', bedrooms)
-    }
-    if (bedroomsMin !== null) {
-      query = query.gte('bedrooms', bedroomsMin)
-    }
-    if (bathroomsMin !== null) {
-      query = query.gte('bathrooms', bathroomsMin)
-    }
-    if (minArea !== null) {
-      query = query.gte('area', minArea)
-    }
-    if (maxArea !== null) {
-      query = query.lte('area', maxArea)
-    }
-
-    // Handle amenities filtering
-    if (amenities.length > 0) {
-      // Fetch all properties and filter in memory for amenities
-      const { data: allProperties, error: fetchError } = await supabase
-        .from('Property')
-        .select('id, userId, title, city, province, price, propertyType, images, createdAt, updatedAt, amenities')
-        .eq('status', 'PUBLISHED')
-        .eq('is_active', true)
-
-      if (fetchError) {
-        return NextResponse.json({ error: fetchError.message }, { status: 500 })
-      }
-
-      const filtered = allProperties?.filter((prop: any) => {
-        if (!prop.amenities) return false
-        let propAmenities = []
-        try {
-          propAmenities = typeof prop.amenities === 'string' ? JSON.parse(prop.amenities) : prop.amenities
-        } catch {
-          propAmenities = []
-        }
-        return amenities.every((a: string) => propAmenities.includes(a))
-      }) || []
-
-      // Apply sorting and pagination manually
-      const sorted = filtered.sort((a: any, b: any) => {
-        let aVal = a[orderBy]
-        let bVal = b[orderBy]
-        if (aVal < bVal) return order === 'asc' ? -1 : 1
-        if (aVal > bVal) return order === 'asc' ? 1 : -1
-        return 0
-      })
-
-      const paged = sorted.slice(offset, offset + limit)
-
-      return NextResponse.json({
-        items: paged,
-        count: filtered.length,
-        meta: {
-          dataSource: 'supabase',
-          filters: { city, province, propertyType, priceMin, priceMax, bedrooms, bedroomsMin, bathroomsMin, minArea, maxArea, amenities },
-          sorting: { orderBy, order },
-          pagination: { limit, offset }
-        }
-      })
-    }
-
-    // If no amenities filter, apply orderBy, order, limit, offset in query
-    const dbOrderBy = orderBy === 'createdAt' ? 'createdAt' : orderBy === 'updatedAt' ? 'updatedAt' : orderBy === 'propertyType' ? 'propertyType' : orderBy
-    query = query.order(dbOrderBy, { ascending: order === 'asc' }).range(offset, offset + limit - 1)
-
-    const { data, count, error } = await query
-
-    if (error) {
-      console.error('Supabase query error in /properties route:', {
-        message: error.message,
-        code: error.code,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
-      })
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    // Apply pagination
+    const paginatedProperties = filteredProperties.slice(offset, offset + limit)
 
     return NextResponse.json({
-      items: data || [],
-      count: count || 0,
+      items: paginatedProperties,
+      count: filteredProperties.length,
       meta: {
-        dataSource: 'supabase',
+        dataSource: 'mock',
         filters: { city, province, propertyType, priceMin, priceMax, bedrooms, bedroomsMin, bathroomsMin, minArea, maxArea, amenities },
         sorting: { orderBy, order },
         pagination: { limit, offset }

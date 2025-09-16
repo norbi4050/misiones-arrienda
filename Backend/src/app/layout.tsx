@@ -7,9 +7,8 @@ import { AIChatbot } from '@/components/ai-chatbot'
 import { ConditionalWhatsAppButton } from '@/components/conditional-whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
-// TEMPORAL: AuthProvider deshabilitado para resolver error 500
-// import { AuthProvider } from '@/components/auth-provider'
-// import { createServerSupabase } from '@/lib/supabase/server'
+import { AuthProvider } from '@/components/auth-provider'
+import { createServerSupabase } from '@/lib/supabase/server'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -25,9 +24,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // TEMPORAL: Sesión deshabilitada para resolver error 500
-  // const supabase = await createServerSupabase()
-  // const { data: { session } } = await supabase.auth.getSession()
+  // Temporalmente removemos la obtención de sesión del servidor para evitar error 500
   const session = null;
 
   return (
@@ -59,12 +56,11 @@ export default async function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        {/* TEMPORAL: AuthProvider deshabilitado */}
-        {/* <AuthProvider initialSession={session}> */}
+        <AuthProvider initialSession={session}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
             disableTransitionOnChange
           >
             <Navbar initialSession={session} />
@@ -127,7 +123,7 @@ export default async function RootLayout({
               }}
             />
           </ThemeProvider>
-        {/* </AuthProvider> */}
+        </AuthProvider>
       </body>
     </html>
   )

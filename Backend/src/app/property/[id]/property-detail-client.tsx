@@ -120,7 +120,8 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                   alt={property.title}
                   fill
                   className="object-cover transition-transform group-hover:scale-105"
-                />
+                /
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"onError={(e) => { const target = e.target as HTMLImageElement; target.style.display = 'none'; }}>
                 
                 {/* Badges y botones superpuestos */}
                 <div className="absolute top-4 left-4 flex gap-2">
@@ -202,7 +203,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                         width={80}
                         height={64}
                         className="w-full h-full object-cover"
-                      />
+                      /onError={(e) => { const target = e.target as HTMLImageElement; target.style.display = 'none'; }}>
                     </button>
                   ))}
                 </div>

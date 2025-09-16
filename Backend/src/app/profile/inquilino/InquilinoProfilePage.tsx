@@ -69,13 +69,24 @@ export default function InquilinoProfilePage() {
         move_in_date: (user as any).move_in_date || '',
         employment_status: (user as any).employment_status || '',
         monthly_income: (user as any).monthly_income || null,
-        profile_image: user.profile_image || '',
+        profile_image: user.avatar || '',
         verified: (user as any).verified || false,
         rating: (user as any).rating || 0,
         reviewCount: (user as any).reviewCount || 0
       });
     }
   }, [user]);
+  // Debug logging for authentication state
+  useEffect(() => {
+    console.log('Auth State Debug:', {
+      loading,
+      isAuthenticated,
+      hasUser: !!user,
+      hasSession: !!session,
+      error
+    });
+  }, [loading, isAuthenticated, user, session, error]);
+
 
   // Show loading state
   if (loading) {
@@ -140,6 +151,37 @@ export default function InquilinoProfilePage() {
     );
   }
 
+  // Show error state if there's an authentication error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Error de Autenticación
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {error}
+            </p>
+          </div>
+          
+          <div className="space-y-3">
+            <Link href="/login" className="w-full">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                Iniciar sesión nuevamente
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
+
   const handleSaveProfile = async (data: Partial<ProfileData>) => {
     try {
       await updateProfile(data);
@@ -150,12 +192,22 @@ export default function InquilinoProfilePage() {
     }
   };
 
-  const handleAvatarChange = (url: string) => {
-    setProfileData(prev => ({ ...prev, profile_image: url }));
-    // Forzar actualización del usuario en useAuth para refrescar datos
-    if (typeof window !== 'undefined') {
-      // Forzar recarga de la página para obtener datos actualizados
-      window.location.reload();
+  const handleAvatarChange = async (url: string) => {
+    try {
+      // Actualizar el estado local inmediatamente
+      setProfileData(prev => ({ ...prev, profile_image: url }));
+      
+      // Actualizar el perfil en la base de datos usando el hook
+      await updateProfile({ profile_image: url });
+      
+      // Mostrar mensaje de éxito
+      toast.success('Avatar actualizado correctamente');
+    } catch (error) {
+      console.error('Error updating avatar in profile:', error);
+      toast.error('Error al guardar el avatar en el perfil');
+      
+      // Revertir el cambio local si falla la actualización
+      setProfileData(prev => ({ ...prev, profile_image: profileData.profile_image }));
     }
   };
 

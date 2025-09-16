@@ -300,6 +300,7 @@ export default function ComunidadPage() {
                             width={48}
                             height={48}
                             className="rounded-full object-cover"
+                            onError={(e) => { const target = e.target as HTMLImageElement; target.style.display = 'none'; }}
                           />
                         ) : (
                           <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
@@ -330,7 +331,9 @@ export default function ComunidadPage() {
                         src={profile.photos[0]}
                         alt="Foto de perfil"
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-cover"
+                        onError={(e) => { const target = e.target as HTMLImageElement; target.style.display = 'none'; }}
                       />
                       {profile.photos.length > 1 && (
                         <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">

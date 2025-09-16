@@ -39,8 +39,9 @@ export async function GET(_req: NextRequest) {
     
     try {
       // Llamar a la función SQL que calcula estadísticas reales
+      // Enviar parámetro directo para evitar ambigüedad de sobrecarga
       const { data: statsData, error: statsError } = await supabase
-        .rpc('get_user_stats', { target_user_id: user.id });
+        .rpc('get_user_stats', user.id);
 
       if (statsError) {
         console.error('Error calling get_user_profile_stats:', statsError);
@@ -80,11 +81,15 @@ async function getFallbackStats(supabase: any, user: any) {
     console.log('Using fallback stats method for user:', user.id);
 
     // 1. Obtener vistas de perfil reales (últimos 30 días)
+    // Usar nombre de columna consistente y timestamp sin Z
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const timestampWithoutZ = thirtyDaysAgo.toISOString().replace('Z', '');
+    
     const { count: profileViews, error: viewsError } = await supabase
       .from("profile_views")
       .select("*", { count: 'exact', head: true })
-      .eq("viewed_user_id", user.id)
-      .gte("viewed_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+      .eq("profile_user_id", user.id)
+      .gte("viewed_at", timestampWithoutZ);
 
     if (viewsError && viewsError.code !== 'PGRST116') { // PGRST116 = table doesn't exist
       console.error('Error fetching profile views:', viewsError);
@@ -113,11 +118,12 @@ async function getFallbackStats(supabase: any, user: any) {
     }
 
     // 4. Obtener rating promedio y conteo de reviews reales
+    // Usar .is() para filtro booleano más explícito
     const { data: ratingsData, error: ratingsError } = await supabase
       .from("user_ratings")
       .select("rating")
       .eq("rated_user_id", user.id)
-      .eq("is_public", true);
+      .is('is_public', true);
 
     let avgRating = 0;
     let reviewCount = 0;
