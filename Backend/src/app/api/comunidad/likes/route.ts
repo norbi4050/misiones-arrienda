@@ -17,7 +17,7 @@ const getLikesSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerSupabase()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in likes POST:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerSupabase()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -223,7 +223,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in likes GET:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Parámetros inválidos', details: error.errors },
@@ -242,7 +242,7 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = createServerSupabase()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -288,7 +288,7 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in likes DELETE:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },

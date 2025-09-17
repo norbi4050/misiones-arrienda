@@ -65,8 +65,8 @@ export function PropertyGridServer({ initialProperties = [], searchParams = {} }
   if (loading && properties.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <FilterSectionServer 
-          onFilterChange={handleFilterChange} 
+        <FilterSectionServer
+          onFilterChange={handleFilterChange}
           initialSearchParams={searchParams}
         />
         <div className="flex justify-center items-center py-12">
@@ -78,17 +78,17 @@ export function PropertyGridServer({ initialProperties = [], searchParams = {} }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <FilterSectionServer 
-        onFilterChange={handleFilterChange} 
+      <FilterSectionServer
+        onFilterChange={handleFilterChange}
         initialSearchParams={searchParams}
       />
-      
+
       {error && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
-      
+
       {/* Propiedades renderizadas server-side para SEO */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {properties.map((property) => (
@@ -107,7 +107,7 @@ export function PropertyGridServer({ initialProperties = [], searchParams = {} }
           />
         ))}
       </div>
-      
+
       {properties.length === 0 && !loading && (
         <div className="text-center py-16">
           <div className="max-w-md mx-auto">
@@ -139,10 +139,10 @@ export function PropertyGridServer({ initialProperties = [], searchParams = {} }
           </div>
         </div>
       )}
-      
+
       {pagination.page < pagination.pages && (
         <div className="flex justify-center mt-12">
-          <button 
+          <button
             onClick={handleLoadMore}
             disabled={loading}
             className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"

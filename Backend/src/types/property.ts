@@ -30,21 +30,21 @@ export interface Property {
   floor?: number
   totalFloors?: number
   featured: boolean
-  
+
   // Campos de contacto
   contact_name?: string
   contact_phone: string
   contact_email?: string
-  
+
   // Campos de sistema
   expiresAt?: Date
   highlightedUntil?: Date
   isPaid: boolean
-  
+
   // Timestamps
   createdAt: Date
   updatedAt: Date
-  
+
   // Relaciones
   userId: string
   agentId?: string
@@ -107,17 +107,17 @@ export interface PropertyFormData {
   price: number
   currency: string
   oldPrice?: number
-  
+
   // Tipo de propiedad
   propertyType: Property['propertyType']
-  
+
   // Características
   bedrooms: number
   bathrooms: number
   garages: number
   area: number
   lotArea?: number
-  
+
   // Ubicación
   address: string
   city: string
@@ -126,32 +126,32 @@ export interface PropertyFormData {
   postalCode: string
   latitude?: number
   longitude?: number
-  
+
   // Contacto
   contact_name?: string
   contact_phone: string
   contact_email?: string
-  
+
   // Multimedia
   images: string[]
   virtualTourUrl?: string
-  
+
   // Características adicionales
   amenities: string[]
   features: string[]
   yearBuilt?: number
   floor?: number
   totalFloors?: number
-  
+
   // Estado
   status: Property['status']
   featured: boolean
-  
+
   // Campos específicos del formulario
   mascotas?: boolean
   expensasIncl?: boolean
   servicios?: string[]
-  
+
   // Campos de sistema opcionales
   expiresAt?: Date
   highlightedUntil?: Date

@@ -69,7 +69,7 @@ export default function ComunidadPage() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      
+
       if (filters.role) params.append('role', filters.role)
       if (filters.city) params.append('city', filters.city)
       if (filters.budgetMin) params.append('budgetMin', filters.budgetMin.toString())
@@ -77,7 +77,7 @@ export default function ComunidadPage() {
       if (filters.petPref) params.append('petPref', filters.petPref)
       if (filters.smokePref) params.append('smokePref', filters.smokePref)
       if (filters.diet) params.append('diet', filters.diet)
-      
+
       params.append('highlightedFirst', 'true')
 
       const response = await fetch(`/api/comunidad/profiles?${params}`)
@@ -101,7 +101,7 @@ export default function ComunidadPage() {
         },
         body: JSON.stringify({ toId: profileId })
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         if (data.matched) {
@@ -124,7 +124,7 @@ export default function ComunidadPage() {
         maximumFractionDigits: 0
       }).format(num)
     }
-    
+
     if (min === max) return formatNumber(min)
     return `${formatNumber(min)} - ${formatNumber(max)}`
   }
@@ -149,7 +149,7 @@ export default function ComunidadPage() {
         'OTRO': 'Otras restricciones'
       }
     }
-    
+
     return preferences[type][pref as keyof typeof preferences[typeof type]] || pref
   }
 
@@ -288,7 +288,7 @@ export default function ComunidadPage() {
                     ⭐ Destacado
                   </div>
                 )}
-                
+
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">

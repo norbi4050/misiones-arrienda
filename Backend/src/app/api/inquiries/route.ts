@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     console.error('Error creating inquiry:', error);
     return NextResponse.json(
       { error: 'Error submitting inquiry' },

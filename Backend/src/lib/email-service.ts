@@ -16,7 +16,7 @@ const getEnvVar = (name: string): string | undefined => {
 };
 
 export class EmailService {
-  private static readonly EDGE_FUNCTION_URL = getEnvVar('NEXT_PUBLIC_SUPABASE_URL') 
+  private static readonly EDGE_FUNCTION_URL = getEnvVar('NEXT_PUBLIC_SUPABASE_URL')
     ? `${getEnvVar('NEXT_PUBLIC_SUPABASE_URL')}/functions/v1/send-inquiry-email`
     : 'http://localhost:54321/functions/v1/send-inquiry-email';
 
@@ -32,10 +32,8 @@ export class EmailService {
     error?: string;
   }> {
     try {
-      console.log('📧 Sending inquiry email via Edge Function...');
-      
       const token = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY') || '';
-      
+
       const response = await fetch(this.EDGE_FUNCTION_URL, {
         method: 'POST',
         headers: {
@@ -51,11 +49,6 @@ export class EmailService {
       }
 
       const result = await response.json();
-      
-      console.log('✅ Inquiry emails sent successfully:', {
-        customerEmailSent: result.customerEmailSent,
-        internalNotificationSent: result.internalNotificationSent,
-      });
 
       return {
         success: true,

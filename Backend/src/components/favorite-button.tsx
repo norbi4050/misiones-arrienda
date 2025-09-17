@@ -13,11 +13,11 @@ interface FavoriteButtonProps {
   showText?: boolean;
 }
 
-export function FavoriteButton({ 
-  propertyId, 
-  className = '', 
+export function FavoriteButton({
+  propertyId,
+  className = '',
   size = 'md',
-  showText = false 
+  showText = false
 }: FavoriteButtonProps) {
   const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
@@ -75,7 +75,7 @@ export function FavoriteButton({
       if (response.ok) {
         const data = await response.json();
         setIsFavorite(data.isFavorite);
-        
+
         if (data.isFavorite) {
           toast.success('Agregado a favoritos ❤️');
         } else {
@@ -109,9 +109,9 @@ export function FavoriteButton({
       variant={isFavorite ? "default" : "outline"}
       size={showText ? "default" : "icon"}
       className={`
-        ${sizeClasses[size]} 
-        ${isFavorite 
-          ? 'bg-red-500 hover:bg-red-600 text-white border-red-500' 
+        ${sizeClasses[size]}
+        ${isFavorite
+          ? 'bg-red-500 hover:bg-red-600 text-white border-red-500'
           : 'hover:bg-red-50 hover:text-red-500 hover:border-red-300'
         }
         transition-all duration-200
@@ -120,12 +120,12 @@ export function FavoriteButton({
       onClick={toggleFavorite}
       disabled={isLoading}
     >
-      <Heart 
-        size={iconSizes[size]} 
+      <Heart
+        size={iconSizes[size]}
         className={`
-          ${isFavorite ? 'fill-current' : ''} 
+          ${isFavorite ? 'fill-current' : ''}
           ${isLoading ? 'animate-pulse' : ''}
-        `} 
+        `}
       />
       {showText && (
         <span className="ml-2">

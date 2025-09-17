@@ -15,7 +15,7 @@ export async function GET(
 ) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -91,7 +91,7 @@ export async function GET(
 
     if (unreadMessages.length > 0) {
       const messageIds = unreadMessages.map(msg => msg.id)
-      
+
       // Marcar mensajes como leídos
       await supabase
         .from('community_messages')
@@ -164,7 +164,7 @@ export async function GET(
 
   } catch (error) {
     console.error('Error in messages GET:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Parámetros inválidos', details: error.errors },
@@ -186,7 +186,7 @@ export async function POST(
 ) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -198,7 +198,7 @@ export async function POST(
 
     const { conversationId } = params
     const body = await request.json()
-    
+
     const { content, type } = z.object({
       content: z.string().min(1, 'Contenido del mensaje es requerido').max(1000, 'Mensaje muy largo'),
       type: z.enum(['text', 'image']).optional().default('text')
@@ -302,7 +302,7 @@ export async function POST(
 
   } catch (error) {
     console.error('Error in messages POST:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },

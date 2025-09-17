@@ -10,7 +10,7 @@ const formatTimeAgo = (date: string) => {
   const now = new Date()
   const past = new Date(date)
   const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000)
-  
+
   if (diffInSeconds < 60) return 'ahora'
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`
@@ -32,13 +32,13 @@ interface ChatMessageProps {
   showAvatar?: boolean
 }
 
-export default function ChatMessage({ 
-  message, 
-  isFromCurrentUser, 
+export default function ChatMessage({
+  message,
+  isFromCurrentUser,
   senderName,
-  showAvatar = true 
+  showAvatar = true
 }: ChatMessageProps) {
-  
+
   if (message.type === 'system') {
     return (
       <div className="flex justify-center my-4">
@@ -76,15 +76,15 @@ export default function ChatMessage({
         {/* Contenido del mensaje */}
         <div className={cn(
           "px-4 py-2 rounded-2xl break-words",
-          isFromCurrentUser 
-            ? "bg-blue-500 text-white rounded-br-md" 
+          isFromCurrentUser
+            ? "bg-blue-500 text-white rounded-br-md"
             : "bg-gray-100 text-gray-900 rounded-bl-md"
         )}>
           {message.type === 'image' ? (
             <div className="space-y-2">
-              <img 
-                src={message.content} 
-                alt="Imagen enviada" 
+              <img
+                src={message.content}
+                alt="Imagen enviada"
                 className="max-w-full h-auto rounded-lg"
               />
             </div>

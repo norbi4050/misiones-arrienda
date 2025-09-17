@@ -19,7 +19,7 @@ const sendMessageSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -81,8 +81,8 @@ export async function GET(request: NextRequest) {
     // Procesar conversaciones para mostrar el otro usuario
     const processedConversations = conversations?.map(conversation => {
       const otherUser = conversation.user1_id === user.id ? conversation.user2 : conversation.user1
-      const unreadCount = conversation.user1_id === user.id 
-        ? conversation.unread_count_user1 
+      const unreadCount = conversation.user1_id === user.id
+        ? conversation.unread_count_user1
         : conversation.unread_count_user2
 
       return {
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in messages GET:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Parámetros inválidos', details: error.errors },
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in messages POST:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },
@@ -264,7 +264,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -326,7 +326,7 @@ export async function PUT(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in messages PUT:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },

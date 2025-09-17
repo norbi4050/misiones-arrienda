@@ -10,7 +10,6 @@ let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter() {
   if (!isEmailServiceConfigured()) {
-    console.warn('⚠️ Servicio de email no configurado - variables SMTP_USER y SMTP_PASS requeridas');
     return null;
   }
 
@@ -42,12 +41,11 @@ function getTransporter() {
 export async function sendVerificationEmail(email: string, name: string, token: string): Promise<{ success: boolean; error?: string }> {
   try {
     const emailTransporter = getTransporter();
-    
+
     if (!emailTransporter) {
-      console.warn('⚠️ Email de verificación no enviado - servicio no configurado');
-      return { 
-        success: false, 
-        error: 'Servicio de email no configurado' 
+      return {
+        success: false,
+        error: 'Servicio de email no configurado'
       };
     }
 
@@ -66,15 +64,15 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 
           <div style="background-color: #f8fafc; padding: 30px; border-radius: 12px; text-align: center;">
             <h2 style="color: #1e40af; margin-top: 0;">¡Bienvenido/a ${name}!</h2>
-            
+
             <p style="color: #374151; font-size: 16px; line-height: 1.6;">
-              Gracias por registrarte en Misiones Arrienda. Para completar tu registro y activar tu cuenta, 
+              Gracias por registrarte en Misiones Arrienda. Para completar tu registro y activar tu cuenta,
               necesitamos verificar tu dirección de email.
             </p>
 
             <div style="margin: 30px 0;">
-              <a href="${verificationUrl}" 
-                 style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; 
+              <a href="${verificationUrl}"
+                 style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none;
                         border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">
                 ✅ Verificar mi cuenta
               </a>
@@ -90,7 +88,7 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 
           <div style="margin-top: 30px; padding: 20px; background-color: #fef3c7; border-radius: 8px;">
             <p style="color: #92400e; margin: 0; font-size: 14px;">
-              <strong>⚠️ Importante:</strong> Este enlace expirará en 24 horas por seguridad. 
+              <strong>⚠️ Importante:</strong> Este enlace expirará en 24 horas por seguridad.
               Si no verificas tu cuenta en este tiempo, deberás registrarte nuevamente.
             </p>
           </div>
@@ -110,19 +108,18 @@ export async function sendVerificationEmail(email: string, name: string, token: 
     // Intentar enviar el email con timeout
     await Promise.race([
       emailTransporter.sendMail(mailOptions),
-      new Promise((_, reject) => 
+      new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Timeout enviando email')), 15000)
       )
     ]);
 
-    console.log('✅ Email de verificación enviado exitosamente a:', email);
     return { success: true };
 
   } catch (error) {
     console.error('❌ Error enviando email de verificación:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Error desconocido' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido'
     };
   }
 }
@@ -134,10 +131,8 @@ export function sendVerificationEmailAsync(email: string, name: string, token: s
     try {
       const result = await sendVerificationEmail(email, name, token);
       if (result.success) {
-        console.log('📧 Email de verificación enviado de forma asíncrona');
-      } else {
-        console.warn('⚠️ No se pudo enviar email de verificación:', result.error);
-      }
+        } else {
+        }
     } catch (error) {
       console.error('❌ Error en envío asíncrono de email:', error);
     }

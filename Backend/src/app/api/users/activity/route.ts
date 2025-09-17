@@ -39,18 +39,18 @@ interface ActivityItem {
 
 export async function GET(_req: NextRequest) {
   const supabase = await getServerSupabase();
-  
+
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     // Try to get real activity data from database
     const activities = await getRealUserActivity(supabase, user.id);
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       activities,
       source: activities.length > 0 ? 'database' : 'fallback',
       timestamp: new Date().toISOString()
@@ -58,11 +58,11 @@ export async function GET(_req: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching user activity:', error);
-    
+
     // Return fallback activities on error
     const fallbackActivities = getFallbackActivities();
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       activities: fallbackActivities,
       source: 'fallback_error',
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -119,7 +119,7 @@ async function getRealUserActivity(supabase: any, userId: string): Promise<Activ
     if (!profileError && userProfile?.updated_at) {
       const updatedAt = new Date(userProfile.updated_at);
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      
+
       if (updatedAt > sevenDaysAgo) {
         activities.push({
           id: `profile-update-${userId}`,

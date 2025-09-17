@@ -162,16 +162,6 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
   const imagesToShow = resolveImages({ apiImages, bucketImages })
 
   // DEBUG LOGS - TEMPORALES PARA TESTING
-  console.log('=== DEBUG PROPERTY IMAGES ===')
-  console.log('Property ID:', property.id)
-  console.log('Property User ID:', property.userId)
-  console.log('API Images length:', apiImages.length)
-  console.log('Bucket Images length:', bucketImages.length)
-  console.log('Images to show length:', imagesToShow.length)
-  console.log('API Images:', apiImages)
-  console.log('Bucket Images:', bucketImages)
-  console.log('Final Images to show:', imagesToShow)
-  console.log('=== END DEBUG ===')
   const amenities = parseAmenities(property.amenities)
   const features = parseFeatures(property.features)
 

@@ -55,7 +55,7 @@ export function useUserActivity() {
     } catch (err) {
       console.error('Error fetching user activity:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-      
+
       // Fallback to realistic mock data
       setActivities(getFallbackActivities());
     } finally {

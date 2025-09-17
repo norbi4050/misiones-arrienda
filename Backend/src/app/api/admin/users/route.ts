@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
       .select('role')
       .then(({ data }) => {
         if (!data) return { data: null };
-        
+
         const totalUsers = data.length;
         const adminCount = data.filter(u => u.role === 'ADMIN').length;
         const moderatorCount = data.filter(u => u.role === 'MODERATOR').length;
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
     if (profileCreateError) {
       // Si falla la creación del perfil, eliminar el usuario de Auth
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-      
+
       return NextResponse.json(
         { error: 'Error creando perfil de usuario' },
         { status: 500 }
@@ -224,13 +224,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log de auditoría
-    console.log(`Usuario creado por admin:`, {
-      createdUserId: newUser.user.id,
-      createdUserEmail: email,
-      createdUserRole: role,
-      createdBy: user.id,
-      createdByEmail: user.email,
-      timestamp: new Date().toISOString()
+    .toISOString()
     });
 
     return NextResponse.json({

@@ -12,38 +12,38 @@ export function rateLimit(config: RateLimitConfig) {
   return async (request: NextRequest) => {
     const ip = request.ip || request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     const now = Date.now()
-    
+
     // Limpiar entradas expiradas
     for (const [key, value] of rateLimitStore.entries()) {
       if (value.resetTime < now) {
         rateLimitStore.delete(key)
       }
     }
-    
+
     const current = rateLimitStore.get(ip) || { count: 0, resetTime: now + config.windowMs }
-    
+
     if (current.resetTime < now) {
       current.count = 1
       current.resetTime = now + config.windowMs
     } else {
       current.count++
     }
-    
+
     rateLimitStore.set(ip, current)
-    
+
     if (current.count > config.maxRequests) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: config.message,
         retryAfter: Math.ceil((current.resetTime - now) / 1000)
       }), {
         status: 429,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Retry-After': Math.ceil((current.resetTime - now) / 1000).toString()
         }
       })
     }
-    
+
     return null // Continuar con la request
   }
 }

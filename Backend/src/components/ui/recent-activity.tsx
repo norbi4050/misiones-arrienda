@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
-import { 
-  Heart, 
-  MessageCircle, 
-  Search, 
-  Settings, 
+import {
+  Heart,
+  MessageCircle,
+  Search,
+  Settings,
   Eye,
   Clock,
   Activity
@@ -91,16 +91,16 @@ function ActivityItem({ type, title, description, timestamp }: ActivityItemProps
 
     if (diffInMinutes < 1) return 'Hace un momento';
     if (diffInMinutes < 60) return `Hace ${diffInMinutes} minuto${diffInMinutes > 1 ? 's' : ''}`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
-    
-    return activityTime.toLocaleDateString('es-AR', { 
-      day: 'numeric', 
-      month: 'short' 
+
+    return activityTime.toLocaleDateString('es-AR', {
+      day: 'numeric',
+      month: 'short'
     });
   };
 
@@ -138,10 +138,10 @@ interface RecentActivityProps {
   showHeader?: boolean;
 }
 
-export function RecentActivity({ 
-  className, 
-  maxItems = 5, 
-  showHeader = true 
+export function RecentActivity({
+  className,
+  maxItems = 5,
+  showHeader = true
 }: RecentActivityProps) {
   const { activities, loading, error } = useUserActivity();
 
@@ -252,7 +252,7 @@ export function RecentActivity({
             />
           ))}
         </div>
-        
+
         {activities.length > maxItems && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             <p className="text-xs text-gray-500 text-center">
@@ -266,12 +266,12 @@ export function RecentActivity({
 }
 
 // Compact version for smaller spaces
-export function RecentActivityCompact({ 
-  className, 
-  maxItems = 3 
-}: { 
-  className?: string; 
-  maxItems?: number; 
+export function RecentActivityCompact({
+  className,
+  maxItems = 3
+}: {
+  className?: string;
+  maxItems?: number;
 }) {
   const { activities, loading } = useUserActivity();
 
@@ -295,10 +295,10 @@ export function RecentActivityCompact({
   return (
     <div className={cn("space-y-2", className)}>
       {displayActivities.map((activity) => {
-        const Icon = activity.type === 'favorite_added' ? Heart : 
+        const Icon = activity.type === 'favorite_added' ? Heart :
                    activity.type === 'message_sent' ? MessageCircle :
                    activity.type === 'search_saved' ? Search : Settings;
-        
+
         return (
           <div key={activity.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
             <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />

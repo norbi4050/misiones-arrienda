@@ -109,8 +109,8 @@ class PerformanceMonitor {
       const method = request.method
 
       // Información de la request
-      const ip = request.headers.get('x-forwarded-for') || 
-                 request.headers.get('x-real-ip') || 
+      const ip = request.headers.get('x-forwarded-for') ||
+                 request.headers.get('x-real-ip') ||
                  'unknown'
       const userAgent = request.headers.get('user-agent') || 'unknown'
 
@@ -122,7 +122,7 @@ class PerformanceMonitor {
       response.headers.set('X-Response-Time', `${Date.now() - startTime}ms`)
 
       const duration = Date.now() - startTime
-      
+
       this.recordMetric({
         route,
         method,
@@ -160,7 +160,7 @@ class PerformanceMonitor {
       return result
     } catch (error) {
       const duration = Date.now() - startTime
-      
+
       this.recordMetric({
         route: `function:${name}`,
         method: 'FUNCTION',
@@ -208,7 +208,7 @@ class PerformanceMonitor {
     // Alert por uso de memoria
     if (metric.memoryUsage) {
       const memoryMB = metric.memoryUsage.heapUsed / 1024 / 1024
-      
+
       if (memoryMB > this.thresholds.criticalMemoryMB) {
         this.createAlert({
           type: 'high_memory',
@@ -265,7 +265,7 @@ class PerformanceMonitor {
 
   private createAlert(alert: PerformanceAlert) {
     this.alerts.push(alert)
-    
+
     // Mantener solo las últimas 1000 alertas
     if (this.alerts.length > 1000) {
       this.alerts = this.alerts.slice(-1000)
@@ -289,7 +289,7 @@ class PerformanceMonitor {
   private cleanupOldMetrics() {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
     this.metrics = this.metrics.filter(m => m.timestamp >= oneHourAgo)
-    
+
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
     this.alerts = this.alerts.filter(a => a.metric.timestamp >= oneDayAgo)
   }
@@ -329,7 +329,7 @@ class PerformanceMonitor {
     const memoryUsages = relevantMetrics
       .filter(m => m.memoryUsage)
       .map(m => m.memoryUsage!.heapUsed / 1024 / 1024)
-    
+
     const currentMemory = process.memoryUsage().heapUsed / 1024 / 1024
     const peakMemory = memoryUsages.length > 0 ? Math.max(...memoryUsages) : 0
     const averageMemory = memoryUsages.length > 0 ? memoryUsages.reduce((a, b) => a + b, 0) / memoryUsages.length : 0
@@ -453,17 +453,17 @@ class PerformanceMonitor {
 - Average: ${stats.memoryUsage.average.toFixed(2)}MB
 
 ## Slowest Endpoints
-${stats.slowestEndpoints.map(ep => 
+${stats.slowestEndpoints.map(ep =>
   `- ${ep.route}: ${ep.averageTime.toFixed(2)}ms avg (${ep.requestCount} requests)`
 ).join('\n')}
 
 ## Errors by Endpoint
-${Object.entries(stats.errorsByEndpoint).map(([endpoint, count]) => 
+${Object.entries(stats.errorsByEndpoint).map(([endpoint, count]) =>
   `- ${endpoint}: ${count} errors`
 ).join('\n')}
 
 ## Recent Alerts (${alerts.length})
-${alerts.slice(0, 10).map(alert => 
+${alerts.slice(0, 10).map(alert =>
   `- [${alert.severity.toUpperCase()}] ${alert.message} (${alert.metric.timestamp.toISOString()})`
 ).join('\n')}
     `.trim()
@@ -483,25 +483,25 @@ export function measureSync<T>(name: string, fn: () => T): T {
   try {
     const result = fn()
     const duration = Date.now() - startTime
-    
+
     performanceMonitor.recordMetric({
       route: `sync:${name}`,
       method: 'SYNC',
       duration,
       statusCode: 200
     })
-    
+
     return result
   } catch (error) {
     const duration = Date.now() - startTime
-    
+
     performanceMonitor.recordMetric({
       route: `sync:${name}`,
       method: 'SYNC',
       duration,
       statusCode: 500
     })
-    
+
     throw error
   }
 }

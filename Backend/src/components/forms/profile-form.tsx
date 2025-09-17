@@ -8,15 +8,15 @@ import { Textarea } from './textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Badge } from './badge';
-import { 
-  Edit3, 
-  Save, 
-  X, 
-  User, 
-  Phone, 
-  MapPin, 
-  Briefcase, 
-  DollarSign, 
+import {
+  Edit3,
+  Save,
+  X,
+  User,
+  Phone,
+  MapPin,
+  Briefcase,
+  DollarSign,
   Calendar,
   Users,
   Heart,
@@ -83,7 +83,7 @@ export function ProfileForm({ initialData, onSave, className }: ProfileFormProps
   // Calculate profile completion percentage
   useEffect(() => {
     const fields = [
-      'name', 'phone', 'location', 'bio', 'search_type', 
+      'name', 'phone', 'location', 'bio', 'search_type',
       'budget_range', 'preferred_areas', 'employment_status'
     ];
     const filledFields = fields.filter(field => {
@@ -128,10 +128,10 @@ export function ProfileForm({ initialData, onSave, className }: ProfileFormProps
             </Badge>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
+            <div
               className={cn(
                 "h-2 rounded-full transition-all duration-300",
-                completionPercentage >= 80 ? "bg-green-500" : 
+                completionPercentage >= 80 ? "bg-green-500" :
                 completionPercentage >= 50 ? "bg-yellow-500" : "bg-red-500"
               )}
               style={{ width: `${completionPercentage}%` }}
@@ -203,7 +203,7 @@ export function ProfileForm({ initialData, onSave, className }: ProfileFormProps
               />
             </div>
           </div>
-          
+
           <div>
             <Label htmlFor="bio">Descripción personal</Label>
             <Textarea
@@ -247,7 +247,7 @@ export function ProfileForm({ initialData, onSave, className }: ProfileFormProps
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="budget_range">Rango de presupuesto</Label>
               <Select

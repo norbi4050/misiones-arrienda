@@ -32,10 +32,10 @@ export default function InmobiliariaRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
+
     // Simular envío
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     alert("¡Registro exitoso! Te contactaremos pronto para verificar tu inmobiliaria.")
     setIsSubmitting(false)
   }
@@ -114,7 +114,7 @@ export default function InmobiliariaRegisterPage() {
             {/* Formulario */}
             <div className="bg-white rounded-lg shadow-lg p-8">
               <h2 className="text-2xl font-bold mb-6">Información de la Inmobiliaria</h2>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -252,8 +252,8 @@ export default function InmobiliariaRegisterPage() {
                   />
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full h-12 text-lg"
                   disabled={isSubmitting}
                 >
@@ -290,7 +290,7 @@ export default function InmobiliariaRegisterPage() {
                         </span>
                       </div>
                     )}
-                    
+
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className="text-xl font-bold">{plan.name}</h3>
@@ -309,7 +309,7 @@ export default function InmobiliariaRegisterPage() {
                         )}
                       </div>
                     </div>
-                    
+
                     <ul className="space-y-2">
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-center text-sm">
@@ -325,7 +325,7 @@ export default function InmobiliariaRegisterPage() {
               <div className="mt-8 p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <h3 className="font-semibold text-yellow-800 mb-2">🎉 Oferta de Lanzamiento</h3>
                 <p className="text-yellow-700 text-sm">
-                  <strong>50% de descuento</strong> en tu primer mes. Además, configuración gratuita 
+                  <strong>50% de descuento</strong> en tu primer mes. Además, configuración gratuita
                   y migración de tus propiedades existentes.
                 </p>
               </div>

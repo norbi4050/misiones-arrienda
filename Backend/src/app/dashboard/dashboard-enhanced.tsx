@@ -98,7 +98,7 @@ export default function DashboardEnhanced() {
     // Redirigir a la página principal con los parámetros de búsqueda
     const searchParams = new URLSearchParams()
     searchParams.set('search', searchTerm)
-    
+
     if (filters) {
       Object.keys(filters).forEach(key => {
         if (filters[key]) {
@@ -106,7 +106,7 @@ export default function DashboardEnhanced() {
         }
       })
     }
-    
+
     router.push(`/?${searchParams.toString()}`)
   }
 
@@ -138,7 +138,7 @@ export default function DashboardEnhanced() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
@@ -159,8 +159,8 @@ export default function DashboardEnhanced() {
                 <Badge variant="secondary">
                   {usuario.tipo}
                 </Badge>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={handleLogout}
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -280,7 +280,7 @@ export default function DashboardEnhanced() {
                     Explorar Más Propiedades
                   </Button>
                 </div>
-                
+
                 {isLoadingFavorites ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
@@ -312,7 +312,7 @@ export default function DashboardEnhanced() {
                               className="w-full h-48 object-cover"
                             />
                             <div className="absolute top-2 right-2">
-                              <FavoriteButton 
+                              <FavoriteButton
                                 propertyId={favorite.property.id}
                                 size="sm"
                               />
@@ -334,8 +334,8 @@ export default function DashboardEnhanced() {
                               <span>{favorite.property.area} m²</span>
                             </div>
                             <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 className="flex-1"
                                 onClick={() => router.push(`/property/${favorite.property.id}`)}
                               >
@@ -359,12 +359,12 @@ export default function DashboardEnhanced() {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Historial de Búsquedas</h2>
-                  <SearchHistory 
+                  <SearchHistory
                     onSearchSelect={handleSearchSelect}
                     maxItems={20}
                   />
                 </div>
-                
+
                 <div className="bg-gray-50 rounded-lg p-8 text-center">
                   <Search size={48} className="mx-auto text-gray-300 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -389,7 +389,7 @@ export default function DashboardEnhanced() {
                     Ver Todas las Propiedades
                   </Button>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* Accesos rápidos a búsquedas populares */}
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
@@ -397,31 +397,31 @@ export default function DashboardEnhanced() {
                     <h3 className="font-semibold text-lg mb-2">Propiedades en Posadas</h3>
                     <p className="text-gray-600">Explora las mejores opciones en la capital</p>
                   </div>
-                  
+
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
                        onClick={() => router.push('/?city=Oberá')}>
                     <h3 className="font-semibold text-lg mb-2">Propiedades en Oberá</h3>
                     <p className="text-gray-600">Descubre opciones en la ciudad del bosque</p>
                   </div>
-                  
+
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
                        onClick={() => router.push('/?propertyType=HOUSE')}>
                     <h3 className="font-semibold text-lg mb-2">Casas</h3>
                     <p className="text-gray-600">Encuentra la casa perfecta para tu familia</p>
                   </div>
-                  
+
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
                        onClick={() => router.push('/?propertyType=APARTMENT')}>
                     <h3 className="font-semibold text-lg mb-2">Departamentos</h3>
                     <p className="text-gray-600">Departamentos modernos y cómodos</p>
                   </div>
-                  
+
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
                        onClick={() => router.push('/?maxPrice=200000')}>
                     <h3 className="font-semibold text-lg mb-2">Hasta $200.000</h3>
                     <p className="text-gray-600">Opciones accesibles para tu presupuesto</p>
                   </div>
-                  
+
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 cursor-pointer transition-colors"
                        onClick={() => router.push('/?featured=true')}>
                     <h3 className="font-semibold text-lg mb-2">Propiedades Destacadas</h3>

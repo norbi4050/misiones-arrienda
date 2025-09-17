@@ -50,7 +50,7 @@ export function SmartSearch({ onSearch, placeholder = "Buscar por ubicación..."
       const filtered = misionesLocations.filter(location =>
         location.name.toLowerCase().includes(query.toLowerCase())
       ).slice(0, 6) // Máximo 6 sugerencias
-      
+
       setSuggestions(filtered)
       setShowSuggestions(true)
       setSelectedIndex(-1)
@@ -76,7 +76,7 @@ export function SmartSearch({ onSearch, placeholder = "Buscar por ubicación..."
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev < suggestions.length - 1 ? prev + 1 : prev
         )
         break
@@ -167,9 +167,9 @@ export function SmartSearch({ onSearch, placeholder = "Buscar por ubicación..."
             </button>
           )}
         </div>
-        
-        <Button 
-          type="submit" 
+
+        <Button
+          type="submit"
           className="absolute right-1 top-1 bottom-1 px-4 rounded-md"
           disabled={!query.trim()}
         >
@@ -179,7 +179,7 @@ export function SmartSearch({ onSearch, placeholder = "Buscar por ubicación..."
 
       {/* Sugerencias */}
       {showSuggestions && suggestions.length > 0 && (
-        <div 
+        <div
           ref={suggestionsRef}
           className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
         >
@@ -201,7 +201,7 @@ export function SmartSearch({ onSearch, placeholder = "Buscar por ubicación..."
               <MapPin className="h-4 w-4 text-gray-400" />
             </button>
           ))}
-          
+
           {query.length >= 2 && (
             <div className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-t">
               💡 Tip: Usa las flechas ↑↓ para navegar y Enter para seleccionar
@@ -212,7 +212,7 @@ export function SmartSearch({ onSearch, placeholder = "Buscar por ubicación..."
 
       {/* Overlay para cerrar sugerencias */}
       {showSuggestions && (
-        <div 
+        <div
           className="fixed inset-0 z-40"
           onClick={() => setShowSuggestions(false)}
         />

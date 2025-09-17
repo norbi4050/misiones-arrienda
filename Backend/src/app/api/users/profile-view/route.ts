@@ -26,11 +26,11 @@ async function getServerSupabase() {
 // POST: Register a profile view
 export async function POST(req: NextRequest) {
   const supabase = await getServerSupabase();
-  
+
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     const { profileUserId } = await req.json();
-    
+
     if (!profileUserId) {
       return NextResponse.json({ error: "Profile user ID required" }, { status: 400 });
     }
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     // Check if this IP has viewed this profile recently (prevent spam)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    
+
     const { data: recentView, error: checkError } = await supabase
       .from("profile_views")
       .select("id")
@@ -83,9 +83,9 @@ export async function POST(req: NextRequest) {
       console.error('Error recording profile view:', insertError);
       // If the table doesn't exist yet, return success anyway
       if (insertError.code === '42P01') {
-        return NextResponse.json({ 
+        return NextResponse.json({
           message: "Profile view tracking not yet available",
-          tracked: false 
+          tracked: false
         }, { status: 200 });
       }
       return NextResponse.json({ error: "Error recording view" }, { status: 500 });
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Profile view recorded",
       viewId: newView.id,
       tracked: true
@@ -110,9 +110,9 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Unexpected error in profile view tracking:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: "Internal server error",
-      tracked: false 
+      tracked: false
     }, { status: 500 });
   }
 }
@@ -120,10 +120,10 @@ export async function POST(req: NextRequest) {
 // GET: Get profile views for a user (for analytics)
 export async function GET(req: NextRequest) {
   const supabase = await getServerSupabase();
-  
+
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
     if (viewsError) {
       console.error('Error fetching profile views:', viewsError);
       if (viewsError.code === '42P01') {
-        return NextResponse.json({ 
+        return NextResponse.json({
           views: [],
           total: 0,
           message: "Profile view tracking not yet available"
@@ -176,7 +176,7 @@ export async function GET(req: NextRequest) {
       console.error('Error counting profile views:', countError);
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       views: views || [],
       total: totalViews || 0,
       timeframe: parseInt(timeframe)
@@ -184,8 +184,8 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('Unexpected error fetching profile views:', error);
-    return NextResponse.json({ 
-      error: "Internal server error" 
+    return NextResponse.json({
+      error: "Internal server error"
     }, { status: 500 });
   }
 }

@@ -25,7 +25,7 @@ export function useUserStatsImproved() {
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
-  
+
   // Cache duration: 5 minutes
   const CACHE_DURATION = 5 * 60 * 1000;
 
@@ -68,7 +68,7 @@ export function useUserStatsImproved() {
       }
 
       const data = await response.json();
-      
+
       if (data.stats) {
         setStats(data.stats);
         setLastFetch(now);
@@ -83,7 +83,7 @@ export function useUserStatsImproved() {
 
       console.error('Error fetching user stats:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-      
+
       // Fallback to default stats only if we don't have any stats yet
       if (!stats) {
         setStats({
@@ -110,7 +110,7 @@ export function useUserStatsImproved() {
   // Initial fetch
   useEffect(() => {
     fetchStats();
-    
+
     // Cleanup on unmount
     return () => {
       if (abortControllerRef.current) {

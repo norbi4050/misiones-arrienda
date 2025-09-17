@@ -60,7 +60,7 @@ export default function UserProfilePage() {
     try {
       const token = localStorage.getItem('token')
       const currentUserData = localStorage.getItem('userData')
-      
+
       if (!token || !currentUserData) {
         toast.error("Debes iniciar sesión para ver perfiles")
         router.push('/login')
@@ -87,7 +87,7 @@ export default function UserProfilePage() {
           createdAt: currentUser.createdAt || new Date().toISOString(),
           userType: currentUser.userType || "inquilino"
         }
-        
+
         setUser(userProfile)
         setEditForm({
           name: userProfile.name,
@@ -135,7 +135,7 @@ export default function UserProfilePage() {
   const handleSaveProfile = async () => {
     try {
       const token = localStorage.getItem('token')
-      
+
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: {
@@ -153,12 +153,12 @@ export default function UserProfilePage() {
 
       if (response.ok) {
         const updatedUser = await response.json()
-        
+
         // Actualizar localStorage
         const currentUserData = JSON.parse(localStorage.getItem('userData') || '{}')
         const newUserData = { ...currentUserData, ...updatedUser.user }
         localStorage.setItem('userData', JSON.stringify(newUserData))
-        
+
         // Actualizar estado local
         setUser(prev => prev ? { ...prev, ...updatedUser.user } : null)
         setIsEditing(false)
@@ -231,7 +231,7 @@ export default function UserProfilePage() {
                 )}
               </div>
             </div>
-            
+
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-2">
                 <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
@@ -246,19 +246,19 @@ export default function UserProfilePage() {
                   </Badge>
                 )}
               </div>
-              
+
               <div className="flex items-center space-x-2 mb-3">
                 <Mail size={16} className="text-gray-500" />
                 <span className="text-gray-600">{user.email}</span>
               </div>
-              
+
               {user.phone && (
                 <div className="flex items-center space-x-2 mb-3">
                   <Phone size={16} className="text-gray-500" />
                   <span className="text-gray-600">{user.phone}</span>
                 </div>
               )}
-              
+
               <div className="space-y-1 text-gray-600">
                 {user.occupation && (
                   <div className="flex items-center space-x-2">
@@ -276,10 +276,10 @@ export default function UserProfilePage() {
               </div>
             </div>
           </div>
-          
+
           {/* Botón de editar perfil */}
           {isCurrentUser && (
-            <Button 
+            <Button
               onClick={handleEditProfile}
               className="flex items-center space-x-2"
             >
@@ -288,7 +288,7 @@ export default function UserProfilePage() {
             </Button>
           )}
         </div>
-        
+
         {/* Formulario de edición */}
         {isEditing && isCurrentUser && (
           <div className="border-t border-gray-200 pt-6">
@@ -305,7 +305,7 @@ export default function UserProfilePage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Ocupación
@@ -317,7 +317,7 @@ export default function UserProfilePage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Edad
@@ -329,7 +329,7 @@ export default function UserProfilePage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Teléfono
@@ -341,7 +341,7 @@ export default function UserProfilePage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Biografía
@@ -355,7 +355,7 @@ export default function UserProfilePage() {
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end space-x-3 mt-6">
               <Button variant="outline" onClick={handleCancelEdit}>
                 Cancelar
@@ -366,7 +366,7 @@ export default function UserProfilePage() {
             </div>
           </div>
         )}
-        
+
         {/* Sección "Sobre mí" */}
         {!isEditing && user.bio && (
           <div className="border-t border-gray-200 pt-6">
@@ -374,7 +374,7 @@ export default function UserProfilePage() {
             <p className="text-gray-700">{user.bio}</p>
           </div>
         )}
-        
+
         {/* Mensaje si no hay biografía */}
         {!isEditing && !user.bio && isCurrentUser && (
           <div className="border-t border-gray-200 pt-6">
@@ -399,7 +399,7 @@ export default function UserProfilePage() {
         <h2 className="text-xl font-bold text-gray-900 mb-6">
           Reseñas como {user.userType || 'Usuario'} ({reviews.length})
         </h2>
-        
+
         {reviews.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -409,7 +409,7 @@ export default function UserProfilePage() {
               {isCurrentUser ? 'Aún no tienes reseñas' : 'Este usuario aún no tiene reseñas'}
             </h3>
             <p className="text-gray-600 mb-4">
-              {isCurrentUser 
+              {isCurrentUser
                 ? 'Las reseñas aparecerán aquí cuando otros usuarios evalúen tu servicio'
                 : 'Las reseñas de otros usuarios aparecerán aquí'
               }
@@ -428,10 +428,10 @@ export default function UserProfilePage() {
                   <div className="flex-shrink-0">
                     <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                       {review.reviewer.avatar ? (
-                        <img 
-                          src={review.reviewer.avatar} 
-                          alt={review.reviewer.name} 
-                          className="w-12 h-12 rounded-full object-cover" 
+                        <img
+                          src={review.reviewer.avatar}
+                          alt={review.reviewer.name}
+                          className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
                         <span className="text-sm font-bold text-gray-600">
@@ -440,7 +440,7 @@ export default function UserProfilePage() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h4 className="font-semibold text-gray-900">
@@ -452,7 +452,7 @@ export default function UserProfilePage() {
                         </Badge>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 mb-3">
                       <div className="flex">
                         {renderStars(review.rating)}
@@ -461,7 +461,7 @@ export default function UserProfilePage() {
                         {new Date(review.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    
+
                     <p className="text-gray-700">{review.comment}</p>
                   </div>
                 </div>
@@ -473,8 +473,8 @@ export default function UserProfilePage() {
 
       {/* Botones de navegación */}
       <div className="mt-6 flex justify-center space-x-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => window.history.back()}
         >
           ← Volver

@@ -79,7 +79,7 @@ export async function GET(
     })
 
     // Filtrar propiedades por userId (asumiendo que existe en el objeto)
-    const userProperties = allProperties.filter((property: any) => 
+    const userProperties = allProperties.filter((property: any) =>
       property.userId === userId
     )
 
@@ -139,15 +139,15 @@ export async function GET(
         createdAt: property.createdAt,
         updatedAt: property.updatedAt,
         userId: (property as any).userId,
-        
+
         // Campos procesados
         images,
         amenities,
         features,
-        
+
         // Información del agente
         agent: property.agent,
-        
+
         // Plan básico por defecto
         activePlan: { planType: 'basico', planName: 'Plan Básico' }
       }

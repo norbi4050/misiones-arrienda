@@ -12,9 +12,9 @@ export async function POST(req: NextRequest) {
     // Si viene en el formato nuevo (items, payer, etc.)
     if (items && payer) {
       const preferenceData = {
-        items: items ?? [{ 
-          title: "Destacado 7 días", 
-          quantity: 1, 
+        items: items ?? [{
+          title: "Destacado 7 días",
+          quantity: 1,
           unit_price: 4999,
           currency_id: 'ARS'
         }],
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
       // Aquí usaríamos directamente MercadoPago SDK si estuviera disponible
       // Por ahora, devolvemos un mock response
-      return NextResponse.json({ 
+      return NextResponse.json({
         id: 'mock-preference-id',
         init_point: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock-preference-id',
         sandbox_init_point: 'https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock-preference-id'

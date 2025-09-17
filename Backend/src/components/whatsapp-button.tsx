@@ -27,40 +27,40 @@ interface WhatsAppButtonProps {
 // Función para normalizar números de teléfono argentinos a formato WhatsApp
 function normalizeArgentinePhone(phone: string): string {
   if (!phone) return "5493764567890" // Fallback al número de Misiones Arrienda
-  
+
   // Remover todos los caracteres no numéricos
   const digits = phone.replace(/\D/g, '')
-  
+
   // Si ya está en formato internacional correcto (549...)
   if (digits.startsWith('549')) {
     return digits
   }
-  
+
   // Si empieza con 54 pero no 549 (teléfono móvil sin el 9)
   if (digits.startsWith('54') && !digits.startsWith('549')) {
     return '549' + digits.slice(2)
   }
-  
+
   // Si empieza con 0 (formato nacional argentino)
   if (digits.startsWith('0')) {
     // Remover el 0 inicial y agregar 549
     return '549' + digits.slice(1)
   }
-  
+
   // Si es un número local (sin código de país)
   if (digits.length >= 10) {
     // Asumir que es un número móvil argentino y agregar 549
     return '549' + digits
   }
-  
+
   // Si no se puede normalizar, usar el número de fallback
   return "5493764567890"
 }
 
-export default function WhatsAppButton({ 
-  propertyId, 
-  address, 
-  price, 
+export default function WhatsAppButton({
+  propertyId,
+  address,
+  price,
   type = "inline",
   className = "",
   source = "web",
@@ -69,15 +69,15 @@ export default function WhatsAppButton({
   agentName,
   propertyTitle
 }: WhatsAppButtonProps) {
-  
+
   const phoneNumber = normalizeArgentinePhone(agentPhone || "")
-  
+
   const generateMessage = () => {
     // Usar el título de la propiedad y nombre del agente si están disponibles
     const agentGreeting = agentName ? `Hola ${agentName}, ` : '¡Hola! '
-    
+
     let baseMessage = ''
-    
+
     if (propertyTitle && address && price) {
       baseMessage = `${agentGreeting}me interesa la propiedad "${propertyTitle}" en ${address} por $${price}. ¿Podemos coordinar una visita? 🏠`
     } else if (address && price) {
@@ -87,7 +87,7 @@ export default function WhatsAppButton({
     } else {
       baseMessage = `${agentGreeting}me interesa conocer más sobre las propiedades disponibles en Misiones Arrienda 🏠`
     }
-    
+
     return baseMessage
   }
 
@@ -169,7 +169,7 @@ export default function WhatsAppButton({
 // Componente para el hero section
 export function WhatsAppHeroButton() {
   return (
-    <WhatsAppButton 
+    <WhatsAppButton
       type="inline"
       source="hero"
       campaign="hero_cta"
@@ -179,23 +179,23 @@ export function WhatsAppHeroButton() {
 }
 
 // Componente para tarjetas de propiedades
-export function WhatsAppPropertyButton({ 
-  propertyId, 
-  address, 
-  price, 
-  agentPhone, 
-  agentName, 
-  propertyTitle 
-}: { 
+export function WhatsAppPropertyButton({
+  propertyId,
+  address,
+  price,
+  agentPhone,
+  agentName,
+  propertyTitle
+}: {
   propertyId: string
-  address: string 
-  price: string 
+  address: string
+  price: string
   agentPhone?: string
   agentName?: string
   propertyTitle?: string
 }) {
   return (
-    <WhatsAppButton 
+    <WhatsAppButton
       propertyId={propertyId}
       address={address}
       price={price}
@@ -213,7 +213,7 @@ export function WhatsAppPropertyButton({
 // Componente para tarjetas de propiedades en grid
 export function WhatsAppCardButton({ propertyId }: { propertyId: string }) {
   return (
-    <WhatsAppButton 
+    <WhatsAppButton
       propertyId={propertyId}
       type="inline"
       source="property_card"
@@ -240,7 +240,7 @@ export function WhatsAppFloatingButton() {
 
   return (
     <div id="whatsapp-floating" className="opacity-0 transition-opacity duration-500">
-      <WhatsAppButton 
+      <WhatsAppButton
         type="fixed"
         source="floating"
         campaign="persistent_cta"

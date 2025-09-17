@@ -4,12 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Badge } from './badge';
 import { Button } from './button';
-import { 
-  Eye, 
-  Heart, 
-  MessageCircle, 
-  Star, 
-  TrendingUp, 
+import {
+  Eye,
+  Heart,
+  MessageCircle,
+  Star,
+  TrendingUp,
   Calendar,
   Shield,
   Award,
@@ -42,9 +42,9 @@ interface ProfileStatsProps {
   layout?: 'grid' | 'compact' | 'detailed';
 }
 
-export function ProfileStatsAuditoria({ 
-  stats: propStats, 
-  className, 
+export function ProfileStatsAuditoria({
+  stats: propStats,
+  className,
   showRefreshButton = true,
   layout = 'grid'
 }: ProfileStatsProps) {
@@ -76,7 +76,7 @@ export function ProfileStatsAuditoria({
 
   const handleRefresh = async () => {
     if (isRefreshing) return;
-    
+
     setIsRefreshing(true);
     try {
       await refreshStats();
@@ -92,37 +92,37 @@ export function ProfileStatsAuditoria({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-AR', { 
-      year: 'numeric', 
-      month: 'long' 
+    return date.toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long'
     });
   };
 
   const getVerificationBadge = (level: string) => {
     switch (level) {
       case 'full':
-        return { 
-          label: 'Completamente Verificado', 
-          color: 'bg-green-100 text-green-800 border-green-200', 
-          icon: Shield 
+        return {
+          label: 'Completamente Verificado',
+          color: 'bg-green-100 text-green-800 border-green-200',
+          icon: Shield
         };
       case 'phone':
-        return { 
-          label: 'Teléfono Verificado', 
-          color: 'bg-blue-100 text-blue-800 border-blue-200', 
-          icon: Shield 
+        return {
+          label: 'Teléfono Verificado',
+          color: 'bg-blue-100 text-blue-800 border-blue-200',
+          icon: Shield
         };
       case 'email':
-        return { 
-          label: 'Email Verificado', 
-          color: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
-          icon: Shield 
+        return {
+          label: 'Email Verificado',
+          color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+          icon: Shield
         };
       default:
-        return { 
-          label: 'Sin Verificar', 
-          color: 'bg-gray-100 text-gray-600 border-gray-200', 
-          icon: AlertCircle 
+        return {
+          label: 'Sin Verificar',
+          color: 'bg-gray-100 text-gray-600 border-gray-200',
+          icon: AlertCircle
         };
     }
   };
@@ -134,28 +134,28 @@ export function ProfileStatsAuditoria({
   if (layout === 'compact') {
     return (
       <div className={cn("flex flex-wrap gap-4 p-4", className)}>
-        <StatItem 
-          icon={Eye} 
-          value={profileStats.profileViews} 
-          label="Vistas" 
+        <StatItem
+          icon={Eye}
+          value={profileStats.profileViews}
+          label="Vistas"
           color="text-blue-600"
         />
-        <StatItem 
-          icon={Heart} 
-          value={profileStats.favoriteCount} 
-          label="Favoritos" 
+        <StatItem
+          icon={Heart}
+          value={profileStats.favoriteCount}
+          label="Favoritos"
           color="text-red-600"
         />
-        <StatItem 
-          icon={MessageCircle} 
-          value={profileStats.messageCount} 
-          label="Mensajes" 
+        <StatItem
+          icon={MessageCircle}
+          value={profileStats.messageCount}
+          label="Mensajes"
           color="text-green-600"
         />
-        <StatItem 
-          icon={Star} 
-          value={profileStats.rating} 
-          label="Rating" 
+        <StatItem
+          icon={Star}
+          value={profileStats.rating}
+          label="Rating"
           color="text-yellow-600"
           isRating
         />
@@ -440,12 +440,12 @@ interface StatCardProps {
   loading?: boolean;
 }
 
-function StatCard({ 
-  icon: Icon, 
-  value, 
-  label, 
-  subtitle, 
-  color = "bg-gray-50 text-gray-700", 
+function StatCard({
+  icon: Icon,
+  value,
+  label,
+  subtitle,
+  color = "bg-gray-50 text-gray-700",
   isRating = false,
   trend,
   loading = false
@@ -468,7 +468,7 @@ function StatCard({
               {trend && (
                 <div className={cn(
                   "flex items-center text-xs",
-                  trend === 'up' ? 'text-green-600' : 
+                  trend === 'up' ? 'text-green-600' :
                   trend === 'down' ? 'text-red-600' : 'text-gray-500'
                 )}>
                   <TrendingUp className={cn(
@@ -504,8 +504,8 @@ function AchievementBadgeComponent({ title, description, earned, icon }: Achieve
   return (
     <div className={cn(
       "p-3 rounded-lg border-2 text-center transition-all hover:scale-105",
-      earned 
-        ? "border-green-200 bg-green-50 shadow-sm" 
+      earned
+        ? "border-green-200 bg-green-50 shadow-sm"
         : "border-gray-200 bg-gray-50 opacity-60"
     )}>
       <div className="text-2xl mb-1">{icon}</div>
@@ -526,9 +526,9 @@ function AchievementBadgeComponent({ title, description, earned, icon }: Achieve
 // Versión compacta para displays pequeños
 export function ProfileStatsCompact({ stats: propStats, className }: ProfileStatsProps) {
   return (
-    <ProfileStatsAuditoria 
-      stats={propStats} 
-      className={className} 
+    <ProfileStatsAuditoria
+      stats={propStats}
+      className={className}
       layout="compact"
       showRefreshButton={false}
     />

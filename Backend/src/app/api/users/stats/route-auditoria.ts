@@ -25,10 +25,10 @@ async function getServerSupabase() {
 
 export async function GET(_req: NextRequest) {
   const supabase = await getServerSupabase();
-  
+
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -36,7 +36,7 @@ export async function GET(_req: NextRequest) {
     // =====================================================
     // USAR FUNCIÓN SQL PARA OBTENER ESTADÍSTICAS REALES
     // =====================================================
-    
+
     try {
       // Llamar a la función SQL que calcula estadísticas reales
       const { data: statsData, error: statsError } = await supabase
@@ -50,8 +50,8 @@ export async function GET(_req: NextRequest) {
 
       // Parsear el JSON retornado por la función
       const stats = typeof statsData === 'string' ? JSON.parse(statsData) : statsData;
-      
-      return NextResponse.json({ 
+
+      return NextResponse.json({
         stats,
         source: 'real_data',
         timestamp: new Date().toISOString()
@@ -65,7 +65,7 @@ export async function GET(_req: NextRequest) {
 
   } catch (error) {
     console.error('Unexpected error in user stats:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: "Internal server error",
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
@@ -77,8 +77,6 @@ export async function GET(_req: NextRequest) {
 // =====================================================
 async function getFallbackStats(supabase: any, user: any) {
   try {
-    console.log('Using fallback stats method for user:', user.id);
-
     // 1. Obtener vistas de perfil reales (últimos 30 días)
     const { count: profileViews, error: viewsError } = await supabase
       .from("profile_views")
@@ -121,7 +119,7 @@ async function getFallbackStats(supabase: any, user: any) {
 
     let avgRating = 0;
     let reviewCount = 0;
-    
+
     if (!ratingsError && ratingsData) {
       reviewCount = ratingsData.length;
       if (reviewCount > 0) {
@@ -180,7 +178,7 @@ async function getFallbackStats(supabase: any, user: any) {
       activityCount: activityCount || 0
     };
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       stats,
       source: 'fallback_queries',
       timestamp: new Date().toISOString(),
@@ -189,7 +187,7 @@ async function getFallbackStats(supabase: any, user: any) {
 
   } catch (fallbackError) {
     console.error('Error in fallback stats:', fallbackError);
-    
+
     // Último recurso: datos mínimos pero reales
     const { count: favoriteCount } = await supabase
       .from("favorites")
@@ -209,7 +207,7 @@ async function getFallbackStats(supabase: any, user: any) {
       activityCount: 0
     };
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       stats: minimalStats,
       source: 'minimal_fallback',
       timestamp: new Date().toISOString(),

@@ -1,6 +1,6 @@
 /**
  * 🗄️ HOOK PARA SUPABASE STORAGE
- * 
+ *
  * Hook personalizado para manejar operaciones de Storage en Supabase
  * FASE 2: OPTIMIZACIÓN DE RENDIMIENTO
  */
@@ -36,7 +36,7 @@ export const useSupabaseStorage = (): UseSupabaseStorageReturn => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   const supabase = getBrowserClient();
 
   /**
@@ -47,11 +47,11 @@ export const useSupabaseStorage = (): UseSupabaseStorageReturn => {
     const randomString = Math.random().toString(36).substring(2, 15);
     const extension = originalName.split('.').pop() || 'jpg';
     const baseName = originalName.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_');
-    
+
     if (userId) {
       return `${userId}/${baseName}_${timestamp}_${randomString}.${extension}`;
     }
-    
+
     return `${baseName}_${timestamp}_${randomString}.${extension}`;
   }, []);
 
@@ -98,8 +98,8 @@ export const useSupabaseStorage = (): UseSupabaseStorageReturn => {
    * Sube una imagen a Supabase Storage
    */
   const uploadImage = useCallback(async (
-    file: File, 
-    bucket: string, 
+    file: File,
+    bucket: string,
     customPath?: string
   ): Promise<UploadResult> => {
     setIsUploading(true);
@@ -115,7 +115,7 @@ export const useSupabaseStorage = (): UseSupabaseStorageReturn => {
 
       // Generar path del archivo
       const fileName = customPath || generateUniqueFileName(file.name);
-      
+
       // Simular progreso (Supabase no proporciona progreso real)
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
@@ -157,7 +157,7 @@ export const useSupabaseStorage = (): UseSupabaseStorageReturn => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMessage);
-      
+
       return {
         url: '',
         path: '',
@@ -198,7 +198,7 @@ export const useSupabaseStorage = (): UseSupabaseStorageReturn => {
     const { data } = supabase.storage
       .from(bucket)
       .getPublicUrl(path);
-    
+
     return data.publicUrl;
   }, [supabase.storage]);
 
@@ -217,10 +217,10 @@ export const useSupabaseStorage = (): UseSupabaseStorageReturn => {
  */
 export const usePropertyImages = () => {
   const storage = useSupabaseStorage();
-  
+
   const uploadPropertyImage = useCallback(async (
-    file: File, 
-    userId: string, 
+    file: File,
+    userId: string,
     propertyId: string,
     imageIndex: number = 0
   ): Promise<UploadResult> => {
@@ -234,7 +234,7 @@ export const usePropertyImages = () => {
     if (!pathMatch) {
       return false;
     }
-    
+
     return storage.deleteImage('property-images', pathMatch[1]);
   }, [storage]);
 
@@ -250,9 +250,9 @@ export const usePropertyImages = () => {
  */
 export const useUserAvatars = () => {
   const storage = useSupabaseStorage();
-  
+
   const uploadAvatar = useCallback(async (
-    file: File, 
+    file: File,
     userId: string
   ): Promise<UploadResult> => {
     const customPath = `${userId}/avatar_${Date.now()}.${file.name.split('.').pop()}`;
@@ -265,7 +265,7 @@ export const useUserAvatars = () => {
     if (!pathMatch) {
       return false;
     }
-    
+
     return storage.deleteImage('user-avatars', pathMatch[1]);
   }, [storage]);
 
@@ -300,7 +300,7 @@ export const storageUtils = {
   parseStorageUrl: (url: string): { bucket: string; path: string } | null => {
     const match = url.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)$/);
     if (!match) return null;
-    
+
     return {
       bucket: match[1],
       path: match[2]

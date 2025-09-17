@@ -34,10 +34,6 @@ export default function InquilinoProfilePage({ session }: InquilinoProfilePagePr
   })
 
   // Log session data for debugging
-  console.log("InquilinoProfilePage - Session prop:", session?.user?.id)
-  console.log("InquilinoProfilePage - useSupabaseAuth user:", user?.id)
-  console.log("InquilinoProfilePage - isAuthenticated:", isAuthenticated)
-
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -74,8 +70,7 @@ export default function InquilinoProfilePage({ session }: InquilinoProfilePagePr
           setUserStats(result.data)
         }
       } else {
-        console.warn('No se pudieron cargar las estadísticas del usuario')
-      }
+        }
     } catch (error) {
       console.error('Error al cargar estadísticas:', error)
     } finally {

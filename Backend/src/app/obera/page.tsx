@@ -58,7 +58,7 @@ export default async function OberaPage({ searchParams }: OberaPageProps) {
             Propiedades en Oberá, Misiones
           </h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Descubre oportunidades inmobiliarias en la capital nacional de la yerba mate. 
+            Descubre oportunidades inmobiliarias en la capital nacional de la yerba mate.
             Una ciudad próspera con gran calidad de vida y crecimiento constante.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
@@ -87,28 +87,28 @@ export default async function OberaPage({ searchParams }: OberaPageProps) {
               <div>
                 <h3 className="text-xl font-semibold mb-4">🧉 Capital Nacional de la Yerba Mate</h3>
                 <p className="text-gray-700">
-                  Oberá es reconocida como la capital nacional de la yerba mate, 
+                  Oberá es reconocida como la capital nacional de la yerba mate,
                   con una economía sólida basada en esta industria tradicional.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🎭 Festival Nacional de la Yerba Mate</h3>
                 <p className="text-gray-700">
-                  Cada año, la ciudad se convierte en el centro de atención nacional 
+                  Cada año, la ciudad se convierte en el centro de atención nacional
                   con su famoso festival que atrae miles de visitantes.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🏫 Centro Educativo Regional</h3>
                 <p className="text-gray-700">
-                  Importante centro educativo con instituciones de nivel superior 
+                  Importante centro educativo con instituciones de nivel superior
                   y técnico que atraen estudiantes de toda la región.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🌱 Crecimiento Sostenible</h3>
                 <p className="text-gray-700">
-                  Ciudad en constante crecimiento con desarrollo urbano planificado 
+                  Ciudad en constante crecimiento con desarrollo urbano planificado
                   y respeto por el medio ambiente.
                 </p>
               </div>
@@ -123,8 +123,8 @@ export default async function OberaPage({ searchParams }: OberaPageProps) {
           <h2 className="text-3xl font-bold text-center mb-12">
             Propiedades Disponibles en Oberá
           </h2>
-          <PropertyGridServer 
-            initialProperties={properties} 
+          <PropertyGridServer
+            initialProperties={properties}
             searchParams={searchParams}
           />
         </div>

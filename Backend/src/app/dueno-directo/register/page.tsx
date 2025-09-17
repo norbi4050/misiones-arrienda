@@ -31,10 +31,10 @@ export default function DuenoDirectoRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
+
     // Simular envío
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     alert("¡Registro exitoso! Te contactaremos pronto para activar tu cuenta de dueño directo.")
     setIsSubmitting(false)
   }
@@ -92,7 +92,7 @@ export default function DuenoDirectoRegisterPage() {
             Dueño Directo
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Alquila tu habitación, estudio o espacio directamente sin intermediarios. 
+            Alquila tu habitación, estudio o espacio directamente sin intermediarios.
             <strong> Es 100% legal en Argentina</strong> 🇦🇷
           </p>
         </div>
@@ -147,7 +147,7 @@ export default function DuenoDirectoRegisterPage() {
             {/* Formulario */}
             <div className="bg-white rounded-lg shadow-lg p-8">
               <h2 className="text-2xl font-bold mb-6">Registra tu Espacio</h2>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -294,8 +294,8 @@ export default function DuenoDirectoRegisterPage() {
                   />
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full h-12 text-lg bg-green-600 hover:bg-green-700"
                   disabled={isSubmitting}
                 >
@@ -332,7 +332,7 @@ export default function DuenoDirectoRegisterPage() {
                         </span>
                       </div>
                     )}
-                    
+
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className="text-xl font-bold">{plan.name}</h3>
@@ -351,7 +351,7 @@ export default function DuenoDirectoRegisterPage() {
                         )}
                       </div>
                     </div>
-                    
+
                     <ul className="space-y-2">
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-center text-sm">
@@ -367,7 +367,7 @@ export default function DuenoDirectoRegisterPage() {
               <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
                 <h3 className="font-semibold text-blue-800 mb-2">💡 ¿Sabías que...?</h3>
                 <p className="text-blue-700 text-sm">
-                  En Misiones, una habitación se alquila entre $15.000-$30.000/mes. 
+                  En Misiones, una habitación se alquila entre $15.000-$30.000/mes.
                   Con nuestro plan básico de $2.000/mes, recuperas la inversión con solo 4 días de alquiler.
                 </p>
               </div>

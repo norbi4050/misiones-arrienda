@@ -50,14 +50,13 @@ class AnalyticsService {
       ...behavior,
       timestamp: new Date()
     }
-    
+
     this.behaviors.push(fullBehavior)
     this.updateInsights()
-    
+
     // In production, send to analytics service
     if (typeof window !== 'undefined') {
-      console.log('📊 Analytics:', fullBehavior)
-    }
+      }
   }
 
   // Track chat interactions
@@ -95,7 +94,7 @@ class AnalyticsService {
   private analyzeUserStruggle(sessionId: string, message: string) {
     const session = this.chatSessions.get(sessionId)!
     const lowerMessage = message.toLowerCase()
-    
+
     const struggleKeywords = [
       'no encuentro', 'no funciona', 'problema', 'error', 'ayuda',
       'no entiendo', 'confuso', 'difícil', 'complicado', 'no puedo'
@@ -111,7 +110,7 @@ class AnalyticsService {
   private analyzeSearchIntent(sessionId: string, message: string) {
     const session = this.chatSessions.get(sessionId)!
     const lowerMessage = message.toLowerCase()
-    
+
     const searchKeywords = [
       'buscar', 'encontrar', 'quiero', 'necesito', 'propiedad',
       'casa', 'departamento', 'alquiler', 'venta'
@@ -132,7 +131,7 @@ class AnalyticsService {
 
   private updateCommonQuestions() {
     const questionMap = new Map<string, number>()
-    
+
     this.chatSessions.forEach(session => {
       session.messages
         .filter(msg => msg.type === 'user')
@@ -150,7 +149,7 @@ class AnalyticsService {
 
   private updateUserStruggles() {
     const struggleMap = new Map<string, number>()
-    
+
     this.chatSessions.forEach(session => {
       session.userStruggles.forEach(struggle => {
         const normalized = this.normalizeStruggle(struggle)
@@ -166,7 +165,7 @@ class AnalyticsService {
 
   private updatePopularSearches() {
     const searchMap = new Map<string, number>()
-    
+
     this.chatSessions.forEach(session => {
       session.searchQueries.forEach(query => {
         const normalized = this.normalizeSearch(query)
@@ -190,26 +189,26 @@ class AnalyticsService {
 
   private normalizeStruggle(struggle: string): string {
     const lowerStruggle = struggle.toLowerCase()
-    
+
     if (lowerStruggle.includes('no encuentro')) return 'Dificultad para encontrar propiedades'
     if (lowerStruggle.includes('no funciona')) return 'Problemas técnicos'
     if (lowerStruggle.includes('confuso')) return 'Interfaz confusa'
     if (lowerStruggle.includes('filtro')) return 'Problemas con filtros'
     if (lowerStruggle.includes('busqueda')) return 'Problemas con búsqueda'
-    
+
     return 'Otros problemas'
   }
 
   private normalizeSearch(search: string): string {
     const lowerSearch = search.toLowerCase()
-    
+
     if (lowerSearch.includes('posadas')) return 'Búsquedas en Posadas'
     if (lowerSearch.includes('eldorado')) return 'Búsquedas en Eldorado'
     if (lowerSearch.includes('casa')) return 'Búsquedas de casas'
     if (lowerSearch.includes('departamento')) return 'Búsquedas de departamentos'
     if (lowerSearch.includes('alquiler')) return 'Búsquedas de alquiler'
     if (lowerSearch.includes('venta')) return 'Búsquedas de venta'
-    
+
     return 'Búsquedas generales'
   }
 
@@ -221,7 +220,7 @@ class AnalyticsService {
   // Get recommendations for platform improvements
   getRecommendations(): string[] {
     const recommendations: string[] = []
-    
+
     // Analyze common struggles
     const topStruggles = this.insights.userStruggles.slice(0, 3)
     topStruggles.forEach(struggle => {
@@ -257,13 +256,13 @@ class AnalyticsService {
       responses: this.extractSuccessfulResponses(),
       patterns: this.extractConversationPatterns()
     }
-    
+
     return trainingData
   }
 
   private extractIntents(): Array<{ intent: string; examples: string[] }> {
     const intentMap = new Map<string, string[]>()
-    
+
     this.chatSessions.forEach(session => {
       session.messages
         .filter(msg => msg.type === 'user')
@@ -284,25 +283,25 @@ class AnalyticsService {
 
   private classifyIntent(message: string): string {
     const lowerMessage = message.toLowerCase()
-    
+
     if (lowerMessage.includes('buscar') || lowerMessage.includes('encontrar')) return 'search'
     if (lowerMessage.includes('precio') || lowerMessage.includes('costo')) return 'pricing'
     if (lowerMessage.includes('dueño directo')) return 'owner_direct'
     if (lowerMessage.includes('inmobiliaria')) return 'real_estate'
     if (lowerMessage.includes('perfil')) return 'profile'
     if (lowerMessage.includes('ayuda')) return 'help'
-    
+
     return 'general'
   }
 
   private extractSuccessfulResponses(): Array<{ question: string; response: string; satisfaction: number }> {
     const successfulResponses: Array<{ question: string; response: string; satisfaction: number }> = []
-    
+
     this.chatSessions.forEach(session => {
       for (let i = 0; i < session.messages.length - 1; i++) {
         const userMsg = session.messages[i]
         const botMsg = session.messages[i + 1]
-        
+
         if (userMsg.type === 'user' && botMsg.type === 'bot') {
           // Assume satisfaction based on conversation continuation
           const satisfaction = this.calculateSatisfaction(session, i)
@@ -314,7 +313,7 @@ class AnalyticsService {
         }
       }
     })
-    
+
     return successfulResponses.filter(r => r.satisfaction > 0.7)
   }
 
@@ -324,12 +323,12 @@ class AnalyticsService {
     const hasFollowUp = remainingMessages > 0
     const hasPositiveKeywords = session.messages
       .slice(messageIndex + 2, messageIndex + 4)
-      .some(msg => msg.type === 'user' && 
-        ['gracias', 'perfecto', 'excelente', 'genial'].some(keyword => 
+      .some(msg => msg.type === 'user' &&
+        ['gracias', 'perfecto', 'excelente', 'genial'].some(keyword =>
           msg.content.toLowerCase().includes(keyword)
         )
       )
-    
+
     if (hasPositiveKeywords) return 0.9
     if (hasFollowUp) return 0.8
     return 0.6
@@ -337,17 +336,17 @@ class AnalyticsService {
 
   private extractConversationPatterns(): Array<{ pattern: string; frequency: number }> {
     const patterns = new Map<string, number>()
-    
+
     this.chatSessions.forEach(session => {
       for (let i = 0; i < session.messages.length - 2; i++) {
         const pattern = session.messages.slice(i, i + 3)
           .map(msg => `${msg.type}:${this.classifyIntent(msg.content)}`)
           .join(' -> ')
-        
+
         patterns.set(pattern, (patterns.get(pattern) || 0) + 1)
       }
     })
-    
+
     return Array.from(patterns.entries())
       .map(([pattern, frequency]) => ({ pattern, frequency }))
       .sort((a, b) => b.frequency - a.frequency)
@@ -396,7 +395,7 @@ export const trackChatInteraction = (type: 'user' | 'bot', content: string, inte
 // Generate session ID
 function getSessionId(): string {
   if (typeof window === 'undefined') return 'server-session'
-  
+
   let sessionId = sessionStorage.getItem('misiones-session-id')
   if (!sessionId) {
     sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`

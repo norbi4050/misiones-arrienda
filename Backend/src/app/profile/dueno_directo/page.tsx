@@ -17,7 +17,7 @@ export default function DuenoDirectoProfilePage() {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  
+
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -121,9 +121,9 @@ export default function DuenoDirectoProfilePage() {
                 ) : (
                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
                     {profileData.profileImage ? (
-                      <img 
-                        src={profileData.profileImage} 
-                        alt="Perfil" 
+                      <img
+                        src={profileData.profileImage}
+                        alt="Perfil"
                         className="w-20 h-20 rounded-full object-cover"
                       />
                     ) : (
@@ -209,7 +209,7 @@ export default function DuenoDirectoProfilePage() {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Email
@@ -264,8 +264,8 @@ export default function DuenoDirectoProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tiempo de respuesta promedio
                     </label>
-                    <Select 
-                      value={profileData.responseTime} 
+                    <Select
+                      value={profileData.responseTime}
                       onValueChange={(value) => setProfileData({...profileData, responseTime: value})}
                       disabled={!isEditing}
                     >
@@ -286,8 +286,8 @@ export default function DuenoDirectoProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Disponibilidad para mostrar propiedades
                     </label>
-                    <Select 
-                      value={profileData.availability} 
+                    <Select
+                      value={profileData.availability}
                       onValueChange={(value) => setProfileData({...profileData, availability: value})}
                       disabled={!isEditing}
                     >
@@ -324,8 +324,8 @@ export default function DuenoDirectoProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tipos de propiedades que ofreces
                     </label>
-                    <Select 
-                      value={profileData.propertyTypes} 
+                    <Select
+                      value={profileData.propertyTypes}
                       onValueChange={(value) => setProfileData({...profileData, propertyTypes: value})}
                       disabled={!isEditing}
                     >
@@ -346,8 +346,8 @@ export default function DuenoDirectoProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Rango de alquileres que manejas
                     </label>
-                    <Select 
-                      value={profileData.rentRange} 
+                    <Select
+                      value={profileData.rentRange}
                       onValueChange={(value) => setProfileData({...profileData, rentRange: value})}
                       disabled={!isEditing}
                     >
@@ -369,8 +369,8 @@ export default function DuenoDirectoProfilePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Tipo de inquilinos que prefieres
                   </label>
-                  <Select 
-                    value={profileData.preferredTenants} 
+                  <Select
+                    value={profileData.preferredTenants}
                     onValueChange={(value) => setProfileData({...profileData, preferredTenants: value})}
                     disabled={!isEditing}
                   >
@@ -420,8 +420,8 @@ export default function DuenoDirectoProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Cantidad de propiedades
                     </label>
-                    <Select 
-                      value={profileData.propertyCount} 
+                    <Select
+                      value={profileData.propertyCount}
                       onValueChange={(value) => setProfileData({...profileData, propertyCount: value})}
                       disabled={!isEditing}
                     >
@@ -441,8 +441,8 @@ export default function DuenoDirectoProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Años de experiencia como propietario
                     </label>
-                    <Select 
-                      value={profileData.experience} 
+                    <Select
+                      value={profileData.experience}
                       onValueChange={(value) => setProfileData({...profileData, experience: value})}
                       disabled={!isEditing}
                     >

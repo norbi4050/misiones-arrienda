@@ -36,10 +36,10 @@ export function createClient() {
 // Helper function to handle Supabase errors consistently
 export function handleSupabaseError(error: any, context?: string) {
   console.error(`Supabase error${context ? ` in ${context}` : ''}:`, error)
-  
+
   if (error?.message) {
     return error.message
   }
-  
+
   return 'An unexpected error occurred. Please try again.'
 }

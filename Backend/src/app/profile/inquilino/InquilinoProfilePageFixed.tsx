@@ -11,10 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Settings, 
-  Bell, 
-  Shield, 
+import {
+  Settings,
+  Bell,
+  Shield,
   HelpCircle,
   ChevronRight,
   MapPin,
@@ -78,7 +78,7 @@ export default function InquilinoProfilePageFixed() {
         rating: (user as any).rating || 0,
         reviewCount: (user as any).reviewCount || 0,
       };
-      
+
       setProfileData(newProfileData);
     }
   }, [user]);
@@ -192,8 +192,8 @@ export default function InquilinoProfilePageFixed() {
                     Un perfil completo te ayuda a encontrar mejores propiedades y genera más confianza.
                   </p>
                 </div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setActiveTab("profile")}
                   className="border-blue-300 text-blue-700 hover:bg-blue-100"
@@ -241,10 +241,10 @@ export default function InquilinoProfilePageFixed() {
                           <span>{profileData.location}</span>
                         </div>
                       )}
-                      
+
                       {/* Verification Badge */}
                       <div className="flex justify-center mb-4">
-                        <Badge 
+                        <Badge
                           variant={profileData.verified ? "default" : "secondary"}
                           className="text-xs"
                         >
@@ -260,7 +260,7 @@ export default function InquilinoProfilePageFixed() {
                           <span>{completionPercentage}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
+                          <div
                             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${completionPercentage}%` }}
                           ></div>
@@ -278,7 +278,7 @@ export default function InquilinoProfilePageFixed() {
               {/* Stats and Actions */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Statistics */}
-                <ProfileStatsImproved 
+                <ProfileStatsImproved
                   stats={{
                     profileViews: undefined, // Will be loaded by hook
                     favoriteCount: undefined, // Will be loaded by hook
@@ -316,7 +316,7 @@ export default function InquilinoProfilePageFixed() {
                   <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Próximamente</h3>
                   <p className="text-gray-500">
-                    Aquí podrás ver tu historial detallado de actividad, búsquedas, 
+                    Aquí podrás ver tu historial detallado de actividad, búsquedas,
                     mensajes y interacciones con propiedades.
                   </p>
                 </div>

@@ -1,6 +1,6 @@
 /**
  * 📈 API DE ACTIVIDAD RECIENTE DE ADMINISTRACIÓN - VERSIÓN SEGURA
- * 
+ *
  * Proporciona la actividad reciente del sistema para el dashboard de administración
  * CON VERIFICACIÓN DE AUTENTICACIÓN Y AUTORIZACIÓN
  */
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 📈 OBTENER ACTIVIDAD RECIENTE DEL SISTEMA
-    
+
     // Obtener actividad reciente de usuarios
     const { data: recentUsers } = await supabaseAdmin
       .from('User')
@@ -243,10 +243,7 @@ export async function GET(request: NextRequest) {
     const recentActivity = allActivity.slice(0, 10);
 
     // Log de auditoría
-    console.log(`Actividad de admin consultada:`, {
-      requestedBy: user.id,
-      requestedByEmail: user.email,
-      timestamp: new Date().toISOString(),
+    .toISOString(),
       activitiesReturned: recentActivity.length
     });
 

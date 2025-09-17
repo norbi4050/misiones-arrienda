@@ -3,12 +3,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Badge } from './badge';
-import { 
-  Eye, 
-  Heart, 
-  MessageCircle, 
-  Star, 
-  TrendingUp, 
+import {
+  Eye,
+  Heart,
+  MessageCircle,
+  Star,
+  TrendingUp,
   Calendar,
   Shield,
   Award,
@@ -81,8 +81,8 @@ function AchievementBadgeComponent({ title, description, earned, icon }: Achieve
   return (
     <div className={cn(
       "p-3 rounded-lg border-2 text-center transition-all cursor-default",
-      earned 
-        ? "border-green-200 bg-green-50 hover:bg-green-100" 
+      earned
+        ? "border-green-200 bg-green-50 hover:bg-green-100"
         : "border-gray-200 bg-gray-50 opacity-60"
     )}>
       <div className="text-2xl mb-1">{icon}</div>
@@ -116,9 +116,9 @@ export function ProfileStats({ stats: propStats, className, layout = 'grid' }: P
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-AR', { 
-      year: 'numeric', 
-      month: 'long' 
+    return date.toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long'
     });
   };
 

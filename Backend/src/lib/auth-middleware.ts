@@ -18,7 +18,7 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<Authen
     }
 
     const token = authHeader.substring(7) // Remover 'Bearer '
-    
+
     if (!token) {
       return null
     }
@@ -68,7 +68,7 @@ export async function getUserFromToken(token: string): Promise<AuthenticatedUser
   try {
     // El token puede ser el userId directamente o un email
     let user = null
-    
+
     // Primero intentamos como userId
     user = await prisma.user.findUnique({
       where: { id: token },
@@ -78,7 +78,7 @@ export async function getUserFromToken(token: string): Promise<AuthenticatedUser
         email: true
       }
     })
-    
+
     // Si no se encuentra, intentamos como email
     if (!user && token.includes('@')) {
       user = await prisma.user.findUnique({

@@ -154,21 +154,21 @@ export async function GET(
       recommendations: [
         {
           type: 'pricing',
-          message: priceStats.average > 0 ? 
+          message: priceStats.average > 0 ?
             `El precio promedio de tus propiedades es $${priceStats.average.toLocaleString()}` :
             'Agrega precios a tus propiedades para obtener mejores análisis',
           priority: 'medium'
         },
         {
           type: 'featured',
-          message: featuredProperties < totalProperties * 0.3 ? 
+          message: featuredProperties < totalProperties * 0.3 ?
             'Considera destacar más propiedades para aumentar la visibilidad' :
             'Buen balance de propiedades destacadas',
           priority: featuredProperties < totalProperties * 0.1 ? 'high' : 'low'
         },
         {
           type: 'status',
-          message: activeProperties < totalProperties * 0.5 ? 
+          message: activeProperties < totalProperties * 0.5 ?
             'Muchas propiedades inactivas. Revisa y actualiza los estados' :
             'Buen porcentaje de propiedades activas',
           priority: activeProperties < totalProperties * 0.3 ? 'high' : 'medium'
@@ -213,32 +213,32 @@ export async function POST(
       case 'track_view':
         // Registrar vista de propiedad
         // En producción, esto se guardaría en una tabla de analytics
-        return NextResponse.json({ 
-          success: true, 
+        return NextResponse.json({
+          success: true,
           message: 'Vista registrada',
           tracked: propertyIds?.length || 1
         });
 
       case 'track_inquiry':
         // Registrar consulta
-        return NextResponse.json({ 
-          success: true, 
+        return NextResponse.json({
+          success: true,
           message: 'Consulta registrada',
           tracked: propertyIds?.length || 1
         });
 
       case 'track_favorite':
         // Registrar favorito
-        return NextResponse.json({ 
-          success: true, 
+        return NextResponse.json({
+          success: true,
           message: 'Favorito registrado',
           tracked: propertyIds?.length || 1
         });
 
       case 'update_performance':
         // Actualizar métricas de rendimiento
-        return NextResponse.json({ 
-          success: true, 
+        return NextResponse.json({
+          success: true,
           message: 'Métricas actualizadas',
           updated: propertyIds?.length || 0
         });

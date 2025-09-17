@@ -18,7 +18,7 @@ const processMatchSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in matches GET:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Parámetros inválidos', details: error.errors },
@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -310,7 +310,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in matches POST:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },
@@ -329,7 +329,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -393,7 +393,7 @@ export async function PUT(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in matches PUT:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },

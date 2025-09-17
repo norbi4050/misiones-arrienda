@@ -5,9 +5,9 @@ export async function GET() {
   try {
     // Solo verificar variables de entorno durante build
     const hasDbUrl = !!process.env.DATABASE_URL;
-    
-    return NextResponse.json({ 
-      ok: true, 
+
+    return NextResponse.json({
+      ok: true,
       timestamp: new Date().toISOString(),
       database: {
         configured: hasDbUrl,
@@ -15,10 +15,10 @@ export async function GET() {
         note: "Full database connection test available at runtime"
       }
     });
-    
+
   } catch (error: any) {
-    return NextResponse.json({ 
-      ok: false, 
+    return NextResponse.json({
+      ok: false,
       timestamp: new Date().toISOString(),
       error: error.message
     }, { status: 500 });
@@ -35,12 +35,12 @@ export async function POST() {
       directUrl: process.env.DIRECT_URL ? 'configured' : 'missing',
       note: "This is a build-safe version. Full diagnostics available at runtime."
     };
-    
+
     return NextResponse.json({
       ok: true,
       diagnostics
     });
-    
+
   } catch (error: any) {
     return NextResponse.json({
       ok: false,

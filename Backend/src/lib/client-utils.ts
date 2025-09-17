@@ -22,7 +22,7 @@ export const getBaseUrl = (): string => {
   if (isClient) {
     return window.location.origin
   }
-  
+
   // En el servidor, usar las variables de entorno
   return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 }
@@ -39,7 +39,7 @@ export const safeLocalStorage = {
       return null
     }
   },
-  
+
   setItem: (key: string, value: string): void => {
     if (!isClient) return
     try {
@@ -48,7 +48,7 @@ export const safeLocalStorage = {
       // Silently fail if localStorage is not available
     }
   },
-  
+
   removeItem: (key: string): void => {
     if (!isClient) return
     try {
@@ -71,7 +71,7 @@ export const safeSessionStorage = {
       return null
     }
   },
-  
+
   setItem: (key: string, value: string): void => {
     if (!isClient) return
     try {
@@ -80,7 +80,7 @@ export const safeSessionStorage = {
       // Silently fail if sessionStorage is not available
     }
   },
-  
+
   removeItem: (key: string): void => {
     if (!isClient) return
     try {
@@ -99,12 +99,12 @@ export const safeNavigate = {
     if (!isClient) return
     window.location.href = url
   },
-  
+
   replace: (url: string): void => {
     if (!isClient) return
     window.location.replace(url)
   },
-  
+
   back: (): void => {
     if (!isClient) return
     window.history.back()
@@ -119,17 +119,17 @@ export const safeDocument = {
     if (!isClient) return null
     return document.getElementById(id)
   },
-  
+
   querySelector: (selector: string): Element | null => {
     if (!isClient) return null
     return document.querySelector(selector)
   },
-  
+
   addEventListener: (event: string, handler: EventListener): void => {
     if (!isClient) return
     document.addEventListener(event, handler)
   },
-  
+
   removeEventListener: (event: string, handler: EventListener): void => {
     if (!isClient) return
     document.removeEventListener(event, handler)
@@ -144,12 +144,12 @@ export const safeWindow = {
     if (!isClient || !window.gtag) return
     window.gtag(...args)
   },
-  
+
   scrollTo: (options: ScrollToOptions): void => {
     if (!isClient) return
     window.scrollTo(options)
   },
-  
+
   open: (url: string, target?: string): void => {
     if (!isClient) return
     window.open(url, target)
@@ -161,7 +161,7 @@ export const safeWindow = {
  */
 export const safeCopyToClipboard = async (text: string): Promise<boolean> => {
   if (!isClient) return false
-  
+
   try {
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(text)
@@ -194,7 +194,7 @@ export const getUrlParams = (): URLSearchParams => {
  */
 export const updateUrlParams = (params: Record<string, string>): void => {
   if (!isClient) return
-  
+
   const url = new URL(window.location.href)
   Object.entries(params).forEach(([key, value]) => {
     if (value) {
@@ -203,7 +203,7 @@ export const updateUrlParams = (params: Record<string, string>): void => {
       url.searchParams.delete(key)
     }
   })
-  
+
   window.history.pushState({}, '', url.toString())
 }
 
@@ -215,17 +215,17 @@ export const safeTimers = {
     if (!isClient) return null
     return window.setTimeout(callback, delay)
   },
-  
+
   setInterval: (callback: () => void, delay: number): number | null => {
     if (!isClient) return null
     return window.setInterval(callback, delay)
   },
-  
+
   clearTimeout: (id: number | null): void => {
     if (!isClient || id === null) return
     window.clearTimeout(id)
   },
-  
+
   clearInterval: (id: number | null): void => {
     if (!isClient || id === null) return
     window.clearInterval(id)
@@ -240,11 +240,11 @@ export const safeDates = {
     if (!isClient) return 0
     return Date.now()
   },
-  
+
   newDate: (value?: string | number | Date): Date => {
     return new Date(value || 0)
   },
-  
+
   formatDate: (date: string | Date): string => {
     try {
       return new Date(date).toLocaleDateString()
@@ -252,7 +252,7 @@ export const safeDates = {
       return 'Fecha inválida'
     }
   },
-  
+
   formatDateTime: (date: string | Date): string => {
     try {
       return new Date(date).toLocaleString()
@@ -260,7 +260,7 @@ export const safeDates = {
       return 'Fecha inválida'
     }
   },
-  
+
   getTimeDifference: (date1: Date, date2: Date): number => {
     try {
       return Math.abs(date1.getTime() - date2.getTime())
@@ -276,20 +276,18 @@ export const safeDates = {
 export const safeConsole = {
   log: (...args: any[]): void => {
     if (isDevelopment && isClient) {
-      console.log(...args)
-    }
+      }
   },
-  
+
   error: (...args: any[]): void => {
     if (isDevelopment && isClient) {
       console.error(...args)
     }
   },
-  
+
   warn: (...args: any[]): void => {
     if (isDevelopment && isClient) {
-      console.warn(...args)
-    }
+      }
   }
 }
 
@@ -301,12 +299,12 @@ export const safeAlerts = {
     if (!isClient) return
     alert(message)
   },
-  
+
   confirm: (message: string): boolean => {
     if (!isClient) return false
     return confirm(message)
   },
-  
+
   prompt: (message: string, defaultValue?: string): string | null => {
     if (!isClient) return null
     return prompt(message, defaultValue)
@@ -324,26 +322,26 @@ export const safeRouter = {
       window.location.href = url
     }
   },
-  
+
   replace: (url: string): void => {
     if (!isClient) return
     if (typeof window !== 'undefined') {
       window.location.replace(url)
     }
   },
-  
+
   back: (): void => {
     if (!isClient) return
     if (typeof window !== 'undefined' && window.history) {
       window.history.back()
     }
   },
-  
+
   getSearchParams: (): URLSearchParams => {
     if (!isClient) return new URLSearchParams()
     return new URLSearchParams(window.location.search)
   },
-  
+
   getPathname: (): string => {
     if (!isClient) return '/'
     return window.location.pathname
@@ -360,21 +358,21 @@ export const safeUseEffect = {
     handler: EventListener
   ): (() => void) => {
     if (!isClient || !element) return () => {}
-    
+
     element.addEventListener(event, handler)
     return () => element.removeEventListener(event, handler)
   },
-  
+
   setTimeoutWithCleanup: (callback: () => void, delay: number): (() => void) => {
     if (!isClient) return () => {}
-    
+
     const id = window.setTimeout(callback, delay)
     return () => window.clearTimeout(id)
   },
-  
+
   setIntervalWithCleanup: (callback: () => void, delay: number): (() => void) => {
     if (!isClient) return () => {}
-    
+
     const id = window.setInterval(callback, delay)
     return () => window.clearInterval(id)
   }
@@ -387,7 +385,7 @@ export const safeIdGenerator = {
   timestamp: (): string => {
     return `id-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   },
-  
+
   uuid: (): string => {
     if (isClient && crypto && crypto.randomUUID) {
       return crypto.randomUUID()
@@ -406,7 +404,7 @@ export const safeIdGenerator = {
  */
 export const safeFetch = async (url: string, options?: RequestInit): Promise<Response | null> => {
   if (!isClient) return null
-  
+
   try {
     return await fetch(url, options)
   } catch (error) {
@@ -421,7 +419,7 @@ export const safeFetch = async (url: string, options?: RequestInit): Promise<Res
 export const safeNavigator = {
   share: async (data: ShareData): Promise<boolean> => {
     if (!isClient || !navigator.share) return false
-    
+
     try {
       await navigator.share(data)
       return true
@@ -430,11 +428,11 @@ export const safeNavigator = {
       return false
     }
   },
-  
+
   clipboard: {
     writeText: async (text: string): Promise<boolean> => {
       if (!isClient) return false
-      
+
       try {
         if (navigator.clipboard) {
           await navigator.clipboard.writeText(text)
@@ -455,7 +453,7 @@ export const safeNavigator = {
       }
     }
   },
-  
+
   userAgent: (): string => {
     if (!isClient) return ''
     return navigator.userAgent || ''
@@ -471,28 +469,28 @@ export const safeLocation = {
       if (!isClient) return ''
       return window.location.href
     },
-    
+
     set: (url: string): void => {
       if (!isClient) return
       window.location.href = url
     }
   },
-  
+
   pathname: (): string => {
     if (!isClient) return '/'
     return window.location.pathname
   },
-  
+
   search: (): string => {
     if (!isClient) return ''
     return window.location.search
   },
-  
+
   origin: (): string => {
     if (!isClient) return ''
     return window.location.origin
   },
-  
+
   reload: (): void => {
     if (!isClient) return
     window.location.reload()
@@ -507,17 +505,17 @@ export const safeHistory = {
     if (!isClient || !window.history) return
     window.history.back()
   },
-  
+
   forward: (): void => {
     if (!isClient || !window.history) return
     window.history.forward()
   },
-  
+
   pushState: (data: any, title: string, url?: string): void => {
     if (!isClient || !window.history) return
     window.history.pushState(data, title, url)
   },
-  
+
   replaceState: (data: any, title: string, url?: string): void => {
     if (!isClient || !window.history) return
     window.history.replaceState(data, title, url)
@@ -536,7 +534,7 @@ export const safeURL = {
       return null
     }
   },
-  
+
   createSearchParams: (init?: string | URLSearchParams | Record<string, string>): URLSearchParams => {
     try {
       return new URLSearchParams(init)
@@ -557,10 +555,10 @@ export const safeCrypto = {
     }
     return safeIdGenerator.uuid()
   },
-  
+
   getRandomValues: (array: Uint8Array): Uint8Array | null => {
     if (!isClient || !crypto) return null
-    
+
     try {
       return crypto.getRandomValues(array)
     } catch (error) {
@@ -578,7 +576,7 @@ export const safePerformance = {
     if (!isClient || !performance) return 0
     return performance.now()
   },
-  
+
   mark: (name: string): void => {
     if (!isClient || !performance || !performance.mark) return
     try {
@@ -587,7 +585,7 @@ export const safePerformance = {
       safeConsole.error('Performance mark error:', error)
     }
   },
-  
+
   measure: (name: string, startMark?: string, endMark?: string): void => {
     if (!isClient || !performance || !performance.measure) return
     try {
@@ -609,11 +607,11 @@ export const safeDOMEvents = {
     options?: boolean | AddEventListenerOptions
   ): (() => void) => {
     if (!isClient || !target) return () => {}
-    
+
     target.addEventListener(type, listener, options)
     return () => target.removeEventListener(type, listener, options)
   },
-  
+
   removeEventListener: (
     target: EventTarget | null,
     type: string,
@@ -631,7 +629,7 @@ export const safeDOMEvents = {
 export const safeMediaQuery = {
   matches: (query: string): boolean => {
     if (!isClient || !window.matchMedia) return false
-    
+
     try {
       return window.matchMedia(query).matches
     } catch (error) {
@@ -639,10 +637,10 @@ export const safeMediaQuery = {
       return false
     }
   },
-  
+
   addListener: (query: string, callback: (e: MediaQueryListEvent) => void): (() => void) => {
     if (!isClient || !window.matchMedia) return () => {}
-    
+
     try {
       const mediaQuery = window.matchMedia(query)
       mediaQuery.addListener(callback)

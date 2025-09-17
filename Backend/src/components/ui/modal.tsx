@@ -31,11 +31,11 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className={cn(
         "relative bg-white rounded-lg shadow-xl w-full mx-4",
@@ -54,7 +54,7 @@ export const Modal: React.FC<ModalProps> = ({
             </button>
           </div>
         )}
-        
+
         {/* Content */}
         <div className="p-6">
           {children}

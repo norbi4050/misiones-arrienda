@@ -12,10 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Settings, 
-  Bell, 
-  Shield, 
+import {
+  Settings,
+  Bell,
+  Shield,
   HelpCircle,
   ChevronRight,
   MapPin,
@@ -78,15 +78,7 @@ export default function InquilinoProfilePage() {
   }, [user]);
   // Debug logging for authentication state
   useEffect(() => {
-    console.log('Auth State Debug:', {
-      loading,
-      isAuthenticated,
-      hasUser: !!user,
-      hasSession: !!session,
-      error
-    });
-  }, [loading, isAuthenticated, user, session, error]);
-
+    }, [loading, isAuthenticated, user, session, error]);
 
   // Show loading state
   if (loading) {
@@ -111,8 +103,8 @@ export default function InquilinoProfilePage() {
             {error}
           </p>
           <div className="flex gap-3 justify-center">
-            <Button 
-              onClick={() => window.location.reload()} 
+            <Button
+              onClick={() => window.location.reload()}
               variant="destructive"
             >
               Reintentar
@@ -167,7 +159,7 @@ export default function InquilinoProfilePage() {
               {error}
             </p>
           </div>
-          
+
           <div className="space-y-3">
             <Link href="/login" className="w-full">
               <Button className="w-full bg-blue-600 hover:bg-blue-700">
@@ -179,8 +171,6 @@ export default function InquilinoProfilePage() {
       </div>
     );
   }
-
-
 
   const handleSaveProfile = async (data: Partial<ProfileData>) => {
     try {
@@ -196,16 +186,16 @@ export default function InquilinoProfilePage() {
     try {
       // Actualizar el estado local inmediatamente
       setProfileData(prev => ({ ...prev, profile_image: url }));
-      
+
       // Actualizar el perfil en la base de datos usando el hook
       await updateProfile({ profile_image: url });
-      
+
       // Mostrar mensaje de éxito
       toast.success('Avatar actualizado correctamente');
     } catch (error) {
       console.error('Error updating avatar in profile:', error);
       toast.error('Error al guardar el avatar en el perfil');
-      
+
       // Revertir el cambio local si falla la actualización
       setProfileData(prev => ({ ...prev, profile_image: profileData.profile_image }));
     }
@@ -308,13 +298,13 @@ export default function InquilinoProfilePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 <QuickActionsGrid userId={user.id} />
-                
+
                 {/* Recent Activity - Now using real data */}
                 <RecentActivity maxItems={5} />
               </div>
 
               <div className="space-y-6">
-                <ProfileStats 
+                <ProfileStats
                   stats={{
                     profileViews: undefined, // Will be loaded by useUserStats hook
                     favoriteCount: undefined, // Will be loaded by useUserFavorites hook

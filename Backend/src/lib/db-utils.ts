@@ -19,12 +19,11 @@ export async function testConnection() {
       .from('profiles')
       .select('count')
       .limit(1);
-    
+
     if (error) {
-      console.warn('Advertencia de conexión DB:', error.message);
       return { connected: false, error: error.message };
     }
-    
+
     return { connected: true, data };
   } catch (error) {
     console.error('Error crítico de conexión:', error);
@@ -39,20 +38,18 @@ export async function executeWithRetry<T>(
   delay: number = 1000
 ): Promise<T> {
   let lastError: Error;
-  
+
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error as Error;
-      console.warn(`Intento ${i + 1} falló:, lastError.message`);
-      
       if (i < maxRetries - 1) {
         await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
       }
     }
   }
-  
+
   throw lastError!;
 }
 
@@ -65,7 +62,7 @@ export async function getDataWithFallback<T>(
   try {
     return await operation();
   } catch (error) {
-    console.warn(`Usando datos de fallback para ${context}:, (error as Error).message`);
+    .message`);
     return fallbackData;
   }
 }

@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/select';
-import { 
-  Search, 
-  Filter, 
-  X, 
+import {
+  Search,
+  Filter,
+  X,
   Calendar,
   DollarSign,
   Home,
@@ -103,31 +103,31 @@ const bathroomOptions = [
   { value: '3', label: '3+ baños' }
 ];
 
-export function PropertyFilters({ 
-  onFiltersChange, 
-  initialFilters = {}, 
+export function PropertyFilters({
+  onFiltersChange,
+  initialFilters = {},
   totalCount = 0,
-  className = '' 
+  className = ''
 }: PropertyFiltersProps) {
   const [filters, setFilters] = useState<PropertyFilters>({
     ...defaultFilters,
     ...initialFilters
   });
-  
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
 
   // Update filters when they change
   useEffect(() => {
     onFiltersChange(filters);
-    
+
     // Count active filters
     const count = Object.entries(filters).reduce((acc, [key, value]) => {
       if (key === 'sortBy' || key === 'sortOrder') return acc;
       if (value && value !== '' && value !== null) return acc + 1;
       return acc;
     }, 0);
-    
+
     setActiveFiltersCount(count);
   }, [filters, onFiltersChange]);
 
@@ -148,7 +148,7 @@ export function PropertyFilters({
 
   const getActiveFilters = () => {
     const active: Array<{ key: keyof PropertyFilters; label: string; value: any }> = [];
-    
+
     if (filters.search) active.push({ key: 'search', label: 'Búsqueda', value: filters.search });
     if (filters.status) active.push({ key: 'status', label: 'Estado', value: statusOptions.find(o => o.value === filters.status)?.label });
     if (filters.propertyType) active.push({ key: 'propertyType', label: 'Tipo', value: propertyTypeOptions.find(o => o.value === filters.propertyType)?.label });
@@ -161,7 +161,7 @@ export function PropertyFilters({
     if (filters.featured !== null) active.push({ key: 'featured', label: 'Destacados', value: filters.featured ? 'Sí' : 'No' });
     if (filters.dateFrom) active.push({ key: 'dateFrom', label: 'Desde', value: filters.dateFrom });
     if (filters.dateTo) active.push({ key: 'dateTo', label: 'Hasta', value: filters.dateTo });
-    
+
     return active;
   };
 
@@ -178,7 +178,7 @@ export function PropertyFilters({
             </Badge>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2">
           {activeFiltersCount > 0 && (
             <Button
@@ -191,7 +191,7 @@ export function PropertyFilters({
               Limpiar ({activeFiltersCount})
             </Button>
           )}
-          
+
           <Button
             variant="ghost"
             size="sm"

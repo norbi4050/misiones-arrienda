@@ -64,7 +64,7 @@ export default function DashboardPage() {
 
   const handleSave = async () => {
     if (!user) return;
-    
+
     setUpdateLoading(true);
     setUpdateMessage(null);
 
@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
       setUpdateMessage("✅ Perfil actualizado correctamente");
       setIsEditing(false);
-      
+
       // Recargar la página para mostrar los datos actualizados
       setTimeout(() => {
         window.location.reload();
@@ -204,8 +204,8 @@ export default function DashboardPage() {
                   <button
                     onClick={handleEditToggle}
                     className={`px-3 py-1 text-sm rounded transition-colors ${
-                      isEditing 
-                        ? 'bg-gray-500 hover:bg-gray-600 text-white' 
+                      isEditing
+                        ? 'bg-gray-500 hover:bg-gray-600 text-white'
                         : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                     }`}
                   >
@@ -238,8 +238,8 @@ export default function DashboardPage() {
                   <div>
                     <label className="text-sm font-medium text-gray-500">Tipo de usuario:</label>
                     <p className="text-sm text-gray-900 mt-1 capitalize">
-                      {user.user_metadata?.userType === 'dueno_directo' ? 'Dueño Directo' : 
-                       user.user_metadata?.userType === 'inmobiliaria' ? 'Inmobiliaria' : 
+                      {user.user_metadata?.userType === 'dueno_directo' ? 'Dueño Directo' :
+                       user.user_metadata?.userType === 'inmobiliaria' ? 'Inmobiliaria' :
                        user.user_metadata?.userType || 'Inquilino'}
                     </p>
                   </div>

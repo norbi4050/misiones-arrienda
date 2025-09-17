@@ -30,8 +30,8 @@ type SearchParams = { [key: string]: string | string[] | undefined }
 
 export default async function EldoradoPage({
   searchParams,
-}: { 
-  searchParams: SearchParams 
+}: {
+  searchParams: SearchParams
 }) {
   // Normalizar searchParams sin usar useSearchParams()
   const city = (searchParams.city as string) ?? 'Eldorado'
@@ -45,7 +45,7 @@ export default async function EldoradoPage({
   // Mapear type string a PropertyType
   const getPropertyType = (typeStr: string): PropertyType | undefined => {
     const upperType = typeStr.toUpperCase()
-    if (upperType === 'HOUSE' || upperType === 'APARTMENT' || 
+    if (upperType === 'HOUSE' || upperType === 'APARTMENT' ||
         upperType === 'COMMERCIAL' || upperType === 'LAND') {
       return upperType as PropertyType
     }
@@ -53,7 +53,7 @@ export default async function EldoradoPage({
   }
 
   // Get properties for Eldorado with filters
-  const response = await getProperties({ 
+  const response = await getProperties({
     city: 'Eldorado',
     ...(type && { propertyType: getPropertyType(type) }),
     ...(min && { minPrice: parseInt(min) }),
@@ -92,7 +92,7 @@ export default async function EldoradoPage({
         }}
       />
 
-      <EldoradoClient 
+      <EldoradoClient
         initial={{ city, type, min, max, bedrooms, bathrooms, featured }}
         initialProperties={eldoradoProperties}
       />

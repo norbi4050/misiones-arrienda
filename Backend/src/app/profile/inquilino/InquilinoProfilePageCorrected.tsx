@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
-import ProfileAvatar from "@/components/ui/profile-avatar-enhanced";
+import { useUser } from "@/hooks/useUser";
+import ProfileAvatar from "@/components/ui/profile-avatar";
 import { ProfileForm } from "@/components/ui/profile-form";
 import { QuickActionsGrid } from "@/components/ui/quick-actions-grid";
 import { ProfileStatsImproved as ProfileStats } from "@/components/ui/profile-stats-improved";
@@ -12,10 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Settings, 
-  Bell, 
-  Shield, 
+import {
+  Settings,
+  Bell,
+  Shield,
   HelpCircle,
   ChevronRight,
   MapPin,
@@ -48,46 +48,59 @@ interface ProfileData {
 }
 
 export default function InquilinoProfilePage() {
-  const { user, loading, session, isAuthenticated, error, updateProfile } = useAuth();
+  const { user, profile, loading, isAuthenticated, error, updateProfile, updateAvatar } = useUser();
   const [profileData, setProfileData] = useState<Partial<ProfileData>>({});
   const [activeTab, setActiveTab] = useState("overview");
 
   // Debug logging - remover después de arreglar
   useEffect(() => {
-    console.log('InquilinoProfilePage - Auth State:', {
-      user: !!user,
-      loading,
-      session: !!session,
-      isAuthenticated,
-      error,
-      userId: user?.id
-    });
-  }, [user, loading, session, isAuthenticated, error]);
+    }, [user, profile, loading, isAuthenticated, error]);
 
-  // Update profile data when user changes
+  // Update profile data when user or profile changes
   useEffect(() => {
-    if (user) {
+    if (profile) {
       setProfileData({
-        name: user.name || '',
+        name: profile.name || '',
+        email: profile.email || user?.email || '',
+        phone: profile.phone || '',
+        location: profile.location || '',
+        bio: profile.bio || '',
+        search_type: profile.search_type || '',
+        budget_range: profile.budget_range || '',
+        preferred_areas: profile.preferred_areas || '',
+        family_size: profile.family_size || null,
+        pet_friendly: profile.pet_friendly || false,
+        move_in_date: profile.move_in_date || '',
+        employment_status: profile.employment_status || '',
+        monthly_income: profile.monthly_income || null,
+        profile_image: profile.profile_image || '',
+        verified: profile.verified || false,
+        rating: profile.rating || 0,
+        reviewCount: 0 // Este campo se puede obtener de otra API
+      });
+    } else if (user) {
+      // Fallback a datos básicos del usuario si no hay perfil
+      setProfileData({
+        name: user.email?.split('@')[0] || '',
         email: user.email || '',
-        phone: user.phone || '',
-        location: (user as any).location || '',
-        bio: user.bio || '',
-        search_type: (user as any).search_type || '',
-        budget_range: (user as any).budget_range || '',
-        preferred_areas: (user as any).preferred_areas || '',
-        family_size: (user as any).family_size || null,
-        pet_friendly: (user as any).pet_friendly || false,
-        move_in_date: (user as any).move_in_date || '',
-        employment_status: (user as any).employment_status || '',
-        monthly_income: (user as any).monthly_income || null,
-        profile_image: user.profile_image || '',
-        verified: (user as any).verified || false,
-        rating: (user as any).rating || 0,
-        reviewCount: (user as any).reviewCount || 0
+        phone: '',
+        location: '',
+        bio: '',
+        search_type: '',
+        budget_range: '',
+        preferred_areas: '',
+        family_size: null,
+        pet_friendly: false,
+        move_in_date: '',
+        employment_status: '',
+        monthly_income: null,
+        profile_image: '',
+        verified: false,
+        rating: 0,
+        reviewCount: 0
       });
     }
-  }, [user]);
+  }, [user, profile]);
 
   const handleSaveProfile = async (data: Partial<ProfileData>) => {
     try {
@@ -97,6 +110,17 @@ export default function InquilinoProfilePage() {
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error(error.message || "Error al actualizar el perfil");
+    }
+  };
+
+  const handleAvatarChange = async (imageUrl: string) => {
+    try {
+      await updateAvatar(imageUrl);
+      setProfileData(prev => ({ ...prev, profile_image: imageUrl }));
+      toast.success("Avatar actualizado correctamente");
+    } catch (error: any) {
+      console.error('Error updating avatar:', error);
+      toast.error(error.message || "Error al actualizar el avatar");
     }
   };
 
@@ -138,7 +162,7 @@ export default function InquilinoProfilePage() {
   }
 
   // Si no hay usuario autenticado después de cargar, mostrar mensaje de login
-  if (!user || !session) {
+  if (!user || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -183,10 +207,7 @@ export default function InquilinoProfilePage() {
                   userId={user.id}
                   size="xl"
                   showUpload={true}
-                  onImageChange={(url) => {
-                    setProfileData(prev => ({ ...prev, profile_image: url }));
-                    handleSaveProfile({ profile_image: url });
-                  }}
+                  onImageChange={handleAvatarChange}
                 />
               </div>
 
@@ -202,7 +223,7 @@ export default function InquilinoProfilePage() {
                     </Badge>
                   )}
                 </div>
-                
+
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
                   {profileData.location && (
                     <div className="flex items-center gap-1">
@@ -232,16 +253,16 @@ export default function InquilinoProfilePage() {
 
                 {/* Acciones rápidas */}
                 <div className="flex flex-wrap gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => setActiveTab("profile")}
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Editar Perfil
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => setActiveTab("settings")}
                   >
@@ -270,9 +291,9 @@ export default function InquilinoProfilePage() {
               <div className="lg:col-span-2 space-y-6">
                 {/* Acciones rápidas */}
                 <QuickActionsGrid />
-                
+
                 {/* Actividad reciente */}
-                <RecentActivity 
+                <RecentActivity
                   userId={user.id}
                   limit={5}
                 />
@@ -281,7 +302,7 @@ export default function InquilinoProfilePage() {
               {/* Sidebar */}
               <div className="space-y-6">
                 {/* Estadísticas del perfil */}
-                <ProfileStats 
+                <ProfileStats
                   userId={user.id}
                   userData={{
                     name: profileData.name || '',

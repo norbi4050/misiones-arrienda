@@ -23,30 +23,30 @@ function AuthRequiredScreen() {
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Lock className="h-8 w-8 text-blue-600" />
           </div>
-          
+
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Autenticación Requerida
           </h1>
-          
+
           <p className="text-gray-600 mb-6">
-            Necesitás una cuenta para publicar propiedades en Misiones Arrienda. 
+            Necesitás una cuenta para publicar propiedades en Misiones Arrienda.
             Creá tu cuenta o iniciá sesión para continuar.
           </p>
-          
+
           <div className="space-y-3">
             <Link href="/register">
               <Button className="w-full">
                 Crear Cuenta Nueva
               </Button>
             </Link>
-            
+
             <Link href="/login">
               <Button variant="outline" className="w-full">
                 Iniciar Sesión
               </Button>
             </Link>
           </div>
-          
+
           <div className="mt-6 pt-6 border-t border-gray-200">
             <Link href="/" className="text-sm text-blue-600 hover:text-blue-500">
               ← Volver al inicio
@@ -64,7 +64,7 @@ export default function PublicarPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedPlan, setSelectedPlan] = useState<'basico' | 'destacado' | 'full'>('basico')
   const [isProcessing, setIsProcessing] = useState(false)
-  
+
   const form = useForm({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
@@ -182,13 +182,13 @@ export default function PublicarPage() {
 
   const onSubmit = async (data: any) => {
     setIsProcessing(true)
-    
+
     try {
       if (selectedPlan === 'basico') {
         // Plan gratuito - crear propiedad directamente
         const response = await fetch('/api/properties', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -212,7 +212,7 @@ export default function PublicarPage() {
         // Plan pago - crear preferencia de MercadoPago
         const response = await fetch('/api/payments/create-preference', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${user?.id}`
           },
@@ -233,7 +233,7 @@ export default function PublicarPage() {
         })
 
         const responseData = await response.json()
-        
+
         if (response.ok && responseData.preference) {
           // Redirigir a MercadoPago
           window.location.href = responseData.preference.init_point
@@ -308,7 +308,7 @@ export default function PublicarPage() {
           {currentStep === 1 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-6">Información de la Propiedad</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -533,14 +533,14 @@ export default function PublicarPage() {
           {currentStep === 2 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-6">Selecciona tu Plan</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {Object.entries(plans).map(([key, plan]) => (
                   <div
                     key={key}
                     className={`relative border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                      selectedPlan === key 
-                        ? 'border-blue-500 bg-blue-50' 
+                      selectedPlan === key
+                        ? 'border-blue-500 bg-blue-50'
                         : plan.color
                     }`}
                     onClick={() => setSelectedPlan(key as any)}
@@ -550,7 +550,7 @@ export default function PublicarPage() {
                         {plan.badge}
                       </Badge>
                     )}
-                    
+
                     <div className="text-center mb-4">
                       <h3 className="text-lg font-semibold">{plan.name}</h3>
                       <div className="text-2xl font-bold text-blue-600 mt-2">
@@ -597,7 +597,7 @@ export default function PublicarPage() {
           {currentStep === 3 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-6">Confirmación</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Resumen de la Propiedad</h3>
@@ -641,7 +641,7 @@ export default function PublicarPage() {
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                   <h4 className="font-semibold text-blue-900 mb-2">Proceso de Pago</h4>
                   <p className="text-sm text-blue-800">
-                    Serás redirigido a MercadoPago para completar el pago de forma segura. 
+                    Serás redirigido a MercadoPago para completar el pago de forma segura.
                     Una vez confirmado el pago, tu propiedad será publicada con el plan seleccionado.
                   </p>
                 </div>
@@ -651,8 +651,8 @@ export default function PublicarPage() {
                 <Button variant="outline" onClick={() => setCurrentStep(2)}>
                   Anterior
                 </Button>
-                <Button 
-                  onClick={handleSubmit(onSubmit)} 
+                <Button
+                  onClick={handleSubmit(onSubmit)}
                   className="bg-green-600 hover:bg-green-700"
                   disabled={isProcessing}
                 >

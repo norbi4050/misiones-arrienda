@@ -72,7 +72,7 @@ export default function AdminUsersPage() {
     try {
       setLoading(true);
       const response = await fetch('/api/admin/users');
-      
+
       if (!response.ok) {
         throw new Error('Error cargando usuarios');
       }
@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
   const getUserDetails = async (userId: string) => {
     try {
       const response = await fetch(`/api/admin/delete-user?userId=${userId}`);
-      
+
       if (!response.ok) {
         throw new Error('Error obteniendo detalles del usuario');
       }
@@ -109,7 +109,7 @@ export default function AdminUsersPage() {
   const deleteUser = async (userId: string) => {
     try {
       setDeleting(userId);
-      
+
       const response = await fetch(`/api/admin/delete-user?userId=${userId}`, {
         method: 'DELETE',
       });
@@ -121,12 +121,12 @@ export default function AdminUsersPage() {
       }
 
       toast.success(`Usuario ${data.deletedUser.email} eliminado exitosamente`);
-      
+
       // Recargar la lista de usuarios
       await loadUsers();
       setShowDeleteConfirm(false);
       setSelectedUser(null);
-      
+
     } catch (error: any) {
       console.error('Error:', error);
       toast.error(error.message || 'Error eliminando usuario');
@@ -297,7 +297,7 @@ export default function AdminUsersPage() {
             {sortOrder === 'asc' ? '↑' : '↓'}
           </Button>
         </div>
-        
+
         {/* Estadísticas */}
         <div className="flex gap-4 text-sm text-gray-600">
           <span>Total: {users.length}</span>
@@ -410,13 +410,13 @@ export default function AdminUsersPage() {
                   Siguiente
                 </Button>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600">
                   Página {currentPage} de {totalPages}
                 </span>
-                <Select 
-                  value={currentPage.toString()} 
+                <Select
+                  value={currentPage.toString()}
                   onValueChange={(value) => setCurrentPage(parseInt(value))}
                 >
                   <SelectTrigger className="w-20">

@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { searchTerm, filters, resultsCount } = await request.json();
-    
+
     if (!searchTerm) {
       return NextResponse.json({ error: 'Término de búsqueda requerido' }, { status: 400 });
     }
@@ -81,10 +81,10 @@ export async function POST(request: NextRequest) {
           createdAt: new Date() // Actualizar timestamp
         }
       });
-      
-      return NextResponse.json({ 
+
+      return NextResponse.json({
         message: 'Búsqueda actualizada',
-        searchHistory: updatedSearch 
+        searchHistory: updatedSearch
       });
     } else {
       // Si no existe, crear nueva entrada
@@ -96,10 +96,10 @@ export async function POST(request: NextRequest) {
           resultsCount: resultsCount || 0
         }
       });
-      
-      return NextResponse.json({ 
+
+      return NextResponse.json({
         message: 'Búsqueda guardada',
-        searchHistory: newSearch 
+        searchHistory: newSearch
       });
     }
   } catch (error) {
@@ -117,7 +117,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const searchId = request.nextUrl.searchParams.get('searchId');
-    
+
     if (searchId) {
       // Eliminar búsqueda específica
       const deletedSearch = await prisma.searchHistory.deleteMany({

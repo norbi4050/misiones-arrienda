@@ -18,7 +18,7 @@ export async function GET(
 
     // Get similar properties (same city and property type, excluding current property)
     let similarProperties = mockProperties
-      .filter(prop => 
+      .filter(prop =>
         prop.id !== property.id &&
         prop.city === property.city &&
         prop.propertyType === property.propertyType &&

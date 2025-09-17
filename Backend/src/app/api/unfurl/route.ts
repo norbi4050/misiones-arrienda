@@ -60,7 +60,7 @@ async function extractOpenGraph(html: string, url: string): Promise<Partial<Unfu
   // Extract bedrooms/bathrooms
   const bedroomsMatch = html.match(/(\d+)\s*(dormitorio|habitacion|bedroom)/i)
   const bathroomsMatch = html.match(/(\d+)\s*(baño|bathroom)/i)
-  
+
   if (bedroomsMatch) data.bedrooms = parseInt(bedroomsMatch[1])
   if (bathroomsMatch) data.bathrooms = parseInt(bathroomsMatch[1])
 
@@ -83,13 +83,13 @@ async function extractSchemaOrg(html: string): Promise<Partial<UnfurlData>> {
   try {
     // Look for JSON-LD scripts
     const jsonLdMatches = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gis)
-    
+
     if (jsonLdMatches) {
       for (const match of jsonLdMatches) {
         const jsonContent = match.replace(/<script[^>]*type="application\/ld\+json"[^>]*>|<\/script>/gi, '')
         try {
           const jsonData = JSON.parse(jsonContent)
-          
+
           // Handle RealEstateListing schema
           if (jsonData['@type'] === 'RealEstateListing' || jsonData.type === 'RealEstateListing') {
             if (jsonData.name) data.title = jsonData.name
@@ -97,7 +97,7 @@ async function extractSchemaOrg(html: string): Promise<Partial<UnfurlData>> {
             if (jsonData.image) {
               data.images = Array.isArray(jsonData.image) ? jsonData.image : [jsonData.image]
             }
-            
+
             // Extract price from offers
             if (jsonData.offers) {
               const offer = Array.isArray(jsonData.offers) ? jsonData.offers[0] : jsonData.offers
@@ -170,9 +170,9 @@ export async function POST(request: NextRequest) {
 
     // Check if user has premium plan
     if (!hasPremiumPlan) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Función premium. Activá tu combo para usar esta funcionalidad.',
-        requiresPremium: true 
+        requiresPremium: true
       }, { status: 403 })
     }
 
@@ -204,14 +204,14 @@ export async function POST(request: NextRequest) {
       // Fetch the webpage
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-      
+
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'MisionesArrienda-Bot/1.0 (+https://misionesarrienda.com)'
         },
         signal: controller.signal
       })
-      
+
       clearTimeout(timeoutId)
 
       if (!response.ok) {
@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
       const html = await response.text()
 
       // Try different extraction methods in order of preference
-      
+
       // 1. Try oEmbed first (highest quality)
       const oembedData = await checkOEmbed(url)
       if (oembedData) {
@@ -247,14 +247,14 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
       console.error('Error fetching URL:', error)
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'No pudimos obtener datos de esa URL. Completá manualmente o probá con otro enlace.',
         unfurlData: unfurlData // Return empty structure so form can be filled manually
       }, { status: 200 })
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       unfurlData,
       message: unfurlData.importQuality === 'high' ? 'Datos extraídos exitosamente' :
                unfurlData.importQuality === 'medium' ? 'Algunos datos extraídos. Revisá y completá lo que falte.' :
@@ -263,8 +263,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Unfurl API error:', error)
-    return NextResponse.json({ 
-      error: 'Error interno del servidor' 
+    return NextResponse.json({
+      error: 'Error interno del servidor'
     }, { status: 500 })
   }
 }

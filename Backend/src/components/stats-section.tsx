@@ -137,7 +137,7 @@ export function StatsSection() {
               ¡Únete a la Revolución Inmobiliaria!
             </h3>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Sé parte de la plataforma que está transformando el mercado inmobiliario en Misiones. 
+              Sé parte de la plataforma que está transformando el mercado inmobiliario en Misiones.
               Publica tu propiedad gratis y conecta con miles de usuarios.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

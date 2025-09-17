@@ -1,7 +1,5 @@
-// src/app/api/users/profile/route.ts
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { createClient } from '@supabase/supabase-js';
 import { cookies } from "next/headers";
 
 async function getServerSupabase() {
@@ -25,286 +23,284 @@ async function getServerSupabase() {
   );
 }
 
-// Cliente con privilegios de servicio para operaciones administrativas
-function getServiceSupabase() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!serviceRoleKey) {
-    console.warn('SUPABASE_SERVICE_ROLE_KEY not found, will use fallback methods');
-    return null;
-  }
-  
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      },
-      db: {
-        schema: 'public'
-      }
-    }
-  );
-}
-
-export async function GET(_req: NextRequest) {
+// GET - Obtener perfil completo del usuario
+export async function GET() {
   const supabase = await getServerSupabase();
-  
+
   try {
+    // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError) {
-      console.error('Auth error:', authError);
-      return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
-    }
-    
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    // Try to get existing profile
-    const { data: existingProfile, error: fetchError } = await supabase
-      .from("User")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    // Obtener perfil completo del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from('User')
+      .select(`
+        id,
+        name,
+        email,
+        phone,
+        profile_image,
+        location,
+        bio,
+        search_type,
+        budget_range,
+        preferred_areas,
+        family_size,
+        pet_friendly,
+        move_in_date,
+        employment_status,
+        monthly_income,
+        verified,
+        created_at,
+        updated_at
+      `)
+      .eq('id', user.id)
+      .single();
 
-    if (fetchError) {
-      console.error('Database error fetching profile:', fetchError);
-      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      return NextResponse.json({
+        error: "Error al obtener perfil del usuario",
+        details: profileError.message
+      }, { status: 500 });
     }
 
-    // If profile exists, return it
-    if (existingProfile) {
-      return NextResponse.json({ profile: existingProfile }, { status: 200 });
-    }
-
-    // Profile doesn't exist, create it automatically
-    console.log('Profile not found for user:', user.id, 'Creating new profile...');
-    
-    const newProfile = {
-      id: user.id,
-      name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario',
-      email: user.email!,
-      phone: user.user_metadata?.phone || '',
-      password: '', // Not stored in our User table for Supabase auth users
-      avatar: user.user_metadata?.avatar_url || null,
-      bio: null,
-      occupation: null,
-      age: null,
-      verified: user.email_confirmed_at ? true : false,
-      emailVerified: user.email_confirmed_at ? true : false,
-      verificationToken: null,
-      rating: 0,
-      reviewCount: 0,
-      userType: null,
-      companyName: null,
-      licenseNumber: null,
-      propertyCount: null,
-      createdAt: new Date(user.created_at),
-      updatedAt: new Date()
-    };
-
-    // Try multiple approaches for profile creation
-    let createdProfile = null;
-    let lastError = null;
-
-    // Approach 1: Try with service role client if available
-    const serviceSupabase = getServiceSupabase();
-    if (serviceSupabase) {
-      try {
-        console.log('Creating profile with service role for user:', user.id);
-        
-        const { data, error } = await serviceSupabase
-          .from("User")
-          .insert(newProfile)
-          .select()
-          .single();
-
-        if (!error) {
-          console.log('Profile created successfully with service role for user:', user.id);
-          return NextResponse.json({ profile: data }, { status: 201 });
-        }
-        
-        console.warn('Service role profile creation failed:', error.message);
-        lastError = error;
-      } catch (serviceError) {
-        console.warn('Service client error:', serviceError);
-        lastError = serviceError;
-      }
-    }
-
-    // Approach 2: Try with regular authenticated client
-    try {
-      console.log('Attempting profile creation with regular client for user:', user.id);
-      const { data: fallbackProfile, error: fallbackError } = await supabase
-        .from("User")
-        .insert(newProfile)
+    // Si no existe perfil, crear uno básico
+    if (!profile) {
+      const { data: newProfile, error: createError } = await supabase
+        .from('User')
+        .insert({
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .select()
         .single();
-        
-      if (!fallbackError) {
-        console.log('Profile created successfully with regular client for user:', user.id);
-        return NextResponse.json({ profile: fallbackProfile }, { status: 201 });
+
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        return NextResponse.json({
+          error: "Error al crear perfil del usuario",
+          details: createError.message
+        }, { status: 500 });
       }
-      
-      console.warn('Regular client profile creation failed:', fallbackError.message);
-      lastError = fallbackError;
-    } catch (regularError) {
-      console.warn('Regular client error:', regularError);
-      lastError = regularError;
+
+      return NextResponse.json({
+        profile: newProfile,
+        message: "Perfil creado exitosamente"
+      }, { status: 201 });
     }
 
-    // All methods failed - provide detailed error response
-    console.error('All profile creation methods failed for user:', user.id, 'Last error:', lastError);
-    
-    const errorMessage = lastError instanceof Error ? lastError.message : 
-                        (lastError as any)?.message || 'Unknown error';
-    
-    if (errorMessage.includes('permission denied')) {
-      return NextResponse.json({
-        error: 'Permission denied: Unable to create user profile. This may be due to database Row Level Security policies.',
-        details: errorMessage,
-        suggestion: 'Please contact support or check database permissions.'
-      }, { status: 403 });
-    }
-    
-    return NextResponse.json({ 
-      error: `Failed to create profile: ${errorMessage}`,
-      details: 'All creation methods failed'
-    }, { status: 500 });
+    return NextResponse.json({
+      profile,
+      message: "Perfil obtenido exitosamente"
+    }, { status: 200 });
 
   } catch (error) {
-    console.error('Unexpected error in profile GET:', error);
-    return NextResponse.json({ 
-      error: "Internal server error" 
+    console.error('Unexpected error in profile fetch:', error);
+    return NextResponse.json({
+      error: "Error interno del servidor",
+      details: error instanceof Error ? error.message : 'Error desconocido'
     }, { status: 500 });
   }
 }
 
-export async function PUT(req: NextRequest) {
+// PUT - Actualizar perfil completo (reemplaza todos los campos)
+export async function PUT(request: NextRequest) {
   const supabase = await getServerSupabase();
-  
+
   try {
+    // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    let body: any = {};
-    try { 
-      body = await req.json(); 
-    } catch (parseError) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    // Obtener datos del cuerpo de la petición
+    const profileData = await request.json();
+
+    // Validar campos requeridos
+    if (!profileData.name || !profileData.email) {
+      return NextResponse.json({
+        error: "Nombre y email son requeridos"
+      }, { status: 400 });
     }
 
-    // Transform data types to match database schema
-    const transformedBody: any = { ...body };
-
-    // Convert familySize to integer
-    if (transformedBody.familySize !== undefined) {
-      if (transformedBody.familySize === "") {
-        transformedBody.family_size = null;
-      } else {
-        const familySizeNum = parseInt(transformedBody.familySize);
-        transformedBody.family_size = isNaN(familySizeNum) ? null : familySizeNum;
-      }
-      delete transformedBody.familySize;
-    }
-
-    // Convert petFriendly to boolean
-    if (transformedBody.petFriendly !== undefined) {
-      transformedBody.pet_friendly = transformedBody.petFriendly === "true" || transformedBody.petFriendly === true;
-      delete transformedBody.petFriendly;
-    }
-
-    // Convert moveInDate to date or null
-    if (transformedBody.moveInDate !== undefined) {
-      if (transformedBody.moveInDate === "" || transformedBody.moveInDate === "flexible") {
-        transformedBody.move_in_date = null;
-      } else {
-        // Try to parse the date, if it fails, set to null
-        const date = new Date(transformedBody.moveInDate);
-        transformedBody.move_in_date = isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
-      }
-      delete transformedBody.moveInDate;
-    }
-
-    // Convert monthlyIncome to numeric
-    if (transformedBody.monthlyIncome !== undefined) {
-      if (transformedBody.monthlyIncome === "") {
-        transformedBody.monthly_income = null;
-      } else {
-        // Remove any non-numeric characters except decimal point
-        const cleanIncome = transformedBody.monthlyIncome.toString().replace(/[^\d.]/g, '');
-        const incomeNum = parseFloat(cleanIncome);
-        transformedBody.monthly_income = isNaN(incomeNum) ? null : incomeNum;
-      }
-      delete transformedBody.monthlyIncome;
-    }
-
-    // Rename camelCase fields to snake_case
-    if (transformedBody.searchType !== undefined) {
-      transformedBody.search_type = transformedBody.searchType;
-      delete transformedBody.searchType;
-    }
-
-    if (transformedBody.budgetRange !== undefined) {
-      transformedBody.budget_range = transformedBody.budgetRange;
-      delete transformedBody.budgetRange;
-    }
-
-    if (transformedBody.profileImage !== undefined) {
-      transformedBody.profile_image = transformedBody.profileImage;
-      delete transformedBody.profileImage;
-    }
-
-    if (transformedBody.preferredAreas !== undefined) {
-      transformedBody.preferred_areas = transformedBody.preferredAreas;
-      delete transformedBody.preferredAreas;
-    }
-
-    if (transformedBody.employmentStatus !== undefined) {
-      transformedBody.employment_status = transformedBody.employmentStatus;
-      delete transformedBody.employmentStatus;
-    }
-
-    // Ensure we have required fields for upsert
-    const payload = { 
-      id: user.id, 
-      email: user.email!,
-      name: transformedBody.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario',
-      phone: transformedBody.phone || user.user_metadata?.phone || '',
-      password: '', // Not used for Supabase auth users
-      updatedAt: new Date(),
-      ...transformedBody 
+    // Preparar datos para actualización
+    const updateData = {
+      name: profileData.name,
+      email: profileData.email,
+      phone: profileData.phone || null,
+      profile_image: profileData.profile_image || null,
+      location: profileData.location || null,
+      bio: profileData.bio || null,
+      search_type: profileData.search_type || null,
+      budget_range: profileData.budget_range || null,
+      preferred_areas: profileData.preferred_areas || null,
+      family_size: profileData.family_size || null,
+      pet_friendly: profileData.pet_friendly || false,
+      move_in_date: profileData.move_in_date || null,
+      employment_status: profileData.employment_status || null,
+      monthly_income: profileData.monthly_income || null,
+      updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
-      .from("User")
-      .upsert(payload, { onConflict: "id" })
+    // Actualizar perfil en la base de datos
+    const { data: updatedProfile, error: updateError } = await supabase
+      .from('User')
+      .update(updateData)
+      .eq('id', user.id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Profile update error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (updateError) {
+      console.error('Error updating profile:', updateError);
+      return NextResponse.json({
+        error: "Error al actualizar perfil",
+        details: updateError.message
+      }, { status: 500 });
     }
-    
-    return NextResponse.json({ profile: data }, { status: 200 });
-    
+
+    return NextResponse.json({
+      profile: updatedProfile,
+      message: "Perfil actualizado exitosamente"
+    }, { status: 200 });
+
   } catch (error) {
-    console.error('Unexpected error in profile PUT:', error);
-    return NextResponse.json({ 
-      error: "Internal server error" 
+    console.error('Unexpected error in profile update:', error);
+    return NextResponse.json({
+      error: "Error interno del servidor",
+      details: error instanceof Error ? error.message : 'Error desconocido'
     }, { status: 500 });
   }
 }
 
-export async function PATCH(req: NextRequest) {
-  // PATCH uses the same logic as PUT for this implementation
-  return PUT(req);
+// PATCH - Actualizar campos específicos del perfil
+export async function PATCH(request: NextRequest) {
+  const supabase = await getServerSupabase();
+
+  try {
+    // Verificar autenticación
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    // Obtener datos del cuerpo de la petición
+    const partialData = await request.json();
+
+    // Validar que se envíen datos
+    if (!partialData || Object.keys(partialData).length === 0) {
+      return NextResponse.json({
+        error: "No se proporcionaron datos para actualizar"
+      }, { status: 400 });
+    }
+
+    // Campos permitidos para actualización
+    const allowedFields = [
+      'name', 'email', 'phone', 'profile_image', 'location', 'bio',
+      'search_type', 'budget_range', 'preferred_areas', 'family_size',
+      'pet_friendly', 'move_in_date', 'employment_status', 'monthly_income'
+    ];
+
+    // Filtrar solo campos permitidos
+    const updateData: any = {};
+    for (const [key, value] of Object.entries(partialData)) {
+      if (allowedFields.includes(key)) {
+        updateData[key] = value;
+      }
+    }
+
+    // Agregar timestamp de actualización
+    updateData.updated_at = new Date().toISOString();
+
+    // Verificar que hay campos válidos para actualizar
+    if (Object.keys(updateData).length <= 1) { // Solo updated_at
+      return NextResponse.json({
+        error: "No se proporcionaron campos válidos para actualizar"
+      }, { status: 400 });
+    }
+
+    // Actualizar perfil en la base de datos
+    const { data: updatedProfile, error: updateError } = await supabase
+      .from('User')
+      .update(updateData)
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating profile:', updateError);
+      return NextResponse.json({
+        error: "Error al actualizar perfil",
+        details: updateError.message
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      profile: updatedProfile,
+      message: "Perfil actualizado exitosamente",
+      updatedFields: Object.keys(updateData).filter(key => key !== 'updated_at')
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Unexpected error in profile patch:', error);
+    return NextResponse.json({
+      error: "Error interno del servidor",
+      details: error instanceof Error ? error.message : 'Error desconocido'
+    }, { status: 500 });
+  }
+}
+
+// DELETE - Eliminar perfil (soft delete)
+export async function DELETE() {
+  const supabase = await getServerSupabase();
+
+  try {
+    // Verificar autenticación
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    // Marcar perfil como eliminado (soft delete)
+    const { error: deleteError } = await supabase
+      .from('User')
+      .update({
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+
+    if (deleteError) {
+      console.error('Error deleting profile:', deleteError);
+      return NextResponse.json({
+        error: "Error al eliminar perfil",
+        details: deleteError.message
+      }, { status: 500 });
+    }
+
+    // Cerrar sesión del usuario
+    await supabase.auth.signOut();
+
+    return NextResponse.json({
+      message: "Perfil eliminado exitosamente"
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Unexpected error in profile deletion:', error);
+    return NextResponse.json({
+      error: "Error interno del servidor",
+      details: error instanceof Error ? error.message : 'Error desconocido'
+    }, { status: 500 });
+  }
 }

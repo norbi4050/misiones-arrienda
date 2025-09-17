@@ -11,12 +11,12 @@ interface PropertyMapProps {
   onPropertyClick?: (property: Property) => void
 }
 
-export function PropertyMap({ 
-  properties, 
+export function PropertyMap({
+  properties,
   center = [-27.3621, -55.9008], // Posadas, Misiones coordinates
   zoom = 10,
   height = "400px",
-  onPropertyClick 
+  onPropertyClick
 }: PropertyMapProps) {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
 
@@ -38,7 +38,7 @@ export function PropertyMap({
             Misiones, Argentina - Vista de propiedades disponibles
           </p>
         </div>
-        
+
         {/* Mock Map Content */}
         <div className="flex-1 relative p-4">
           <div className="absolute inset-4 bg-white rounded-lg shadow-inner flex items-center justify-center">
@@ -50,7 +50,7 @@ export function PropertyMap({
               </p>
             </div>
           </div>
-          
+
           {/* Property markers simulation */}
           <div className="absolute top-8 left-8 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
             $85k
@@ -65,7 +65,7 @@ export function PropertyMap({
             $150k
           </div>
         </div>
-        
+
         {/* Map Controls */}
         <div className="bg-white p-3 border-t flex justify-between items-center">
           <div className="flex gap-2">

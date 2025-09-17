@@ -9,10 +9,10 @@ import { BulkActions, BulkAction } from '@/components/ui/bulk-actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Plus, 
-  Grid3X3, 
-  List, 
+import {
+  Plus,
+  Grid3X3,
+  List,
   BarChart3,
   RefreshCw,
   Download,
@@ -118,7 +118,7 @@ const STORAGE_KEY = 'property-dashboard-state';
 
 export default function PropertiesManagementPage() {
   const { user } = useAuth();
-  
+
   // State management optimizado
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
@@ -333,12 +333,12 @@ export default function PropertiesManagementPage() {
 
     // Location filters
     if (filters.city) {
-      filtered = filtered.filter(property => 
+      filtered = filtered.filter(property =>
         property.city.toLowerCase().includes(filters.city.toLowerCase())
       );
     }
     if (filters.province) {
-      filtered = filtered.filter(property => 
+      filtered = filtered.filter(property =>
         property.province.toLowerCase().includes(filters.province.toLowerCase())
       );
     }
@@ -360,12 +360,12 @@ export default function PropertiesManagementPage() {
 
     // Date filters
     if (filters.dateFrom) {
-      filtered = filtered.filter(property => 
+      filtered = filtered.filter(property =>
         new Date(property.createdAt) >= new Date(filters.dateFrom)
       );
     }
     if (filters.dateTo) {
-      filtered = filtered.filter(property => 
+      filtered = filtered.filter(property =>
         new Date(property.createdAt) <= new Date(filters.dateTo)
       );
     }
@@ -401,12 +401,12 @@ export default function PropertiesManagementPage() {
     const { currentPage, itemsPerPage } = dashboardState.pagination;
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    
+
     const totalItems = filteredProperties.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
     // Update pagination state if needed
-    if (dashboardState.pagination.totalItems !== totalItems || 
+    if (dashboardState.pagination.totalItems !== totalItems ||
         dashboardState.pagination.totalPages !== totalPages) {
       updateDashboardState({
         pagination: {
@@ -440,10 +440,10 @@ export default function PropertiesManagementPage() {
 
   // Handle property selection
   const handlePropertySelect = useCallback((propertyId: string, selected: boolean) => {
-    const newSelected = selected 
+    const newSelected = selected
       ? [...dashboardState.selectedProperties, propertyId]
       : dashboardState.selectedProperties.filter(id => id !== propertyId);
-    
+
     updateDashboardState({ selectedProperties: newSelected });
   }, [dashboardState.selectedProperties, updateDashboardState]);
 
@@ -465,10 +465,10 @@ export default function PropertiesManagementPage() {
 
   const handleItemsPerPageChange = useCallback((itemsPerPage: number) => {
     updateDashboardState({
-      pagination: { 
-        ...dashboardState.pagination, 
-        itemsPerPage, 
-        currentPage: 1 
+      pagination: {
+        ...dashboardState.pagination,
+        itemsPerPage,
+        currentPage: 1
       }
     });
   }, [dashboardState.pagination, updateDashboardState]);
@@ -611,7 +611,7 @@ export default function PropertiesManagementPage() {
   // Render pagination controls
   const renderPaginationControls = () => {
     const { currentPage, totalPages, itemsPerPage } = dashboardState.pagination;
-    
+
     if (totalPages <= 1) return null;
 
     return (
@@ -647,11 +647,11 @@ export default function PropertiesManagementPage() {
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          
+
           <span className="text-sm text-gray-600">
             Página {currentPage} de {totalPages}
           </span>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -699,7 +699,7 @@ export default function PropertiesManagementPage() {
                 Administra y controla todas tus propiedades desde un solo lugar
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
@@ -710,7 +710,7 @@ export default function PropertiesManagementPage() {
                 <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Actualizar
               </Button>
-              
+
               <Button
                 onClick={() => window.location.href = '/publicar'}
                 className="flex items-center"
@@ -765,7 +765,7 @@ export default function PropertiesManagementPage() {
                   )}
                 </div>
               </div>
-              
+
               <PropertyFilters
                 onFiltersChange={handleFiltersChange}
                 initialFilters={dashboardState.filters}
@@ -824,8 +824,8 @@ export default function PropertiesManagementPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => updateDashboardState({ 
-                      sortOrder: dashboardState.sortOrder === 'asc' ? 'desc' : 'asc' 
+                    onClick={() => updateDashboardState({
+                      sortOrder: dashboardState.sortOrder === 'asc' ? 'desc' : 'asc'
                     })}
                   >
                     {dashboardState.sortOrder === 'asc' ? '↑' : '↓'}
@@ -877,7 +877,7 @@ export default function PropertiesManagementPage() {
                     No se encontraron propiedades
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    {properties.length === 0 
+                    {properties.length === 0
                       ? 'Aún no has publicado ninguna propiedad. ¡Comienza creando tu primera publicación!'
                       : 'No hay propiedades que coincidan con los filtros aplicados. Intenta ajustar los criterios de búsqueda.'
                     }
@@ -894,7 +894,7 @@ export default function PropertiesManagementPage() {
             ) : (
               <>
                 <div className={
-                  dashboardState.viewMode === 'grid' 
+                  dashboardState.viewMode === 'grid'
                     ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
                     : 'space-y-4'
                 }>
@@ -912,7 +912,7 @@ export default function PropertiesManagementPage() {
                     />
                   ))}
                 </div>
-                
+
                 {/* Pagination Controls */}
                 {renderPaginationControls()}
               </>
@@ -922,8 +922,8 @@ export default function PropertiesManagementPage() {
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             {stats ? (
-              <PropertyStats 
-                stats={stats} 
+              <PropertyStats
+                stats={stats}
                 loading={isLoading}
                 error={error}
                 onRefresh={handleRefresh}

@@ -323,8 +323,7 @@ export function ProfileImageUpload({
                 if (error) {
                   console.error('Error deleting old avatar:', error)
                 } else {
-                  console.log('✅ Old avatar deleted successfully:', filePath)
-                }
+                  }
               }
             } catch (deleteError) {
               console.error('Error during old avatar cleanup:', deleteError)

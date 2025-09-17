@@ -11,10 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Settings, 
-  Bell, 
-  Shield, 
+import {
+  Settings,
+  Bell,
+  Shield,
   HelpCircle,
   ChevronRight,
   MapPin,
@@ -99,8 +99,8 @@ export default function InquilinoProfilePageNew() {
             {error}
           </p>
           <div className="flex gap-3 justify-center">
-            <Button 
-              onClick={() => window.location.reload()} 
+            <Button
+              onClick={() => window.location.reload()}
               variant="destructive"
             >
               Reintentar
@@ -252,7 +252,7 @@ export default function InquilinoProfilePageNew() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 <QuickActionsGrid userId={user.id} />
-                
+
                 {/* Recent Activity */}
                 <Card>
                   <CardHeader>
@@ -280,7 +280,7 @@ export default function InquilinoProfilePageNew() {
               </div>
 
               <div className="space-y-6">
-                <ProfileStats 
+                <ProfileStats
                   stats={{
                     profileViews: 45,
                     favoriteCount: 12,

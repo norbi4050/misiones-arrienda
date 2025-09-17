@@ -71,7 +71,7 @@ export function FilterSection({
       order: searchParams.get('order') || 'desc',
       featured: searchParams.get('featured') || 'all'
     }
-    
+
     setFilters(urlFilters)
   }, [searchParams, enableUrlPersistence])
 
@@ -176,7 +176,7 @@ export function FilterSection({
     if (filters.priceMin && filters.priceMin !== "") {
       apiFilters.priceMin = parseInt(filters.priceMin)
     }
-    
+
     if (filters.priceMax && filters.priceMax !== "") {
       apiFilters.priceMax = parseInt(filters.priceMax)
     }
@@ -210,7 +210,7 @@ export function FilterSection({
     if (filters.orderBy && filters.orderBy !== "createdAt") {
       apiFilters.orderBy = filters.orderBy as 'createdAt' | 'price' | 'id'
     }
-    
+
     if (filters.order && filters.order !== "desc") {
       apiFilters.order = filters.order as 'asc' | 'desc'
     }
@@ -262,7 +262,7 @@ export function FilterSection({
     const labels: Record<string, Record<string, string>> = {
       type: {
         house: "🏡 Casa",
-        apartment: "🏢 Departamento", 
+        apartment: "🏢 Departamento",
         commercial: "🏪 Local",
         land: "🌾 Terreno"
       },
@@ -296,7 +296,7 @@ export function FilterSection({
         "true": "⭐ Destacadas"
       }
     }
-    
+
     return labels[key]?.[value] || value
   }
 
@@ -316,10 +316,10 @@ export function FilterSection({
             </h2>
             <p className="text-gray-600">Encuentra exactamente lo que buscas</p>
           </div>
-          
+
           {getActiveFiltersCount() > 0 && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={clearAllFilters}
               className="text-red-600 border-red-200 hover:bg-red-50"
             >
@@ -479,8 +479,8 @@ export function FilterSection({
 
           {/* Clear Filters Button */}
           {getActiveFiltersCount() > 0 && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={clearAllFilters}
               className="text-red-600 border-red-200 hover:bg-red-50"
             >

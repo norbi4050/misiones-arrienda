@@ -3,12 +3,12 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Badge } from './badge';
-import { 
-  Eye, 
-  Heart, 
-  MessageCircle, 
-  Star, 
-  TrendingUp, 
+import {
+  Eye,
+  Heart,
+  MessageCircle,
+  Star,
+  TrendingUp,
   Calendar,
   Shield,
   Award,
@@ -56,13 +56,13 @@ interface AchievementBadgeProps {
   icon: string;
 }
 
-function StatCard({ 
-  icon: Icon, 
-  value, 
-  label, 
-  color, 
-  bgColor, 
-  isRating = false, 
+function StatCard({
+  icon: Icon,
+  value,
+  label,
+  color,
+  bgColor,
+  isRating = false,
   suffix,
   isLoading = false,
   motivationalMessage
@@ -118,8 +118,8 @@ function AchievementBadgeComponent({ title, description, earned, icon }: Achieve
   return (
     <div className={cn(
       "p-3 rounded-lg border-2 text-center transition-all cursor-default",
-      earned 
-        ? "border-green-200 bg-green-50 hover:bg-green-100" 
+      earned
+        ? "border-green-200 bg-green-50 hover:bg-green-100"
         : "border-gray-200 bg-gray-50 opacity-60"
     )}>
       <div className="text-2xl mb-1">{icon}</div>
@@ -341,7 +341,7 @@ export function ProfileStatsDetailed({ stats: propStats, className }: ProfileSta
             </Card>
           ))}
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Logros</CardTitle>
@@ -366,7 +366,7 @@ export function ProfileStatsDetailed({ stats: propStats, className }: ProfileSta
     <div className={cn("space-y-6", className)}>
       {/* Main Stats */}
       <ProfileStatsEnhanced stats={profileStats} layout="grid" />
-      
+
       {/* Additional Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -376,7 +376,7 @@ export function ProfileStatsDetailed({ stats: propStats, className }: ProfileSta
             <div className="text-sm text-gray-600">Búsquedas Guardadas</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 text-center">
             <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-2" />
@@ -384,14 +384,14 @@ export function ProfileStatsDetailed({ stats: propStats, className }: ProfileSta
             <div className="text-sm text-gray-600">Tasa de Respuesta</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4 text-center">
             <Calendar className="w-8 h-8 text-blue-600 mx-auto mb-2" />
             <div className="text-sm font-bold text-gray-900">
-              {profileStats.joinDate ? new Date(profileStats.joinDate).toLocaleDateString('es-AR', { 
-                month: 'short', 
-                year: 'numeric' 
+              {profileStats.joinDate ? new Date(profileStats.joinDate).toLocaleDateString('es-AR', {
+                month: 'short',
+                year: 'numeric'
               }) : 'N/A'}
             </div>
             <div className="text-sm text-gray-600">Miembro desde</div>

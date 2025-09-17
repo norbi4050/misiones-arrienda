@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow-lg rounded-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Política de Privacidad</h1>
-          
+
           <div className="prose prose-lg max-w-none">
             <p className="text-gray-600 mb-6">
               <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-AR')}
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Cookies</h2>
               <p className="text-gray-700 mb-4">
-                Utilizamos cookies para mejorar su experiencia. Puede configurar su navegador para rechazar cookies, 
+                Utilizamos cookies para mejorar su experiencia. Puede configurar su navegador para rechazar cookies,
                 aunque esto puede afectar la funcionalidad del sitio.
               </p>
             </section>
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Cambios a esta Política</h2>
               <p className="text-gray-700">
-                Nos reservamos el derecho de actualizar esta política. Los cambios serán notificados 
+                Nos reservamos el derecho de actualizar esta política. Los cambios serán notificados
                 a través del sitio web y por email cuando sea apropiado.
               </p>
             </section>

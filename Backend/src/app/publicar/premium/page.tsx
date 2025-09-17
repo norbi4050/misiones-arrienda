@@ -39,13 +39,13 @@ interface UnfurlData {
 export default function PremiumPublishPage() {
   const { user, isAuthenticated, isLoading } = useSupabaseAuth()
   const router = useRouter()
-  
+
   const [url, setUrl] = useState("")
   const [isUnfurling, setIsUnfurling] = useState(false)
   const [unfurlData, setUnfurlData] = useState<UnfurlData | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
-  
+
   // Mock premium plan check
   const hasPremiumPlan = true // TODO: Implement real premium plan check
 
@@ -82,7 +82,7 @@ export default function PremiumPublishPage() {
 
       if (response.ok) {
         setUnfurlData(data.unfurlData)
-        
+
         // Pre-fill form with extracted data
         setFormData({
           title: data.unfurlData.title || "",
@@ -96,7 +96,7 @@ export default function PremiumPublishPage() {
           areaM2: data.unfurlData.areaM2?.toString() || "",
           images: data.unfurlData.images || []
         })
-        
+
         setIsEditing(true)
         toast.success(data.message || "Datos extraídos exitosamente")
       } else {
@@ -212,7 +212,7 @@ export default function PremiumPublishPage() {
                 Autocompletar con Link
               </CardTitle>
               <CardDescription>
-                {hasPremiumPlan 
+                {hasPremiumPlan
                   ? "Pega la URL de tu anuncio y extraeremos automáticamente título, precio, fotos y más detalles"
                   : "Esta función está disponible solo con planes premium"
                 }
@@ -232,8 +232,8 @@ export default function PremiumPublishPage() {
                       </p>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="mt-3 border-amber-300 text-amber-700 hover:bg-amber-100"
                     onClick={() => router.push('/pricing')}
                   >
@@ -250,7 +250,7 @@ export default function PremiumPublishPage() {
                       disabled={isUnfurling}
                       className="flex-1"
                     />
-                    <Button 
+                    <Button
                       onClick={handleUnfurl}
                       disabled={isUnfurling || !url.trim()}
                       className="bg-purple-600 hover:bg-purple-700"
@@ -268,7 +268,7 @@ export default function PremiumPublishPage() {
                       )}
                     </Button>
                   </div>
-                  
+
                   <div className="text-sm text-gray-600">
                     <p className="font-medium mb-2">Sitios compatibles:</p>
                     <div className="flex flex-wrap gap-2">
@@ -292,8 +292,8 @@ export default function PremiumPublishPage() {
                 <span>Detalles de la Propiedad</span>
                 {unfurlData && (
                   <div className="flex items-center space-x-2">
-                    <Badge 
-                      variant="secondary" 
+                    <Badge
+                      variant="secondary"
                       className={
                         unfurlData.importQuality === 'high' ? 'bg-green-100 text-green-800' :
                         unfurlData.importQuality === 'medium' ? 'bg-yellow-100 text-yellow-800' :
@@ -319,7 +319,7 @@ export default function PremiumPublishPage() {
                 )}
               </CardTitle>
               <CardDescription>
-                {unfurlData 
+                {unfurlData
                   ? "Revisa y edita los datos extraídos antes de publicar"
                   : "Completa manualmente los detalles de tu propiedad"
                 }
@@ -367,8 +367,8 @@ export default function PremiumPublishPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Operación *
                   </label>
-                  <Select 
-                    value={formData.operation} 
+                  <Select
+                    value={formData.operation}
                     onValueChange={(value) => setFormData({...formData, operation: value})}
                   >
                     <SelectTrigger>
@@ -390,8 +390,8 @@ export default function PremiumPublishPage() {
                       </Badge>
                     )}
                   </label>
-                  <Select 
-                    value={formData.propertyType} 
+                  <Select
+                    value={formData.propertyType}
                     onValueChange={(value) => setFormData({...formData, propertyType: value})}
                   >
                     <SelectTrigger>
@@ -545,7 +545,7 @@ export default function PremiumPublishPage() {
                 >
                   Volver
                 </Button>
-                
+
                 <Button
                   onClick={handlePublish}
                   disabled={isPublishing || !formData.title || !formData.price || !formData.operation}

@@ -39,7 +39,7 @@ export default function PaymentSuccessClient() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-2xl mx-auto">
           {/* Success Icon */}
@@ -60,7 +60,7 @@ export default function PaymentSuccessClient() {
           {/* Payment Details */}
           <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
             <h2 className="text-xl font-semibold mb-6">Detalles del Pago</h2>
-            
+
             <div className="space-y-4">
               <div className="flex justify-between items-center py-3 border-b border-gray-100">
                 <span className="text-gray-600">Plan Seleccionado:</span>
@@ -68,28 +68,28 @@ export default function PaymentSuccessClient() {
                   {planNames[paymentData.plan as keyof typeof planNames] || 'Plan Desconocido'}
                 </span>
               </div>
-              
+
               <div className="flex justify-between items-center py-3 border-b border-gray-100">
                 <span className="text-gray-600">Precio:</span>
                 <span className="font-semibold text-gray-900">
                   {planPrices[paymentData.plan as keyof typeof planPrices] || '$0'}/mes
                 </span>
               </div>
-              
+
               <div className="flex justify-between items-center py-3 border-b border-gray-100">
                 <span className="text-gray-600">ID de Pago:</span>
                 <span className="font-mono text-sm text-gray-900">
                   {paymentData.paymentId || 'MP-' + Date.now()}
                 </span>
               </div>
-              
+
               <div className="flex justify-between items-center py-3 border-b border-gray-100">
                 <span className="text-gray-600">Estado:</span>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   Aprobado
                 </span>
               </div>
-              
+
               <div className="flex justify-between items-center py-3">
                 <span className="text-gray-600">Vigencia:</span>
                 <span className="font-semibold text-gray-900">
@@ -104,7 +104,7 @@ export default function PaymentSuccessClient() {
             <h3 className="text-lg font-semibold text-blue-900 mb-4">
               ¿Qué incluye tu plan?
             </h3>
-            
+
             {paymentData.plan === 'destacado' && (
               <ul className="space-y-2 text-blue-800">
                 <li className="flex items-center">

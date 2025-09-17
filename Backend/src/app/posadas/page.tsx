@@ -49,7 +49,7 @@ export default async function PosadasPage() {
             Propiedades en Posadas, Misiones
           </h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Descubre las mejores oportunidades inmobiliarias en la capital de Misiones. 
+            Descubre las mejores oportunidades inmobiliarias en la capital de Misiones.
             Casas, departamentos y locales comerciales en el corazón de la provincia.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
@@ -78,28 +78,28 @@ export default async function PosadasPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-4">🏛️ Capital Provincial</h3>
                 <p className="text-gray-700">
-                  Como capital de Misiones, Posadas ofrece todas las comodidades urbanas, 
+                  Como capital de Misiones, Posadas ofrece todas las comodidades urbanas,
                   servicios públicos de calidad y oportunidades laborales.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🌊 Costanera del Río Paraná</h3>
                 <p className="text-gray-700">
-                  Disfruta de una de las costaneras más hermosas del país, 
+                  Disfruta de una de las costaneras más hermosas del país,
                   perfecta para recreación y actividades al aire libre.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🎓 Centro Educativo</h3>
                 <p className="text-gray-700">
-                  Universidad Nacional de Misiones y múltiples instituciones 
+                  Universidad Nacional de Misiones y múltiples instituciones
                   educativas de todos los niveles.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🛒 Centro Comercial</h3>
                 <p className="text-gray-700">
-                  Amplia oferta comercial, desde centros comerciales modernos 
+                  Amplia oferta comercial, desde centros comerciales modernos
                   hasta el tradicional mercado de la ciudad.
                 </p>
               </div>

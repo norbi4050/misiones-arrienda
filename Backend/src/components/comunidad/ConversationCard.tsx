@@ -9,7 +9,7 @@ const formatTimeAgo = (date: string) => {
   const now = new Date()
   const past = new Date(date)
   const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000)
-  
+
   if (diffInSeconds < 60) return 'hace un momento'
   if (diffInSeconds < 3600) return `hace ${Math.floor(diffInSeconds / 60)} min`
   if (diffInSeconds < 86400) return `hace ${Math.floor(diffInSeconds / 3600)} h`
@@ -46,10 +46,10 @@ interface ConversationCardProps {
   onClick?: (conversationId: string) => void
 }
 
-export default function ConversationCard({ 
-  conversation, 
+export default function ConversationCard({
+  conversation,
   currentUserId,
-  onClick 
+  onClick
 }: ConversationCardProps) {
   const { match, last_message, unread_count } = conversation
   const { otherUser } = match
@@ -63,7 +63,7 @@ export default function ConversationCard({
   const isFromCurrentUser = last_message?.sender_id === currentUserId
 
   return (
-    <Card 
+    <Card
       className="w-full hover:shadow-md transition-shadow cursor-pointer"
       onClick={handleClick}
     >
@@ -75,7 +75,7 @@ export default function ConversationCard({
               <h3 className="font-semibold text-gray-900 truncate">
                 {otherUser.name}
               </h3>
-              <Badge 
+              <Badge
                 variant={otherUser.profile.role === 'BUSCO' ? 'default' : 'secondary'}
                 className="text-xs flex-shrink-0"
               >

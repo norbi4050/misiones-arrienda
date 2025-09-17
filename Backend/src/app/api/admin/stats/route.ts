@@ -1,6 +1,6 @@
 /**
  * 📊 API DE ESTADÍSTICAS DE ADMINISTRACIÓN
- * 
+ *
  * Proporciona estadísticas completas del sistema para el dashboard de administración
  * CON VERIFICACIÓN DE AUTENTICACIÓN Y AUTORIZACIÓN
  */
@@ -55,10 +55,10 @@ export async function GET(request: NextRequest) {
         { status: 403 }
       );
     }
-    
+
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     // Estadísticas de usuarios
     const [
       totalUsers,
@@ -167,9 +167,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Log de auditoría
-    console.log(`Estadísticas de admin consultadas:`, {
-      requestedBy: user.id,
-      requestedAt: new Date().toISOString(),
+    .toISOString(),
       userEmail: user.email
     });
 

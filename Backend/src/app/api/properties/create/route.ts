@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Error creating property:', error)
-    
+
     // Manejo específico de errores de Prisma
     if (error instanceof Error) {
       if (error.message.includes('Unique constraint')) {
@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
           { status: 409 }
         )
       }
-      
+
       if (error.message.includes('Foreign key constraint')) {
         return NextResponse.json(
           { error: 'Error de referencia en los datos' },
@@ -215,7 +215,7 @@ export async function GET() {
     method: 'POST',
     requiredFields: [
       'title',
-      'description', 
+      'description',
       'price',
       'propertyType',
       'bedrooms',

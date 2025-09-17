@@ -27,15 +27,15 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 
         <div style="background-color: #f8fafc; padding: 30px; border-radius: 12px; text-align: center;">
           <h2 style="color: #1e40af; margin-top: 0;">¡Bienvenido/a ${name}!</h2>
-          
+
           <p style="color: #374151; font-size: 16px; line-height: 1.6;">
-            Gracias por registrarte en Misiones Arrienda. Para completar tu registro y activar tu cuenta, 
+            Gracias por registrarte en Misiones Arrienda. Para completar tu registro y activar tu cuenta,
             necesitamos verificar tu dirección de email.
           </p>
 
           <div style="margin: 30px 0;">
-            <a href="${verificationUrl}" 
-               style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; 
+            <a href="${verificationUrl}"
+               style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none;
                       border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">
               ✅ Verificar mi cuenta
             </a>
@@ -51,7 +51,7 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 
         <div style="margin-top: 30px; padding: 20px; background-color: #fef3c7; border-radius: 8px;">
           <p style="color: #92400e; margin: 0; font-size: 14px;">
-            <strong>⚠️ Importante:</strong> Este enlace expirará en 24 horas por seguridad. 
+            <strong>⚠️ Importante:</strong> Este enlace expirará en 24 horas por seguridad.
             Si no verificas tu cuenta en este tiempo, deberás registrarte nuevamente.
           </p>
         </div>

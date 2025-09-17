@@ -63,7 +63,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // SELF DELETE PREVENTION MARKER - Verificaciones de seguridad mejoradas
-    
+
     // 1. Verificación ID usuario - Prevenir auto-eliminación por ID
     if (user.id === userIdToDelete) {
       console.error(`CRITICAL ERROR: Self-deletion attempt by user ID ${user.id}`);
@@ -123,7 +123,7 @@ export async function DELETE(request: NextRequest) {
 
     // Eliminar datos relacionados del usuario (opcional - depende de tu lógica de negocio)
     // Esto es importante para mantener la integridad de los datos
-    
+
     // 1. Eliminar propiedades del usuario
     const { error: propertiesError } = await supabaseAdmin
       .from('Property')
@@ -180,14 +180,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Log de auditoría
-    console.log(`Usuario eliminado exitosamente:`, {
-      deletedUserId: userIdToDelete,
-      deletedUserEmail: userToDelete.email,
-      deletedUserName: userToDelete.name,
-      deletedUserRole: userToDelete.role,
-      deletedBy: user.id,
-      deletedByEmail: user.email,
-      timestamp: new Date().toISOString()
+    .toISOString()
     });
 
     // Opcional: Guardar log en base de datos

@@ -25,10 +25,10 @@ async function getServerSupabase() {
 
 export async function GET(_req: NextRequest) {
   const supabase = await getServerSupabase();
-  
+
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json({ items: [] }, { status: 200 });
     }
@@ -72,16 +72,16 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const supabase = await getServerSupabase();
-  
+
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const { propertyId } = await req.json();
-    
+
     if (!propertyId) {
       return NextResponse.json({ error: "Property ID required" }, { status: 400 });
     }
@@ -111,9 +111,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Error removing favorite" }, { status: 500 });
       }
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: "Favorite removed",
-        isFavorite: false 
+        isFavorite: false
       }, { status: 200 });
     } else {
       // Add favorite
@@ -131,10 +131,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Error adding favorite" }, { status: 500 });
       }
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: "Favorite added",
         favorite: newFavorite,
-        isFavorite: true 
+        isFavorite: true
       }, { status: 200 });
     }
 
@@ -146,16 +146,16 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const supabase = await getServerSupabase();
-  
+
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const propertyId = req.nextUrl.searchParams.get('propertyId');
-    
+
     if (!propertyId) {
       return NextResponse.json({ error: "Property ID required" }, { status: 400 });
     }

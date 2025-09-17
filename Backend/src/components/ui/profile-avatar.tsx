@@ -3,10 +3,10 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from './button';
 import { Badge } from './badge';
-import { 
-  Camera, 
-  Upload, 
-  AlertCircle, 
+import {
+  Camera,
+  Upload,
+  AlertCircle,
   Loader2,
   User,
   Trash2
@@ -53,7 +53,7 @@ export function ProfileAvatar({
   // Tamaños del avatar
   const sizeClasses = {
     sm: 'w-12 h-12',
-    md: 'w-16 h-16', 
+    md: 'w-16 h-16',
     lg: 'w-24 h-24',
     xl: 'w-32 h-32'
   };
@@ -61,7 +61,7 @@ export function ProfileAvatar({
   const iconSizes = {
     sm: 'w-4 h-4',
     md: 'w-5 h-5',
-    lg: 'w-6 h-6', 
+    lg: 'w-6 h-6',
     xl: 'w-8 h-8'
   };
 
@@ -80,11 +80,11 @@ export function ProfileAvatar({
     if (!allowedFormats.includes(file.type)) {
       return `Formato no permitido. Use: ${allowedFormats.map(f => f.split('/')[1]).join(', ')}`;
     }
-    
+
     if (file.size > maxSizeInMB * 1024 * 1024) {
       return `El archivo es muy grande. Máximo ${maxSizeInMB}MB`;
     }
-    
+
     return null;
   };
 
@@ -94,12 +94,12 @@ export function ProfileAvatar({
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d')!;
       const img = new Image();
-      
+
       img.onload = () => {
         // Calcular dimensiones manteniendo aspect ratio
         const maxSize = 400;
         let { width, height } = img;
-        
+
         if (width > height) {
           if (width > maxSize) {
             height = (height * maxSize) / width;
@@ -111,13 +111,13 @@ export function ProfileAvatar({
             height = maxSize;
           }
         }
-        
+
         canvas.width = width;
         canvas.height = height;
-        
+
         // Dibujar imagen comprimida
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         canvas.toBlob((blob) => {
           if (blob) {
             resolve(blob);
@@ -126,7 +126,7 @@ export function ProfileAvatar({
           }
         }, 'image/jpeg', quality);
       };
-      
+
       img.src = URL.createObjectURL(file);
     });
   };
@@ -134,7 +134,7 @@ export function ProfileAvatar({
   // Manejar selección de archivo
   const handleFileSelect = useCallback(async (file: File) => {
     setError(null);
-    
+
     const validationError = validateFile(file);
     if (validationError) {
       setError(validationError);
@@ -153,7 +153,7 @@ export function ProfileAvatar({
       // Comprimir imagen
       setUploadProgress(20);
       const compressedBlob = await compressImage(file);
-      
+
       if (!compressedBlob) {
         throw new Error('Error al comprimir la imagen');
       }
@@ -181,16 +181,16 @@ export function ProfileAvatar({
       }
 
       const { imageUrl } = await response.json();
-      
+
       setUploadProgress(100);
-      
+
       // Actualizar estado local inmediatamente
       setCurrentImageUrl(imageUrl);
-      
+
       // Limpiar preview
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
-      
+
       // Notificar al componente padre
       onImageChange?.(imageUrl);
       toast.success('Avatar actualizado correctamente');
@@ -200,7 +200,7 @@ export function ProfileAvatar({
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       setError(errorMessage);
       toast.error(errorMessage);
-      
+
       // Limpiar preview en caso de error
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -226,7 +226,7 @@ export function ProfileAvatar({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    
+
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
       handleFileSelect(files[0]);
@@ -249,10 +249,10 @@ export function ProfileAvatar({
   // Eliminar avatar
   const handleRemoveAvatar = async () => {
     if (!currentImageUrl) return;
-    
+
     try {
       setUploading(true);
-      
+
       const response = await fetch('/api/users/avatar', {
         method: 'DELETE',
         headers: {
@@ -267,7 +267,7 @@ export function ProfileAvatar({
 
       // Actualizar estado local inmediatamente
       setCurrentImageUrl(null);
-      
+
       // Notificar al componente padre
       onImageChange?.('');
       toast.success('Avatar eliminado');
@@ -359,7 +359,7 @@ export function ProfileAvatar({
           >
             <Camera className="w-4 h-4" />
           </Button>
-          
+
           {currentImageUrl && (
             <Button
               size="sm"
@@ -387,7 +387,7 @@ export function ProfileAvatar({
       {uploading && (
         <div className="absolute -bottom-8 left-0 right-0">
           <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div 
+            <div
               className="bg-blue-500 h-full transition-all duration-300 ease-out"
               style={{ width: `${uploadProgress}%` }}
             />
@@ -406,7 +406,7 @@ export function ProfileAvatar({
 
       {/* Zona de drop para tamaños grandes */}
       {showUpload && size === 'xl' && !displayImageUrl && (
-        <div 
+        <div
           className={cn(
             "absolute inset-0 border-2 border-dashed border-gray-300 rounded-full flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors",
             dragOver && "border-blue-400 bg-blue-50"

@@ -27,8 +27,6 @@ export class EnhancedEmailService {
     error?: string;
   }> {
     try {
-      console.log('📧 Enhanced Email Service: Sending inquiry emails...');
-      
       // Validate data first
       const validation = this.validateInquiryData(inquiryData);
       if (!validation.valid) {
@@ -46,11 +44,9 @@ export class EnhancedEmailService {
         try {
           const result = await this.sendWithProvider(provider, inquiryData);
           if (result.success) {
-            console.log(`✅ Emails sent successfully via ${provider}`);
             return { ...result, provider };
           }
         } catch (providerError) {
-          console.warn(`⚠️ Provider ${provider} failed:`, providerError);
           continue;
         }
       }
@@ -77,13 +73,13 @@ export class EnhancedEmailService {
     switch (provider) {
       case this.EMAIL_PROVIDERS.RESEND:
         return this.sendWithResend(inquiryData);
-      
+
       case this.EMAIL_PROVIDERS.NODEMAILER:
         return this.sendWithNodemailer(inquiryData);
-      
+
       case this.EMAIL_PROVIDERS.MOCK:
         return this.sendWithMockProvider(inquiryData);
-      
+
       default:
         throw new Error(`Unknown provider: ${provider}`);
     }
@@ -153,22 +149,12 @@ export class EnhancedEmailService {
     customerEmailSent: boolean;
     internalNotificationSent: boolean;
   }> {
-    console.log('📧 MOCK EMAIL SERVICE - Development Mode');
-    
     // Simulate email sending delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Log email content for development
-    console.log('📨 Customer Confirmation Email:', {
-      to: inquiryData.email,
-      subject: 'Confirmación de consulta - Misiones Arrienda',
-      template: this.generateCustomerEmailTemplate(inquiryData)
     });
 
-    console.log('📨 Internal Notification Email:', {
-      to: 'admin@misionesarrienda.com.ar',
-      subject: `Nueva consulta de ${inquiryData.name}`,
-      template: this.generateInternalEmailTemplate(inquiryData)
     });
 
     return {
@@ -183,10 +169,8 @@ export class EnhancedEmailService {
    */
   private static async sendCustomerConfirmation(inquiryData: InquiryData): Promise<boolean> {
     const template = this.generateCustomerEmailTemplate(inquiryData);
-    
+
     // Here would be the actual email sending logic
-    console.log('Sending customer confirmation to:', inquiryData.email);
-    
     return true;
   }
 
@@ -195,10 +179,8 @@ export class EnhancedEmailService {
    */
   private static async sendInternalNotification(inquiryData: InquiryData): Promise<boolean> {
     const template = this.generateInternalEmailTemplate(inquiryData);
-    
+
     // Here would be the actual email sending logic
-    console.log('Sending internal notification to admin');
-    
     return true;
   }
 
@@ -227,31 +209,31 @@ export class EnhancedEmailService {
             <h1>🏠 Misiones Arrienda</h1>
             <p>Confirmación de consulta recibida</p>
         </div>
-        
+
         <div class="content">
             <h2>¡Hola ${inquiryData.name}!</h2>
-            
+
             <p>Hemos recibido tu consulta y te contactaremos pronto. Aquí tienes un resumen:</p>
-            
+
             <div style="background: white; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0;">
                 <p><strong>Tipo de consulta:</strong> ${this.getInquiryTypeLabel(inquiryData.type || 'GENERAL')}</p>
                 <p><strong>Mensaje:</strong> ${inquiryData.message}</p>
                 <p><strong>Teléfono:</strong> ${inquiryData.phone}</p>
                 ${inquiryData.propertyId ? `<p><strong>Propiedad:</strong> ID ${inquiryData.propertyId}</p>` : ''}
             </div>
-            
+
             <p><strong>¿Qué sigue?</strong></p>
             <ul>
                 <li>📞 Te contactaremos en las próximas 2 horas</li>
                 <li>📋 Revisaremos tu consulta en detalle</li>
                 <li>🏠 Te ayudaremos a encontrar la propiedad perfecta</li>
             </ul>
-            
+
             <p style="text-align: center; margin: 30px 0;">
                 <a href="https://misionesarrienda.com.ar" class="button">Ver más propiedades</a>
             </p>
         </div>
-        
+
         <div class="footer">
             <p>Misiones Arrienda - Tu hogar en Misiones</p>
             <p>📧 info@misionesarrienda.com.ar | 📱 +54 376 123-4567</p>
@@ -289,13 +271,13 @@ export class EnhancedEmailService {
             <h1>🚨 Nueva Consulta Recibida</h1>
             <p>Misiones Arrienda - Panel Administrativo</p>
         </div>
-        
+
         <div class="content">
             <div class="urgent">
                 <h3>⏰ Acción Requerida</h3>
                 <p>Nueva consulta recibida. <strong>Contactar en las próximas 2 horas.</strong></p>
             </div>
-            
+
             <h3>📋 Detalles de la Consulta</h3>
             <table class="data-table">
                 <tr><th>Campo</th><th>Valor</th></tr>
@@ -306,12 +288,12 @@ export class EnhancedEmailService {
                 <tr><td><strong>Propiedad ID</strong></td><td>${inquiryData.propertyId || 'N/A'}</td></tr>
                 <tr><td><strong>Fecha</strong></td><td>${new Date().toLocaleString('es-AR')}</td></tr>
             </table>
-            
+
             <h3>💬 Mensaje del Cliente</h3>
             <div style="background: white; padding: 15px; border-left: 4px solid #dc2626; margin: 20px 0;">
                 <p>${inquiryData.message}</p>
             </div>
-            
+
             <h3>🎯 Acciones Recomendadas</h3>
             <ul>
                 <li>📞 Llamar al cliente en las próximas 2 horas</li>

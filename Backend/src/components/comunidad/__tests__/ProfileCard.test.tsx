@@ -134,7 +134,7 @@ describe('ProfileCard', () => {
 
     const messageButton = screen.getByText('Mensaje')
     expect(messageButton).toBeInTheDocument()
-    
+
     fireEvent.click(messageButton)
     expect(mockOnMessage).toHaveBeenCalledWith(mockProfile.id)
   })

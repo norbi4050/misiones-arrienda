@@ -11,7 +11,7 @@ interface PropertyGridProps {
 }
 
 export function PropertyGrid({ properties }: { properties: any[] }) {
-  console.log('PropertyGrid props len:', Array.isArray(properties) ? properties.length : 'no-array')
+  ? properties.length : 'no-array')
   if (!Array.isArray(properties)) return null
   if (properties.length === 0) {
     return <div className="text-center text-gray-500 py-10">No hay propiedades publicadas.</div>
@@ -24,7 +24,6 @@ export function PropertyGrid({ properties }: { properties: any[] }) {
       {properties.map((p: any) => {
         const price = Number(p?.price ?? 0)
         const area = Number(p?.area ?? 0)
-        console.log('Card ->', p?.id)
         return (
           <PropertyCard
             key={p.id}

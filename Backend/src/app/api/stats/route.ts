@@ -17,10 +17,10 @@ export async function GET() {
       isNewPlatform: true,
       message: "¡Plataforma nueva lista para crecer contigo!"
     })
-    
+
   } catch (error) {
     console.error('Error in stats API:', error)
-    
+
     // Fallback honesto para errores
     return NextResponse.json({
       properties: 0,
@@ -42,14 +42,14 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { action } = await request.json()
-    
+
     // Para plataforma nueva, simplemente confirmar la acción
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Action registered for new platform',
       action,
       isNewPlatform: true
     })
-    
+
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to register action' },

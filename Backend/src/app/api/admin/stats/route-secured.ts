@@ -1,6 +1,6 @@
 /**
  * 📊 API DE ESTADÍSTICAS DE ADMINISTRACIÓN - VERSIÓN SEGURA
- * 
+ *
  * Proporciona estadísticas completas del sistema para el dashboard de administración
  * CON VERIFICACIÓN DE AUTENTICACIÓN Y AUTORIZACIÓN
  */
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     // 📊 OBTENER ESTADÍSTICAS DEL SISTEMA
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     // Estadísticas de usuarios usando Supabase
     const [
       { count: totalUsers },
@@ -151,10 +151,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Log de auditoría
-    console.log(`Estadísticas de admin consultadas:`, {
-      requestedBy: user.id,
-      requestedByEmail: user.email,
-      timestamp: new Date().toISOString()
+    .toISOString()
     });
 
     return NextResponse.json(stats);

@@ -45,8 +45,8 @@ export function generatePropertySchema(property: any): PropertySchema {
   // Parse images if they're stored as JSON string
   let images: string[] = []
   try {
-    images = typeof property.images === 'string' 
-      ? JSON.parse(property.images) 
+    images = typeof property.images === 'string'
+      ? JSON.parse(property.images)
       : property.images || []
   } catch {
     images = ['/images/properties/default-1.jpg']
@@ -55,8 +55,8 @@ export function generatePropertySchema(property: any): PropertySchema {
   // Parse amenities if they're stored as JSON string
   let amenities: string[] = []
   try {
-    amenities = typeof property.amenities === 'string' 
-      ? JSON.parse(property.amenities) 
+    amenities = typeof property.amenities === 'string'
+      ? JSON.parse(property.amenities)
       : property.amenities || []
   } catch {
     amenities = []
@@ -79,12 +79,12 @@ export function generatePropertySchema(property: any): PropertySchema {
       "@type": "Offer",
       price: property.price,
       priceCurrency: "ARS",
-      availability: property.status === 'AVAILABLE' 
-        ? "https://schema.org/InStock" 
+      availability: property.status === 'AVAILABLE'
+        ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
       priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     },
-    image: images.map(img => 
+    image: images.map(img =>
       img.startsWith('http') ? img : `https://www.misionesarrienda.com.ar${img}`
     ),
     floorSize: {

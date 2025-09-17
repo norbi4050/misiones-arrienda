@@ -5,10 +5,10 @@ import { FilterSectionWrapper } from '@/components/filter-section-wrapper';
 import { getProperties } from '@/lib/api';
 import { Property } from '@/types/property';
 
-type Filters = { 
-  city: string; 
-  type: string; 
-  min: string; 
+type Filters = {
+  city: string;
+  type: string;
+  min: string;
   max: string;
   bedrooms: string;
   bathrooms: string;
@@ -53,9 +53,9 @@ export default function EldoradoClient({ initial, initialProperties }: EldoradoC
   const handleFilterChange = async (newFilters: any) => {
     setLoading(true);
     try {
-      const response = await getProperties({ 
+      const response = await getProperties({
         city: 'Eldorado',
-        ...newFilters 
+        ...newFilters
       });
       setProperties(response.properties);
     } catch (error) {
@@ -75,15 +75,15 @@ export default function EldoradoClient({ initial, initialProperties }: EldoradoC
             <span className="mx-2">›</span>
             <span>Eldorado</span>
           </nav>
-          
+
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Propiedades en Eldorado
           </h1>
           <p className="text-xl opacity-90 max-w-2xl">
-            Descubre las mejores opciones de alquiler en la ciudad del conocimiento. 
+            Descubre las mejores opciones de alquiler en la ciudad del conocimiento.
             Eldorado combina desarrollo industrial con calidad de vida.
           </p>
-          
+
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div className="bg-white/10 rounded-lg p-4">
               <div className="text-2xl font-bold">{properties.length}</div>
@@ -91,7 +91,7 @@ export default function EldoradoClient({ initial, initialProperties }: EldoradoC
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <div className="text-2xl font-bold">
-                ${properties.length > 0 
+                ${properties.length > 0
                   ? Math.min(...properties.map((p: Property) => p.price)).toLocaleString()
                   : '0'
                 }
@@ -115,43 +115,43 @@ export default function EldoradoClient({ initial, initialProperties }: EldoradoC
             <h2 className="text-3xl font-bold text-gray-900 mb-6">
               ¿Por qué elegir Eldorado?
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Ciudad del Conocimiento
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Eldorado es reconocida como la "Ciudad del Conocimiento" por su fuerte 
-                  desarrollo educativo e industrial. Cuenta con importantes instituciones 
+                  Eldorado es reconocida como la "Ciudad del Conocimiento" por su fuerte
+                  desarrollo educativo e industrial. Cuenta con importantes instituciones
                   educativas y empresas que generan empleo de calidad.
                 </p>
-                
+
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Desarrollo Industrial
                 </h3>
                 <p className="text-gray-600">
-                  La ciudad alberga importantes industrias forestales y manufactureras, 
+                  La ciudad alberga importantes industrias forestales y manufactureras,
                   ofreciendo oportunidades laborales y crecimiento económico sostenido.
                 </p>
               </div>
-              
+
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Calidad de Vida
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Eldorado ofrece un equilibrio perfecto entre desarrollo urbano y 
-                  naturaleza, con excelentes servicios públicos, centros de salud 
+                  Eldorado ofrece un equilibrio perfecto entre desarrollo urbano y
+                  naturaleza, con excelentes servicios públicos, centros de salud
                   y espacios recreativos.
                 </p>
-                
+
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Conectividad
                 </h3>
                 <p className="text-gray-600">
-                  Estratégicamente ubicada sobre la Ruta Nacional 12, Eldorado 
-                  cuenta con excelente conectividad con otras ciudades de Misiones 
+                  Estratégicamente ubicada sobre la Ruta Nacional 12, Eldorado
+                  cuenta con excelente conectividad con otras ciudades de Misiones
                   y el resto del país.
                 </p>
               </div>
@@ -167,13 +167,13 @@ export default function EldoradoClient({ initial, initialProperties }: EldoradoC
             Propiedades Disponibles en Eldorado
           </h2>
           <p className="text-gray-600">
-            Explora nuestra selección de propiedades en alquiler en Eldorado. 
+            Explora nuestra selección de propiedades en alquiler en Eldorado.
             Utiliza los filtros para encontrar exactamente lo que buscas.
           </p>
         </div>
 
         <FilterSectionWrapper onFilterChange={handleFilterChange} />
-        
+
         {loading ? (
           <div className="text-center py-12">
             <div className="text-gray-600">Cargando propiedades...</div>

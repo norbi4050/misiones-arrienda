@@ -20,14 +20,14 @@ interface FilterSectionServerProps {
   initialSearchParams?: { [key: string]: string | string[] | undefined }
 }
 
-export function FilterSectionServer({ 
-  onFilterChange, 
+export function FilterSectionServer({
+  onFilterChange,
   enableUrlPersistence = true,
   enableRealTimeFiltering = true,
   initialSearchParams = {}
 }: FilterSectionServerProps) {
   const router = useRouter()
-  
+
   const [filters, setFilters] = useState({
     type: "all",
     listingType: "all",
@@ -51,7 +51,7 @@ export function FilterSectionServer({
       bathrooms: (typeof initialSearchParams.bathrooms === 'string' ? initialSearchParams.bathrooms : null) || 'all',
       featured: (typeof initialSearchParams.featured === 'string' ? initialSearchParams.featured : null) || 'all'
     }
-    
+
     setFilters(urlFilters)
   }, [initialSearchParams, enableUrlPersistence])
 
@@ -66,7 +66,7 @@ export function FilterSectionServer({
     if (!enableUrlPersistence) return
 
     const params = new URLSearchParams()
-    
+
     Object.entries(newFilters).forEach(([key, value]) => {
       if (value !== 'all') {
         // Map internal keys to URL-friendly keys
@@ -193,7 +193,7 @@ export function FilterSectionServer({
     const labels: Record<string, Record<string, string>> = {
       type: {
         house: "🏡 Casa",
-        apartment: "🏢 Departamento", 
+        apartment: "🏢 Departamento",
         commercial: "🏪 Local",
         land: "🌾 Terreno"
       },
@@ -227,7 +227,7 @@ export function FilterSectionServer({
         "true": "⭐ Destacadas"
       }
     }
-    
+
     return labels[key]?.[value] || value
   }
 
@@ -247,10 +247,10 @@ export function FilterSectionServer({
             </h2>
             <p className="text-gray-600">Encuentra exactamente lo que buscas</p>
           </div>
-          
+
           {getActiveFiltersCount() > 0 && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={clearAllFilters}
               className="text-red-600 border-red-200 hover:bg-red-50"
             >
@@ -367,9 +367,9 @@ export function FilterSectionServer({
             {Object.entries(filters).map(([key, value]) => {
               if (value === "all") return null
               return (
-                <Badge 
-                  key={`${key}-${value}`} 
-                  variant="secondary" 
+                <Badge
+                  key={`${key}-${value}`}
+                  variant="secondary"
                   className="bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer"
                   onClick={() => updateFilter(key, "all")}
                 >

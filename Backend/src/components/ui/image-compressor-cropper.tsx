@@ -135,10 +135,7 @@ export function ImageCompressorCropper({
       // Compress
       const compressedFile = await compressImage(resizedCanvas)
 
-      console.log('✅ Image compressed successfully:', {
-        originalSize: imageFile.size,
-        compressedSize: compressedFile.size,
-        compressionRatio: ((imageFile.size - compressedFile.size) / imageFile.size * 100).toFixed(1) + '%'
+      / imageFile.size * 100).toFixed(1) + '%'
       })
 
       onComplete(compressedFile)

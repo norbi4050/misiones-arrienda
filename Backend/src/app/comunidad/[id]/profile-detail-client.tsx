@@ -65,7 +65,7 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
       const matchesResponse = await fetch('/api/comunidad/matches')
       if (matchesResponse.ok) {
         const matches = await matchesResponse.json()
-        const hasMatch = matches.some((match: any) => 
+        const hasMatch = matches.some((match: any) =>
           (match.user1_id === user?.id && match.user2_id === profile.user.id) ||
           (match.user2_id === user?.id && match.user1_id === profile.user.id)
         )
@@ -202,14 +202,14 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
                         {profile.age} años
                       </div>
                     </div>
-                    <Badge 
+                    <Badge
                       variant={profile.role === 'BUSCO' ? 'default' : 'secondary'}
                       className="mb-4"
                     >
                       {profile.role === 'BUSCO' ? 'Busca vivienda' : 'Ofrece vivienda'}
                     </Badge>
                   </div>
-                  
+
                   {/* Indicador de Match */}
                   {isMatched && (
                     <div className="bg-pink-50 border border-pink-200 rounded-lg p-3 text-center">

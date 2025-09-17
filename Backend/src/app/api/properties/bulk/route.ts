@@ -15,14 +15,14 @@ export async function POST(request: NextRequest) {
     const { action, propertyIds, data } = body;
 
     if (!action || !propertyIds || !Array.isArray(propertyIds)) {
-      return NextResponse.json({ 
-        error: 'Faltan parámetros requeridos: action, propertyIds' 
+      return NextResponse.json({
+        error: 'Faltan parámetros requeridos: action, propertyIds'
       }, { status: 400 });
     }
 
     if (propertyIds.length === 0) {
-      return NextResponse.json({ 
-        error: 'Debe seleccionar al menos una propiedad' 
+      return NextResponse.json({
+        error: 'Debe seleccionar al menos una propiedad'
       }, { status: 400 });
     }
 
@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
     // Verificar permisos
     const unauthorizedProperties = properties?.filter(p => p.user_id !== user.id) || [];
     if (unauthorizedProperties.length > 0) {
-      return NextResponse.json({ 
-        error: 'No tienes permisos para modificar algunas propiedades seleccionadas' 
+      return NextResponse.json({
+        error: 'No tienes permisos para modificar algunas propiedades seleccionadas'
       }, { status: 403 });
     }
 
@@ -83,22 +83,22 @@ export async function POST(request: NextRequest) {
       case 'update-status':
         const newStatus = data?.status;
         if (!newStatus) {
-          return NextResponse.json({ 
-            error: 'Estado requerido para actualización' 
+          return NextResponse.json({
+            error: 'Estado requerido para actualización'
           }, { status: 400 });
         }
 
         const validStatuses = ['AVAILABLE', 'RENTED', 'SOLD', 'MAINTENANCE', 'RESERVED', 'EXPIRED'];
         if (!validStatuses.includes(newStatus)) {
-          return NextResponse.json({ 
-            error: 'Estado no válido' 
+          return NextResponse.json({
+            error: 'Estado no válido'
           }, { status: 400 });
         }
 
         try {
           const { error: updateError } = await supabase
             .from('properties')
-            .update({ 
+            .update({
               status: newStatus,
               updated_at: new Date().toISOString()
             })
@@ -142,10 +142,10 @@ export async function POST(request: NextRequest) {
           // Procesar cada propiedad individualmente
           for (const property of currentProperties || []) {
             const newFeaturedStatus = !property.is_featured;
-            
+
             const { error: updateError } = await supabase
               .from('properties')
-              .update({ 
+              .update({
                 is_featured: newFeaturedStatus,
                 updated_at: new Date().toISOString()
               })
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
         try {
           const { error: archiveError } = await supabase
             .from('properties')
-            .update({ 
+            .update({
               status: 'EXPIRED',
               is_active: false,
               updated_at: new Date().toISOString()
@@ -246,11 +246,11 @@ export async function POST(request: NextRequest) {
           }
 
           const duplicatedProperties = [];
-          
+
           for (const original of originalProperties || []) {
             // Crear copia sin id, created_at, updated_at
             const { id, created_at, updated_at, ...propertyData } = original;
-            
+
             const duplicatedProperty = {
               ...propertyData,
               title: `${original.title} (Copia)`,
@@ -289,8 +289,8 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        return NextResponse.json({ 
-          error: 'Acción no válida' 
+        return NextResponse.json({
+          error: 'Acción no válida'
         }, { status: 400 });
     }
 
@@ -309,8 +309,7 @@ export async function POST(request: NextRequest) {
         }]);
     } catch (logError) {
       // No fallar si no se puede registrar la actividad
-      console.warn('Could not log activity:', logError);
-    }
+      }
 
     return NextResponse.json({
       success: true,

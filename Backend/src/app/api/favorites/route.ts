@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
       await prisma.favorite.delete({
         where: { id: existingFavorite.id }
       });
-      
-      return NextResponse.json({ 
+
+      return NextResponse.json({
         message: 'Favorito eliminado',
-        isFavorite: false 
+        isFavorite: false
       });
     } else {
       // Si no existe, lo creamos
@@ -92,11 +92,11 @@ export async function POST(request: NextRequest) {
           propertyId
         }
       });
-      
-      return NextResponse.json({ 
+
+      return NextResponse.json({
         message: 'Favorito agregado',
         favorite: newFavorite,
-        isFavorite: true 
+        isFavorite: true
       });
     }
   } catch (error) {
@@ -114,7 +114,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const propertyId = request.nextUrl.searchParams.get('propertyId');
-    
+
     if (!propertyId) {
       return NextResponse.json({ error: 'ID de propiedad requerido' }, { status: 400 });
     }

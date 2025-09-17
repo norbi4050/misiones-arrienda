@@ -47,13 +47,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   return (
-    <div 
+    <div
       className="relative inline-block"
       onMouseEnter={showTooltip}
       onMouseLeave={hideTooltip}
     >
       {children}
-      
+
       {isVisible && (
         <div className={cn(
           "absolute z-50 px-2 py-1 text-sm text-white bg-gray-900 rounded shadow-lg whitespace-nowrap",
@@ -62,7 +62,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           className
         )}>
           {content}
-          
+
           {/* Arrow */}
           <div className={cn(
             "absolute w-0 h-0 border-4",

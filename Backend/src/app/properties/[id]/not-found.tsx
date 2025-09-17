@@ -25,7 +25,7 @@ export default function PropertyNotFound() {
               Ver todas las propiedades
             </Link>
           </Button>
-          
+
           <Button variant="outline" asChild className="w-full">
             <Link href="/">
               <Home className="h-4 w-4 mr-2" />

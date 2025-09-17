@@ -48,7 +48,7 @@ export default async function PuertoIguazuPage() {
             Propiedades en Puerto Iguazú, Misiones
           </h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Invierte en la puerta de entrada a una de las Siete Maravillas Naturales del Mundo. 
+            Invierte en la puerta de entrada a una de las Siete Maravillas Naturales del Mundo.
             Puerto Iguazú ofrece oportunidades únicas en el sector turístico e inmobiliario.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
@@ -77,42 +77,42 @@ export default async function PuertoIguazuPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-4">🌊 Cataratas del Iguazú</h3>
                 <p className="text-gray-700">
-                  Ubicado a solo 18 km de las mundialmente famosas Cataratas del Iguazú, 
+                  Ubicado a solo 18 km de las mundialmente famosas Cataratas del Iguazú,
                   declaradas Patrimonio Natural de la Humanidad por la UNESCO.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">✈️ Conectividad Internacional</h3>
                 <p className="text-gray-700">
-                  Aeropuerto Internacional Cataratas del Iguazú con vuelos directos 
+                  Aeropuerto Internacional Cataratas del Iguazú con vuelos directos
                   desde las principales ciudades de Argentina y conexiones internacionales.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🏨 Industria Turística</h3>
                 <p className="text-gray-700">
-                  Más de 1.5 millones de turistas anuales generan una demanda constante 
+                  Más de 1.5 millones de turistas anuales generan una demanda constante
                   de alojamiento y servicios, ideal para inversiones en turismo.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🌍 Triple Frontera</h3>
                 <p className="text-gray-700">
-                  Punto estratégico donde confluyen Argentina, Brasil y Paraguay, 
+                  Punto estratégico donde confluyen Argentina, Brasil y Paraguay,
                   con oportunidades comerciales únicas en la región.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">🦋 Parque Nacional Iguazú</h3>
                 <p className="text-gray-700">
-                  Rodeado de selva subtropical y biodiversidad única, 
+                  Rodeado de selva subtropical y biodiversidad única,
                   ofreciendo un entorno natural incomparable para vivir.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-4">💰 Rentabilidad Turística</h3>
                 <p className="text-gray-700">
-                  Excelente potencial de rentabilidad para propiedades destinadas 
+                  Excelente potencial de rentabilidad para propiedades destinadas
                   a alquiler turístico y hospedaje temporal.
                 </p>
               </div>
@@ -140,21 +140,21 @@ export default async function PuertoIguazuPage() {
               <div className="bg-white rounded-lg p-6 shadow-md">
                 <h3 className="text-xl font-semibold mb-4 text-blue-600">🏠 Alquiler Turístico</h3>
                 <p className="text-gray-700">
-                  Propiedades para Airbnb y alquiler temporal con alta demanda 
+                  Propiedades para Airbnb y alquiler temporal con alta demanda
                   durante todo el año.
                 </p>
               </div>
               <div className="bg-white rounded-lg p-6 shadow-md">
                 <h3 className="text-xl font-semibold mb-4 text-blue-600">🏨 Hospedajes</h3>
                 <p className="text-gray-700">
-                  Hostels, apart-hoteles y cabañas con excelente retorno 
+                  Hostels, apart-hoteles y cabañas con excelente retorno
                   de inversión en zona turística.
                 </p>
               </div>
               <div className="bg-white rounded-lg p-6 shadow-md">
                 <h3 className="text-xl font-semibold mb-4 text-blue-600">🏪 Locales Comerciales</h3>
                 <p className="text-gray-700">
-                  Espacios comerciales en zonas de alto tránsito turístico 
+                  Espacios comerciales en zonas de alto tránsito turístico
                   para restaurantes y tiendas.
                 </p>
               </div>

@@ -2,12 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  Heart, 
-  MessageCircle, 
-  Search, 
-  BarChart3, 
-  Bell, 
+import {
+  Heart,
+  MessageCircle,
+  Search,
+  BarChart3,
+  Bell,
   Shield,
   Loader2
 } from 'lucide-react';
@@ -154,7 +154,7 @@ function QuickActionCard({ action }: QuickActionCardProps) {
             )}>
               <Loader2 className="w-6 h-6 animate-spin" />
             </div>
-            
+
             <div className="flex flex-col items-end gap-1">
               <div className="w-12 h-4 bg-gray-200 rounded animate-pulse"></div>
             </div>
@@ -163,7 +163,7 @@ function QuickActionCard({ action }: QuickActionCardProps) {
           <div className="space-y-2">
             <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse"></div>
             <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
-            
+
             <div className="flex items-center gap-2 pt-2">
               <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
               <div className="h-3 w-16 bg-gray-200 rounded animate-pulse"></div>
@@ -186,7 +186,7 @@ function QuickActionCard({ action }: QuickActionCardProps) {
             <div className="p-3 rounded-xl bg-red-100 text-red-600">
               <action.icon className="w-6 h-6" />
             </div>
-            
+
             <Badge variant="destructive" className="text-xs">
               Error
             </Badge>
@@ -199,7 +199,7 @@ function QuickActionCard({ action }: QuickActionCardProps) {
             <p className="text-sm text-red-600">
               No se pudieron cargar los datos
             </p>
-            
+
             <div className="flex items-center gap-2 pt-2">
               <div className="text-2xl font-bold text-red-600">
                 --
@@ -230,7 +230,7 @@ function QuickActionCard({ action }: QuickActionCardProps) {
               )}>
                 <action.icon className="w-6 h-6" />
               </div>
-              
+
               <div className="flex flex-col items-end gap-1">
                 {action.isComingSoon && (
                   <Badge variant="outline" className="text-xs">
@@ -269,7 +269,7 @@ function QuickActionCard({ action }: QuickActionCardProps) {
             )}>
               <action.icon className="w-6 h-6" />
             </div>
-            
+
             <div className="flex flex-col items-end gap-1">
               {action.hasNotification && (
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -289,7 +289,7 @@ function QuickActionCard({ action }: QuickActionCardProps) {
             <p className="text-sm text-gray-600">
               {action.description}
             </p>
-            
+
             {/* Show count or motivational message */}
             {action.count !== undefined && (
               <div className="flex items-center gap-2 pt-2">
@@ -328,8 +328,8 @@ function QuickActionCard({ action }: QuickActionCardProps) {
                 <span>{action.count} total</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1">
-                <div 
-                  className="bg-red-500 h-1 rounded-full transition-all duration-300" 
+                <div
+                  className="bg-red-500 h-1 rounded-full transition-all duration-300"
                   style={{ width: `${Math.min((action.count / 20) * 100, 100)}%` }}
                 ></div>
               </div>

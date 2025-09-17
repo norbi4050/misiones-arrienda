@@ -4,14 +4,14 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Star, 
-  MapPin, 
-  Bed, 
-  Bath, 
+import {
+  Edit,
+  Trash2,
+  Eye,
+  Star,
+  MapPin,
+  Bed,
+  Bath,
   Car,
   Square,
   Calendar,
@@ -139,18 +139,18 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export function PropertyCard({ 
-  property, 
-  onEdit, 
-  onDelete, 
-  onView, 
-  onPromote, 
+export function PropertyCard({
+  property,
+  onEdit,
+  onDelete,
+  onView,
+  onPromote,
   onToggleFeatured,
   isSelected = false,
-  onSelect 
+  onSelect
 }: PropertyCardProps) {
-  const mainImage = property.images && property.images.length > 0 
-    ? property.images[0] 
+  const mainImage = property.images && property.images.length > 0
+    ? property.images[0]
     : '/images/placeholder-property.jpg';
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,7 +183,7 @@ export function PropertyCard({
             (e.target as HTMLImageElement).src = '/images/placeholder-property.jpg';
           }}
         />
-        
+
         {/* Featured Badge */}
         {property.featured && (
           <div className="absolute top-3 right-3">
@@ -311,7 +311,7 @@ export function PropertyCard({
               Ver
             </Button>
           )}
-          
+
           {onEdit && (
             <Button
               variant="outline"

@@ -1,6 +1,6 @@
 /**
  * 📈 API DE ACTIVIDAD RECIENTE DE ADMINISTRACIÓN
- * 
+ *
  * Proporciona la actividad reciente del sistema para el dashboard de administración
  * CON VERIFICACIÓN DE AUTENTICACIÓN Y AUTORIZACIÓN
  */
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         { status: 403 }
       );
     }
-    
+
     // Obtener actividad reciente de usuarios
     const recentUsers = await prisma.user.findMany({
       orderBy: {
@@ -185,9 +185,7 @@ export async function GET(request: NextRequest) {
     const recentActivity = allActivity.slice(0, 10);
 
     // Log de auditoría
-    console.log(`Actividad de admin consultada:`, {
-      requestedBy: user.id,
-      requestedAt: new Date().toISOString(),
+    .toISOString(),
       userEmail: user.email
     });
 

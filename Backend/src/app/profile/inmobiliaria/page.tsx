@@ -16,7 +16,7 @@ export default function InmobiliariaProfilePage() {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  
+
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -118,9 +118,9 @@ export default function InmobiliariaProfilePage() {
               <div className="relative">
                 <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center">
                   {profileData.profileImage ? (
-                    <img 
-                      src={profileData.profileImage} 
-                      alt="Perfil" 
+                    <img
+                      src={profileData.profileImage}
+                      alt="Perfil"
                       className="w-20 h-20 rounded-full object-cover"
                     />
                   ) : (
@@ -209,7 +209,7 @@ export default function InmobiliariaProfilePage() {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Email
@@ -322,8 +322,8 @@ export default function InmobiliariaProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Año de fundación
                     </label>
-                    <Select 
-                      value={profileData.foundedYear} 
+                    <Select
+                      value={profileData.foundedYear}
                       onValueChange={(value) => setProfileData({...profileData, foundedYear: value})}
                       disabled={!isEditing}
                     >
@@ -350,8 +350,8 @@ export default function InmobiliariaProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tamaño del equipo
                     </label>
-                    <Select 
-                      value={profileData.teamSize} 
+                    <Select
+                      value={profileData.teamSize}
                       onValueChange={(value) => setProfileData({...profileData, teamSize: value})}
                       disabled={!isEditing}
                     >
@@ -372,8 +372,8 @@ export default function InmobiliariaProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Horarios de atención
                     </label>
-                    <Select 
-                      value={profileData.businessHours} 
+                    <Select
+                      value={profileData.businessHours}
                       onValueChange={(value) => setProfileData({...profileData, businessHours: value})}
                       disabled={!isEditing}
                     >
@@ -421,8 +421,8 @@ export default function InmobiliariaProfilePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Especializaciones
                   </label>
-                  <Select 
-                    value={profileData.specializations} 
+                  <Select
+                    value={profileData.specializations}
                     onValueChange={(value) => setProfileData({...profileData, specializations: value})}
                     disabled={!isEditing}
                   >
@@ -542,8 +542,8 @@ export default function InmobiliariaProfilePage() {
                 <CardTitle className="text-lg">Gestión</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full justify-start"
                   onClick={() => router.push('/publicar/premium')}
                 >
@@ -591,7 +591,6 @@ export default function InmobiliariaProfilePage() {
                 </div>
               </CardContent>
             </Card>
-
 
             {/* Contacto Rápido */}
             <Card>

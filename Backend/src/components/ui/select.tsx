@@ -76,7 +76,7 @@ const SelectContent = React.forwardRef<
   }
 >(({ className, children, position = "popper", searchable = false, ...props }, ref) => {
   const [searchTerm, setSearchTerm] = React.useState("")
-  
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content

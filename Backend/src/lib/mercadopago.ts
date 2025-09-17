@@ -35,9 +35,7 @@ export const MERCADOPAGO_CONFIG = {
 
 // Validar que las credenciales estén configuradas
 if (!MERCADOPAGO_CONFIG.publicKey || !MERCADOPAGO_CONFIG.accessToken) {
-  console.warn('⚠️ ADVERTENCIA: Credenciales de MercadoPago no configuradas correctamente');
-  console.warn('Variables requeridas: MERCADOPAGO_ACCESS_TOKEN, MERCADOPAGO_PUBLIC_KEY');
-}
+  }
 
 // Cliente de preferencias
 const preference = new Preference(client)
@@ -101,11 +99,11 @@ export async function getPaymentInfo(paymentId: string) {
         'Authorization': `Bearer ${accessToken}`
       }
     })
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch payment info')
     }
-    
+
     return await response.json()
   } catch (error) {
     console.error('Error fetching payment info:', error)
@@ -117,7 +115,7 @@ export async function getPaymentInfo(paymentId: string) {
 export async function verifyPayment(paymentId: string) {
   try {
     const paymentInfo = await getPaymentInfo(paymentId)
-    
+
     return {
       id: paymentInfo.id,
       status: paymentInfo.status,

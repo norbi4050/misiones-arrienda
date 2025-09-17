@@ -90,7 +90,7 @@ const mockProfiles = [
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    
+
     // Parsear parámetros de búsqueda
     const params = {
       role: searchParams.get('role') || undefined,
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (validatedParams.city) {
-      filteredProfiles = filteredProfiles.filter(p => 
+      filteredProfiles = filteredProfiles.filter(p =>
         p.city.toLowerCase().includes(validatedParams.city!.toLowerCase())
       )
     }
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching community profiles:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid search parameters', details: error.errors },
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error creating community profile:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid profile data', details: error.errors },

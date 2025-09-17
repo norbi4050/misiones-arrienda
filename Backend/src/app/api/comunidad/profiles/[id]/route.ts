@@ -28,7 +28,7 @@ export async function GET(
 ) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -127,7 +127,7 @@ export async function GET(
 
   } catch (error) {
     console.error('Error in profile GET:', error)
-    
+
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
@@ -142,7 +142,7 @@ export async function PUT(
 ) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -233,7 +233,7 @@ export async function PUT(
 
   } catch (error) {
     console.error('Error in profile PUT:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Datos inválidos', details: error.errors },
@@ -255,7 +255,7 @@ export async function DELETE(
 ) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -327,7 +327,7 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Error in profile DELETE:', error)
-    
+
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

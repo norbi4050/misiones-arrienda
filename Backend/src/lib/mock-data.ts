@@ -21,13 +21,13 @@ export function filterProperties(params: {
 
   // Aplicar filtros
   if (params.city) {
-    filtered = filtered.filter(p => 
+    filtered = filtered.filter(p =>
       p.city.toLowerCase().includes(params.city!.toLowerCase())
     );
   }
 
   if (params.province) {
-    filtered = filtered.filter(p => 
+    filtered = filtered.filter(p =>
       p.province.toLowerCase().includes(params.province!.toLowerCase())
     );
   }

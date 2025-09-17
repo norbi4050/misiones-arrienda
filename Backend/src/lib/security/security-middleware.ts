@@ -80,7 +80,7 @@ export class SecurityMiddleware {
 
   constructor(config: Partial<SecurityConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
-    
+
     // Limpiar actividad sospechosa cada hora
     setInterval(() => {
       this.suspiciousActivity.clear()
@@ -113,7 +113,7 @@ export class SecurityMiddleware {
           method,
           userAgent
         })
-        
+
         if (this.shouldBlockIP(ip)) {
           this.blockIP(ip)
           return this.createBlockedResponse('Suspicious activity detected')
@@ -123,7 +123,7 @@ export class SecurityMiddleware {
       // 3. Rate Limiting simple
       if (this.config.rateLimiting.enabled) {
         const rateLimitResult = this.checkRateLimit(ip)
-        
+
         if (!rateLimitResult.allowed) {
           auditLogger.logSecurity('rate_limit_exceeded', ip, userAgent, {
             path,
@@ -132,7 +132,7 @@ export class SecurityMiddleware {
             remaining: rateLimitResult.remaining,
             resetTime: rateLimitResult.resetTime
           })
-          
+
           return this.createRateLimitResponse(rateLimitResult)
         }
       }
@@ -161,10 +161,10 @@ export class SecurityMiddleware {
       // 7. Logging de auditoría
       if (this.config.auditLogging.enabled) {
         const duration = Date.now() - startTime
-        
-        if (this.config.auditLogging.logAllRequests || 
+
+        if (this.config.auditLogging.logAllRequests ||
             (this.config.auditLogging.logFailedOnly && response.status >= 400)) {
-          
+
           auditLogger.log({
             action: `${method.toLowerCase()}.${path.replace(/\//g, '_')}`,
             resource: this.getResourceFromPath(path),
@@ -215,17 +215,17 @@ export class SecurityMiddleware {
     const now = Date.now()
     const windowMs = this.config.rateLimiting.windowMs || 15 * 60 * 1000
     const maxRequests = this.config.rateLimiting.maxRequests || 100
-    
+
     const key = ip
     const current = this.requestCounts.get(key)
-    
+
     if (!current || now > current.resetTime) {
       // Nueva ventana de tiempo
       this.requestCounts.set(key, {
         count: 1,
         resetTime: now + windowMs
       })
-      
+
       return {
         allowed: true,
         limit: maxRequests,
@@ -233,7 +233,7 @@ export class SecurityMiddleware {
         resetTime: now + windowMs
       }
     }
-    
+
     if (current.count >= maxRequests) {
       return {
         allowed: false,
@@ -242,9 +242,9 @@ export class SecurityMiddleware {
         resetTime: current.resetTime
       }
     }
-    
+
     current.count++
-    
+
     return {
       allowed: true,
       limit: maxRequests,
@@ -286,7 +286,7 @@ export class SecurityMiddleware {
 
   private blockIP(ip: string): void {
     this.blockedIPs.add(ip)
-    
+
     // Auto-desbloquear después de 24 horas
     setTimeout(() => {
       this.blockedIPs.delete(ip)
@@ -326,7 +326,7 @@ export class SecurityMiddleware {
     // Implementar lógica de verificación de autenticación
     const authHeader = request.headers.get('authorization')
     const sessionCookie = request.cookies.get('session')
-    
+
     return !!(authHeader || sessionCookie)
   }
 
@@ -334,7 +334,7 @@ export class SecurityMiddleware {
     // Implementar lógica de verificación de acceso a API
     const apiKey = request.headers.get('x-api-key')
     const csrfToken = request.headers.get('x-csrf-token')
-    
+
     // Por ahora, permitir si tiene algún tipo de token
     return !!(apiKey || csrfToken)
   }
@@ -350,12 +350,12 @@ export class SecurityMiddleware {
 
   private createBlockedResponse(reason: string): NextResponse {
     return new NextResponse(
-      JSON.stringify({ 
-        error: 'Access Denied', 
+      JSON.stringify({
+        error: 'Access Denied',
         message: reason,
         timestamp: new Date().toISOString()
       }),
-      { 
+      {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
       }
@@ -371,7 +371,7 @@ export class SecurityMiddleware {
         remaining: rateLimitResult.remaining,
         resetTime: rateLimitResult.resetTime
       }),
-      { 
+      {
         status: 429,
         headers: { 'Content-Type': 'application/json' }
       }
@@ -393,7 +393,7 @@ export class SecurityMiddleware {
         message: reason,
         timestamp: new Date().toISOString()
       }),
-      { 
+      {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       }
@@ -431,7 +431,7 @@ export class SecurityMiddleware {
   } {
     const totalRequests = Array.from(this.requestCounts.values()).reduce((sum, data) => sum + data.count, 0)
     const rateLimitHits = Array.from(this.requestCounts.values()).filter(data => data.count >= (this.config.rateLimiting.maxRequests || 100)).length
-    
+
     return {
       blockedIPs: this.blockedIPs.size,
       suspiciousActivity: this.suspiciousActivity.size,
@@ -447,7 +447,7 @@ export const securityMiddleware = new SecurityMiddleware()
 // Función helper para usar en middleware.ts de Next.js
 export function createSecurityMiddleware(config?: Partial<SecurityConfig>) {
   const middleware = new SecurityMiddleware(config)
-  
+
   return async (request: NextRequest) => {
     return middleware.handle(request)
   }
@@ -461,7 +461,7 @@ export const SECURITY_PRESETS = {
     securityHeaders: { enabled: true, strictMode: false },
     performanceMonitoring: { enabled: true }
   },
-  
+
   production: {
     rateLimiting: { enabled: true, maxRequests: 60, windowMs: 15 * 60 * 1000 },
     auditLogging: { enabled: true, logAllRequests: true },
@@ -469,7 +469,7 @@ export const SECURITY_PRESETS = {
     performanceMonitoring: { enabled: true },
     pathProtection: { requireAuth: true }
   },
-  
+
   strict: {
     rateLimiting: { enabled: true, maxRequests: 30, windowMs: 15 * 60 * 1000 },
     auditLogging: { enabled: true, logAllRequests: true },

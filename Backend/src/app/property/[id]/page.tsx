@@ -10,7 +10,7 @@ interface Props {
 // Generar metadatos dinámicos para SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const property = await getPropertyById(params.id)
-  
+
   if (!property) {
     return {
       title: 'Propiedad no encontrada - Misiones Arrienda',
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${property.title} - ${property.city}, Misiones | Misiones Arrienda`
   const description = `${property.description.substring(0, 160)}... Precio: $${property.price.toLocaleString()}. ${property.bedrooms} hab, ${property.bathrooms} baños, ${property.area}m².`
-  
+
   return {
     title,
     description,
@@ -62,7 +62,7 @@ export default async function PropertyDetailPage({ params }: Props) {
   return (
     <>
       <PropertyDetailClient property={property} />
-      
+
       {/* JSON-LD para SEO */}
       <script
         type="application/ld+json"

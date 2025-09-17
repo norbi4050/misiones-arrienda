@@ -82,7 +82,7 @@ export function useUserFavorites() {
       }
 
       const data = await response.json();
-      
+
       if (data.isFavorite) {
         // Refresh favorites list
         await fetchFavorites();
@@ -112,7 +112,7 @@ export function useUserFavorites() {
       }
 
       const data = await response.json();
-      
+
       if (!data.isFavorite) {
         // Remove from local state
         setFavorites(prev => prev.filter(fav => fav.property.id !== propertyId));
@@ -127,7 +127,7 @@ export function useUserFavorites() {
 
   const toggleFavorite = async (propertyId: string) => {
     const isFavorite = favorites.some(fav => fav.property.id === propertyId);
-    
+
     if (isFavorite) {
       return await removeFavorite(propertyId);
     } else {

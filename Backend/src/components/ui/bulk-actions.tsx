@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckSquare, 
-  Square, 
-  Trash2, 
-  Edit, 
-  Star, 
+import {
+  CheckSquare,
+  Square,
+  Trash2,
+  Edit,
+  Star,
   StarOff,
   Eye,
   EyeOff,
@@ -50,14 +50,14 @@ const statusOptions = [
   { value: 'EXPIRED', label: 'Expirado', color: 'bg-red-100 text-red-800' }
 ];
 
-export function BulkActions({ 
-  selectedItems, 
-  totalItems, 
-  onSelectAll, 
-  onClearSelection, 
+export function BulkActions({
+  selectedItems,
+  totalItems,
+  onSelectAll,
+  onClearSelection,
   onBulkAction,
   isLoading = false,
-  className = '' 
+  className = ''
 }: BulkActionsProps) {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<BulkAction | null>(null);
@@ -100,7 +100,7 @@ export function BulkActions({
       icon: <Edit className="w-4 h-4" />,
       data: { status }
     };
-    
+
     await executeBulkAction(action);
     setShowStatusMenu(false);
   };
@@ -171,19 +171,19 @@ export function BulkActions({
                   <Square className="w-4 h-4 text-gray-400" />
                 )}
               </button>
-              
+
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                 <span className="text-sm font-medium text-gray-900">
                   {selectedItems.length} de {totalItems} seleccionados
                 </span>
-                
+
                 <div className="flex items-center gap-2">
                   {hasSelection && (
                     <Badge variant="secondary" className="text-xs">
                       {selectionPercentage}%
                     </Badge>
                   )}
-                  
+
                   {selectedItems.length > 0 && (
                     <Badge variant="outline" className="text-xs">
                       {selectedItems.length}
@@ -296,7 +296,7 @@ export function BulkActions({
                   )}
                   <span className="hidden sm:inline">{action.label}</span>
                   <span className="sm:hidden">
-                    {action.type === 'delete' ? 'Del' : 
+                    {action.type === 'delete' ? 'Del' :
                      action.type === 'toggle-featured' ? 'Star' :
                      action.type === 'archive' ? 'Arch' :
                      action.type === 'export' ? 'Exp' :
@@ -317,10 +317,10 @@ export function BulkActions({
                 Procesando {selectedItems.length} propiedades...
               </span>
             </div>
-            
+
             {/* Progress Bar */}
             <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
-              <div 
+              <div
                 className="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all duration-300 animate-pulse"
                 style={{ width: `${selectionPercentage}%` }}
               />
@@ -340,7 +340,7 @@ export function BulkActions({
                   <strong>{selectionPercentage}%</strong> del total
                 </span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">
                   {totalItems - selectedItems.length} sin seleccionar
@@ -374,7 +374,7 @@ export function BulkActions({
                 ¿Estás seguro de que quieres <strong>{showConfirmDialog.label.toLowerCase()}</strong> las{' '}
                 <strong>{selectedItems.length}</strong> propiedades seleccionadas?
               </p>
-              
+
               {showConfirmDialog.type === 'delete' && (
                 <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
                   <p className="text-sm text-red-800">

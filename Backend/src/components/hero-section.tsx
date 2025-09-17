@@ -16,8 +16,6 @@ export function HeroSection() {
 
   const handleSearch = (filters: SearchFilters) => {
     setSearchResults(filters)
-    console.log("Buscando propiedades con filtros:", filters)
-    
     // Scroll a la sección de propiedades
     const propertiesSection = document.getElementById('propiedades')
     if (propertiesSection) {
@@ -41,7 +39,7 @@ export function HeroSection() {
               Casas, departamentos y locales comerciales en alquiler y venta
             </p>
           </div>
-          
+
           {/* Enhanced Search Bar */}
           <div className="max-w-6xl mx-auto">
             <EnhancedSearchBar onSearch={handleSearch} />
@@ -57,18 +55,17 @@ export function HeroSection() {
               🗺️ Explora propiedades en el mapa
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Visualiza todas las propiedades disponibles en Misiones. 
+              Visualiza todas las propiedades disponibles en Misiones.
               Haz clic en los marcadores para ver detalles de cada propiedad.
             </p>
           </div>
-          
+
           <div className="max-w-6xl mx-auto">
             {mockProperties.length > 0 ? (
-              <PropertyMap 
+              <PropertyMap
                 properties={mockProperties}
                 height="500px"
                 onPropertyClick={(property) => {
-                  console.log("Clicked property:", property.title)
                   // Could redirect to property detail page
                   window.location.href = `/property/${property.id}`
                 }}
@@ -85,7 +82,7 @@ export function HeroSection() {
               </div>
             )}
           </div>
-          
+
           {/* Map Features */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="text-center p-4">

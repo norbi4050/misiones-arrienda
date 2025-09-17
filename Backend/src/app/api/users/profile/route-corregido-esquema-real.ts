@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 // Campos válidos del modelo User según el esquema de Prisma (camelCase)
 const validUserFields = [
   'name',
-  'email', 
+  'email',
   'phone',
   'avatar',
   'bio',
@@ -28,16 +28,15 @@ const booleanFields = ['verified', 'emailVerified']
 // Función para validar y convertir tipos de datos
 function validateAndConvertData(data: any): any {
   const convertedData: any = {}
-  
+
   Object.keys(data).forEach(key => {
     // Solo procesar campos válidos
     if (!validUserFields.includes(key)) {
-      console.warn(`Campo no válido ignorado: ${key}`)
       return
     }
-    
+
     const value = data[key]
-    
+
     // Campos INTEGER
     if (integerFields.includes(key)) {
       if (value === '' || value === null || value === undefined) {
@@ -84,30 +83,26 @@ function validateAndConvertData(data: any): any {
       }
     }
   })
-  
+
   return convertedData
 }
 
 async function handleProfileUpdate(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
     // Obtener datos del cuerpo de la solicitud
     const body = await request.json()
-    
+
     // Log de la solicitud para debugging
-    console.log('Profile update request:', {
-      method: request.method,
-      path: request.url,
-      userId: user.id,
-      bodyKeys: Object.keys(body),
+    ,
       bodyData: body
     })
 
@@ -116,7 +111,7 @@ async function handleProfileUpdate(request: NextRequest) {
 
     // Solo proceder si hay datos válidos para actualizar
     if (Object.keys(validatedData).length === 0) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'No se proporcionaron campos válidos para actualizar',
         validFields: validUserFields
       }, { status: 400 })
@@ -125,8 +120,7 @@ async function handleProfileUpdate(request: NextRequest) {
     // Agregar timestamp de actualización
     validatedData.updatedAt = new Date().toISOString()
 
-    console.log('Validated data for database:', {
-      keys: Object.keys(validatedData),
+    ,
       data: validatedData
     })
 
@@ -140,7 +134,7 @@ async function handleProfileUpdate(request: NextRequest) {
 
     if (error) {
       console.error('Error updating profile:', error)
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Error al actualizar el perfil: ' + error.message,
         details: error.details || 'No additional details',
         hint: error.hint || 'No hint available',
@@ -148,14 +142,14 @@ async function handleProfileUpdate(request: NextRequest) {
       }, { status: 500 })
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Perfil actualizado exitosamente',
-      user: data 
+      user: data
     })
 
   } catch (error) {
     console.error('Profile update error:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Error interno del servidor',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
@@ -173,10 +167,10 @@ export async function PATCH(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
@@ -190,7 +184,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching profile:', error)
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Error al obtener el perfil',
         details: error.message
       }, { status: 500 })
@@ -201,7 +195,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Profile fetch error:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Error interno del servidor',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })

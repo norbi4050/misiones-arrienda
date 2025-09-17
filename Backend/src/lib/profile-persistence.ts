@@ -14,17 +14,16 @@ export class ProfilePersistence {
   static saveProfile(profile: User): void {
     try {
       if (typeof window === 'undefined') return;
-      
+
       const profileData = {
         ...profile,
         cached_at: Date.now()
       };
-      
+
       localStorage.setItem(this.PROFILE_KEY, JSON.stringify(profileData));
       localStorage.setItem(this.PROFILE_TIMESTAMP_KEY, Date.now().toString());
-      
-      console.log('Profile saved to localStorage:', profile.id);
-    } catch (error) {
+
+      } catch (error) {
       console.error('Error saving profile to localStorage:', error);
     }
   }
@@ -35,21 +34,20 @@ export class ProfilePersistence {
   static getCachedProfile(): User | null {
     try {
       if (typeof window === 'undefined') return null;
-      
+
       const profileData = localStorage.getItem(this.PROFILE_KEY);
       const timestamp = localStorage.getItem(this.PROFILE_TIMESTAMP_KEY);
-      
+
       if (!profileData || !timestamp) return null;
-      
+
       // Check if cache is expired
       const cacheAge = Date.now() - parseInt(timestamp);
       if (cacheAge > this.CACHE_DURATION) {
         this.clearProfile();
         return null;
       }
-      
+
       const profile = JSON.parse(profileData);
-      console.log('Profile loaded from localStorage:', profile.id);
       return profile;
     } catch (error) {
       console.error('Error loading profile from localStorage:', error);
@@ -64,11 +62,10 @@ export class ProfilePersistence {
   static clearProfile(): void {
     try {
       if (typeof window === 'undefined') return;
-      
+
       localStorage.removeItem(this.PROFILE_KEY);
       localStorage.removeItem(this.PROFILE_TIMESTAMP_KEY);
-      console.log('Profile cache cleared');
-    } catch (error) {
+      } catch (error) {
       console.error('Error clearing profile cache:', error);
     }
   }
@@ -79,10 +76,10 @@ export class ProfilePersistence {
   static isCacheValid(): boolean {
     try {
       if (typeof window === 'undefined') return false;
-      
+
       const timestamp = localStorage.getItem(this.PROFILE_TIMESTAMP_KEY);
       if (!timestamp) return false;
-      
+
       const cacheAge = Date.now() - parseInt(timestamp);
       return cacheAge <= this.CACHE_DURATION;
     } catch (error) {
@@ -106,7 +103,6 @@ export class ProfilePersistence {
       if (!response.ok) {
         // Handle different error cases
         if (response.status === 404) {
-          console.log('Profile not found, will be created automatically by API');
           // The API will now create the profile automatically, so retry once
           const retryResponse = await fetch('/api/users/profile', {
             method: 'GET',
@@ -114,55 +110,49 @@ export class ProfilePersistence {
               'Content-Type': 'application/json',
             },
           });
-          
+
           if (retryResponse.ok) {
             const { profile } = await retryResponse.json();
             if (profile) {
               this.saveProfile(profile);
-              console.log('Profile created and synced with server:', profile.id);
               return profile;
             }
           }
         } else if (response.status === 500) {
           const errorData = await response.json().catch(() => ({}));
           if (errorData.error && errorData.error.includes('permission denied')) {
-            console.log('Permission denied error detected, retrying profile sync...');
             // Wait a moment and retry once for permission issues
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             const retryResponse = await fetch('/api/users/profile', {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
               },
             });
-            
+
             if (retryResponse.ok) {
               const { profile } = await retryResponse.json();
               if (profile) {
                 this.saveProfile(profile);
-                console.log('Profile synced successfully after permission retry:', profile.id);
                 return profile;
               }
             } else {
-              console.warn('Profile sync retry also failed, using cached profile if available');
-            }
+              }
           }
         }
-        
+
         const errorData = await response.json().catch(() => ({}));
-        console.warn(`Profile sync failed: ${response.status} - ${errorData.error || 'Unknown error'}`);
         return null;
       }
 
       const { profile } = await response.json();
-      
+
       if (profile) {
         this.saveProfile(profile);
-        console.log('Profile synced with server:', profile.id);
         return profile;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error syncing profile with server:', error);
@@ -207,13 +197,12 @@ export class ProfilePersistence {
       }
 
       const { profile } = await response.json();
-      
+
       if (profile) {
         this.saveProfile(profile);
-        console.log('Profile updated and cached:', profile.id);
         return profile;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -226,8 +215,7 @@ export class ProfilePersistence {
    */
   static handleSessionExpired(): void {
     this.clearProfile();
-    console.log('Session expired, profile cache cleared');
-  }
+    }
 
   /**
    * Initialize profile persistence on app start
@@ -235,14 +223,13 @@ export class ProfilePersistence {
   static initialize(): void {
     try {
       if (typeof window === 'undefined') return;
-      
+
       // Clean up expired cache on initialization
       if (!this.isCacheValid()) {
         this.clearProfile();
       }
-      
-      console.log('Profile persistence initialized');
-    } catch (error) {
+
+      } catch (error) {
       console.error('Error initializing profile persistence:', error);
     }
   }

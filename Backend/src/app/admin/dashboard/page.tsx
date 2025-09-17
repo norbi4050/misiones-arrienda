@@ -1,6 +1,6 @@
 /**
  * 🏢 DASHBOARD DE ADMINISTRACIÓN
- * 
+ *
  * Panel de control para administradores del sistema
  * Permite gestionar usuarios, propiedades, pagos y estadísticas
  */
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch admin statistics
       const statsResponse = await fetch('/api/admin/stats');
       if (statsResponse.ok) {

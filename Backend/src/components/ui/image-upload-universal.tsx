@@ -94,7 +94,7 @@ export function ImageUploadUniversal({
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i]
-      
+
       // Verificar límite de archivos
       if (currentFileCount + newFiles.length >= maxFiles) {
         onUploadError?.(`Máximo ${maxFiles} archivos permitidos`)
@@ -109,7 +109,7 @@ export function ImageUploadUniversal({
       }
 
       // Crear preview
-      const preview = file.type.startsWith('image/') 
+      const preview = file.type.startsWith('image/')
         ? URL.createObjectURL(file)
         : ''
 
@@ -133,7 +133,7 @@ export function ImageUploadUniversal({
       : `${config.folder}/${fileName}`
 
     // Actualizar estado a uploading
-    setFiles(prev => prev.map((f, i) => 
+    setFiles(prev => prev.map((f, i) =>
       i === index ? { ...f, status: 'uploading' as const } : f
     ))
 
@@ -155,25 +155,25 @@ export function ImageUploadUniversal({
         .getPublicUrl(filePath)
 
       // Actualizar estado a completed
-      setFiles(prev => prev.map((f, i) => 
-        i === index ? { 
-          ...f, 
-          status: 'completed' as const, 
+      setFiles(prev => prev.map((f, i) =>
+        i === index ? {
+          ...f,
+          status: 'completed' as const,
           progress: 100,
-          url: publicUrl 
+          url: publicUrl
         } : f
       ))
 
       return publicUrl
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      
+
       // Actualizar estado a error
-      setFiles(prev => prev.map((f, i) => 
-        i === index ? { 
-          ...f, 
-          status: 'error' as const, 
-          error: errorMessage 
+      setFiles(prev => prev.map((f, i) =>
+        i === index ? {
+          ...f,
+          status: 'error' as const,
+          error: errorMessage
         } : f
       ))
 
@@ -190,7 +190,7 @@ export function ImageUploadUniversal({
 
     try {
       // Subir archivos en paralelo
-      const uploadPromises = files.map((file, index) => 
+      const uploadPromises = files.map((file, index) =>
         uploadFile(file, index)
           .then(url => uploadedUrls.push(url))
           .catch(error => errors.push(error.message))
@@ -246,7 +246,7 @@ export function ImageUploadUniversal({
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFiles(e.dataTransfer.files)
     }
@@ -262,8 +262,8 @@ export function ImageUploadUniversal({
       <div
         className={cn(
           "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
-          dragActive 
-            ? "border-blue-500 bg-blue-50" 
+          dragActive
+            ? "border-blue-500 bg-blue-50"
             : "border-gray-300 hover:border-gray-400",
           isUploading && "opacity-50 pointer-events-none"
         )}
@@ -285,7 +285,7 @@ export function ImageUploadUniversal({
           <div className="p-3 bg-gray-100 rounded-full">
             <Upload className="w-6 h-6 text-gray-600" />
           </div>
-          
+
           <div>
             <p className="text-lg font-medium text-gray-900">
               Arrastra archivos aquí o{' '}

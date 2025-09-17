@@ -11,17 +11,17 @@ interface ChatInputProps {
   placeholder?: string
 }
 
-export default function ChatInput({ 
-  onSendMessage, 
+export default function ChatInput({
+  onSendMessage,
   disabled = false,
-  placeholder = "Escribe un mensaje..." 
+  placeholder = "Escribe un mensaje..."
 }: ChatInputProps) {
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!message.trim() || isLoading || disabled) return
 
     const messageToSend = message.trim()
@@ -57,9 +57,9 @@ export default function ChatInput({
         className="flex-1"
         maxLength={1000}
       />
-      
-      <Button 
-        type="submit" 
+
+      <Button
+        type="submit"
         size="sm"
         disabled={!message.trim() || isLoading || disabled}
         className="px-3"

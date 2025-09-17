@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Eye, 
-  Heart, 
-  MessageSquare, 
-  Home, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Eye,
+  Heart,
+  MessageSquare,
+  Home,
   DollarSign,
   Calendar,
   BarChart3,
@@ -145,13 +145,13 @@ const formatNumber = (num: number) => {
   return new Intl.NumberFormat('es-AR').format(num);
 };
 
-export function PropertyStats({ 
-  stats, 
-  className = '', 
-  loading = false, 
-  error = null, 
-  onRefresh, 
-  onRetry 
+export function PropertyStats({
+  stats,
+  className = '',
+  loading = false,
+  error = null,
+  onRefresh,
+  onRetry
 }: PropertyStatsProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
@@ -461,7 +461,7 @@ export function PropertyStats({
                       {property.featured && (
                         <Star className="w-4 h-4 text-yellow-500 fill-current" />
                       )}
-                      <Badge 
+                      <Badge
                         variant={property.priority === 'high' ? 'destructive' : property.priority === 'medium' ? 'default' : 'secondary'}
                         className="text-xs"
                       >

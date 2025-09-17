@@ -18,7 +18,7 @@ export default function RegisterPage() {
   });
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   const { register, isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
 
@@ -69,7 +69,7 @@ export default function RegisterPage() {
       };
 
       const result = await register(formData.email, formData.password, userData);
-      
+
       if (result.success) {
         setMsg("¡Registro exitoso! Revisa tu email para confirmar tu cuenta.");
       } else {
@@ -97,24 +97,24 @@ export default function RegisterPage() {
   const getUserTypeInfo = (type: string) => {
     switch (type) {
       case 'inmobiliaria':
-        return { 
-          icon: Building2, 
-          title: "Inmobiliaria", 
+        return {
+          icon: Building2,
+          title: "Inmobiliaria",
           description: "Gestiona múltiples propiedades",
           color: "border-purple-500 bg-purple-50"
         };
       case 'dueno_directo':
-        return { 
-          icon: User, 
-          title: "Dueño Directo", 
+        return {
+          icon: User,
+          title: "Dueño Directo",
           description: "Alquila tu propia propiedad",
           color: "border-green-500 bg-green-50"
         };
       case 'inquilino':
       default:
-        return { 
-          icon: Search, 
-          title: "Inquilino", 
+        return {
+          icon: Search,
+          title: "Inquilino",
           description: "Busca tu hogar ideal",
           color: "border-blue-500 bg-blue-50"
         };
@@ -175,8 +175,8 @@ export default function RegisterPage() {
                     />
                     <div className="flex items-center">
                       <Icon className={`h-5 w-5 mr-3 ${
-                        formData.userType === type 
-                          ? type === 'inmobiliaria' ? 'text-purple-600' : 
+                        formData.userType === type
+                          ? type === 'inmobiliaria' ? 'text-purple-600' :
                             type === 'dueno_directo' ? 'text-green-600' : 'text-blue-600'
                           : 'text-gray-400'
                       }`} />

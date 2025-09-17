@@ -9,8 +9,8 @@ import { PropertyStatus, PropertyType, ListingType } from '@/types/property';
 export const normalizePropertyStatus = (status: string | PropertyStatus): PropertyStatus => {
   const validStatuses: PropertyStatus[] = ['AVAILABLE', 'RENTED', 'SOLD', 'MAINTENANCE', 'RESERVED'];
   const upperStatus = status.toString().toUpperCase();
-  return (validStatuses as readonly string[]).includes(upperStatus) 
-    ? (upperStatus as PropertyStatus) 
+  return (validStatuses as readonly string[]).includes(upperStatus)
+    ? (upperStatus as PropertyStatus)
     : 'AVAILABLE';
 };
 
@@ -18,8 +18,8 @@ export const normalizePropertyStatus = (status: string | PropertyStatus): Proper
 export const normalizePropertyType = (type: string | PropertyType): PropertyType => {
   const validTypes: PropertyType[] = ['APARTMENT', 'HOUSE', 'COMMERCIAL', 'LAND', 'OFFICE', 'WAREHOUSE', 'PH', 'STUDIO'];
   const upperType = type.toString().toUpperCase();
-  return (validTypes as readonly string[]).includes(upperType) 
-    ? (upperType as PropertyType) 
+  return (validTypes as readonly string[]).includes(upperType)
+    ? (upperType as PropertyType)
     : 'HOUSE';
 };
 
@@ -27,8 +27,8 @@ export const normalizePropertyType = (type: string | PropertyType): PropertyType
 export const normalizeListingType = (type: string | ListingType): ListingType => {
   const validTypes: ListingType[] = ['RENT', 'SALE', 'BOTH'];
   const upperType = type.toString().toUpperCase();
-  return (validTypes as readonly string[]).includes(upperType) 
-    ? (upperType as ListingType) 
+  return (validTypes as readonly string[]).includes(upperType)
+    ? (upperType as ListingType)
     : 'SALE';
 };
 
@@ -43,11 +43,11 @@ export const normalizeProperty = (property: any): any => {
     propertyType: normalizePropertyType(property.propertyType),
     listingType: normalizeListingType(property.listingType),
     // Ensure dates are properly formatted
-    createdAt: property.createdAt instanceof Date 
-      ? property.createdAt.toISOString() 
+    createdAt: property.createdAt instanceof Date
+      ? property.createdAt.toISOString()
       : property.createdAt,
-    updatedAt: property.updatedAt instanceof Date 
-      ? property.updatedAt.toISOString() 
+    updatedAt: property.updatedAt instanceof Date
+      ? property.updatedAt.toISOString()
       : property.updatedAt,
     // Ensure arrays are properly initialized
     images: Array.isArray(property.images) ? property.images : [],

@@ -15,11 +15,11 @@ async function getProfile(id: string) {
     const response = await fetch(`${baseUrl}/api/comunidad/profiles/${id}`, {
       cache: 'no-store'
     })
-    
+
     if (!response.ok) {
       return null
     }
-    
+
     return await response.json()
   } catch (error) {
     console.error('Error fetching profile:', error)
@@ -29,7 +29,7 @@ async function getProfile(id: string) {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const profile = await getProfile(params.id)
-  
+
   if (!profile) {
     return {
       title: 'Perfil no encontrado - Misiones Arrienda'
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProfileDetailPage({ params }: PageProps) {
   const profile = await getProfile(params.id)
-  
+
   if (!profile) {
     notFound()
   }

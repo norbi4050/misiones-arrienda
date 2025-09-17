@@ -11,7 +11,7 @@ export default function TermsPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow-lg rounded-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Términos y Condiciones</h1>
-          
+
           <div className="prose prose-lg max-w-none">
             <p className="text-gray-600 mb-6">
               <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-AR')}
@@ -20,7 +20,7 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Aceptación de los Términos</h2>
               <p className="text-gray-700 mb-4">
-                Al acceder y utilizar Misiones Arrienda, usted acepta estar sujeto a estos términos y condiciones. 
+                Al acceder y utilizar Misiones Arrienda, usted acepta estar sujeto a estos términos y condiciones.
                 Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro servicio.
               </p>
             </section>
@@ -28,7 +28,7 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Descripción del Servicio</h2>
               <p className="text-gray-700 mb-4">
-                Misiones Arrienda es una plataforma digital que conecta propietarios de inmuebles con inquilinos 
+                Misiones Arrienda es una plataforma digital que conecta propietarios de inmuebles con inquilinos
                 potenciales en la provincia de Misiones, Argentina. Facilitamos:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -42,7 +42,7 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Registro y Cuenta de Usuario</h2>
               <p className="text-gray-700 mb-4">
-                Para utilizar ciertos servicios, debe crear una cuenta proporcionando información veraz y actualizada. 
+                Para utilizar ciertos servicios, debe crear una cuenta proporcionando información veraz y actualizada.
                 Usted es responsable de:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -112,8 +112,8 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Propiedad Intelectual</h2>
               <p className="text-gray-700 mb-4">
-                Todo el contenido de la plataforma (diseño, código, textos, logos) es propiedad de Misiones Arrienda 
-                o sus licenciantes. Los usuarios conservan derechos sobre el contenido que publican pero otorgan 
+                Todo el contenido de la plataforma (diseño, código, textos, logos) es propiedad de Misiones Arrienda
+                o sus licenciantes. Los usuarios conservan derechos sobre el contenido que publican pero otorgan
                 licencia para su uso en la plataforma.
               </p>
             </section>
@@ -134,7 +134,7 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Ley Aplicable</h2>
               <p className="text-gray-700 mb-4">
-                Estos términos se rigen por las leyes de la República Argentina. 
+                Estos términos se rigen por las leyes de la República Argentina.
                 Cualquier disputa será resuelta en los tribunales competentes de Posadas, Misiones.
               </p>
             </section>
@@ -154,7 +154,7 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Modificaciones</h2>
               <p className="text-gray-700">
-                Nos reservamos el derecho de modificar estos términos en cualquier momento. 
+                Nos reservamos el derecho de modificar estos términos en cualquier momento.
                 Los cambios serán notificados a través del sitio web y entrarán en vigor inmediatamente.
               </p>
             </section>

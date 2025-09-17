@@ -39,7 +39,7 @@ export async function createPaymentPreference(
   userId: string
 ) {
   const plan = PLANS[planId];
-  
+
   if (!plan) {
     throw new Error('Plan no encontrado');
   }
@@ -51,8 +51,8 @@ export async function createPaymentPreference(
     planId,
     planName: plan.name,
     price: plan.price,
-    message: plan.price === 0 
-      ? 'Plan básico activado gratuitamente' 
+    message: plan.price === 0
+      ? 'Plan básico activado gratuitamente'
       : `Plan ${plan.name} activado temporalmente (integración de pagos pendiente)`,
     mockPaymentUrl: `#payment-${planId}-${propertyId}`,
     success: true
@@ -75,7 +75,7 @@ export function calculatePlanExpiration(planId: string): Date {
   if (!plan) {
     throw new Error('Plan no encontrado');
   }
-  
+
   const expirationDate = new Date();
   expirationDate.setDate(expirationDate.getDate() + plan.duration);
   return expirationDate;

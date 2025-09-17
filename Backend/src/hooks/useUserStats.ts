@@ -53,7 +53,7 @@ export function useUserStats() {
       } catch (err) {
         console.error('Error fetching user stats:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
-        
+
         // Fallback to default stats
         setStats({
           profileViews: 0,
@@ -76,7 +76,7 @@ export function useUserStats() {
 
   const refreshStats = async () => {
     if (!isAuthenticated || !user) return;
-    
+
     try {
       setLoading(true);
       const response = await fetch('/api/users/stats', {

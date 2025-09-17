@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Badge } from './badge';
 import { Button } from './button';
-import { 
-  Eye, 
-  Heart, 
-  MessageCircle, 
-  Star, 
-  TrendingUp, 
+import {
+  Eye,
+  Heart,
+  MessageCircle,
+  Star,
+  TrendingUp,
   Calendar,
   Shield,
   Award,
@@ -77,9 +77,9 @@ export function ProfileStatsImproved({ stats: propStats, className, showRefresh 
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-AR', { 
-      year: 'numeric', 
-      month: 'long' 
+    return date.toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long'
     });
   };
 
@@ -138,9 +138,9 @@ export function ProfileStatsImproved({ stats: propStats, className, showRefresh 
       {showRefresh && (
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-900">Estadísticas del Perfil</h3>
-          <Button 
-            onClick={handleRefresh} 
-            variant="outline" 
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
             size="sm"
             disabled={isRefreshing}
           >
@@ -356,8 +356,8 @@ function AchievementBadge({ title, description, earned, icon }: AchievementBadge
   return (
     <div className={cn(
       "p-3 rounded-lg border-2 text-center transition-all cursor-pointer hover:scale-105",
-      earned 
-        ? "border-green-200 bg-green-50 shadow-sm" 
+      earned
+        ? "border-green-200 bg-green-50 shadow-sm"
         : "border-gray-200 bg-gray-50 opacity-60"
     )}>
       <div className="text-2xl mb-1">{icon}</div>

@@ -20,10 +20,10 @@ interface SearchHistoryProps {
   maxItems?: number;
 }
 
-export function SearchHistory({ 
-  onSearchSelect, 
+export function SearchHistory({
+  onSearchSelect,
   className = '',
-  maxItems = 10 
+  maxItems = 10
 }: SearchHistoryProps) {
   const { user } = useAuth();
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
@@ -153,7 +153,6 @@ export function SearchHistory({
       return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
     }
   };
-
 
   if (!user) {
     return null;

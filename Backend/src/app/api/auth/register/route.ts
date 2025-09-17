@@ -2,34 +2,34 @@
 // Manejo mejorado de errores
 const handleApiError = (error: any, context: string) => {
   console.error(`Error en ${context}:`, error);
-  
+
   if (error.message?.includes('permission denied')) {
     return NextResponse.json(
-      { 
+      {
         error: 'Error de permisos de base de datos. Verifica la configuración de Supabase.',
         details: 'Las políticas RLS pueden no estar configuradas correctamente.',
-        context 
+        context
       },
       { status: 403 }
     );
   }
-  
+
   if (error.message?.includes('connection')) {
     return NextResponse.json(
-      { 
+      {
         error: 'Error de conexión a la base de datos.',
         details: 'Verifica las credenciales de Supabase.',
-        context 
+        context
       },
       { status: 500 }
     );
   }
-  
+
   return NextResponse.json(
-    { 
+    {
       error: 'Error interno del servidor',
       details: error.message || 'Error desconocido',
-      context 
+      context
     },
     { status: 500 }
   );
@@ -60,17 +60,13 @@ interface ErrorResponse {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  console.log('🚀 [REGISTRO] Iniciando proceso de registro mejorado...');
-  
   try {
     // ========================================
     // 1. VERIFICACIÓN DE VARIABLES DE ENTORNO
     // ========================================
-    console.log('🔍 [REGISTRO] Verificando variables de entorno...');
-    
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
+
     if (!supabaseUrl) {
       console.error('❌ [REGISTRO] NEXT_PUBLIC_SUPABASE_URL no configurada');
       return NextResponse.json({
@@ -80,7 +76,7 @@ export async function POST(request: NextRequest) {
         code: 'ENV_SUPABASE_URL_MISSING'
       } as ErrorResponse, { status: 500 });
     }
-    
+
     if (!supabaseServiceKey) {
       console.error('❌ [REGISTRO] SUPABASE_SERVICE_ROLE_KEY no configurada');
       return NextResponse.json({
@@ -90,14 +86,10 @@ export async function POST(request: NextRequest) {
         code: 'ENV_SERVICE_KEY_MISSING'
       } as ErrorResponse, { status: 500 });
     }
-    
-    console.log('✅ [REGISTRO] Variables de entorno verificadas correctamente');
-    
+
     // ========================================
     // 2. VALIDACIÓN Y PARSEO DE DATOS
     // ========================================
-    console.log('📝 [REGISTRO] Procesando datos de entrada...');
-    
     let body: RegisterRequestBody;
     try {
       body = await request.json();
@@ -110,40 +102,31 @@ export async function POST(request: NextRequest) {
         code: 'INVALID_JSON'
       } as ErrorResponse, { status: 400 });
     }
-    
-    const { 
-      name, 
-      email, 
-      phone, 
-      password, 
-      userType, 
-      companyName, 
-      licenseNumber, 
-      propertyCount 
-    } = body;
-    
-    console.log(`📋 [REGISTRO] Datos recibidos: ${JSON.stringify({ 
-      name, 
-      email, 
+
+    const {
+      name,
+      email,
+      phone,
+      password,
       userType,
-      hasCompanyName: !!companyName,
-      hasLicenseNumber: !!licenseNumber,
-      hasPropertyCount: !!propertyCount
-    }, null, 2)}`);
-    
+      companyName,
+      licenseNumber,
+      propertyCount
+    } = body;
+
+    }`);
+
     // ========================================
     // 3. VALIDACIONES BÁSICAS MEJORADAS
     // ========================================
-    console.log('🔍 [REGISTRO] Ejecutando validaciones básicas...');
-    
     // Validar campos requeridos
     const requiredFields = { name, email, phone, password, userType };
     const missingFields = Object.entries(requiredFields)
       .filter(([_, value]) => !value)
       .map(([key, _]) => key);
-    
+
     if (missingFields.length > 0) {
-      console.warn(`⚠️ [REGISTRO] Campos faltantes: ${missingFields.join(', ')}`);
+      }`);
       return NextResponse.json({
         error: 'Campos requeridos faltantes',
         details: `Los siguientes campos son obligatorios: ${missingFields.join(', ')}`,
@@ -151,11 +134,10 @@ export async function POST(request: NextRequest) {
         code: 'MISSING_REQUIRED_FIELDS'
       } as ErrorResponse, { status: 400 });
     }
-    
+
     // Validar tipo de usuario
     const validUserTypes = ['inquilino', 'dueno_directo', 'inmobiliaria'];
     if (!validUserTypes.includes(userType)) {
-      console.warn(`⚠️ [REGISTRO] Tipo de usuario inválido: ${userType}`);
       return NextResponse.json({
         error: 'Tipo de usuario inválido',
         details: `Los tipos válidos son: ${validUserTypes.join(', ')}`,
@@ -163,11 +145,10 @@ export async function POST(request: NextRequest) {
         code: 'INVALID_USER_TYPE'
       } as ErrorResponse, { status: 400 });
     }
-    
+
     // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      console.warn(`⚠️ [REGISTRO] Formato de email inválido: ${email}`);
       return NextResponse.json({
         error: 'Formato de email inválido',
         details: 'Por favor ingrese un email válido',
@@ -175,10 +156,9 @@ export async function POST(request: NextRequest) {
         code: 'INVALID_EMAIL_FORMAT'
       } as ErrorResponse, { status: 400 });
     }
-    
+
     // Validar contraseña
     if (password.length < 6) {
-      console.warn('⚠️ [REGISTRO] Contraseña muy corta');
       return NextResponse.json({
         error: 'Contraseña muy corta',
         details: 'La contraseña debe tener al menos 6 caracteres',
@@ -186,11 +166,10 @@ export async function POST(request: NextRequest) {
         code: 'PASSWORD_TOO_SHORT'
       } as ErrorResponse, { status: 400 });
     }
-    
+
     // Validaciones específicas por tipo de usuario
     if (userType === 'inmobiliaria') {
       if (!companyName || !licenseNumber) {
-        console.warn('⚠️ [REGISTRO] Datos de inmobiliaria incompletos');
         return NextResponse.json({
           error: 'Datos de inmobiliaria incompletos',
           details: 'Para inmobiliarias son requeridos: nombre de empresa y número de licencia',
@@ -199,14 +178,10 @@ export async function POST(request: NextRequest) {
         } as ErrorResponse, { status: 400 });
       }
     }
-    
-    console.log('✅ [REGISTRO] Validaciones básicas completadas');
-    
+
     // ========================================
     // 4. CREACIÓN Y VERIFICACIÓN DE CLIENTE SUPABASE
     // ========================================
-    console.log('🔗 [REGISTRO] Creando cliente Supabase...');
-    
     let supabase;
     try {
       supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -215,8 +190,7 @@ export async function POST(request: NextRequest) {
           persistSession: false
         }
       });
-      console.log('✅ [REGISTRO] Cliente Supabase creado exitosamente');
-    } catch (clientError) {
+      } catch (clientError) {
       console.error('❌ [REGISTRO] Error creando cliente Supabase:', clientError);
       return NextResponse.json({
         error: 'Error de configuración de base de datos',
@@ -225,19 +199,17 @@ export async function POST(request: NextRequest) {
         code: 'SUPABASE_CLIENT_ERROR'
       } as ErrorResponse, { status: 500 });
     }
-    
+
     // ========================================
     // 5. VERIFICACIÓN DE CONECTIVIDAD
     // ========================================
-    console.log('🏥 [REGISTRO] Verificando conectividad con Supabase...');
-    
     try {
       // Intentar una consulta simple para verificar conectividad
       const { error: healthError } = await supabase
         .from('users')
         .select('id')
         .limit(1);
-      
+
       if (healthError) {
         // Si la tabla no existe, es un problema de esquema
         if (healthError.message.includes('relation "users" does not exist')) {
@@ -249,7 +221,7 @@ export async function POST(request: NextRequest) {
             code: 'USERS_TABLE_NOT_EXISTS'
           } as ErrorResponse, { status: 500 });
         }
-        
+
         // Otros errores de base de datos
         console.error('❌ [REGISTRO] Error de conectividad:', healthError);
         return NextResponse.json({
@@ -259,9 +231,8 @@ export async function POST(request: NextRequest) {
           code: 'DATABASE_CONNECTION_ERROR'
         } as ErrorResponse, { status: 503 });
       }
-      
-      console.log('✅ [REGISTRO] Conectividad con Supabase verificada');
-    } catch (connectError) {
+
+      } catch (connectError) {
       console.error('❌ [REGISTRO] Error verificando conectividad:', connectError);
       return NextResponse.json({
         error: 'Error de conexión con base de datos',
@@ -270,15 +241,13 @@ export async function POST(request: NextRequest) {
         code: 'CONNECTIVITY_CHECK_FAILED'
       } as ErrorResponse, { status: 503 });
     }
-    
+
     // ========================================
     // 6. VERIFICACIÓN DE USUARIO EXISTENTE
     // ========================================
-    console.log('👤 [REGISTRO] Verificando si el usuario ya existe...');
-    
     try {
       const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers();
-      
+
       if (listError) {
         console.error('❌ [REGISTRO] Error listando usuarios:', listError);
         return NextResponse.json({
@@ -288,11 +257,10 @@ export async function POST(request: NextRequest) {
           code: 'USER_LIST_ERROR'
         } as ErrorResponse, { status: 500 });
       }
-      
+
       const userExists = existingUsers?.users?.find(user => user.email === email);
-      
+
       if (userExists) {
-        console.warn(`⚠️ [REGISTRO] Usuario ya existe con email: ${email}`);
         return NextResponse.json({
           error: 'Usuario ya existe',
           details: 'Ya existe una cuenta registrada con este email',
@@ -300,9 +268,8 @@ export async function POST(request: NextRequest) {
           code: 'USER_ALREADY_EXISTS'
         } as ErrorResponse, { status: 409 });
       }
-      
-      console.log('✅ [REGISTRO] Usuario no existe, procediendo con registro');
-    } catch (checkError) {
+
+      } catch (checkError) {
       console.error('❌ [REGISTRO] Error verificando usuario existente:', checkError);
       return NextResponse.json({
         error: 'Error verificando usuario existente',
@@ -311,12 +278,10 @@ export async function POST(request: NextRequest) {
         code: 'USER_CHECK_ERROR'
       } as ErrorResponse, { status: 500 });
     }
-    
+
     // ========================================
     // 7. CREACIÓN DE USUARIO EN SUPABASE AUTH
     // ========================================
-    console.log('🔐 [REGISTRO] Creando usuario en Supabase Auth...');
-    
     let authData;
     try {
       const { data, error: authError } = await supabase.auth.admin.createUser({
@@ -332,12 +297,12 @@ export async function POST(request: NextRequest) {
           propertyCount: userType === 'dueno_directo' ? propertyCount : null
         }
       });
-      
+
       if (authError) {
         console.error('❌ [REGISTRO] Error creando usuario en Auth:', authError);
-        
+
         // Manejar errores específicos de Auth
-        if (authError.message.includes('already registered') || 
+        if (authError.message.includes('already registered') ||
             authError.message.includes('User already registered')) {
           return NextResponse.json({
             error: 'Usuario ya existe',
@@ -346,7 +311,7 @@ export async function POST(request: NextRequest) {
             code: 'AUTH_USER_EXISTS'
           } as ErrorResponse, { status: 409 });
         }
-        
+
         return NextResponse.json({
           error: 'Error creando usuario',
           details: process.env.NODE_ENV === 'development' ? authError.message : 'Error en el proceso de registro',
@@ -354,10 +319,9 @@ export async function POST(request: NextRequest) {
           code: 'AUTH_CREATE_ERROR'
         } as ErrorResponse, { status: 500 });
       }
-      
+
       authData = data;
-      console.log('✅ [REGISTRO] Usuario creado exitosamente en Supabase Auth');
-    } catch (authException) {
+      } catch (authException) {
       console.error('❌ [REGISTRO] Excepción creando usuario en Auth:', authException);
       return NextResponse.json({
         error: 'Error creando usuario',
@@ -366,12 +330,10 @@ export async function POST(request: NextRequest) {
         code: 'AUTH_CREATE_EXCEPTION'
       } as ErrorResponse, { status: 500 });
     }
-    
+
     // ========================================
     // 8. CREACIÓN DE PERFIL EN TABLA USERS
     // ========================================
-    console.log('👤 [REGISTRO] Creando perfil de usuario en tabla users...');
-    
     const userData = {
       id: authData.user.id,
       name: name,           // ✅ Usa 'name' que es NOT NULL en Supabase
@@ -385,7 +347,7 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
-    
+
     let profileData;
     try {
       const { data, error: profileError } = await supabase
@@ -393,19 +355,17 @@ export async function POST(request: NextRequest) {
         .insert([userData])
         .select()
         .single();
-      
+
       if (profileError) {
         console.error('❌ [REGISTRO] Error creando perfil de usuario:', profileError);
-        
+
         // Rollback: eliminar usuario de Auth si falla la creación del perfil
-        console.log('🔄 [REGISTRO] Ejecutando rollback - eliminando usuario de Auth...');
         try {
           await supabase.auth.admin.deleteUser(authData.user.id);
-          console.log('✅ [REGISTRO] Rollback completado');
-        } catch (rollbackError) {
+          } catch (rollbackError) {
           console.error('❌ [REGISTRO] Error en rollback:', rollbackError);
         }
-        
+
         // Manejar errores específicos de perfil
         if (profileError.message.includes('duplicate key')) {
           return NextResponse.json({
@@ -415,7 +375,7 @@ export async function POST(request: NextRequest) {
             code: 'PROFILE_DUPLICATE_KEY'
           } as ErrorResponse, { status: 409 });
         }
-        
+
         return NextResponse.json({
           error: 'Database error saving new user',
           details: process.env.NODE_ENV === 'development' ? profileError.message : 'Error guardando perfil de usuario',
@@ -423,21 +383,18 @@ export async function POST(request: NextRequest) {
           code: 'PROFILE_CREATE_ERROR'
         } as ErrorResponse, { status: 500 });
       }
-      
+
       profileData = data;
-      console.log('✅ [REGISTRO] Perfil de usuario creado exitosamente');
-    } catch (profileException) {
+      } catch (profileException) {
       console.error('❌ [REGISTRO] Excepción creando perfil:', profileException);
-      
+
       // Rollback: eliminar usuario de Auth
-      console.log('🔄 [REGISTRO] Ejecutando rollback por excepción...');
       try {
         await supabase.auth.admin.deleteUser(authData.user.id);
-        console.log('✅ [REGISTRO] Rollback completado');
-      } catch (rollbackError) {
+        } catch (rollbackError) {
         console.error('❌ [REGISTRO] Error en rollback:', rollbackError);
       }
-      
+
       return NextResponse.json({
         error: 'Database error saving new user',
         details: process.env.NODE_ENV === 'development' ? String(profileException) : 'Error guardando perfil de usuario',
@@ -445,13 +402,13 @@ export async function POST(request: NextRequest) {
         code: 'PROFILE_CREATE_EXCEPTION'
       } as ErrorResponse, { status: 500 });
     }
-    
+
     // ========================================
     // 9. PREPARACIÓN DE RESPUESTA EXITOSA
     // ========================================
     const endTime = Date.now();
     const processingTime = endTime - startTime;
-    
+
     const responseUser = {
       id: profileData.id,
       name: profileData.name,
@@ -464,9 +421,7 @@ export async function POST(request: NextRequest) {
       emailVerified: profileData.email_verified,
       createdAt: profileData.created_at
     };
-    
-    console.log(`🎉 [REGISTRO] Registro completado exitosamente en ${processingTime}ms`);
-    
+
     return NextResponse.json({
       message: 'Usuario registrado exitosamente.',
       user: responseUser,
@@ -474,7 +429,7 @@ export async function POST(request: NextRequest) {
       emailConfigured: true,
       processingTime: `${processingTime}ms`
     }, { status: 201 });
-    
+
   } catch (error) {
     return handleApiError(error, 'registro de usuario');
   }

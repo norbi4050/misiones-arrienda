@@ -54,14 +54,14 @@ export const Toast: React.FC<ToastProps> = ({
       isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
     )}>
       <Icon className="w-5 h-5 mt-0.5 mr-3 flex-shrink-0" />
-      
+
       <div className="flex-1 min-w-0">
         <p className="font-medium">{title}</p>
         {message && (
           <p className="mt-1 text-sm opacity-90">{message}</p>
         )}
       </div>
-      
+
       <button
         onClick={() => onClose(id)}
         className="ml-3 p-1 hover:bg-black/10 rounded transition-colors"

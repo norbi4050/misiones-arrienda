@@ -36,20 +36,20 @@ interface ProfileCardProps {
   showActions?: boolean
 }
 
-export default function ProfileCard({ 
-  profile, 
-  isLiked = false, 
+export default function ProfileCard({
+  profile,
+  isLiked = false,
   isMatched = false,
   onLike,
   onMessage,
-  showActions = true 
+  showActions = true
 }: ProfileCardProps) {
   const [liked, setLiked] = useState(isLiked)
   const [loading, setLoading] = useState(false)
 
   const handleLike = useCallback(async () => {
     if (!onLike || loading) return
-    
+
     setLoading(true)
     try {
       await onLike(profile.id)
@@ -112,7 +112,7 @@ export default function ProfileCard({
               {profile.age} años
             </div>
           </div>
-          <Badge 
+          <Badge
             variant={profile.role === 'BUSCO' ? 'default' : 'secondary'}
             className="ml-2"
           >
@@ -182,7 +182,7 @@ export default function ProfileCard({
               <Heart className={`w-4 h-4 mr-1 ${liked ? 'fill-current' : ''}`} />
               {liked ? 'Te gusta' : 'Me gusta'}
             </Button>
-            
+
             {isMatched && (
               <Button
                 variant="secondary"

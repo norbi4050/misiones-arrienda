@@ -1,6 +1,6 @@
 /**
  * 🚫 SISTEMA DE LÍMITES POR TIPO DE USUARIO (VERSIÓN SIMPLIFICADA)
- * 
+ *
  * Controla las limitaciones según el plan técnico:
  * - Usuario Básico (Comunidad): 1 perfil gratis, ilimitados pagos
  * - Propietario Directo: 3 propiedades gratis, 10 con pago
@@ -20,7 +20,7 @@ export interface UserLimits {
 }
 
 export class UserLimitsManager {
-  
+
   /**
    * Obtiene los límites según el tipo de usuario
    */
@@ -36,7 +36,7 @@ export class UserLimitsManager {
           canHighlight: true,
           highlightPrice: 3000 // AR$3.000
         };
-        
+
       case 'dueno_directo': // Propietario Directo
         return {
           userType: 'dueno_directo',
@@ -47,7 +47,7 @@ export class UserLimitsManager {
           canHighlight: true,
           highlightPrice: 7000 // AR$7.000
         };
-        
+
       case 'inmobiliaria': // Usuario Profesional
         if (subscriptionType === 'premium') {
           return {
@@ -71,7 +71,7 @@ export class UserLimitsManager {
             highlightPrice: 7000 // AR$7.000
           };
         }
-        
+
       default:
         // Usuario sin tipo definido - límites mínimos
         return {
@@ -85,7 +85,7 @@ export class UserLimitsManager {
         };
     }
   }
-  
+
   /**
    * Verifica si un usuario puede publicar una propiedad
    */
@@ -101,7 +101,7 @@ export class UserLimitsManager {
       const user = await prisma.user.findUnique({
         where: { id: userId }
       });
-      
+
       if (!user) {
         return {
           canPublish: false,
@@ -111,7 +111,7 @@ export class UserLimitsManager {
           maxAllowed: 0
         };
       }
-      
+
       // Contar propiedades activas del usuario
       const currentCount = await prisma.property.count({
         where: {
@@ -121,9 +121,9 @@ export class UserLimitsManager {
           }
         }
       });
-      
+
       const limits = this.getUserLimits(user.userType || 'inquilino');
-      
+
       // Verificar si puede publicar gratis
       if (currentCount < limits.maxFreeProperties) {
         return {
@@ -133,7 +133,7 @@ export class UserLimitsManager {
           maxAllowed: limits.maxFreeProperties
         };
       }
-      
+
       // Verificar si puede publicar con pago
       if (limits.maxPaidProperties === -1 || currentCount < limits.maxPaidProperties) {
         return {
@@ -143,7 +143,7 @@ export class UserLimitsManager {
           maxAllowed: limits.maxPaidProperties
         };
       }
-      
+
       // Ha alcanzado el límite máximo
       return {
         canPublish: false,
@@ -152,7 +152,7 @@ export class UserLimitsManager {
         currentCount,
         maxAllowed: limits.maxPaidProperties
       };
-      
+
     } catch (error) {
       console.error('Error checking property limits:', error);
       return {
@@ -164,7 +164,7 @@ export class UserLimitsManager {
       };
     }
   }
-  
+
   /**
    * Verifica si un usuario puede crear un perfil de comunidad
    */
@@ -180,7 +180,7 @@ export class UserLimitsManager {
       const user = await prisma.user.findUnique({
         where: { id: userId }
       });
-      
+
       if (!user) {
         return {
           canCreate: false,
@@ -190,15 +190,15 @@ export class UserLimitsManager {
           maxAllowed: 0
         };
       }
-      
+
       // Verificar si ya tiene un perfil de comunidad
       const existingProfile = await prisma.userProfile.findUnique({
         where: { userId }
       });
-      
+
       const currentCount = existingProfile ? 1 : 0;
       const limits = this.getUserLimits(user.userType || 'inquilino');
-      
+
       // Verificar si puede crear gratis
       if (currentCount < limits.maxFreeProfiles) {
         return {
@@ -208,7 +208,7 @@ export class UserLimitsManager {
           maxAllowed: limits.maxFreeProfiles
         };
       }
-      
+
       // Verificar si puede crear con pago
       if (limits.maxPaidProfiles === -1 || currentCount < limits.maxPaidProfiles) {
         return {
@@ -218,7 +218,7 @@ export class UserLimitsManager {
           maxAllowed: limits.maxPaidProfiles
         };
       }
-      
+
       // Ha alcanzado el límite máximo
       return {
         canCreate: false,
@@ -227,7 +227,7 @@ export class UserLimitsManager {
         currentCount,
         maxAllowed: limits.maxPaidProfiles
       };
-      
+
     } catch (error) {
       console.error('Error checking profile limits:', error);
       return {
@@ -239,7 +239,7 @@ export class UserLimitsManager {
       };
     }
   }
-  
+
   /**
    * Verifica si un usuario puede destacar un anuncio
    */
@@ -252,7 +252,7 @@ export class UserLimitsManager {
       const user = await prisma.user.findUnique({
         where: { id: userId }
       });
-      
+
       if (!user) {
         return {
           canHighlight: false,
@@ -260,9 +260,9 @@ export class UserLimitsManager {
           price: 0
         };
       }
-      
+
       const limits = this.getUserLimits(user.userType || 'inquilino');
-      
+
       if (!limits.canHighlight) {
         return {
           canHighlight: false,
@@ -270,12 +270,12 @@ export class UserLimitsManager {
           price: 0
         };
       }
-      
+
       return {
         canHighlight: true,
         price: limits.highlightPrice
       };
-      
+
     } catch (error) {
       console.error('Error checking highlight limits:', error);
       return {
@@ -285,7 +285,7 @@ export class UserLimitsManager {
       };
     }
   }
-  
+
   /**
    * Obtiene el resumen de uso actual del usuario
    */
@@ -294,11 +294,11 @@ export class UserLimitsManager {
       const user = await prisma.user.findUnique({
         where: { id: userId }
       });
-      
+
       if (!user) {
         return null;
       }
-      
+
       // Contar propiedades activas
       const propertiesCount = await prisma.property.count({
         where: {
@@ -308,15 +308,15 @@ export class UserLimitsManager {
           }
         }
       });
-      
+
       // Verificar perfil de comunidad
       const existingProfile = await prisma.userProfile.findUnique({
         where: { userId }
       });
       const profilesCount = existingProfile ? 1 : 0;
-      
+
       const limits = this.getUserLimits(user.userType || 'inquilino');
-      
+
       return {
         userType: user.userType,
         subscriptionType: 'free', // Por ahora siempre free
@@ -342,7 +342,7 @@ export class UserLimitsManager {
           }
         }
       };
-      
+
     } catch (error) {
       console.error('Error getting usage summary:', error);
       return null;

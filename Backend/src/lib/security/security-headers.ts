@@ -161,7 +161,7 @@ export class SecurityHeaders {
 
   private mergeConfig(defaultConfig: SecurityHeadersConfig, userConfig: Partial<SecurityHeadersConfig>): SecurityHeadersConfig {
     const merged = { ...defaultConfig }
-    
+
     for (const [key, value] of Object.entries(userConfig)) {
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         merged[key as keyof SecurityHeadersConfig] = {
@@ -172,7 +172,7 @@ export class SecurityHeaders {
         merged[key as keyof SecurityHeadersConfig] = value as any
       }
     }
-    
+
     return merged
   }
 
@@ -182,8 +182,8 @@ export class SecurityHeaders {
     // Content Security Policy
     if (this.config.contentSecurityPolicy?.enabled) {
       const csp = this.buildCSP(this.config.contentSecurityPolicy.directives || {})
-      const headerName = this.config.contentSecurityPolicy.reportOnly 
-        ? 'Content-Security-Policy-Report-Only' 
+      const headerName = this.config.contentSecurityPolicy.reportOnly
+        ? 'Content-Security-Policy-Report-Only'
         : 'Content-Security-Policy'
       headers[headerName] = csp
     }
@@ -253,15 +253,15 @@ export class SecurityHeaders {
 
   private buildHSTS(config: NonNullable<SecurityHeadersConfig['strictTransportSecurity']>): string {
     let hsts = `max-age=${config.maxAge || 31536000}`
-    
+
     if (config.includeSubDomains) {
       hsts += '; includeSubDomains'
     }
-    
+
     if (config.preload) {
       hsts += '; preload'
     }
-    
+
     return hsts
   }
 
@@ -278,11 +278,11 @@ export class SecurityHeaders {
 
   applyToResponse(response: NextResponse): NextResponse {
     const headers = this.generateHeaders()
-    
+
     for (const [name, value] of Object.entries(headers)) {
       response.headers.set(name, value)
     }
-    
+
     return response
   }
 
@@ -336,11 +336,11 @@ export class SecurityHeaders {
     // Validar CSP
     if (this.config.contentSecurityPolicy?.enabled) {
       const directives = this.config.contentSecurityPolicy.directives || {}
-      
+
       if (!directives['default-src'] || directives['default-src'].length === 0) {
         errors.push('CSP debe incluir default-src')
       }
-      
+
       if (directives['script-src']?.includes("'unsafe-eval'") && process.env.NODE_ENV === 'production') {
         errors.push("'unsafe-eval' no debería usarse en producción")
       }

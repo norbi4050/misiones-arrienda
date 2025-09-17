@@ -14,7 +14,6 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
 export async function checkDatabaseConnection() {
   try {
     await prisma.$connect();
-    console.log('✅ Conexión a la base de datos establecida correctamente');
     return true;
   } catch (error) {
     console.error('❌ Error conectando a la base de datos:', error);
@@ -26,8 +25,7 @@ export async function checkDatabaseConnection() {
 export async function disconnectDatabase() {
   try {
     await prisma.$disconnect();
-    console.log('✅ Desconectado de la base de datos correctamente');
-  } catch (error) {
+    } catch (error) {
     console.error('❌ Error desconectando de la base de datos:', error);
   }
 }
@@ -35,28 +33,28 @@ export async function disconnectDatabase() {
 // Función para manejar errores de Prisma de forma más específica
 export function handlePrismaError(error: any) {
   console.error('Error de Prisma:', error);
-  
+
   if (error.code === 'P2002') {
     return {
       message: 'Ya existe un registro con esos datos únicos',
       field: error.meta?.target?.[0] || 'campo único'
     };
   }
-  
+
   if (error.code === 'P2025') {
     return {
       message: 'Registro no encontrado',
       field: null
     };
   }
-  
+
   if (error.code === 'P1001') {
     return {
       message: 'No se puede conectar a la base de datos',
       field: null
     };
   }
-  
+
   return {
     message: 'Error interno de la base de datos',
     field: null

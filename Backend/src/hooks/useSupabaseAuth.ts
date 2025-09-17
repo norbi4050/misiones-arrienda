@@ -20,14 +20,14 @@ export function useSupabaseAuth() {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (!alive) return;
-        
+
         if (error) {
           console.error('Auth error:', error);
           setError(error.message);
         } else {
           setError(null);
         }
-        
+
         setSession(session);
         setUser(session?.user ?? null);
       } finally {
@@ -92,7 +92,7 @@ export function useSupabaseAuth() {
   const updateProfile = async (profileData: any) => {
     try {
       setError(null);
-      
+
       if (!user) {
         throw new Error('Usuario no autenticado');
       }
@@ -102,7 +102,7 @@ export function useSupabaseAuth() {
       if (profileData.email && profileData.email !== user.email) {
         authUpdates.email = profileData.email;
       }
-      
+
       if (Object.keys(authUpdates).length > 0) {
         const { error: authError } = await supabase.auth.updateUser(authUpdates);
         if (authError) {
@@ -132,7 +132,7 @@ export function useSupabaseAuth() {
 
       // Actualizar datos adicionales del perfil en la tabla de usuarios
       const { error: profileError } = await supabase
-        .from('users')
+        .from('User')
         .update(updateData)
         .eq('id', user.id);
 
@@ -179,8 +179,8 @@ export function useSupabaseAuth() {
     }
   };
 
-  return { 
-    user, 
+  return {
+    user,
     session,
     loading,
     error,

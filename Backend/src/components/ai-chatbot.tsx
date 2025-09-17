@@ -34,7 +34,7 @@ export function AIChatbot() {
     strugglingWith: [],
     preferredFilters: {}
   })
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const startTime = useRef(Date.now())
 
@@ -81,7 +81,7 @@ export function AIChatbot() {
   // Analyze user behavior and provide intelligent responses
   const analyzeUserIntent = (message: string): string => {
     const lowerMessage = message.toLowerCase()
-    
+
     // Track search queries
     if (lowerMessage.includes('buscar') || lowerMessage.includes('encontrar') || lowerMessage.includes('propiedad')) {
       setUserAnalytics(prev => ({
@@ -102,7 +102,7 @@ export function AIChatbot() {
     if (lowerMessage.includes('posadas')) {
       return "¡Perfecto! Posadas es nuestra ciudad con más propiedades. Tenemos **departamentos desde $120.000** y **casas desde $280.000**. \n\n🔍 **Tip inteligente**: Usa nuestra búsqueda inteligente escribiendo 'pos' y verás todas las opciones de Posadas automáticamente.\n\n¿Te interesa algún barrio específico como Villa Cabello o Centro?"
     }
-    
+
     if (lowerMessage.includes('eldorado')) {
       return "¡Eldorado es una excelente opción! Tenemos propiedades familiares hermosas. \n\n🏠 **Destacado**: Casa de 3 dormitorios con jardín por $320.000 (antes $350.000).\n\n¿Buscas algo específico en Eldorado?"
     }
@@ -142,10 +142,10 @@ export function AIChatbot() {
     }
 
     setMessages(prev => [...prev, userMessage])
-    
+
     // Track user message with analytics
     trackChatInteraction('user', inputValue)
-    
+
     const currentInput = inputValue
     setInputValue("")
     setIsTyping(true)
@@ -162,17 +162,17 @@ export function AIChatbot() {
       }
 
       setMessages(prev => [...prev, botMessage])
-      
+
       // Track bot response with analytics
       trackChatInteraction('bot', botResponse)
-      
+
       setIsTyping(false)
     }, 1500)
   }
 
   const getBotSuggestions = (userMessage: string): string[] => {
     const lowerMessage = userMessage.toLowerCase()
-    
+
     if (lowerMessage.includes('posadas')) {
       return [
         "Ver propiedades en Villa Cabello",
@@ -181,7 +181,7 @@ export function AIChatbot() {
         "Filtrar por precio"
       ]
     }
-    
+
     if (lowerMessage.includes('dueño directo')) {
       return [
         "Registrarme como dueño directo",
@@ -219,7 +219,7 @@ export function AIChatbot() {
         >
           <MessageCircle className="h-6 w-6" />
         </Button>
-        
+
         {/* Notification badge */}
         <div className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 rounded-full flex items-center justify-center">
           <span className="text-xs text-white font-bold">AI</span>
@@ -268,8 +268,8 @@ export function AIChatbot() {
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] rounded-lg p-3 ${
-              message.type === 'user' 
-                ? 'bg-blue-600 text-white' 
+              message.type === 'user'
+                ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-900'
             }`}>
               <div className="flex items-start space-x-2">
@@ -277,7 +277,7 @@ export function AIChatbot() {
                 {message.type === 'user' && <User className="h-4 w-4 mt-0.5" />}
                 <div className="flex-1">
                   <div className="whitespace-pre-wrap text-sm">
-                    {message.content.split('**').map((part, index) => 
+                    {message.content.split('**').map((part, index) =>
                       index % 2 === 1 ? <strong key={index}>{part}</strong> : part
                     )}
                   </div>
@@ -286,7 +286,7 @@ export function AIChatbot() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Suggestions */}
               {message.suggestions && (
                 <div className="mt-3 space-y-1">
@@ -304,7 +304,7 @@ export function AIChatbot() {
             </div>
           </div>
         ))}
-        
+
         {isTyping && (
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">

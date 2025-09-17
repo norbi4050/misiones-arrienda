@@ -9,7 +9,7 @@ const formatTimeAgo = (date: string) => {
   const now = new Date()
   const past = new Date(date)
   const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000)
-  
+
   if (diffInSeconds < 60) return 'hace un momento'
   if (diffInSeconds < 3600) return `hace ${Math.floor(diffInSeconds / 60)} min`
   if (diffInSeconds < 86400) return `hace ${Math.floor(diffInSeconds / 3600)} h`
@@ -53,14 +53,14 @@ interface MatchCardProps {
   onViewProfile?: (userId: string) => void
 }
 
-export default function MatchCard({ 
-  match, 
+export default function MatchCard({
+  match,
   currentUserId,
   onMessage,
-  onViewProfile 
+  onViewProfile
 }: MatchCardProps) {
   const { otherUser, conversation } = match
-  
+
   const formatBudget = (amount: number) => {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
@@ -110,30 +110,30 @@ export default function MatchCard({
               <h3 className="text-lg font-semibold text-gray-900">
                 {otherUser.name}
               </h3>
-              <Badge 
+              <Badge
                 variant={otherUser.profile.role === 'BUSCO' ? 'default' : 'secondary'}
                 className="text-xs"
               >
                 {otherUser.profile.role === 'BUSCO' ? 'Busca' : 'Ofrece'}
               </Badge>
             </div>
-            
+
             <div className="flex items-center text-sm text-gray-600 mb-1">
               <MapPin className="w-4 h-4 mr-1" />
               {otherUser.profile.neighborhood}, {otherUser.profile.city}
             </div>
-            
+
             <div className="flex items-center text-sm text-gray-600">
               <Calendar className="w-4 h-4 mr-1" />
               {otherUser.profile.age} años
             </div>
           </div>
-          
+
           <div className="flex flex-col items-end gap-2">
             <Badge className={`text-xs ${getStatusColor(match.status)}`}>
               {getStatusText(match.status)}
             </Badge>
-            
+
             {conversation && conversation.unread_count > 0 && (
               <Badge variant="destructive" className="text-xs">
                 {conversation.unread_count} nuevo{conversation.unread_count > 1 ? 's' : ''}
@@ -198,7 +198,7 @@ export default function MatchCard({
           >
             Ver Perfil
           </Button>
-          
+
           {conversation && (
             <Button
               variant="default"

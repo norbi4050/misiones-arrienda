@@ -45,7 +45,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             Explora las mejores propiedades en alquiler y venta en Misiones
           </p>
         </div>
-        
+
         {/* Mensaje temporal mientras se cargan las propiedades */}
         <div className="text-center py-16">
           <div className="max-w-md mx-auto">

@@ -70,8 +70,8 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
           <label className="text-sm font-medium text-gray-700">
             🏠 Tipo de Propiedad
           </label>
-          <Select 
-            value={filters.propertyType} 
+          <Select
+            value={filters.propertyType}
             onValueChange={(value) => setFilters(prev => ({ ...prev, propertyType: value }))}
           >
             <SelectTrigger>
@@ -92,8 +92,8 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
           <label className="text-sm font-medium text-gray-700">
             💰 Precio Mínimo
           </label>
-          <Select 
-            value={filters.minPrice} 
+          <Select
+            value={filters.minPrice}
             onValueChange={(value) => setFilters(prev => ({ ...prev, minPrice: value }))}
           >
             <SelectTrigger>
@@ -116,8 +116,8 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
           <label className="text-sm font-medium text-gray-700">
             💎 Precio Máximo
           </label>
-          <Select 
-            value={filters.maxPrice} 
+          <Select
+            value={filters.maxPrice}
             onValueChange={(value) => setFilters(prev => ({ ...prev, maxPrice: value }))}
           >
             <SelectTrigger>
@@ -138,14 +138,14 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
 
       {/* Search Button */}
       <div className="flex flex-col sm:flex-row gap-3 items-center">
-        <Button 
+        <Button
           onClick={handleSearch}
           className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-2"
           size="lg"
         >
           🔍 Buscar Propiedades
         </Button>
-        
+
         {/* Quick filters */}
         <div className="flex flex-wrap gap-2 text-sm">
           <span className="text-gray-500">Búsquedas rápidas:</span>
@@ -193,7 +193,7 @@ export function EnhancedSearchBar({ onSearch, className = "" }: EnhancedSearchBa
             )}
             {filters.propertyType && (
               <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                🏠 {filters.propertyType === 'HOUSE' ? 'Casa' : 
+                🏠 {filters.propertyType === 'HOUSE' ? 'Casa' :
                      filters.propertyType === 'APARTMENT' ? 'Departamento' :
                      filters.propertyType === 'COMMERCIAL' ? 'Local' : 'Terreno'}
               </span>

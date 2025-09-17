@@ -67,7 +67,7 @@ export default function PublicarPerfilPage() {
       ...prev,
       [field]: value
     }))
-    
+
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[field]) {
       setErrors(prev => ({
@@ -139,7 +139,7 @@ export default function PublicarPerfilPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }

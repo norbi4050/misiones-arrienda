@@ -108,8 +108,6 @@ export function PropertiesPageClient() {
       const queryString = params.toString()
       const url = `/api/properties${queryString ? `?${queryString}` : ''}`
 
-      console.log('Loading properties with URL:', url)
-
       const response = await fetch(url)
       if (!response.ok) {
         throw new Error('Error al cargar las propiedades')
@@ -119,7 +117,6 @@ export function PropertiesPageClient() {
       const items = Array.isArray(data?.items) ? data.items : []
       const count = data?.count || 0
 
-      console.log('Loaded properties:', items.length, 'total:', count)
       setProperties(items)
       setTotalCount(count)
     } catch (err) {
@@ -396,7 +393,7 @@ export function PropertiesPageClient() {
                 )}
               </p>
             </div>
-            
+
             {/* View Mode Toggle */}
             <div className="flex gap-2">
               <Button
@@ -462,7 +459,7 @@ export function PropertiesPageClient() {
             {/* Content based on view mode - FORZAMOS LISTA */}
             {view === 'list' ? (
               <>
-                {console.log('RENDERING LIST VIEW:', properties.length, 'properties')}
+                {}
                 <PropertyGrid properties={properties} />
               </>
             ) : (

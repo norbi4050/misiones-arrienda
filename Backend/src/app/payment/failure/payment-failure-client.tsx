@@ -52,7 +52,7 @@ export default function PaymentFailureClient() {
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Detalles del Pago
           </h3>
-          
+
           {paymentInfo && (
             <div className="space-y-3">
               {paymentInfo.paymentId && (
@@ -61,7 +61,7 @@ export default function PaymentFailureClient() {
                   <p className="text-sm text-gray-900">{paymentInfo.paymentId}</p>
                 </div>
               )}
-              
+
               <div>
                 <span className="text-sm font-medium text-gray-500">Estado:</span>
                 <p className="text-sm text-red-600 font-medium">
@@ -95,7 +95,7 @@ export default function PaymentFailureClient() {
               Intentar Nuevamente
             </Link>
           </Button>
-          
+
           <Button variant="outline" asChild className="flex-1">
             <Link href="/">
               Volver al Inicio

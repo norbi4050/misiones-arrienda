@@ -32,7 +32,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
   const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
+
     try {
       const response = await fetch("/api/inquiries", {
         method: "POST",
@@ -44,7 +44,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
           propertyId: property.id,
         }),
       })
-      
+
       if (response.ok) {
         toast.success('¡Consulta enviada exitosamente! Te contactaremos pronto.')
         setInquiryForm({
@@ -122,7 +122,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                   className="object-cover transition-transform group-hover:scale-105"
                 /
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"onError={(e) => { const target = e.target as HTMLImageElement; target.style.display = 'none'; }}>
-                
+
                 {/* Badges y botones superpuestos */}
                 <div className="absolute top-4 left-4 flex gap-2">
                   {property.featured && (
@@ -158,7 +158,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                 {property.images.length > 1 && (
                   <>
                     <button
-                      onClick={() => setCurrentImageIndex(prev => 
+                      onClick={() => setCurrentImageIndex(prev =>
                         prev === 0 ? property.images.length - 1 : prev - 1
                       )}
                       className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 hover:bg-white transition-all"
@@ -166,7 +166,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                       ←
                     </button>
                     <button
-                      onClick={() => setCurrentImageIndex(prev => 
+                      onClick={() => setCurrentImageIndex(prev =>
                         prev === property.images.length - 1 ? 0 : prev + 1
                       )}
                       className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 hover:bg-white transition-all"
@@ -183,7 +183,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                   </div>
                 )}
               </div>
-              
+
               {/* Thumbnails mejorados */}
               {property.images.length > 1 && (
                 <div className="flex gap-2 p-4 overflow-x-auto">
@@ -192,8 +192,8 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
                       className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                        currentImageIndex === index 
-                          ? "border-blue-500 shadow-md" 
+                        currentImageIndex === index
+                          ? "border-blue-500 shadow-md"
                           : "border-gray-200 hover:border-gray-300"
                       }`}
                     >
@@ -230,7 +230,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                     <span className="text-lg">{property.address}, {property.city}, {property.province}</span>
                   </div>
                 </div>
-                
+
                 <div className="text-right">
                   {property.oldPrice && (
                     <div className="text-lg text-gray-500 line-through mb-1">
@@ -337,7 +337,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                 <h3 className="text-xl font-bold">¡Contacto Inmediato!</h3>
                 <p className="text-green-100">Respuesta garantizada en menos de 2 horas</p>
               </div>
-              <WhatsAppPropertyButton 
+              <WhatsAppPropertyButton
                 propertyId={property.id}
                 address={`${property.address}, ${property.city}`}
                 price={property.price.toLocaleString()}
@@ -364,7 +364,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-3 mb-6">
                 <div className="flex items-center text-sm bg-gray-50 p-3 rounded-lg">
                   <Phone className="h-4 w-4 mr-3 text-blue-500" />
@@ -391,7 +391,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
             {/* Contact Form mejorado */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Consultar sobre esta propiedad</h3>
-              
+
               <form onSubmit={handleInquirySubmit} className="space-y-4">
                 <Input
                   placeholder="Tu nombre completo"
@@ -424,9 +424,9 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                   onChange={(e) => setInquiryForm({...inquiryForm, message: e.target.value})}
                   required
                 />
-                
-                <Button 
-                  type="submit" 
+
+                <Button
+                  type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700"
                   disabled={isSubmitting}
                 >
