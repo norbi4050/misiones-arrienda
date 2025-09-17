@@ -8,7 +8,9 @@ import { cn } from "@/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ProfileDropdown } from "@/components/ui/profile-dropdown"
+import { AvatarUniversal } from "@/components/ui/avatar-universal"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import { useUser } from "@/contexts/UserContext"
 import type { Session } from "@supabase/supabase-js"
 
 const navigation = [
@@ -27,12 +29,14 @@ export function Navbar({ initialSession }: NavbarProps) {
   const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, loading, isAuthenticated, signOut } = useSupabaseAuth()
+  const { profile } = useUser()
 
   // Usar sesión inicial del servidor para evitar flicker
   const hasInitialSession = !!initialSession?.user
   const shouldShowAuth = !loading || hasInitialSession
   const isUserAuthenticated = isAuthenticated || hasInitialSession
   const currentUser = user || initialSession?.user
+  const displayName = profile?.name || currentUser?.email?.split('@')[0] || 'Usuario'
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -187,12 +191,17 @@ export function Navbar({ initialSession }: NavbarProps) {
                 {isUserAuthenticated && currentUser ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 py-2">
-                      <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                        {currentUser.email?.slice(0, 2).toUpperCase() || 'U'}
-                      </div>
+                      <AvatarUniversal
+                        photos={profile?.photos}
+                        src={profile?.profile_image}
+                        name={displayName}
+                        updatedAt={profile?.updated_at}
+                        size="sm"
+                        showFallback={true}
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {currentUser.email?.split('@')[0] || 'Usuario'}
+                          {displayName}
                         </p>
                         <p className="text-xs text-gray-500 truncate">
                           {currentUser.email}

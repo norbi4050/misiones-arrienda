@@ -4,6 +4,8 @@ import * as React from "react"
 import Link from "next/link"
 import { User, Settings, LogOut, Heart, MessageCircle, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { AvatarUniversal } from "@/components/ui/avatar-universal"
+import { useUser } from "@/contexts/UserContext"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 interface ProfileDropdownProps {
@@ -13,25 +15,30 @@ interface ProfileDropdownProps {
 
 export function ProfileDropdown({ user, onSignOut }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = React.useState(false)
-  const displayName = user.email?.split('@')[0] || 'Usuario'
-  const initials = displayName.slice(0, 2).toUpperCase()
+  const { profile } = useUser()
+  const displayName = profile?.name || user.email?.split('@')[0] || 'Usuario'
 
   return (
     <div className="relative">
-      <Button 
-        variant="ghost" 
-        className="relative h-8 w-8 rounded-full"
+      <Button
+        variant="ghost"
+        className="relative h-8 w-8 rounded-full p-0"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-          {initials}
-        </div>
+        <AvatarUniversal
+          photos={profile?.photos}
+          src={profile?.profile_image}
+          name={displayName}
+          updatedAt={profile?.updated_at}
+          size="sm"
+          showFallback={true}
+        />
       </Button>
-      
+
       {isOpen && (
         <>
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border z-50">
@@ -41,34 +48,34 @@ export function ProfileDropdown({ user, onSignOut }: ProfileDropdownProps) {
                 {user.email}
               </p>
             </div>
-            
+
             <div className="py-1">
-              <Link 
-                href="/profile/inquilino" 
+              <Link
+                href="/profile/inquilino"
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsOpen(false)}
               >
                 <User className="mr-2 h-4 w-4" />
                 Mi Perfil
               </Link>
-              <Link 
-                href="/profile/inquilino?tab=favoritos" 
+              <Link
+                href="/profile/inquilino?tab=favoritos"
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsOpen(false)}
               >
                 <Heart className="mr-2 h-4 w-4" />
                 Mis Favoritos
               </Link>
-              <Link 
-                href="/profile/inquilino?tab=mensajes" 
+              <Link
+                href="/profile/inquilino?tab=mensajes"
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsOpen(false)}
               >
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Mensajes
               </Link>
-              <Link 
-                href="/dashboard" 
+              <Link
+                href="/dashboard"
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsOpen(false)}
               >
@@ -76,9 +83,9 @@ export function ProfileDropdown({ user, onSignOut }: ProfileDropdownProps) {
                 Dashboard
               </Link>
             </div>
-            
+
             <div className="border-t py-1">
-              <button 
+              <button
                 onClick={() => {
                   setIsOpen(false)
                   onSignOut()
