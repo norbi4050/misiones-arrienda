@@ -192,7 +192,6 @@ export function Navbar({ initialSession }: NavbarProps) {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 py-2">
                       <AvatarUniversal
-                        photos={profile?.photos}
                         src={profile?.profile_image}
                         name={displayName}
                         updatedAt={profile?.updated_at}

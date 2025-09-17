@@ -1,36 +1,13 @@
 /**
  * Avatar utilities for handling avatar URLs with cache-busting
+ * Single Source of Truth: User.profile_image
  */
 
 export interface AvatarUrlOptions {
-  photos?: string[] | null;
   profileImage?: string | null;
   updatedAt?: string | null;
   fallbackInitials?: string;
   size?: number;
-}
-
-/**
- * Gets the avatar source following the single source of truth (SSoT)
- * SSoT: user_profiles.photos[0] (PRIMARY - read/write)
- * Fallback: User.avatar (SECONDARY - read only)
- * @param options - Avatar configuration options
- * @returns Avatar URL or null if no image
- */
-export function getAvatarSource(options: AvatarUrlOptions): string | null {
-  const { photos, profileImage } = options;
-  
-  // SSoT: photos[0] from user_profiles (PRIMARY SOURCE)
-  if (photos && photos.length > 0 && photos[0]) {
-    return photos[0];
-  }
-  
-  // Fallback: User.avatar (SECONDARY - read only)
-  if (profileImage) {
-    return profileImage;
-  }
-  
-  return null;
 }
 
 /**
@@ -39,18 +16,15 @@ export function getAvatarSource(options: AvatarUrlOptions): string | null {
  * @returns Complete avatar URL with cache-busting or null if no image
  */
 export function getAvatarUrl(options: AvatarUrlOptions): string | null {
-  const { updatedAt } = options;
-  
-  // Get the avatar source following priority rules
-  const avatarSource = getAvatarSource(options);
+  const { profileImage, updatedAt } = options;
 
-  if (!avatarSource) {
+  if (!profileImage) {
     return null;
   }
 
   // If no updatedAt provided, return original URL
   if (!updatedAt) {
-    return avatarSource;
+    return profileImage;
   }
 
   try {
@@ -58,11 +32,11 @@ export function getAvatarUrl(options: AvatarUrlOptions): string | null {
     const timestamp = new Date(updatedAt).getTime();
     
     // Add cache-busting parameter
-    const separator = avatarSource.includes('?') ? '&' : '?';
-    return `${avatarSource}${separator}v=${timestamp}`;
+    const separator = profileImage.includes('?') ? '&' : '?';
+    return `${profileImage}${separator}v=${timestamp}`;
   } catch (error) {
     console.warn('Error generating cache-busted avatar URL:', error);
-    return avatarSource;
+    return profileImage;
   }
 }
 
@@ -93,9 +67,9 @@ export function getInitials(name?: string | null): string {
  * @returns Complete avatar configuration
  */
 export function getAvatarConfig(options: AvatarUrlOptions) {
-  const { photos, profileImage, updatedAt, fallbackInitials, size = 40 } = options;
+  const { profileImage, updatedAt, fallbackInitials, size = 40 } = options;
   
-  const avatarUrl = getAvatarUrl({ photos, profileImage, updatedAt });
+  const avatarUrl = getAvatarUrl({ profileImage, updatedAt });
   const initials = getInitials(fallbackInitials);
 
   return {
@@ -103,8 +77,7 @@ export function getAvatarConfig(options: AvatarUrlOptions) {
     initials,
     hasImage: !!avatarUrl,
     size,
-    cacheBusted: !!avatarUrl && !!updatedAt,
-    source: getAvatarSource({ photos, profileImage }) ? 'user_profiles' : 'fallback'
+    cacheBusted: !!avatarUrl && !!updatedAt
   };
 }
 

@@ -35,7 +35,7 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    // Obtener perfil completo del usuario
+    // Obtener perfil completo del usuario (solo campos básicos que existen)
     const { data: profile, error: profileError } = await supabase
       .from('User')
       .select(`
@@ -44,19 +44,10 @@ export async function GET() {
         email,
         phone,
         profile_image,
-        location,
         bio,
-        search_type,
-        budget_range,
-        preferred_areas,
-        family_size,
-        pet_friendly,
-        move_in_date,
-        employment_status,
-        monthly_income,
         verified,
-        created_at,
-        updated_at
+        createdAt,
+        updatedAt
       `)
       .eq('id', user.id)
       .single();
@@ -77,8 +68,8 @@ export async function GET() {
           id: user.id,
           email: user.email,
           name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         })
         .select()
         .single();
@@ -133,22 +124,13 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Preparar datos para actualización
+    // Preparar datos para actualización (solo campos básicos que existen)
     const updateData = {
       name: profileData.name,
       email: profileData.email,
       phone: profileData.phone || null,
       profile_image: profileData.profile_image || null,
-      location: profileData.location || null,
       bio: profileData.bio || null,
-      search_type: profileData.search_type || null,
-      budget_range: profileData.budget_range || null,
-      preferred_areas: profileData.preferred_areas || null,
-      family_size: profileData.family_size || null,
-      pet_friendly: profileData.pet_friendly || false,
-      move_in_date: profileData.move_in_date || null,
-      employment_status: profileData.employment_status || null,
-      monthly_income: profileData.monthly_income || null,
       updated_at: new Date().toISOString()
     };
 
@@ -204,11 +186,9 @@ export async function PATCH(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Campos permitidos para actualización
+    // Campos permitidos para actualización (solo campos básicos que existen)
     const allowedFields = [
-      'name', 'email', 'phone', 'profile_image', 'location', 'bio',
-      'search_type', 'budget_range', 'preferred_areas', 'family_size',
-      'pet_friendly', 'move_in_date', 'employment_status', 'monthly_income'
+      'name', 'email', 'phone', 'profile_image', 'bio'
     ];
 
     // Filtrar solo campos permitidos
@@ -220,10 +200,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Agregar timestamp de actualización
-    updateData.updated_at = new Date().toISOString();
+    updateData.updatedAt = new Date().toISOString();
 
     // Verificar que hay campos válidos para actualizar
-    if (Object.keys(updateData).length <= 1) { // Solo updated_at
+    if (Object.keys(updateData).length <= 1) { // Solo updatedAt
       return NextResponse.json({
         error: "No se proporcionaron campos válidos para actualizar"
       }, { status: 400 });
@@ -248,7 +228,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       profile: updatedProfile,
       message: "Perfil actualizado exitosamente",
-      updatedFields: Object.keys(updateData).filter(key => key !== 'updated_at')
+      updatedFields: Object.keys(updateData).filter(key => key !== 'updatedAt')
     }, { status: 200 });
 
   } catch (error) {
@@ -276,8 +256,8 @@ export async function DELETE() {
     const { error: deleteError } = await supabase
       .from('User')
       .update({
-        deleted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        deletedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .eq('id', user.id);
 

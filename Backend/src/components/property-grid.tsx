@@ -11,7 +11,7 @@ interface PropertyGridProps {
 }
 
 export function PropertyGrid({ properties }: { properties: any[] }) {
-  ? properties.length : 'no-array')
+  // Debug log removed - was causing syntax error
   if (!Array.isArray(properties)) return null
   if (properties.length === 0) {
     return <div className="text-center text-gray-500 py-10">No hay propiedades publicadas.</div>

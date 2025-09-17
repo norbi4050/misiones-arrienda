@@ -113,15 +113,19 @@ export default function InquilinoProfilePage() {
     }
   };
 
-  const handleAvatarChange = async (imageUrl: string) => {
-    try {
-      await updateAvatar(imageUrl);
-      setProfileData(prev => ({ ...prev, profile_image: imageUrl }));
-      toast.success("Avatar actualizado correctamente");
-    } catch (error: any) {
-      console.error('Error updating avatar:', error);
-      toast.error(error.message || "Error al actualizar el avatar");
-    }
+  const handleAvatarChange = (imageUrl: string) => {
+    // Solo actualizar UI local - ProfileAvatar ya manejó la API
+    setProfileData(prev => ({ ...prev, profile_image: imageUrl }));
+    
+    // Refrescar el perfil del contexto para sincronizar
+    // Esto se hace de forma asíncrona sin bloquear la UI
+    setTimeout(() => {
+      if (user?.id) {
+        // Refrescar datos del contexto para mantener sincronización
+        // pero sin hacer llamada adicional a la API de avatar
+        updateProfile({ profile_image: imageUrl });
+      }
+    }, 100);
   };
 
   // Mostrar loading mientras se carga la autenticación

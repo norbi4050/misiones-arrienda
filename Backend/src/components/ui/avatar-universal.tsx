@@ -7,7 +7,6 @@ import { getAvatarConfig } from "@/utils/avatar";
 
 export interface AvatarUniversalProps {
   src?: string | null;
-  photos?: string[] | null;
   name?: string | null;
   updatedAt?: string | null;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -37,7 +36,6 @@ const iconSizes = {
 
 export function AvatarUniversal({
   src,
-  photos,
   name,
   updatedAt,
   size = 'md',
@@ -49,11 +47,10 @@ export function AvatarUniversal({
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
-  // Get avatar configuration with cache-busting (prioritize photos[0])
+  // Get avatar configuration with cache-busting
   const avatarConfig = getAvatarConfig({
-    photos,
-    profileImage: src,
-    updatedAt,
+    profileImage: src || undefined,
+    updatedAt: updatedAt || undefined,
     fallbackInitials: name || undefined,
     size: parseInt(sizeClasses[size].match(/w-(\d+)/)?.[1] || '10') * 4 // Convert to pixels
   });
@@ -85,7 +82,7 @@ export function AvatarUniversal({
       {shouldShowImage && avatarConfig.url && (
         <img
           src={avatarConfig.url}
-          alt={`Avatar de ${name || 'Usuario'}`}
+          alt={`Avatar de ${name ?? 'Usuario'}`}
           className={cn(
             "w-full h-full object-cover transition-opacity duration-200",
             imageLoading ? "opacity-0" : "opacity-100"

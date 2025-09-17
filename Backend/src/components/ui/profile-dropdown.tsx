@@ -26,7 +26,6 @@ export function ProfileDropdown({ user, onSignOut }: ProfileDropdownProps) {
         onClick={() => setIsOpen(!isOpen)}
       >
         <AvatarUniversal
-          photos={profile?.photos}
           src={profile?.profile_image}
           name={displayName}
           updatedAt={profile?.updated_at}

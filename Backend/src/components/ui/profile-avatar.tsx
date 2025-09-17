@@ -12,12 +12,14 @@ import {
   Trash2
 } from 'lucide-react';
 import { cn } from "@/utils";
+import { getAvatarUrl, getInitials } from "@/utils/avatar";
 import toast from 'react-hot-toast';
 
 interface ProfileAvatarProps {
   src?: string;
   name?: string;
   userId?: string;
+  updatedAt?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showUpload?: boolean;
   allowedFormats?: string[];
@@ -30,6 +32,7 @@ export function ProfileAvatar({
   src,
   name = 'Usuario',
   userId,
+  updatedAt,
   size = 'lg',
   showUpload = true,
   allowedFormats = ['image/jpeg', 'image/png', 'image/webp'],
@@ -44,11 +47,16 @@ export function ProfileAvatar({
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadInProgressRef = useRef(false); // Mutex para prevenir dobles uploads
 
-  // Actualizar imagen cuando cambie la prop src
+  // Actualizar imagen cuando cambie la prop src o updatedAt
   useEffect(() => {
-    setCurrentImageUrl(src || null);
-  }, [src]);
+    const cacheBustedUrl = getAvatarUrl({
+      profileImage: src,
+      updatedAt
+    });
+    setCurrentImageUrl(cacheBustedUrl);
+  }, [src, updatedAt]);
 
   // Tamaños del avatar
   const sizeClasses = {
@@ -65,15 +73,6 @@ export function ProfileAvatar({
     xl: 'w-8 h-8'
   };
 
-  // Generar iniciales del nombre
-  const getInitials = (fullName: string) => {
-    return fullName
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   // Validar archivo
   const validateFile = (file: File): string | null => {
@@ -133,6 +132,12 @@ export function ProfileAvatar({
 
   // Manejar selección de archivo
   const handleFileSelect = useCallback(async (file: File) => {
+    // Prevenir dobles uploads con mutex
+    if (uploadInProgressRef.current) {
+      console.warn('Upload already in progress, ignoring duplicate request');
+      return;
+    }
+
     setError(null);
 
     const validationError = validateFile(file);
@@ -143,6 +148,7 @@ export function ProfileAvatar({
     }
 
     try {
+      uploadInProgressRef.current = true; // Activar mutex
       setUploading(true);
       setUploadProgress(0);
 
@@ -207,6 +213,7 @@ export function ProfileAvatar({
         setPreviewUrl(null);
       }
     } finally {
+      uploadInProgressRef.current = false; // Liberar mutex
       setUploading(false);
       setUploadProgress(0);
     }
@@ -248,9 +255,10 @@ export function ProfileAvatar({
 
   // Eliminar avatar
   const handleRemoveAvatar = async () => {
-    if (!currentImageUrl) return;
+    if (!currentImageUrl || uploadInProgressRef.current) return;
 
     try {
+      uploadInProgressRef.current = true; // Activar mutex
       setUploading(true);
 
       const response = await fetch('/api/users/avatar', {
@@ -275,6 +283,7 @@ export function ProfileAvatar({
       console.error('Error removing avatar:', error);
       toast.error('Error al eliminar avatar');
     } finally {
+      uploadInProgressRef.current = false; // Liberar mutex
       setUploading(false);
     }
   };
