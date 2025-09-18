@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MessageCircle, X, Send, Bot, User, TrendingUp, Search, Home, HelpCircle } from "lucide-react"
+import { MessageCircle, X, Send, Robot, User, TrendingUp, Search, Home, HelpCircle } from "lucide-react"
 import { trackChatInteraction, trackPageView, analyticsService } from "@/lib/analytics"
 
 interface Message {
@@ -233,7 +233,7 @@ export function AIChatbot() {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-blue-600 text-white rounded-t-lg">
         <div className="flex items-center space-x-2">
-          <Bot className="h-6 w-6" />
+          <Robot className="h-6 w-6" />
           <div>
             <h3 className="font-semibold">MisionesBot</h3>
             <p className="text-xs opacity-90">Asistente IA • Tiempo: {formatTime(userAnalytics.timeOnPage)}</p>
@@ -273,7 +273,7 @@ export function AIChatbot() {
                 : 'bg-gray-100 text-gray-900'
             }`}>
               <div className="flex items-start space-x-2">
-                {message.type === 'bot' && <Bot className="h-4 w-4 mt-0.5 text-blue-600" />}
+                {message.type === 'bot' && <Robot className="h-4 w-4 mt-0.5 text-blue-600" />}
                 {message.type === 'user' && <User className="h-4 w-4 mt-0.5" />}
                 <div className="flex-1">
                   <div className="whitespace-pre-wrap text-sm">
@@ -309,7 +309,7 @@ export function AIChatbot() {
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
               <div className="flex items-center space-x-2">
-                <Bot className="h-4 w-4 text-blue-600" />
+                <Robot className="h-4 w-4 text-blue-600" />
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>

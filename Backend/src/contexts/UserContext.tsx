@@ -46,11 +46,11 @@ export interface UserContextType {
   updateAvatar: (imageUrl: string) => Promise<{ success: boolean; error?: string }>;
   refreshProfile: () => Promise<void>;
 
+  // Funciones de avatar con cache-busting
+  getAvatarUrlWithCacheBust: () => string | null;
+
   // Funciones de caché
   clearCache: () => void;
-
-  // Función para obtener avatar con cache-busting
-  getAvatarWithCacheBust: () => string | null;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -87,24 +87,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const loadFromCache = useCallback(() => {
     try {
-      const timestamp = localStorage.getItem(CACHE_KEYS.CACHE_TIMESTAMP);
-      if (!timestamp || Date.now() - parseInt(timestamp) > CACHE_DURATION) {
-        clearCache();
-        return null;
-      }
-
       const cachedProfile = localStorage.getItem(CACHE_KEYS.USER_PROFILE);
       const cachedSession = localStorage.getItem(CACHE_KEYS.USER_SESSION);
+      const cacheTimestamp = localStorage.getItem(CACHE_KEYS.CACHE_TIMESTAMP);
 
-      if (cachedProfile && cachedSession) {
-        return {
-          profile: JSON.parse(cachedProfile) as UserProfile,
-          session: JSON.parse(cachedSession) as Session
-        };
+      if (cachedProfile && cachedSession && cacheTimestamp) {
+        const timestamp = parseInt(cacheTimestamp);
+        const isExpired = Date.now() - timestamp > CACHE_DURATION;
+
+        if (!isExpired) {
+          return {
+            profile: JSON.parse(cachedProfile) as UserProfile,
+            session: JSON.parse(cachedSession) as Session
+          };
+        }
       }
     } catch (error) {
       console.warn('Error loading from cache:', error);
-      clearCache();
     }
     return null;
   }, []);
@@ -120,14 +119,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Función para obtener avatar con cache-busting
-  const getAvatarWithCacheBust = useCallback(() => {
-    if (!profile) return null;
+  const getAvatarUrlWithCacheBust = useCallback(() => {
+    if (!profile?.profile_image) return null;
     
     return getAvatarUrl({
       profileImage: profile.profile_image,
       updatedAt: profile.updated_at
     });
-  }, [profile]);
+  }, [profile?.profile_image, profile?.updated_at]);
 
   // Cargar perfil del usuario
   const loadUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
@@ -150,7 +149,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase]);
 
-  // Funciones de autenticación
+  // Función de login
   const login = useCallback(async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -158,7 +157,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
 
       if (error) {
@@ -187,6 +186,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase, loadUserProfile, saveToCache]);
 
+  // Función de registro
   const register = useCallback(async (email: string, password: string, userData?: any) => {
     try {
       setLoading(true);
@@ -215,6 +215,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase]);
 
+  // Función de logout
   const signOut = useCallback(async () => {
     try {
       await supabase.auth.signOut();
@@ -227,7 +228,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase, clearCache]);
 
-  // Funciones de perfil
+  // Función para actualizar perfil
   const updateProfile = useCallback(async (data: Partial<UserProfile>) => {
     if (!user) {
       return { success: false, error: 'Usuario no autenticado' };
@@ -246,28 +247,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: error.message };
       }
 
-      // Actualizar perfil local
-      if (profile) {
-        const updatedProfile = { 
-          ...profile, 
-          ...data, 
-          updated_at: new Date().toISOString() 
-        };
-        setProfile(updatedProfile);
-        
-        if (session) {
-          saveToCache(updatedProfile, session);
-        }
-      }
+      // Actualizar estado local
+      setProfile(prev => prev ? { ...prev, ...data, updated_at: new Date().toISOString() } : null);
+
+      // Refrescar perfil completo
+      await refreshProfile();
 
       return { success: true };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       return { success: false, error: errorMessage };
     }
-  }, [user, profile, session, supabase, saveToCache]);
+  }, [user, supabase]);
 
-  // Función para actualizar avatar
+  // Función para actualizar avatar con cache-busting
   const updateAvatar = useCallback(async (imageUrl: string) => {
     if (!user) {
       return { success: false, error: 'Usuario no autenticado' };
@@ -288,27 +281,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: error.message };
       }
 
-      // Actualizar perfil local inmediatamente
-      if (profile) {
-        const updatedProfile = { 
-          ...profile, 
-          profile_image: imageUrl,
-          updated_at: now
-        };
-        setProfile(updatedProfile);
-        
-        if (session) {
-          saveToCache(updatedProfile, session);
-        }
-      }
+      // Actualizar estado local inmediatamente con cache-busting
+      setProfile(prev => prev ? { 
+        ...prev, 
+        profile_image: imageUrl, 
+        updated_at: now 
+      } : null);
 
       return { success: true };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       return { success: false, error: errorMessage };
     }
-  }, [user, profile, session, supabase, saveToCache]);
+  }, [user, supabase]);
 
+  // Función para refrescar perfil
   const refreshProfile = useCallback(async () => {
     if (!user) return;
 
@@ -339,23 +326,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setUser(cached.session.user);
         }
 
-        // Verificar sesión actual
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Obtener sesión actual
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) {
-            setError('Error al verificar sesión');
-            clearCache();
-          }
-          return;
-        }
-
         if (session?.user && mounted) {
           setSession(session);
           setUser(session.user);
 
-          // Cargar perfil actualizado
           const profileData = await loadUserProfile(session.user.id);
           if (profileData && mounted) {
             setProfile(profileData);
@@ -436,11 +413,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     updateAvatar,
     refreshProfile,
 
+    // Funciones de avatar con cache-busting
+    getAvatarUrlWithCacheBust,
+
     // Funciones de caché
     clearCache,
-
-    // Función para obtener avatar con cache-busting
-    getAvatarWithCacheBust,
   };
 
   return (

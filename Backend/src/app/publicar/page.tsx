@@ -186,14 +186,14 @@ export default function PublicarPage() {
     try {
       if (selectedPlan === 'basico') {
         // Plan gratuito - crear propiedad directamente
-        const response = await fetch('/api/properties', {
+        const response = await fetch('/api/properties/create', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
+          credentials: 'include',
           body: JSON.stringify({
             ...data,
-            user_id: user?.id,
             contact_name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuario',
             contact_email: user?.email,
             province: data.province || 'Misiones'

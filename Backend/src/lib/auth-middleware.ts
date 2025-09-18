@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { createServerSupabase } from './supabase/server'
 
 const prisma = new PrismaClient()
 
@@ -11,21 +12,19 @@ interface AuthenticatedUser {
 
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthenticatedUser | null> {
   try {
-    // Obtener el token del header Authorization
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Usar Supabase para obtener el usuario desde las cookies
+    const supabase = await createServerSupabase()
+
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    if (error || !user) {
+      console.error('Supabase auth error:', error)
       return null
     }
 
-    const token = authHeader.substring(7) // Remover 'Bearer '
-
-    if (!token) {
-      return null
-    }
-
-    // Para el sistema actual que usa localStorage, el token es directamente el userId
-    const user = await prisma.user.findUnique({
-      where: { id: token },
+    // Buscar el usuario en la base de datos usando el ID de Supabase
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
       select: {
         id: true,
         name: true,
@@ -33,7 +32,12 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<Authen
       }
     })
 
-    return user
+    if (!dbUser) {
+      console.error('User not found in database:', user.id)
+      return null
+    }
+
+    return dbUser
   } catch (error) {
     console.error('Error in getAuthenticatedUser:', error)
     return null

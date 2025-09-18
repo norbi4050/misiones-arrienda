@@ -7,9 +7,18 @@ const prisma = new PrismaClient()
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
+  console.log('=== CREATE PROPERTY REQUEST STARTED ===')
+  console.log('Request method:', req.method)
+  console.log('Request headers:', Object.fromEntries(req.headers.entries()))
+
   try {
     // Verificar autenticación del usuario
+    console.log('Checking authentication...')
     const authenticatedUser = await getAuthenticatedUser(req)
+    console.log('Authenticated user:', authenticatedUser ? 'Found' : 'Not found')
+    if (authenticatedUser) {
+      console.log('User details:', { id: authenticatedUser.id, name: authenticatedUser.name, email: authenticatedUser.email })
+    }
     if (!authenticatedUser) {
       return NextResponse.json(
         { error: 'Usuario no autenticado. Debe iniciar sesión para crear propiedades.' },
@@ -181,6 +190,11 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Error creating property:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    })
 
     // Manejo específico de errores de Prisma
     if (error instanceof Error) {
@@ -195,6 +209,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           { error: 'Error de referencia en los datos' },
           { status: 400 }
+        )
+      }
+
+      // Check for user not found
+      if (error.message.includes('User not found in database')) {
+        return NextResponse.json(
+          { error: 'Usuario no encontrado en la base de datos. Por favor, contacte al administrador.' },
+          { status: 404 }
         )
       }
     }
