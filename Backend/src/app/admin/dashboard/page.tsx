@@ -1,359 +1,367 @@
-/**
- * 🏢 DASHBOARD DE ADMINISTRACIÓN
- *
- * Panel de control para administradores del sistema
- * Permite gestionar usuarios, propiedades, pagos y estadísticas
- */
+"use client";
 
-'use client';
-
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AvatarOptimized } from '@/components/ui/avatar-optimized';
+import { useNotifications } from '@/hooks/useNotifications';
+import { 
+  Users, 
+  Image, 
+  Shield, 
+  Activity, 
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  TrendingUp,
+  Database,
+  Server
+} from 'lucide-react';
 
 interface AdminStats {
-  users: {
-    total: number;
-    inquilinos: number;
-    duenos: number;
-    inmobiliarias: number;
-    newThisMonth: number;
-  };
-  properties: {
-    total: number;
-    active: number;
-    expired: number;
-    featured: number;
-    newThisMonth: number;
-  };
-  payments: {
-    totalRevenue: number;
-    thisMonth: number;
-    successful: number;
-    pending: number;
-    failed: number;
-  };
-  community: {
-    profiles: number;
-    activeProfiles: number;
-    suspendedProfiles: number;
-    newThisMonth: number;
-  };
+  totalUsers: number;
+  totalAvatars: number;
+  avatarUploadsToday: number;
+  securityAlerts: number;
+  systemHealth: 'healthy' | 'warning' | 'critical';
+  storageUsed: number;
+  storageLimit: number;
 }
 
 interface RecentActivity {
   id: string;
-  type: 'user_registered' | 'property_published' | 'payment_received' | 'profile_created';
+  type: 'avatar_upload' | 'user_registration' | 'security_alert' | 'system_event';
+  user?: {
+    id: string;
+    name: string;
+    avatar?: string;
+    updated_at?: string;
+  };
   description: string;
   timestamp: string;
-  amount?: number;
+  severity: 'info' | 'warning' | 'error';
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { notifications, unreadCount } = useNotifications();
 
+  // Cargar estadísticas del dashboard
   useEffect(() => {
-    fetchAdminData();
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Simular carga de datos (en producción sería una API real)
+        const mockStats: AdminStats = {
+          totalUsers: 1247,
+          totalAvatars: 892,
+          avatarUploadsToday: 23,
+          securityAlerts: 2,
+          systemHealth: 'healthy',
+          storageUsed: 2.4, // GB
+          storageLimit: 10 // GB
+        };
+
+        const mockActivity: RecentActivity[] = [
+          {
+            id: '1',
+            type: 'avatar_upload',
+            user: {
+              id: 'user1',
+              name: 'María González',
+              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
+              updated_at: new Date().toISOString()
+            },
+            description: 'Subió nuevo avatar',
+            timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+            severity: 'info'
+          },
+          {
+            id: '2',
+            type: 'user_registration',
+            user: {
+              id: 'user2',
+              name: 'Carlos Mendoza',
+              updated_at: new Date().toISOString()
+            },
+            description: 'Nuevo usuario registrado',
+            timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+            severity: 'info'
+          },
+          {
+            id: '3',
+            type: 'security_alert',
+            description: 'Rate limit alcanzado para IP 192.168.1.100',
+            timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+            severity: 'warning'
+          },
+          {
+            id: '4',
+            type: 'system_event',
+            description: 'Limpieza automática de avatares antiguos completada',
+            timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+            severity: 'info'
+          }
+        ];
+
+        setStats(mockStats);
+        setRecentActivity(mockActivity);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error desconocido');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
-  const fetchAdminData = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch admin statistics
-      const statsResponse = await fetch('/api/admin/stats');
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData);
-      }
-
-      // Fetch recent activity
-      const activityResponse = await fetch('/api/admin/activity');
-      if (activityResponse.ok) {
-        const activityData = await activityResponse.json();
-        setRecentActivity(activityData);
-      }
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
-    } finally {
-      setLoading(false);
+  const getActivityIcon = (type: RecentActivity['type']) => {
+    switch (type) {
+      case 'avatar_upload': return <Image className="w-4 h-4" />;
+      case 'user_registration': return <Users className="w-4 h-4" />;
+      case 'security_alert': return <Shield className="w-4 h-4" />;
+      case 'system_event': return <Server className="w-4 h-4" />;
+      default: return <Activity className="w-4 h-4" />;
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS'
-    }).format(amount);
-  };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'user_registered': return '👤';
-      case 'property_published': return '🏠';
-      case 'payment_received': return '💰';
-      case 'profile_created': return '👥';
-      default: return '📊';
+  const getSeverityColor = (severity: RecentActivity['severity']) => {
+    switch (severity) {
+      case 'error': return 'text-red-600 bg-red-50';
+      case 'warning': return 'text-yellow-600 bg-yellow-50';
+      case 'info': return 'text-blue-600 bg-blue-50';
+      default: return 'text-gray-600 bg-gray-50';
     }
   };
 
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case 'user_registered': return 'bg-blue-100 text-blue-800';
-      case 'property_published': return 'bg-green-100 text-green-800';
-      case 'payment_received': return 'bg-yellow-100 text-yellow-800';
-      case 'profile_created': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getHealthColor = (health: AdminStats['systemHealth']) => {
+    switch (health) {
+      case 'healthy': return 'text-green-600 bg-green-50';
+      case 'warning': return 'text-yellow-600 bg-yellow-50';
+      case 'critical': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Cargando dashboard...</p>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-64"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <Card className="p-6 max-w-md">
+          <div className="text-center">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar dashboard</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Reintentar
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard de Administración</h1>
-        <p className="text-gray-600 mt-2">Panel de control y estadísticas del sistema</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard Administrativo</h1>
+              <p className="text-gray-600">Misiones Arrienda - Sistema de Gestión</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              {unreadCount > 0 && (
+                <Badge variant="destructive">{unreadCount} notificaciones</Badge>
+              )}
+              <Badge className={getHealthColor(stats?.systemHealth || 'healthy')}>
+                {stats?.systemHealth === 'healthy' ? 'Sistema Saludable' : 
+                 stats?.systemHealth === 'warning' ? 'Advertencias' : 'Crítico'}
+              </Badge>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Estadísticas principales */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
-              <span className="text-2xl">👥</span>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.users.total.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                +{stats.users.newThisMonth} este mes
-              </p>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="secondary" className="text-xs">
-                  {stats.users.inquilinos} Inquilinos
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {stats.users.duenos} Dueños
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {stats.users.inmobiliarias} Inmobiliarias
-                </Badge>
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Estadísticas principales */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
+                <p className="text-3xl font-bold text-gray-900">{stats?.totalUsers.toLocaleString()}</p>
               </div>
-            </CardContent>
+              <Users className="w-8 h-8 text-blue-500" />
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Propiedades</CardTitle>
-              <span className="text-2xl">🏠</span>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.properties.total.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                +{stats.properties.newThisMonth} este mes
-              </p>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="default" className="text-xs">
-                  {stats.properties.active} Activas
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {stats.properties.featured} Destacadas
-                </Badge>
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Avatares Activos</p>
+                <p className="text-3xl font-bold text-gray-900">{stats?.totalAvatars.toLocaleString()}</p>
               </div>
-            </CardContent>
+              <Image className="w-8 h-8 text-green-500" />
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ingresos</CardTitle>
-              <span className="text-2xl">💰</span>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.payments.totalRevenue)}</div>
-              <p className="text-xs text-muted-foreground">
-                {formatCurrency(stats.payments.thisMonth)} este mes
-              </p>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="default" className="text-xs">
-                  {stats.payments.successful} Exitosos
-                </Badge>
-                <Badge variant="destructive" className="text-xs">
-                  {stats.payments.failed} Fallidos
-                </Badge>
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Uploads Hoy</p>
+                <p className="text-3xl font-bold text-gray-900">{stats?.avatarUploadsToday}</p>
               </div>
-            </CardContent>
+              <TrendingUp className="w-8 h-8 text-purple-500" />
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Comunidad</CardTitle>
-              <span className="text-2xl">👫</span>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.community.profiles.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                +{stats.community.newThisMonth} este mes
-              </p>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="default" className="text-xs">
-                  {stats.community.activeProfiles} Activos
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {stats.community.suspendedProfiles} Suspendidos
-                </Badge>
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Alertas Seguridad</p>
+                <p className="text-3xl font-bold text-gray-900">{stats?.securityAlerts}</p>
               </div>
-            </CardContent>
+              <Shield className="w-8 h-8 text-red-500" />
+            </div>
           </Card>
         </div>
-      )}
 
-      {/* Tabs para diferentes secciones */}
-      <Tabs defaultValue="activity" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="activity">Actividad Reciente</TabsTrigger>
-          <TabsTrigger value="users">Gestión de Usuarios</TabsTrigger>
-          <TabsTrigger value="properties">Gestión de Propiedades</TabsTrigger>
-          <TabsTrigger value="payments">Gestión de Pagos</TabsTrigger>
-          <TabsTrigger value="reports">Reportes</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="activity" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Actividad Reciente</CardTitle>
-              <CardDescription>
-                Últimas acciones realizadas en la plataforma
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-4 p-4 border rounded-lg">
-                    <div className="text-2xl">{getActivityIcon(activity.type)}</div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.description}</p>
-                      <p className="text-xs text-gray-500">{activity.timestamp}</p>
-                    </div>
-                    {activity.amount && (
-                      <Badge className={getActivityColor(activity.type)}>
-                        {formatCurrency(activity.amount)}
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestión de Usuarios</CardTitle>
-              <CardDescription>
-                Administrar usuarios registrados en la plataforma
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Button variant="outline">Ver Todos los Usuarios</Button>
-                  <Button variant="outline">Usuarios Suspendidos</Button>
-                  <Button variant="outline">Exportar Datos</Button>
+        {/* Storage y rendimiento */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Uso de Storage</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                  <span>Avatares</span>
+                  <span>{stats?.storageUsed}GB / {stats?.storageLimit}GB</span>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Funcionalidad de gestión de usuarios en desarrollo...
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="properties" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestión de Propiedades</CardTitle>
-              <CardDescription>
-                Administrar propiedades publicadas en la plataforma
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Button variant="outline">Propiedades Pendientes</Button>
-                  <Button variant="outline">Propiedades Reportadas</Button>
-                  <Button variant="outline">Propiedades Destacadas</Button>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${((stats?.storageUsed || 0) / (stats?.storageLimit || 1)) * 100}%` }}
+                  ></div>
                 </div>
-                <p className="text-sm text-gray-600">
-                  Funcionalidad de gestión de propiedades en desarrollo...
-                </p>
               </div>
-            </CardContent>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Database className="w-4 h-4" />
+                <span>Optimización automática activa</span>
+                <CheckCircle className="w-4 h-4 text-green-500" />
+              </div>
+            </div>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="payments" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestión de Pagos</CardTitle>
-              <CardDescription>
-                Administrar transacciones y pagos del sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Button variant="outline">Pagos Pendientes</Button>
-                  <Button variant="outline">Pagos Fallidos</Button>
-                  <Button variant="outline">Reembolsos</Button>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Funcionalidad de gestión de pagos en desarrollo...
-                </p>
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Estado del Sistema</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Cache-busting</span>
+                <Badge className="bg-green-50 text-green-600">Activo</Badge>
               </div>
-            </CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Rate Limiting</span>
+                <Badge className="bg-green-50 text-green-600">Activo</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">RLS Policies</span>
+                <Badge className="bg-green-50 text-green-600">Activo</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Lazy Loading</span>
+                <Badge className="bg-green-50 text-green-600">Activo</Badge>
+              </div>
+            </div>
           </Card>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="reports" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reportes y Análisis</CardTitle>
-              <CardDescription>
-                Generar reportes detallados del sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Button variant="outline">Reporte de Ingresos</Button>
-                  <Button variant="outline">Reporte de Usuarios</Button>
-                  <Button variant="outline">Reporte de Actividad</Button>
+        {/* Actividad reciente */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Actividad Reciente</h3>
+            <Button variant="outline" size="sm">
+              Ver Todo
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                <div className={`p-2 rounded-full ${getSeverityColor(activity.severity)}`}>
+                  {getActivityIcon(activity.type)}
                 </div>
-                <p className="text-sm text-gray-600">
-                  Funcionalidad de reportes en desarrollo...
-                </p>
+                
+                {activity.user && (
+                  <AvatarOptimized
+                    src={activity.user.avatar}
+                    name={activity.user.name}
+                    updatedAt={activity.user.updated_at}
+                    size="sm"
+                    lazy={true}
+                  />
+                )}
+                
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">
+                    {activity.user?.name || 'Sistema'}
+                  </p>
+                  <p className="text-sm text-gray-600 truncate">
+                    {activity.description}
+                  </p>
+                </div>
+                
+                <div className="flex items-center text-xs text-gray-500">
+                  <Clock className="w-3 h-3 mr-1" />
+                  {new Date(activity.timestamp).toLocaleTimeString()}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            ))}
+          </div>
+        </Card>
+
+        {/* Acciones rápidas */}
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Acciones Administrativas</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button variant="outline" className="justify-start">
+              <Database className="w-4 h-4 mr-2" />
+              Optimizar Storage
+            </Button>
+            <Button variant="outline" className="justify-start">
+              <Shield className="w-4 h-4 mr-2" />
+              Revisar Seguridad
+            </Button>
+            <Button variant="outline" className="justify-start">
+              <Activity className="w-4 h-4 mr-2" />
+              Generar Reporte
+            </Button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

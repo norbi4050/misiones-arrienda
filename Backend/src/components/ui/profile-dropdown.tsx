@@ -42,10 +42,22 @@ export function ProfileDropdown({ user, onSignOut }: ProfileDropdownProps) {
           />
           <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border z-50">
             <div className="px-4 py-3 border-b">
-              <p className="text-sm font-medium leading-none">{displayName}</p>
-              <p className="text-xs leading-none text-gray-500 mt-1">
-                {user.email}
-              </p>
+              <div className="flex items-center space-x-3">
+                <AvatarUniversal
+                  src={user?.user_metadata?.profile_image}
+                  name={user?.user_metadata?.name || user?.email}
+                  updatedAt={user?.updated_at}
+                  size="md"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium leading-none truncate">
+                    {user?.user_metadata?.name || displayName}
+                  </p>
+                  <p className="text-xs leading-none text-gray-500 mt-1 truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="py-1">

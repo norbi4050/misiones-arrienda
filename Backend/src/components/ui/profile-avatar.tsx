@@ -56,6 +56,7 @@ export function ProfileAvatar({
       updatedAt
     });
     setCurrentImageUrl(cacheBustedUrl);
+    setPreviewUrl(null); // Clear preview when src changes
   }, [src, updatedAt]);
 
   // Tamaños del avatar
@@ -288,7 +289,11 @@ export function ProfileAvatar({
     }
   };
 
-  const displayImageUrl = previewUrl || currentImageUrl;
+  // Generate cache-busted URL for display
+  const displayImageUrl = getAvatarUrl({
+    profileImage: previewUrl || currentImageUrl,
+    updatedAt: new Date().toISOString() // Use current time for immediate updates
+  }) || previewUrl || currentImageUrl;
 
   return (
     <div className={cn("relative", className)}>
