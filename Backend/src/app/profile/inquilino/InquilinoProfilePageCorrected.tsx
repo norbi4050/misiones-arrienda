@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
-import ProfileAvatar from "@/components/ui/profile-avatar";
+import ProfileAvatarSimple from "@/components/ui/profile-avatar-simple";
 import { ProfileForm } from "@/components/ui/profile-form";
 import { QuickActionsGrid } from "@/components/ui/quick-actions-grid";
 import { ProfileStatsImproved as ProfileStats } from "@/components/ui/profile-stats-improved";
@@ -48,7 +48,7 @@ interface ProfileData {
 }
 
 export default function InquilinoProfilePage() {
-  const { user, profile, loading, isAuthenticated, error, updateProfile, updateAvatar } = useUser();
+  const { user, profile, loading, isAuthenticated, error, updateProfile, updateAvatar, refreshProfile } = useUser();
   const [profileData, setProfileData] = useState<Partial<ProfileData>>({});
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -102,6 +102,13 @@ export default function InquilinoProfilePage() {
     }
   }, [user, profile]);
 
+  // Force refresh profile on component mount to ensure fresh data
+  useEffect(() => {
+    if (user && !loading) {
+      refreshProfile();
+    }
+  }, [user, loading, refreshProfile]);
+
   const handleSaveProfile = async (data: Partial<ProfileData>) => {
     try {
       await updateProfile(data);
@@ -113,19 +120,19 @@ export default function InquilinoProfilePage() {
     }
   };
 
-  const handleAvatarChange = (imageUrl: string) => {
-    // Solo actualizar UI local - ProfileAvatar ya manejó la API
+  const handleAvatarChange = async (imageUrl: string) => {
+    // Actualizar UI local inmediatamente
     setProfileData(prev => ({ ...prev, profile_image: imageUrl }));
     
-    // Refrescar el perfil del contexto para sincronizar
-    // Esto se hace de forma asíncrona sin bloquear la UI
-    setTimeout(() => {
-      if (user?.id) {
-        // Refrescar datos del contexto para mantener sincronización
-        // pero sin hacer llamada adicional a la API de avatar
-        updateProfile({ profile_image: imageUrl });
+    // NO llamar updateAvatar aquí porque ProfileAvatar ya actualizó la API
+    // En su lugar, refrescar el perfil después de un delay para sincronizar
+    setTimeout(async () => {
+      try {
+        await refreshProfile();
+      } catch (error) {
+        console.error('Error refreshing profile after avatar change:', error);
       }
-    }, 100);
+    }, 500);
   };
 
   // Mostrar loading mientras se carga la autenticación
@@ -205,9 +212,7 @@ export default function InquilinoProfilePage() {
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Avatar */}
               <div className="flex-shrink-0">
-                <ProfileAvatar
-                  src={profileData.profile_image}
-                  name={profileData.name || 'Usuario'}
+                <ProfileAvatarSimple
                   userId={user.id}
                   size="xl"
                   showUpload={true}

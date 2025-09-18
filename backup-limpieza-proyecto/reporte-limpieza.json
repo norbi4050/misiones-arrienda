@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-09-18T14:19:23.997Z",
+  "limpieza": {
+    "eliminados": 16,
+    "backup": 16,
+    "errores": 222
+  },
+  "archivosOriginales": 576,
+  "archivosRestantes": 560,
+  "espacioLiberado": "1.37 MB",
+  "backupLocation": "backup-limpieza-proyecto/",
+  "archivosParaRevisar": 24
+}

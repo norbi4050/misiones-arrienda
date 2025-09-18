@@ -194,7 +194,7 @@ export default function PublicarPage() {
           body: JSON.stringify({
             ...data,
             user_id: user?.id,
-            contact_name: user?.name,
+            contact_name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuario',
             contact_email: user?.email,
             province: data.province || 'Misiones'
           })
@@ -203,10 +203,19 @@ export default function PublicarPage() {
         if (response.ok) {
           toast.success('¡Propiedad publicada exitosamente!')
           reset()
-          router.push('/dashboard')
+          router.push('/properties')
         } else {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Error al crear la propiedad')
+          // Verificar si la respuesta contiene JSON válido
+          let errorMessage = 'Error al crear la propiedad'
+          try {
+            const errorData = await response.json()
+            errorMessage = errorData.error || errorMessage
+          } catch (jsonError) {
+            // Si no se puede parsear como JSON, usar mensaje genérico
+            console.warn('Response is not valid JSON:', jsonError)
+            errorMessage = `Error ${response.status}: ${response.statusText || 'Error del servidor'}`
+          }
+          throw new Error(errorMessage)
         }
       } else {
         // Plan pago - crear preferencia de MercadoPago
@@ -223,7 +232,7 @@ export default function PublicarPage() {
             quantity: 1,
             propertyId: `temp-${Date.now()}`,
             userEmail: user?.email,
-            userName: user?.name,
+            userName: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuario',
             metadata: {
               plan: selectedPlan,
               propertyData: JSON.stringify(data),
@@ -259,11 +268,11 @@ export default function PublicarPage() {
           </Link>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
-              Bienvenido, <strong>{user?.name}</strong>
+              Bienvenido, <strong>{user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuario'}</strong>
             </span>
-            <Link href="/dashboard">
+            <Link href="/properties">
               <Button variant="outline" size="sm">
-                Mi Dashboard
+                Ver Propiedades
               </Button>
             </Link>
           </div>

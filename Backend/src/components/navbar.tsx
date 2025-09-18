@@ -118,7 +118,12 @@ export function Navbar({ initialSession }: NavbarProps) {
                     </Link>
 
                     {/* Profile Dropdown */}
-                    <ProfileDropdown user={currentUser} onSignOut={signOut} />
+                    <ProfileDropdown 
+                      user={currentUser} 
+                      onSignOut={signOut}
+                      profileImage={profile?.profile_image}
+                      updatedAt={profile?.updated_at}
+                    />
                   </>
                 ) : (
                   <>

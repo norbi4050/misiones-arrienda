@@ -286,61 +286,73 @@ export function ProfileImageUpload({
   userId
 }: ProfileImageUploadProps) {
   const [uploading, setUploading] = useState(false)
+  const uploadInProgressRef = useRef(false) // Single-flight protection
   const router = useRouter()
 
-  const handleUploadComplete = async (urls: string[]) => {
-    if (urls.length > 0) {
-      const imageUrl = urls[0]
-      const oldAvatarUrl = value // Store the current avatar URL before updating
-
-      try {
-        // Make PATCH request to /api/users/profile
-        const response = await fetch('/api/users/profile', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ profileImage: imageUrl }),
-        })
-
-        if (response.ok) {
-          onChange(imageUrl)
-          toast.success('✅ Avatar guardado')
-
-          // Clean up old avatar from storage if it exists
-          if (oldAvatarUrl) {
-            try {
-              // Extract file path from Supabase URL
-              // URL format: https://[project].supabase.co/storage/v1/object/public/avatars/[userId]/[filename]
-              const urlParts = oldAvatarUrl.split('/storage/v1/object/public/avatars/')
-              if (urlParts.length === 2) {
-                const filePath = urlParts[1] // This will be [userId]/[filename]
-
-                const { error } = await supabase.storage
-                  .from('avatars')
-                  .remove([filePath])
-
-                if (error) {
-                  console.error('Error deleting old avatar:', error)
-                } else {
-                  }
-              }
-            } catch (deleteError) {
-              console.error('Error during old avatar cleanup:', deleteError)
-            }
-          }
-
-          // Refresh the page to update header avatar
-          router.refresh()
-        } else {
-          throw new Error('Error al guardar el avatar')
-        }
-      } catch (error) {
-        console.error('Error saving profile image:', error)
-        toast.error('Error al guardar el avatar')
-      }
+  const uploadAvatarOnce = async (urls: string[]) => {
+    // Single-flight protection
+    if (uploadInProgressRef.current) {
+      console.warn('Upload already in progress, ignoring duplicate request')
+      return
     }
-    setUploading(false)
+
+    if (urls.length === 0) return
+
+    try {
+      uploadInProgressRef.current = true
+      setUploading(true)
+
+      const imageUrl = urls[0]
+      const oldAvatarUrl = value
+
+      // Make PATCH request to /api/users/profile with correct field name
+      const response = await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ profileImage: imageUrl }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        
+        // Update local state immediately (optimistic update)
+        onChange(imageUrl)
+        toast.success('✅ Avatar guardado')
+
+        // Clean up old avatar from storage if it exists
+        if (oldAvatarUrl && oldAvatarUrl !== imageUrl) {
+          try {
+            const urlParts = oldAvatarUrl.split('/storage/v1/object/public/avatars/')
+            if (urlParts.length === 2) {
+              const filePath = urlParts[1]
+              await supabase.storage.from('avatars').remove([filePath])
+            }
+          } catch (deleteError) {
+            console.error('Error during old avatar cleanup:', deleteError)
+          }
+        }
+
+        // NO router.refresh() - use optimistic updates instead
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al guardar el avatar')
+      }
+    } catch (error) {
+      console.error('Error saving profile image:', error)
+      toast.error('Error al guardar el avatar')
+      
+      // Revert optimistic update on error
+      onChange(value || '')
+    } finally {
+      uploadInProgressRef.current = false
+      setUploading(false)
+    }
+  }
+
+  const handleUploadComplete = async (urls: string[]) => {
+    await uploadAvatarOnce(urls)
   }
 
   const handleUploadError = (error: string) => {

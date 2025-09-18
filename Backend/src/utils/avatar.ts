@@ -1,6 +1,5 @@
 /**
  * Avatar utilities for handling avatar URLs with cache-busting
- * Single Source of Truth: User.profile_image
  */
 
 export interface AvatarUrlOptions {
@@ -15,7 +14,11 @@ export interface AvatarUrlOptions {
  * @param options - Avatar configuration options
  * @returns Complete avatar URL with cache-busting or null if no image
  */
-export function getAvatarUrl(options: AvatarUrlOptions): string | null {
+export function getAvatarUrl(options?: AvatarUrlOptions): string | null {
+  if (!options) {
+    return null;
+  }
+
   const { profileImage, updatedAt } = options;
 
   if (!profileImage) {
@@ -66,7 +69,17 @@ export function getInitials(name?: string | null): string {
  * @param options - Avatar configuration options
  * @returns Complete avatar configuration
  */
-export function getAvatarConfig(options: AvatarUrlOptions) {
+export function getAvatarConfig(options?: AvatarUrlOptions) {
+  if (!options) {
+    return {
+      url: null,
+      initials: 'U',
+      hasImage: false,
+      size: 40,
+      cacheBusted: false
+    };
+  }
+
   const { profileImage, updatedAt, fallbackInitials, size = 40 } = options;
   
   const avatarUrl = getAvatarUrl({ profileImage, updatedAt });

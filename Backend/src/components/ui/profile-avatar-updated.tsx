@@ -12,9 +12,9 @@ import {
   Trash2
 } from 'lucide-react';
 import { cn } from "@/utils";
-import toast from 'react-hot-toast';
 import { AvatarUniversal } from './avatar-universal';
 import { getAvatarUrl } from '@/utils/avatar';
+import toast from 'react-hot-toast';
 
 interface ProfileAvatarProps {
   src?: string;
@@ -55,10 +55,18 @@ export function ProfileAvatar({
   }, [src]);
 
   // Generar URL con cache-busting
-  const displayImageUrl = getAvatarUrl({
-    profileImage: currentImageUrl || src,
-    updatedAt: updatedAt
+  const cacheBustedUrl = getAvatarUrl({
+    profileImage: currentImageUrl,
+    updatedAt
   });
+
+  // Tamaños del avatar
+  const sizeClasses = {
+    sm: 'w-12 h-12',
+    md: 'w-16 h-16',
+    lg: 'w-24 h-24',
+    xl: 'w-32 h-32'
+  };
 
   // Validar archivo
   const validateFile = (file: File): string | null => {
@@ -77,29 +85,30 @@ export function ProfileAvatar({
   const compressImage = (file: File, quality: number = 0.8): Promise<Blob> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d')!;
       const img = new Image();
 
       img.onload = () => {
-        const maxSize = 800;
+        const maxWidth = 400;
+        const maxHeight = 400;
         let { width, height } = img;
 
         if (width > height) {
-          if (width > maxSize) {
-            height = (height * maxSize) / width;
-            width = maxSize;
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
           }
         } else {
-          if (height > maxSize) {
-            width = (width * maxSize) / height;
-            height = maxSize;
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
           }
         }
 
         canvas.width = width;
         canvas.height = height;
 
-        ctx?.drawImage(img, 0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
         canvas.toBlob((blob) => {
           if (blob) {
             resolve(blob);
@@ -115,22 +124,27 @@ export function ProfileAvatar({
 
   // Subir archivo
   const uploadFile = async (file: File) => {
+    if (!userId) {
+      toast.error('Usuario no identificado');
+      return;
+    }
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
+      toast.error(validationError);
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+    setUploadProgress(0);
+
     try {
-      setUploading(true);
-      setUploadProgress(0);
-      setError(null);
-
-      // Validar archivo
-      const validationError = validateFile(file);
-      if (validationError) {
-        setError(validationError);
-        return;
-      }
-
       // Comprimir imagen
       const compressedBlob = await compressImage(file);
       if (!compressedBlob) {
-        throw new Error('Error al comprimir imagen');
+        throw new Error('Error al comprimir la imagen');
       }
 
       // Simular progreso
@@ -141,12 +155,12 @@ export function ProfileAvatar({
       // Crear FormData
       const formData = new FormData();
       formData.append('file', compressedBlob, `avatar-${userId}-${Date.now()}.jpg`);
-      formData.append('userId', userId || '');
+      formData.append('userId', userId);
 
       // Subir a la API
       const response = await fetch('/api/users/avatar', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
 
       clearInterval(progressInterval);
@@ -159,13 +173,13 @@ export function ProfileAvatar({
 
       const data = await response.json();
       
-      // Actualizar estado local inmediatamente
-      setCurrentImageUrl(data.originalUrl || data.imageUrl);
+      // Actualizar estado local con URL cache-busted
+      setCurrentImageUrl(data.originalUrl);
       setPreviewUrl(null);
       
-      // Notificar cambio para actualización optimista
+      // Notificar cambio con URL cache-busted
       if (onImageChange) {
-        onImageChange(data.originalUrl || data.imageUrl);
+        onImageChange(data.imageUrl || data.originalUrl);
       }
 
       toast.success('Avatar actualizado correctamente');
@@ -183,17 +197,19 @@ export function ProfileAvatar({
 
   // Eliminar avatar
   const handleRemoveAvatar = async () => {
-    if (!currentImageUrl) return;
+    if (!userId) {
+      toast.error('Usuario no identificado');
+      return;
+    }
+
+    setUploading(true);
 
     try {
-      setUploading(true);
-      setError(null);
-
       const response = await fetch('/api/users/avatar', {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json'
+        }
       });
 
       if (!response.ok) {
@@ -203,7 +219,6 @@ export function ProfileAvatar({
       setCurrentImageUrl(null);
       setPreviewUrl(null);
       
-      // Notificar cambio para actualización optimista
       if (onImageChange) {
         onImageChange('');
       }
@@ -212,8 +227,6 @@ export function ProfileAvatar({
 
     } catch (error) {
       console.error('Error removing avatar:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      setError(errorMessage);
       toast.error('Error al eliminar avatar');
     } finally {
       setUploading(false);
@@ -224,11 +237,6 @@ export function ProfileAvatar({
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Mostrar preview inmediatamente
-      const previewUrl = URL.createObjectURL(file);
-      setPreviewUrl(previewUrl);
-      
-      // Subir archivo
       uploadFile(file);
     }
   };
@@ -239,9 +247,7 @@ export function ProfileAvatar({
     setDragOver(false);
 
     const file = event.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const previewUrl = URL.createObjectURL(file);
-      setPreviewUrl(previewUrl);
+    if (file) {
       uploadFile(file);
     }
   };
@@ -260,40 +266,35 @@ export function ProfileAvatar({
     fileInputRef.current?.click();
   };
 
+  const displayImageUrl = previewUrl || cacheBustedUrl;
+
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", sizeClasses[size], className)}>
       {/* Avatar principal */}
       <div
         className={cn(
-          "relative group",
+          "relative w-full h-full",
           showUpload && "cursor-pointer",
-          dragOver && "ring-2 ring-blue-400 ring-offset-2"
+          dragOver && "ring-2 ring-blue-400"
         )}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
         onClick={showUpload ? openFileSelector : undefined}
+        onDrop={showUpload ? handleDrop : undefined}
+        onDragOver={showUpload ? handleDragOver : undefined}
+        onDragLeave={showUpload ? handleDragLeave : undefined}
       >
         <AvatarUniversal
-          src={previewUrl || displayImageUrl}
+          src={displayImageUrl}
           name={name}
           updatedAt={updatedAt}
-          size={size}
+          size={size === 'sm' ? 'sm' : size === 'md' ? 'md' : size === 'lg' ? 'lg' : 'xl'}
+          showFallback={true}
           loading={uploading}
-          className={cn(
-            "transition-all duration-200",
-            uploading && "opacity-75",
-            showUpload && "hover:opacity-80"
-          )}
         />
 
-        {/* Overlay de carga */}
+        {/* Overlay de loading */}
         {uploading && (
           <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-            <div className="text-center text-white">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-1" />
-              <span className="text-xs">{uploadProgress}%</span>
-            </div>
+            <Loader2 className="w-6 h-6 text-white animate-spin" />
           </div>
         )}
       </div>

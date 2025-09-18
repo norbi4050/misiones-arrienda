@@ -42,7 +42,7 @@ export function ImageUploadUniversal({
   maxSizeMB = 10,
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'],
   className,
-  multiple = true,
+  multiple = false,
   showPreview = true,
   existingImages = []
 }: ImageUploadUniversalProps) {

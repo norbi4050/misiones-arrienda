@@ -43,7 +43,7 @@ export async function GET() {
         name,
         email,
         phone,
-        profile_image,
+        avatar,
         bio,
         verified,
         createdAt,
@@ -129,9 +129,9 @@ export async function PUT(request: NextRequest) {
       name: profileData.name,
       email: profileData.email,
       phone: profileData.phone || null,
-      profile_image: profileData.profile_image || null,
+      avatar: profileData.avatar || profileData.profileImage || null,
       bio: profileData.bio || null,
-      updated_at: new Date().toISOString()
+      updatedAt: new Date().toISOString()
     };
 
     // Actualizar perfil en la base de datos
@@ -188,14 +188,19 @@ export async function PATCH(request: NextRequest) {
 
     // Campos permitidos para actualización (solo campos básicos que existen)
     const allowedFields = [
-      'name', 'email', 'phone', 'profile_image', 'bio'
+      'name', 'email', 'phone', 'avatar', 'profileImage', 'bio'
     ];
 
-    // Filtrar solo campos permitidos
+    // Filtrar solo campos permitidos y normalizar nombres
     const updateData: any = {};
     for (const [key, value] of Object.entries(partialData)) {
       if (allowedFields.includes(key)) {
-        updateData[key] = value;
+        // Normalizar profileImage → avatar
+        if (key === 'profileImage') {
+          updateData.avatar = value;
+        } else {
+          updateData[key] = value;
+        }
       }
     }
 

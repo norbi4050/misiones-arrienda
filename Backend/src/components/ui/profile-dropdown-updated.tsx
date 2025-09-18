@@ -9,12 +9,12 @@ import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 interface ProfileDropdownProps {
   user: SupabaseUser
+  onSignOut: () => void
   profileImage?: string | null
   updatedAt?: string | null
-  onSignOut: () => void
 }
 
-export function ProfileDropdown({ user, profileImage, updatedAt, onSignOut }: ProfileDropdownProps) {
+export function ProfileDropdown({ user, onSignOut, profileImage, updatedAt }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const displayName = user.email?.split('@')[0] || 'Usuario'
 
@@ -22,14 +22,14 @@ export function ProfileDropdown({ user, profileImage, updatedAt, onSignOut }: Pr
     <div className="relative">
       <Button
         variant="ghost"
-        className="relative h-8 w-8 rounded-full p-0"
+        className="relative h-10 w-10 rounded-full p-0"
         onClick={() => setIsOpen(!isOpen)}
       >
         <AvatarUniversal
           src={profileImage}
           name={displayName}
           updatedAt={updatedAt}
-          size="sm"
+          size="md"
           showFallback={true}
         />
       </Button>
@@ -42,10 +42,21 @@ export function ProfileDropdown({ user, profileImage, updatedAt, onSignOut }: Pr
           />
           <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border z-50">
             <div className="px-4 py-3 border-b">
-              <p className="text-sm font-medium leading-none">{displayName}</p>
-              <p className="text-xs leading-none text-gray-500 mt-1">
-                {user.email}
-              </p>
+              <div className="flex items-center space-x-3">
+                <AvatarUniversal
+                  src={profileImage}
+                  name={displayName}
+                  updatedAt={updatedAt}
+                  size="sm"
+                  showFallback={true}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium leading-none truncate">{displayName}</p>
+                  <p className="text-xs leading-none text-gray-500 mt-1 truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="py-1">

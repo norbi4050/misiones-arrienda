@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-09-18T15:10:21.272Z",
+  "puntuacion": 100,
+  "estado": "FUNCIONAL",
+  "detalles": {
+    "archivos": {
+      "total": 8,
+      "encontrados": 8,
+      "faltantes": []
+    },
+    "dependencias": {
+      "total": 5,
+      "encontradas": 5,
+      "dependencias": 30,
+      "devDependencias": 21
+    },
+    "nextConfig": {
+      "valido": true
+    },
+    "typescript": {
+      "valido": true
+    },
+    "estructura": {
+      "total": 4,
+      "encontrados": 4
+    },
+    "apis": {
+      "total": 4,
+      "encontradas": 4
+    },
+    "paginas": {
+      "total": 7,
+      "encontradas": 7
+    }
+  }
+}

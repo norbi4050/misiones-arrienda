@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import ProfileAvatar from "@/components/ui/profile-avatar-enhanced";
+import ProfileAvatar from "@/components/ui/profile-avatar";
 import { ProfileForm } from "@/components/ui/profile-form";
 import { QuickActionsGrid } from "@/components/ui/quick-actions-grid";
 import { ProfileStatsImproved as ProfileStats } from "@/components/ui/profile-stats-improved";

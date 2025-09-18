@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import { User } from 'lucide-react';
 import { cn } from "@/utils";
-import { getAvatarConfig } from "@/utils/avatar";
+import { getAvatarConfig } from "@/utils/avatar-ssot";
 
 export interface AvatarUniversalProps {
-  src?: string | null;
+  avatarPath?: string | null;
   name?: string | null;
   updatedAt?: string | null;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -35,7 +35,7 @@ const iconSizes = {
 };
 
 export function AvatarUniversal({
-  src,
+  avatarPath,
   name,
   updatedAt,
   size = 'md',
@@ -47,15 +47,15 @@ export function AvatarUniversal({
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
-  // Get avatar configuration with cache-busting
+  // Get avatar configuration with cache-busting using avatar_path
   const avatarConfig = getAvatarConfig({
-    profileImage: src || undefined,
+    avatarPath: avatarPath || undefined,
     updatedAt: updatedAt || undefined,
     fallbackInitials: name || undefined,
     size: parseInt(sizeClasses[size].match(/w-(\d+)/)?.[1] || '10') * 4 // Convert to pixels
   });
 
-  const shouldShowImage = avatarConfig.url && !imageError;
+  const shouldShowImage = avatarConfig.url && !imageError && showFallback;
   const shouldShowFallback = !shouldShowImage && showFallback;
   const isLoading = loading || (shouldShowImage && imageLoading);
 
@@ -112,7 +112,7 @@ export function AvatarUniversal({
       {/* Cache-busted indicator (only in development) */}
       {process.env.NODE_ENV === 'development' && avatarConfig.cacheBusted && (
         <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border border-white" 
-             title="Cache-busted URL" />
+             title={`Cache-busted URL from avatar_path: ${avatarPath}`} />
       )}
     </div>
   );
