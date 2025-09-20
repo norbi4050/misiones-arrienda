@@ -10,9 +10,9 @@ import {
   MessageCircle,
   Star,
   TrendingUp,
-  Calendar,
+  User,
   Shield,
-  Award,
+  Trophy,
   RefreshCw,
   Loader2,
   Search,
@@ -256,7 +256,7 @@ export function ProfileStatsImproved({ stats: propStats, className, showRefresh 
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-gray-600" />
+              <User className="w-5 h-5 text-gray-600" />
               <span className="text-sm font-medium text-gray-700">
                 Miembro desde {formatDate(profileStats.joinDate)}
               </span>
@@ -273,7 +273,7 @@ export function ProfileStatsImproved({ stats: propStats, className, showRefresh 
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Award className="w-5 h-5" />
+            <Trophy className="w-5 h-5" />
             Logros
           </CardTitle>
         </CardHeader>

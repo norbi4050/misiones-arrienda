@@ -5,7 +5,7 @@ import { HeroSection } from '@/components/hero-section'
 
 export const metadata: Metadata = {
   title: 'Propiedades en Posadas, Misiones | Alquiler y Venta - Misiones Arrienda',
-  description: 'Encuentra las mejores propiedades en alquiler y venta en Posadas, Misiones. Casas, departamentos y locales comerciales en el centro de la capital misionera.',
+  description: 'Encuentra las mejores propiedades en alquiler y venta en Posadas, Misiones. Casas, departamentos y habitaciones compartidas en el centro de la capital misionera.',
   keywords: 'posadas misiones, alquiler posadas, venta propiedades posadas, casas posadas, departamentos posadas, inmobiliaria posadas',
   openGraph: {
     title: 'Propiedades en Posadas, Misiones - Misiones Arrienda',
@@ -50,7 +50,7 @@ export default async function PosadasPage() {
           </h1>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             Descubre las mejores oportunidades inmobiliarias en la capital de Misiones.
-            Casas, departamentos y locales comerciales en el corazón de la provincia.
+            Casas, departamentos y habitaciones compartidas en el corazón de la provincia.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">

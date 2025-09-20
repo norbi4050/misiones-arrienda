@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+// Removido import de iconos problemáticos
 
 interface ImageCarouselProps {
   images: string[]
@@ -86,14 +86,14 @@ export default function ImageCarousel({ images, altBase }: ImageCarouselProps) {
               className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Imagen anterior"
             >
-              <ChevronLeft size={24} />
+              <span className="text-xl select-none">‹</span>
             </button>
             <button
               onClick={goToNext}
               className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Imagen siguiente"
             >
-              <ChevronRight size={24} />
+              <span className="text-xl select-none">›</span>
             </button>
           </>
         )}

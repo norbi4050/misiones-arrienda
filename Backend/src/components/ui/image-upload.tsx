@@ -4,10 +4,19 @@ import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Upload, X, Image as ImageIcon, Loader2, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
 import React from 'react'
 import { ImageUploadUniversal } from './image-upload-universal'
+import { 
+  propertyImageValidator, 
+  avatarImageValidator, 
+  ImageValidator,
+  PROPERTY_IMAGE_LIMITS,
+  formatFileSize,
+  getFileInfo,
+  type ImageValidationError
+} from '@/lib/image-validation'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -23,36 +32,40 @@ interface ImageUploadProps {
   disabled?: boolean
   showPreview?: boolean
   uploadText?: string
+  variant?: 'property' | 'avatar' | 'custom'
 }
 
 export function ImageUpload({
   value = [],
   onChange,
-  maxImages = 10,
-  maxSizeMB = 5,
-  acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  maxImages,
+  maxSizeMB,
+  acceptedTypes,
   className = '',
   disabled = false,
   showPreview = true,
-  uploadText = 'Subir imágenes'
+  uploadText = 'Subir imágenes',
+  variant = 'property'
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<ImageValidationError[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const validateFile = (file: File): string | null => {
-    // Validar tipo de archivo
-    if (!acceptedTypes.includes(file.type)) {
-      return `Tipo de archivo no válido. Solo se permiten: ${acceptedTypes.join(', ')}`
-    }
+  // Usar validador según el variant
+  const validator = variant === 'avatar' ? avatarImageValidator : 
+                   variant === 'property' ? propertyImageValidator :
+                   new ImageValidator({
+                     maxImages: maxImages || PROPERTY_IMAGE_LIMITS.maxImages,
+                     maxSizeMB: maxSizeMB || PROPERTY_IMAGE_LIMITS.maxSizeMB,
+                     acceptedTypes: (acceptedTypes as any) || PROPERTY_IMAGE_LIMITS.acceptedTypes,
+                     acceptedExtensions: PROPERTY_IMAGE_LIMITS.acceptedExtensions
+                   })
 
-    // Validar tamaño
-    const sizeMB = file.size / (1024 * 1024)
-    if (sizeMB > maxSizeMB) {
-      return `El archivo es muy grande. Máximo ${maxSizeMB}MB permitido.`
-    }
-
-    return null
+  const limits = {
+    maxImages: maxImages || validator['limits'].maxImages,
+    maxSizeMB: maxSizeMB || validator['limits'].maxSizeMB,
+    acceptedTypes: acceptedTypes || validator['limits'].acceptedTypes
   }
 
   const convertToBase64 = (file: File): Promise<string> => {
@@ -68,10 +81,17 @@ export function ImageUpload({
     if (disabled) return
 
     const fileArray = Array.from(files)
+    setValidationErrors([])
 
-    // Verificar límite de imágenes
-    if (value.length + fileArray.length > maxImages) {
-      toast.error(`Máximo ${maxImages} imágenes permitidas`)
+    // Validar archivos usando el validador
+    const errors = validator.validateFiles(fileArray, value.length)
+    
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      // Mostrar errores específicos
+      errors.forEach(error => {
+        toast.error(error.message)
+      })
       return
     }
 
@@ -81,13 +101,6 @@ export function ImageUpload({
       const newImages: string[] = []
 
       for (const file of fileArray) {
-        // Validar archivo
-        const error = validateFile(file)
-        if (error) {
-          toast.error(error)
-          continue
-        }
-
         // Convertir a base64 para preview inmediato
         const base64 = await convertToBase64(file)
         newImages.push(base64)
@@ -176,7 +189,7 @@ export function ImageUpload({
           ref={fileInputRef}
           type="file"
           multiple
-          accept={acceptedTypes.join(',')}
+          accept={limits.acceptedTypes.join(',')}
           onChange={handleFileSelect}
           className="hidden"
           disabled={disabled}
@@ -197,7 +210,7 @@ export function ImageUpload({
               Arrastra y suelta o haz clic para seleccionar
             </p>
             <p className="text-xs text-gray-400 mt-1">
-              Máximo {maxImages} imágenes, {maxSizeMB}MB cada una
+              {validator.getHelpText()}
             </p>
           </div>
         )}

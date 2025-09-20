@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Button } from './button'
 import { Progress } from './progress'
-import { X, Upload, Image as ImageIcon, FileText, AlertCircle } from 'lucide-react'
+import { X, Upload, Image as ImageIcon, FileText, AlertTriangle } from 'lucide-react'
 import { cn } from "@/utils"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -351,7 +351,7 @@ export function ImageUploadUniversal({
                 {/* Estado */}
                 {file.status === 'error' && (
                   <div className="flex items-center mt-1 text-red-600">
-                    <AlertCircle className="w-4 h-4 mr-1" />
+                    <AlertTriangle className="w-4 h-4 mr-1" />
                     <span className="text-xs">{file.error}</span>
                   </div>
                 )}

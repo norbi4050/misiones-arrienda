@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ImageUpload } from "@/components/ui/image-upload"
-import { MapPin, Upload, DollarSign, Home, Check, Loader2, CreditCard, Shield, Clock, Lock } from "lucide-react"
+import { MapPin, Upload, DollarSign, Home, Loader2, Shield, Clock, Lock } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
@@ -185,19 +185,43 @@ export default function PublicarPage() {
 
     try {
       if (selectedPlan === 'basico') {
-        // Plan gratuito - crear propiedad directamente
-        const response = await fetch('/api/properties/create', {
+        // PASO A: Crear DRAFT con payload mínimo (solo campos esenciales)
+        const minimalPayload: any = {
+          // Campos mínimos requeridos
+          title: String(data.title || '').trim(),
+          city: String(data.city || '').trim(),
+          province: 'Misiones',
+          price: Number(data.price) || 0
+        }
+        
+        // Campos opcionales (solo si tienen valor válido)
+        if (data.propertyType && String(data.propertyType).trim()) {
+          minimalPayload.property_type = String(data.propertyType).trim()
+        }
+        
+        if (data.bedrooms && !isNaN(Number(data.bedrooms)) && Number(data.bedrooms) > 0) {
+          minimalPayload.bedrooms = Number(data.bedrooms)
+        }
+        
+        if (data.bathrooms && !isNaN(Number(data.bathrooms)) && Number(data.bathrooms) > 0) {
+          minimalPayload.bathrooms = Number(data.bathrooms)
+        }
+        
+        if (data.area && !isNaN(Number(data.area)) && Number(data.area) > 0) {
+          minimalPayload.area = Number(data.area)
+        }
+        
+        console.log('📤 PAYLOAD MÍNIMO PARA DRAFT:', minimalPayload)
+        console.log('📊 Campos enviados:', Object.keys(minimalPayload).length)
+        
+        // PASO A: Crear DRAFT con datos mínimos
+        const response = await fetch('/api/properties', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           credentials: 'include',
-          body: JSON.stringify({
-            ...data,
-            contact_name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Usuario',
-            contact_email: user?.email,
-            province: data.province || 'Misiones'
-          })
+          body: JSON.stringify(minimalPayload)
         })
 
         if (response.ok) {
@@ -572,7 +596,7 @@ export default function PublicarPage() {
                     <ul className="space-y-2">
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-center text-sm">
-                          <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                          <span className="inline-block w-4 h-4 bg-green-500 rounded-full mr-2 flex-shrink-0"></span>
                           {feature}
                         </li>
                       ))}
@@ -582,7 +606,7 @@ export default function PublicarPage() {
                       <div className="absolute inset-0 border-2 border-blue-500 rounded-lg pointer-events-none">
                         <div className="absolute top-2 right-2">
                           <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                            <Check className="h-4 w-4 text-white" />
+                            <span className="inline-block w-4 h-4 bg-white rounded-full"></span>
                           </div>
                         </div>
                       </div>
@@ -637,7 +661,7 @@ export default function PublicarPage() {
                     <ul className="space-y-1 text-sm">
                       {plans[selectedPlan].features.slice(0, 3).map((feature, index) => (
                         <li key={index} className="flex items-center">
-                          <Check className="h-3 w-3 text-green-500 mr-2" />
+                          <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
                           {feature}
                         </li>
                       ))}
@@ -673,9 +697,9 @@ export default function PublicarPage() {
                   ) : (
                     <>
                       {selectedPlan === 'basico' ? (
-                        <Check className="h-4 w-4 mr-2" />
+                        <span className="inline-block w-4 h-4 bg-green-500 rounded-full mr-2"></span>
                       ) : (
-                        <CreditCard className="h-4 w-4 mr-2" />
+                        <span className="inline-block w-4 h-4 bg-blue-500 rounded-full mr-2"></span>
                       )}
                       {selectedPlan === 'basico' ? 'Publicar Gratis' : `Pagar $${plans[selectedPlan].price.toLocaleString()}`}
                     </>

@@ -74,7 +74,7 @@ export function ProfileDropdown({ user, profileImage, updatedAt, onSignOut }: Pr
                 Mensajes
               </Link>
               <Link
-                href="/dashboard"
+                href="/profile/inquilino"
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsOpen(false)}
               >

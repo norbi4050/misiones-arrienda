@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, Users, Star, TrendingUp, Home, CheckCircle, Shield, Clock } from "lucide-react"
+import { MapPin, Users, Star, TrendingUp, Home, CheckCircle, Shield, Timer } from "lucide-react"
 
 export function StatsSection() {
   return (
@@ -48,7 +48,7 @@ export function StatsSection() {
 
           <div className="text-center group">
             <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              <Clock className="h-10 w-10 text-white" />
+              <Timer className="h-10 w-10 text-white" />
             </div>
             <div className="text-4xl font-bold text-gray-900 mb-2">24/7</div>
             <div className="text-gray-600 font-medium text-lg">Disponibilidad</div>

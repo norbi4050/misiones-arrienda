@@ -36,7 +36,7 @@ export function HeroSection() {
               Encuentra tu propiedad ideal en Misiones
             </h1>
             <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto">
-              Casas, departamentos y locales comerciales en alquiler y venta
+              Casas, departamentos y habitaciones compartidas en alquiler y venta
             </p>
           </div>
 

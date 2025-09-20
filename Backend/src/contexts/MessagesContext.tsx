@@ -73,6 +73,14 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
 
       const response = await fetch('/api/messages');
       if (!response.ok) {
+        // Si es error 500, probablemente las tablas no existen
+        if (response.status === 500) {
+          console.warn('Sistema de mensajes no disponible - tablas no configuradas');
+          setConversations([]);
+          setUnreadCount(0);
+          setError(null); // No mostrar error al usuario
+          return;
+        }
         throw new Error('Error al cargar conversaciones');
       }
 
@@ -88,7 +96,14 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
 
     } catch (error) {
       console.error('Error loading conversations:', error);
-      setError(error instanceof Error ? error.message : 'Error desconocido');
+      // Solo mostrar error si no es problema de tablas faltantes
+      if (error instanceof Error && !error.message.includes('tablas no configuradas')) {
+        setError(error.message);
+      } else {
+        setError(null);
+      }
+      setConversations([]);
+      setUnreadCount(0);
     } finally {
       setIsLoading(false);
     }

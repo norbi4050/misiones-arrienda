@@ -49,16 +49,18 @@ const mockProfiles = [
     smokePref: 'NO_FUMADOR',
     diet: 'VEGETARIANO',
     tags: ['estudiante', 'ordenado', 'responsable'],
-    photos: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'],
+    photos: ['/placeholder-apartment-1.jpg'],
     user: {
       id: '1',
       name: 'María González',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+      avatar: '/placeholder-apartment-2.jpg',
       rating: 4.8,
       reviewCount: 12
     },
-    createdAt: new Date('2024-01-15'),
-    likesCount: 8
+    _count: {
+      likesReceived: 8
+    },
+    createdAt: new Date('2024-01-15')
   },
   {
     id: '2',
@@ -73,16 +75,44 @@ const mockProfiles = [
     smokePref: 'NO_FUMADOR',
     diet: 'NINGUNA',
     tags: ['propietario', 'familiar', 'acogedor'],
-    photos: ['https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face'],
+    photos: ['/placeholder-house-2.jpg'],
     user: {
       id: '2',
       name: 'Carlos Mendoza',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+      avatar: '/placeholder-house-1.jpg',
       rating: 4.9,
       reviewCount: 25
     },
-    createdAt: new Date('2024-01-10'),
-    likesCount: 15
+    _count: {
+      likesReceived: 15
+    },
+    createdAt: new Date('2024-01-10')
+  },
+  {
+    id: '3',
+    role: 'BUSCO',
+    city: 'Eldorado',
+    neighborhood: 'Centro',
+    budgetMin: 80000,
+    budgetMax: 120000,
+    bio: 'Trabajador joven, busco lugar tranquilo y bien ubicado.',
+    age: 28,
+    petPref: 'NO_PET',
+    smokePref: 'NO_FUMADOR',
+    diet: 'NINGUNA',
+    tags: ['trabajador', 'tranquilo', 'puntual'],
+    photos: ['/placeholder-apartment-3.jpg'],
+    user: {
+      id: '3',
+      name: 'Juan Pérez',
+      avatar: '/placeholder-house-2.jpg',
+      rating: 4.5,
+      reviewCount: 8
+    },
+    _count: {
+      likesReceived: 5
+    },
+    createdAt: new Date('2024-01-20')
   }
 ]
 
@@ -172,7 +202,7 @@ export async function POST(request: NextRequest) {
       user: {
         id: 'temp-user-id',
         name: 'Usuario Temporal',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+        avatar: '/placeholder-apartment-3.jpg',
         rating: 5.0,
         reviewCount: 0
       },

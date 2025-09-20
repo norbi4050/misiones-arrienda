@@ -11,13 +11,13 @@ import {
   MessageSquare,
   Home,
   DollarSign,
-  Calendar,
+  User,
   BarChart3,
   PieChart,
   Activity,
   Users,
   Star,
-  AlertCircle,
+  AlertTriangle,
   Loader2,
   RefreshCw,
   Filter,
@@ -201,7 +201,7 @@ export function PropertyStats({
         <Card className="p-6 border-red-200 bg-red-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <AlertCircle className="w-6 h-6 text-red-600" />
+              <AlertTriangle className="w-6 h-6 text-red-600" />
               <div>
                 <h3 className="text-lg font-semibold text-red-900">Error al cargar estadísticas</h3>
                 <p className="text-red-700">{error}</p>
@@ -489,7 +489,7 @@ export function PropertyStats({
       {stats.performance?.topPerforming && stats.performance.topPerforming.length > 0 && (
         <Card className="p-6">
           <div className="flex items-center mb-4">
-            <Activity className="w-5 h-5 text-gray-600 mr-2" />
+            <TrendingUp className="w-5 h-5 text-gray-600 mr-2" />
             <h3 className="text-lg font-semibold text-gray-900">Propiedades con Mejor Rendimiento</h3>
           </div>
           <div className="space-y-3">
@@ -571,7 +571,7 @@ export function PropertyStats({
       {stats.recentActivity && (
         <Card className="p-6">
           <div className="flex items-center mb-4">
-            <Calendar className="w-5 h-5 text-gray-600 mr-2" />
+            <User className="w-5 h-5 text-gray-600 mr-2" />
             <h3 className="text-lg font-semibold text-gray-900">Actividad Reciente</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

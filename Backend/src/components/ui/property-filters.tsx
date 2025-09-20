@@ -10,7 +10,7 @@ import {
   Filter,
   X,
   Calendar,
-  DollarSign,
+  Banknote,
   Home,
   MapPin,
   SlidersHorizontal
@@ -281,7 +281,7 @@ export function PropertyFilters({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                <DollarSign className="w-4 h-4 inline mr-1" />
+                <span className="text-green-600 font-bold mr-1">$</span>
                 Precio mínimo
               </label>
               <Input
@@ -293,7 +293,7 @@ export function PropertyFilters({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                <DollarSign className="w-4 h-4 inline mr-1" />
+                <span className="text-green-600 font-bold mr-1">$</span>
                 Precio máximo
               </label>
               <Input

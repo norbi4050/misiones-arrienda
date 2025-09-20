@@ -23,7 +23,7 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<Authen
     }
 
     // Buscar el usuario en la base de datos usando el ID de Supabase
-    const dbUser = await prisma.user.findUnique({
+    let dbUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: {
         id: true,
@@ -32,9 +32,59 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<Authen
       }
     })
 
+    // Si el usuario no existe en Prisma, crearlo automáticamente
     if (!dbUser) {
-      console.error('User not found in database:', user.id)
-      return null
+      console.log('User not found in database, creating automatically:', user.id)
+      
+      try {
+        // Extraer información del usuario de Supabase
+        const userName = user.user_metadata?.name || 
+                        user.user_metadata?.full_name || 
+                        user.email?.split('@')[0] || 
+                        'Usuario'
+        
+        // Crear el usuario en Prisma
+        dbUser = await prisma.user.create({
+          data: {
+            id: user.id,
+            name: userName,
+            email: user.email!,
+            phone: '', // Campo requerido, valor por defecto
+            emailVerified: !!user.email_confirmed_at // Boolean: true si está confirmado
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        })
+
+        console.log('User created successfully in database:', {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email
+        })
+      } catch (createError: any) {
+        console.error('Error creating user in database:', createError)
+        
+        // Si hay error de constraint único (usuario ya existe), intentar buscarlo de nuevo
+        if (createError instanceof Error && createError.message.includes('Unique constraint')) {
+          console.log('User might have been created by another request, trying to find again...')
+          dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          })
+        }
+        
+        if (!dbUser) {
+          console.error('Failed to create or find user after creation attempt')
+          return null
+        }
+      }
     }
 
     return dbUser

@@ -31,10 +31,7 @@ export interface Property {
   totalFloors?: number
   featured: boolean
 
-  // Campos de contacto
-  contact_name?: string
-  contact_phone: string
-  contact_email?: string
+  // Campos de contacto (eliminados - no existen en schema)
 
   // Campos de sistema
   expiresAt?: Date
@@ -127,10 +124,7 @@ export interface PropertyFormData {
   latitude?: number
   longitude?: number
 
-  // Contacto
-  contact_name?: string
-  contact_phone: string
-  contact_email?: string
+  // Contacto (eliminados - no existen en schema)
 
   // Multimedia
   images: string[]

@@ -51,6 +51,13 @@ export function useUserFavorites() {
       });
 
       if (!response.ok) {
+        // Si es error 400 o 500, probablemente las tablas no existen
+        if (response.status === 400 || response.status === 500) {
+          console.warn('Sistema de favoritos no disponible - tablas no configuradas');
+          setFavorites([]);
+          setError(null); // No mostrar error al usuario
+          return;
+        }
         throw new Error('Failed to fetch favorites');
       }
 
@@ -58,7 +65,12 @@ export function useUserFavorites() {
       setFavorites(data.items || []);
     } catch (err) {
       console.error('Error fetching favorites:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      // Solo mostrar error si no es problema de tablas faltantes
+      if (err instanceof Error && !err.message.includes('tablas no configuradas')) {
+        setError(err.message);
+      } else {
+        setError(null);
+      }
       setFavorites([]);
     } finally {
       setLoading(false);

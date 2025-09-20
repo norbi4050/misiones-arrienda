@@ -74,7 +74,7 @@ export default function AdminDashboard() {
             user: {
               id: 'user1',
               name: 'María González',
-              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100',
+              avatar: '/placeholder-house-1.jpg',
               updated_at: new Date().toISOString()
             },
             description: 'Subió nuevo avatar',

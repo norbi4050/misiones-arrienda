@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Heart, MessageCircle, MapPin, DollarSign, Users, Star, Filter } from 'lucide-react'
+import { Heart, MessageCircle, MapPin, Users, Star, Filter } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -345,7 +345,7 @@ export default function ComunidadPage() {
 
                   {/* Presupuesto */}
                   <div className="flex items-center gap-2 text-sm">
-                    <DollarSign className="w-4 h-4 text-green-600" />
+                    <span className="text-green-600 font-bold">$</span>
                     <span className="font-medium">{formatBudget(profile.budgetMin, profile.budgetMax)}</span>
                   </div>
 

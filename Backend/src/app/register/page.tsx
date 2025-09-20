@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useRouter } from "next/navigation";
-import { User, Building2, Search } from "lucide-react";
+import { User, Home, Search } from "lucide-react";
 import { ProfileImageUpload } from "@/components/ui/image-upload";
 
 export default function RegisterPage() {
@@ -98,7 +98,7 @@ export default function RegisterPage() {
     switch (type) {
       case 'inmobiliaria':
         return {
-          icon: Building2,
+          icon: Home,
           title: "Inmobiliaria",
           description: "Gestiona múltiples propiedades",
           color: "border-purple-500 bg-purple-50"
@@ -144,6 +144,7 @@ export default function RegisterPage() {
               onChange={(url) => setFormData(prev => ({ ...prev, profileImage: url }))}
               disabled={loading}
               className="mb-4"
+              userId="temp-user-id"
             />
           </div>
 

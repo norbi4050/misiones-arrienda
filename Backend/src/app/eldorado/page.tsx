@@ -6,8 +6,8 @@ import EldoradoClient from '@/components/eldorado/EldoradoClient'
 
 export const metadata: Metadata = {
   title: 'Alquiler en Eldorado, Misiones | Misiones Arrienda',
-  description: 'Encuentra las mejores propiedades en alquiler en Eldorado, Misiones. Casas, departamentos y locales comerciales en la ciudad del conocimiento.',
-  keywords: 'alquiler Eldorado, propiedades Eldorado, Misiones, inmuebles, casas, departamentos, locales comerciales',
+  description: 'Encuentra las mejores propiedades en alquiler en Eldorado, Misiones. Casas, departamentos y habitaciones compartidas en la ciudad del conocimiento.',
+  keywords: 'alquiler Eldorado, propiedades Eldorado, Misiones, inmuebles, casas, departamentos, habitaciones compartidas',
   openGraph: {
     title: 'Propiedades en Alquiler en Eldorado, Misiones',
     description: 'Descubre las mejores opciones de alquiler en Eldorado, la ciudad del conocimiento en Misiones.',

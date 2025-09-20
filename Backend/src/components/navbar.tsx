@@ -11,6 +11,8 @@ import { ProfileDropdown } from "@/components/ui/profile-dropdown"
 import { AvatarUniversal } from "@/components/ui/avatar-universal"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useUser } from "@/contexts/UserContext"
+import { useUserFavorites } from "@/hooks/useUserFavorites"
+import { useMessages } from "@/contexts/MessagesContext"
 import type { Session } from "@supabase/supabase-js"
 
 const navigation = [
@@ -30,6 +32,8 @@ export function Navbar({ initialSession }: NavbarProps) {
   const pathname = usePathname()
   const { user, loading, isAuthenticated, signOut } = useSupabaseAuth()
   const { profile } = useUser()
+  const { favoritesCount } = useUserFavorites()
+  const { unreadCount } = useMessages()
 
   // Usar sesión inicial del servidor para evitar flicker
   const hasInitialSession = !!initialSession?.user
@@ -106,14 +110,24 @@ export function Navbar({ initialSession }: NavbarProps) {
                 {isUserAuthenticated && currentUser ? (
                   <>
                     {/* Quick Actions for authenticated users */}
-                    <Link href="/profile/inquilino?tab=favoritos">
-                      <Button variant="ghost" size="sm" title="Mis Favoritos">
+                    <Link href="/favorites">
+                      <Button variant="ghost" size="sm" title="Mis Favoritos" className="relative">
                         <Heart className="h-4 w-4" />
+                        {favoritesCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                            {favoritesCount > 9 ? '9+' : favoritesCount}
+                          </span>
+                        )}
                       </Button>
                     </Link>
-                    <Link href="/profile/inquilino?tab=mensajes">
-                      <Button variant="ghost" size="sm" title="Mensajes">
+                    <Link href="/messages">
+                      <Button variant="ghost" size="sm" title="Mensajes" className="relative">
                         <MessageCircle className="h-4 w-4" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
                       </Button>
                     </Link>
 
@@ -220,18 +234,23 @@ export function Navbar({ initialSession }: NavbarProps) {
                       Mi Perfil
                     </Link>
                     <Link
-                      href="/profile/inquilino?tab=favoritos"
+                      href="/favorites"
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
                       Mis Favoritos
                     </Link>
                     <Link
-                      href="/profile/inquilino?tab=mensajes"
+                      href="/messages"
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
                       Mensajes
+                      {unreadCount > 0 && (
+                        <span className="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
                     </Link>
                     <button
                       onClick={() => {

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit, User, Mail, Phone, Calendar, Briefcase } from "lucide-react"
+import { Edit, User, Mail, Phone, Home } from "lucide-react"
 import toast from "react-hot-toast"
 
 interface UserProfile {
@@ -262,7 +262,7 @@ export default function UserProfilePage() {
               <div className="space-y-1 text-gray-600">
                 {user.occupation && (
                   <div className="flex items-center space-x-2">
-                    <Briefcase size={16} className="text-gray-500" />
+                    <Home size={16} className="text-gray-500" />
                     <span>{user.occupation}</span>
                   </div>
                 )}
@@ -270,7 +270,7 @@ export default function UserProfilePage() {
                   <p><strong>Edad:</strong> {user.age} años</p>
                 )}
                 <div className="flex items-center space-x-2">
-                  <Calendar size={16} className="text-gray-500" />
+                  <User size={16} className="text-gray-500" />
                   <span>Miembro desde: {new Date(user.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>

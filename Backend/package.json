@@ -19,7 +19,12 @@
     "test:ci": "jest --ci --coverage --watchAll=false",
     "test:unit": "jest __tests__/unit",
     "test:integration": "jest __tests__/integration",
-    "test:e2e": "jest __tests__/e2e"
+    "test:e2e": "jest __tests__/e2e",
+    "test:regression": "npm run check:no-mock && npm run test:e2e && npm run test:integration",
+    "test:regression:signed-urls": "jest __tests__/regression/signed-urls-critical-scenarios.test.js",
+    "test:anti-regression": "npm run check:no-mock && jest __tests__/regression",
+    "ci:full": "npm run check:no-mock && npm run test && npm run build",
+    "check:no-mock": "node scripts/check-no-mock.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

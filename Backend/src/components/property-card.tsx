@@ -1,26 +1,27 @@
 "use client"
 
-import { MapPin, Bed, Bath, Square } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Home, Ruler, FileImage } from "lucide-react" // Usar iconos que funcionan
 import { FavoriteButton } from "@/components/favorite-button"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
-import { fetchBucketImages } from "@/lib/propertyImages/fetchBucketImages"
-import { resolveImages } from "@/lib/propertyImages/resolveImages"
-import { parseImagesText } from "@/lib/propertyImages/parseImagesText"
+import { useMemo } from "react"
 
 interface PropertyCardProps {
   id: string
   title: string
   price: number
-  images: unknown
+  images?: unknown // Mantenemos para compatibilidad
+  coverUrl?: string // Signed URL del cover desde API
+  coverUrlExpiresAt?: string // Expiración del signed URL
+  isPlaceholder?: boolean // Si es placeholder
+  imagesCount?: number // Contador optimizado
   city: string
   province: string
   bedrooms: number
   bathrooms: number
   area: number
-  userId: string
+  propertyType?: string // Para placeholder inteligente
+  // NO incluir userId por seguridad
 }
 
 export function PropertyCard({
@@ -28,32 +29,79 @@ export function PropertyCard({
   title,
   price,
   images,
+  coverUrl,
+  coverUrlExpiresAt,
+  isPlaceholder,
+  imagesCount,
   city,
   province,
   bedrooms,
   bathrooms,
   area,
-  userId,
+  propertyType,
 }: PropertyCardProps) {
-  const [bucketImages, setBucketImages] = useState<string[] | null>(null)
-  const apiImages = useMemo(() => parseImagesText(images), [images])
-  useEffect(() => {
-    let active = true
-    ;(async () => {
+  // Usar coverUrl directamente del API (ya viene procesado)
+  const coverSrc = useMemo(() => {
+    // 1. Prioridad: coverUrl del API (signed URL o placeholder)
+    if (coverUrl && coverUrl.trim()) {
+      return coverUrl
+    }
+    
+    // 2. Fallback: parsear images (compatibilidad con versiones anteriores)
+    if (images) {
       try {
-        const urls = await fetchBucketImages(userId, id)
-        if (active) setBucketImages(urls)
+        const parsedImages = typeof images === 'string' 
+          ? JSON.parse(images) 
+          : Array.isArray(images) 
+            ? images 
+            : []
+        
+        if (parsedImages.length > 0 && parsedImages[0]) {
+          return parsedImages[0]
+        }
       } catch {
-        if (active) setBucketImages([])
+        // Si falla el parsing, continuar con placeholder
       }
-    })()
-    return () => { active = false }
-  }, [userId, id])
-  const finalImages = useMemo(
-    () => resolveImages({ apiImages, bucketImages: bucketImages ?? [] }),
-    [apiImages, bucketImages]
-  )
-  const coverSrc = finalImages[0] ?? '/placeholder-house-1.jpg'
+    }
+    
+    // 3. Placeholder final basado en tipo de propiedad
+    const placeholders = {
+      'HOUSE': '/placeholder-house-1.jpg',
+      'APARTMENT': '/placeholder-apartment-1.jpg',
+      'COMMERCIAL': '/placeholder-house-2.jpg',
+      'LAND': '/placeholder-house-2.jpg',
+      'OFFICE': '/placeholder-apartment-2.jpg',
+      'WAREHOUSE': '/placeholder-house-2.jpg',
+      'PH': '/placeholder-apartment-1.jpg',
+      'STUDIO': '/placeholder-apartment-2.jpg'
+    }
+    
+    return placeholders[propertyType as keyof typeof placeholders] || '/placeholder-house-1.jpg'
+  }, [coverUrl, images, propertyType])
+
+  // Usar imagesCount directamente del API
+  const totalImages = useMemo(() => {
+    // 1. Prioridad: imagesCount optimizado del API
+    if (typeof imagesCount === 'number' && imagesCount >= 0) {
+      return imagesCount
+    }
+    
+    // 2. Fallback: contar desde images (compatibilidad)
+    if (images) {
+      try {
+        const parsedImages = typeof images === 'string' 
+          ? JSON.parse(images) 
+          : Array.isArray(images) 
+            ? images 
+            : []
+        return parsedImages.length
+      } catch {
+        return 0
+      }
+    }
+    
+    return 0
+  }, [imagesCount, images])
 
   return (
     <Link href={`/properties/${id}`} className="block">
@@ -67,10 +115,21 @@ export function PropertyCard({
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => {
-              // fallback de runtime si la URL falla
+              // Fallback robusto si la signed URL falla
               const img = document.querySelector(`img[alt="${title}"]`) as HTMLImageElement
-              if (img && img.src !== '/placeholder-house-1.jpg') {
-                img.src = '/placeholder-house-1.jpg'
+              if (img && !img.src.includes('/placeholder-')) {
+                // Usar placeholder específico por tipo de propiedad
+                const placeholders = {
+                  'HOUSE': '/placeholder-house-1.jpg',
+                  'APARTMENT': '/placeholder-apartment-1.jpg',
+                  'COMMERCIAL': '/placeholder-house-2.jpg',
+                  'LAND': '/placeholder-house-2.jpg',
+                  'OFFICE': '/placeholder-apartment-2.jpg',
+                  'WAREHOUSE': '/placeholder-house-2.jpg',
+                  'PH': '/placeholder-apartment-1.jpg',
+                  'STUDIO': '/placeholder-apartment-2.jpg'
+                }
+                img.src = placeholders[propertyType as keyof typeof placeholders] || '/placeholder-house-1.jpg'
               }
             }}
           />
@@ -83,11 +142,26 @@ export function PropertyCard({
             />
           </div>
 
+          {/* Indicador de cantidad de imágenes */}
+          {totalImages > 1 && (
+            <div className="absolute bottom-2 left-2 z-10 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+              <FileImage className="w-3 h-3" />
+              <span>{totalImages}</span>
+            </div>
+          )}
+
+          {/* Indicador de signed URL (solo en desarrollo) */}
+          {process.env.NODE_ENV === 'development' && !isPlaceholder && coverUrlExpiresAt && (
+            <div className="absolute top-2 left-2 z-10 bg-green-600/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md">
+              🔒 Signed
+            </div>
+          )}
+
           {/* Overlay gradient on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
-        {/* Más contenido visible para validar */}
+        {/* Contenido de la card */}
         <div className="p-3">
           <div className="text-base font-semibold text-gray-900">{title}</div>
           <div className="text-sm text-gray-600">
@@ -98,19 +172,19 @@ export function PropertyCard({
           <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
             {bedrooms > 0 && (
               <div className="flex items-center gap-1">
-                <Bed className="w-4 h-4" />
+                <Home className="w-4 h-4" />
                 <span>{bedrooms}</span>
               </div>
             )}
             {bathrooms > 0 && (
               <div className="flex items-center gap-1">
-                <Bath className="w-4 h-4" />
+                <Home className="w-4 h-4" />
                 <span>{bathrooms}</span>
               </div>
             )}
             {area > 0 && (
               <div className="flex items-center gap-1">
-                <Square className="w-4 h-4" />
+                <Ruler className="w-4 h-4" />
                 <span>{area}m²</span>
               </div>
             )}

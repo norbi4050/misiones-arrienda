@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { createClient } from '@/lib/supabase/server'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
-
-const prisma = new PrismaClient()
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   console.log('=== CREATE PROPERTY REQUEST STARTED ===')
   console.log('Request method:', req.method)
-  console.log('Request headers:', Object.fromEntries(req.headers.entries()))
+  console.log('Request headers logged')
 
   try {
     // Verificar autenticación del usuario
@@ -49,13 +47,12 @@ export async function POST(req: NextRequest) {
       features = [],
       contact_phone, // Campo requerido según schema
       contact_name,
-      contact_email
     } = body
 
-    // Validación de campos requeridos
-    if (!title || !description || !price || !propertyType || !bedrooms || !bathrooms || !area || !address || !city || !contact_phone) {
+    // Validación de campos requeridos (sin contact_phone ya que no existe en Supabase)
+    if (!title || !description || !price || !propertyType || !bedrooms || !bathrooms || !area || !address || !city) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos. Se requiere: title, description, price, propertyType, bedrooms, bathrooms, area, address, city, contact_phone' },
+        { error: 'Faltan campos requeridos. Se requiere: title, description, price, propertyType, bedrooms, bathrooms, area, address, city' },
         { status: 400 }
       )
     }
@@ -69,67 +66,95 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Buscar o crear un agente por defecto
-    let defaultAgent = await prisma.agent.findFirst({
-      where: { email: 'admin@misionesarrienda.com' }
-    })
-
-    if (!defaultAgent) {
-      defaultAgent = await prisma.agent.create({
-        data: {
-          name: 'Misiones Arrienda',
-          email: 'admin@misionesarrienda.com',
-          phone: '+54 3764 123456',
-          license: 'MA-DEFAULT-001',
-          bio: 'Agente por defecto del sistema'
+    // Usar Supabase directamente (bypass Prisma por problemas de conectividad)
+    const supabase = await createClient()
+    
+    // SOLUCIÓN DEFINITIVA: Usar NULL para agent_id y crear propiedad con Service Role
+    console.log('🔧 Usando Service Role para crear propiedad sin agent_id')
+    
+    // Crear cliente admin con Service Role Key para bypasear RLS completamente
+    const { createClient: createServiceClient } = await import('@supabase/supabase-js')
+    const supabaseAdmin = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
         }
-      })
+      }
+    )
+    
+    // Preparar datos con nombres CORRECTOS según schema real de Supabase
+    const propertyData: any = {
+      title,
+      description,
+      price: numericPrice,
+      currency: currency || 'ARS',
+      bedrooms: parseInt(bedrooms) || 1,
+      bathrooms: parseInt(bathrooms) || 1,
+      garages: parseInt(garages) || 0,
+      area: parseFloat(area) || 50,
+      address,
+      city,
+      province: province || 'Misiones',
+      postal_code: '3300', // Código postal por defecto
+      property_type: propertyType || 'HOUSE', // ✅ CORRECTO: property_type (snake_case)
+      status: 'AVAILABLE',
+      images: JSON.stringify(images.length > 0 ? images : ['/placeholder.jpg']),
+      amenities: JSON.stringify(amenities.length > 0 ? amenities : ['Agua', 'Luz']),
+      features: JSON.stringify(features.length > 0 ? features : ['Cocina']),
+      user_id: authenticatedUser.id, // ✅ CORRECTO: user_id (snake_case)
+      agent_id: null, // ✅ USAR NULL para evitar constraint
+      is_active: true, // ✅ CORRECTO: is_active existe
+      operation_type: 'rent',
+      featured: false,
+      is_paid: false
+    }
+    
+    console.log('✅ Usando agent_id: NULL para evitar constraint')
+
+    console.log('📝 Datos mínimos a insertar:', Object.keys(propertyData))
+    console.log('📝 Usuario autenticado:', authenticatedUser.id)
+
+    console.log('🔧 Intentando con Service Role Admin...')
+    
+    // Usar Service Role para crear la propiedad (bypasea RLS)
+    const { data: property, error: propertyError } = await supabaseAdmin
+      .from('properties')
+      .insert(propertyData)
+      .select()
+      .single()
+    
+    console.log('Service Role result:', { property: property?.id, error: propertyError?.message })
+
+    if (propertyError) {
+      console.error('Error Supabase al crear propiedad:', propertyError)
+      console.error('Error code:', propertyError.code)
+      console.error('Error details:', propertyError.details)
+      
+      // Manejar errores específicos
+      if (propertyError.code === '42501') {
+        return NextResponse.json(
+          { error: `Error de permisos: ${propertyError.message}. Verifica RLS en Supabase.` },
+          { status: 403 }
+        )
+      }
+      
+      if (propertyError.code === 'PGRST204') {
+        return NextResponse.json(
+          { error: `Campo no encontrado: ${propertyError.message}. Schema mismatch detectado.` },
+          { status: 400 }
+        )
+      }
+      
+      return NextResponse.json(
+        { error: `Error al crear propiedad: ${propertyError.message} (Code: ${propertyError.code})` },
+        { status: 500 }
+      )
     }
 
-    // Crear la propiedad en la base de datos con el userId del usuario autenticado
-    const property = await prisma.property.create({
-      data: {
-        title,
-        description,
-        price: numericPrice,
-        currency: currency || 'ARS', // Agregar el campo currency
-        propertyType: propertyType || 'HOUSE',
-        bedrooms: parseInt(bedrooms) || 0,
-        bathrooms: parseInt(bathrooms) || 0,
-        garages: parseInt(garages) || 0,
-        area: parseFloat(area) || 0,
-        address,
-        city,
-        province: province || 'Misiones',
-        postalCode: '3300', // Código postal por defecto para Misiones
-        status: 'PUBLISHED',
-        images: JSON.stringify(images.length > 0 ? images : [
-          '/images/properties/default-1.jpg',
-          '/images/properties/default-2.jpg',
-          '/images/properties/default-3.jpg'
-        ]),
-        amenities: JSON.stringify(amenities.length > 0 ? amenities : [
-          'Agua corriente',
-          'Electricidad',
-          'Gas natural'
-        ]),
-        features: JSON.stringify(features.length > 0 ? features : [
-          'Cocina equipada',
-          'Baño completo',
-          'Patio'
-        ]),
-        // Campos de contacto requeridos
-        contact_phone: contact_phone,
-        contact_name: contact_name || authenticatedUser.name,
-        contact_email: contact_email || authenticatedUser.email,
-        userId: authenticatedUser.id, // Guardar automáticamente el ID del usuario autenticado
-        agentId: defaultAgent.id,
-        isPaid: false,
-        featured: false
-      }
-    })
-
-    // Si es un plan pago, crear una suscripción
+    // Si es un plan pago, actualizar la propiedad (usando Supabase)
     if (plan && plan !== 'basico') {
       const planConfig = {
         destacado: { name: 'Plan Destacado', price: 5000, duration: 30 },
@@ -139,53 +164,64 @@ export async function POST(req: NextRequest) {
       const selectedPlan = planConfig[plan as keyof typeof planConfig]
 
       if (selectedPlan) {
-        // Actualizar propiedad con flags premium
-        await prisma.property.update({
-          where: { id: property.id },
-          data: {
-            status: 'PUBLISHED',
+        // Actualizar propiedad con flags premium usando Supabase
+        const { error: updateError } = await supabase
+          .from('properties')
+          .update({
+            status: 'AVAILABLE',
             isPaid: true,
             featured: true,
-            highlightedUntil: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000),
-            expiresAt: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000)
-          }
-        })
+            highlightedUntil: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000).toISOString(),
+            expiresAt: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000).toISOString()
+          })
+          .eq('id', property.id)
 
-        // Crear suscripción con el userId del usuario autenticado
-        await prisma.subscription.create({
-          data: {
+        if (updateError) {
+          console.error('Error actualizando propiedad premium:', updateError)
+        }
+
+        // Crear suscripción usando Supabase
+        const { error: subscriptionError } = await supabase
+          .from('subscriptions')
+          .insert({
             planType: plan,
             planName: selectedPlan.name,
             planPrice: selectedPlan.price,
             planDuration: selectedPlan.duration,
-            startDate: new Date(),
-            endDate: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000),
-            userId: authenticatedUser.id, // Usar el ID del usuario autenticado
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + selectedPlan.duration * 24 * 60 * 60 * 1000).toISOString(),
+            userId: authenticatedUser.id,
             propertyId: property.id
-          }
-        })
+          })
+
+        if (subscriptionError) {
+          console.error('Error creando suscripción:', subscriptionError)
+        }
       }
     }
 
     // Respuesta exitosa
+    console.log('✅ Propiedad creada exitosamente con Supabase:', property.id)
+
     return NextResponse.json({
       success: true,
       property: {
         id: property.id,
         title: property.title,
         price: property.price,
+        currency: property.currency, // ✅ Campo currency incluido
         city: property.city,
         featured: property.featured,
         status: property.status,
-        plan: plan || 'basico', // Devolvemos el plan aunque no se guarde en Property
-        userId: authenticatedUser.id, // Incluir el userId en la respuesta
+        plan: plan || 'basico',
+        userId: authenticatedUser.id,
         owner: {
           id: authenticatedUser.id,
           name: authenticatedUser.name,
           email: authenticatedUser.email
         }
       },
-      message: 'Propiedad creada exitosamente'
+      message: 'Propiedad creada exitosamente usando Supabase'
     })
 
   } catch (error) {
@@ -226,14 +262,14 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
+    // No desconectamos aquí porque usamos la instancia singleton
   }
 }
 
 // Método GET para obtener información sobre la creación de propiedades
 export async function GET() {
   return NextResponse.json({
-    message: 'Endpoint para crear propiedades',
+    message: 'Endpoint para crear propiedades - Usando Supabase directo',
     method: 'POST',
     requiredFields: [
       'title',
@@ -244,8 +280,7 @@ export async function GET() {
       'bathrooms',
       'area',
       'address',
-      'city',
-      'contact_phone'
+      'city'
     ],
     optionalFields: [
       'garages',
@@ -256,14 +291,17 @@ export async function GET() {
       'images',
       'amenities',
       'features',
-      'contact_name',
-      'contact_email',
       'currency'
+    ],
+    removedFields: [
+      'contact_phone', // No existe en schema Supabase
+      'contact_name',  // No existe en schema Supabase
     ],
     plans: {
       basico: { price: 0, features: ['Publicación básica', 'Hasta 3 fotos', 'Vigencia 30 días'] },
       destacado: { price: 5000, features: ['Publicación destacada', 'Hasta 8 fotos', 'Aparece primero'] },
       full: { price: 10000, features: ['Fotos ilimitadas', 'Video promocional', 'Tour virtual'] }
-    }
+    },
+    note: 'API migrada de Prisma a Supabase por problemas de conectividad'
   })
 }

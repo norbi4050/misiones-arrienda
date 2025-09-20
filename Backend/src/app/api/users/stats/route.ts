@@ -34,35 +34,11 @@ export async function GET(_req: NextRequest) {
     }
 
     // =====================================================
-    // USAR FUNCIÓN SQL PARA OBTENER ESTADÍSTICAS REALES
+    // USAR CONSULTAS DIRECTAS (FUNCIÓN SQL NO DISPONIBLE)
     // =====================================================
 
-    try {
-      // Llamar a la función SQL que calcula estadísticas reales
-      // Enviar parámetro directo para evitar ambigüedad de sobrecarga
-      const { data: statsData, error: statsError } = await supabase
-        .rpc('get_user_stats', user.id);
-
-      if (statsError) {
-        console.error('Error calling get_user_profile_stats:', statsError);
-        // Fallback a datos básicos si la función falla
-        return await getFallbackStats(supabase, user);
-      }
-
-      // Parsear el JSON retornado por la función
-      const stats = typeof statsData === 'string' ? JSON.parse(statsData) : statsData;
-
-      return NextResponse.json({
-        stats,
-        source: 'real_data',
-        timestamp: new Date().toISOString()
-      }, { status: 200 });
-
-    } catch (functionError) {
-      console.error('Error with profile stats function:', functionError);
-      // Fallback a consultas individuales
-      return await getFallbackStats(supabase, user);
-    }
+    // Ir directamente a fallback ya que la función get_user_stats no existe
+    return await getFallbackStats(supabase, user);
 
   } catch (error) {
     console.error('Unexpected error in user stats:', error);

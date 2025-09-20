@@ -6,8 +6,8 @@ import {
   Heart,
   MessageCircle,
   Search,
-  BarChart3,
-  Bell,
+  TrendingUp,
+  Info,
   Shield,
   Loader2
 } from 'lucide-react';
@@ -95,7 +95,7 @@ export function QuickActionsGrid({ className, userId }: QuickActionsGridProps) {
       title: 'Dashboard',
       description: 'Estadísticas y actividad',
       href: '/dashboard',
-      icon: BarChart3,
+      icon: TrendingUp,
       color: 'bg-purple-50 text-purple-600 border-purple-200',
       count: realStats.views,
       hasNotification: false,
@@ -107,7 +107,7 @@ export function QuickActionsGrid({ className, userId }: QuickActionsGridProps) {
       title: 'Notificaciones',
       description: 'Alertas y actualizaciones',
       href: '/profile/inquilino?tab=notificaciones',
-      icon: Bell,
+      icon: Info,
       color: 'bg-yellow-50 text-yellow-600 border-yellow-200',
       hasNotification: realStats.messages > 0,
       isNew: true,
@@ -388,7 +388,7 @@ export function QuickActionsCompact({ className }: { className?: string }) {
     {
       title: 'Dashboard',
       href: '/dashboard',
-      icon: BarChart3,
+      icon: TrendingUp,
       count: stats?.profileViews ?? 0,
       color: 'text-purple-600',
       hasNotification: false

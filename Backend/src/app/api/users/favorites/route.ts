@@ -49,7 +49,6 @@ export async function GET(_req: NextRequest) {
           bedrooms,
           bathrooms,
           area,
-          type,
           status,
           created_at
         )

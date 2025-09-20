@@ -4,7 +4,7 @@ import { PropertiesPageClient } from './properties-client'
 
 export const metadata: Metadata = {
   title: 'Propiedades en Alquiler y Venta - Misiones | MisionesArrienda',
-  description: 'Encuentra la propiedad perfecta en Misiones. Casas, departamentos, locales comerciales y terrenos en alquiler y venta en Posadas, Oberá, Puerto Iguazú y más ciudades.',
+  description: 'Encuentra la propiedad perfecta en Misiones. Casas, departamentos, habitaciones compartidas y terrenos en alquiler y venta en Posadas, Oberá, Puerto Iguazú y más ciudades.',
   keywords: 'propiedades Misiones, alquiler Posadas, venta casas Oberá, departamentos Puerto Iguazú, inmobiliaria Misiones',
   openGraph: {
     title: 'Propiedades en Misiones - Alquiler y Venta',
