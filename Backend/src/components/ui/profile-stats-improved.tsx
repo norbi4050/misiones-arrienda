@@ -136,16 +136,17 @@ export function ProfileStatsImproved({ stats: propStats, className, showRefresh 
     <div className={cn("space-y-6", className)}>
       {/* Header with refresh button */}
       {showRefresh && (
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-900">Estadísticas del Perfil</h3>
+        <div className="relative">
+          <h3 className="text-lg font-semibold text-gray-900 pr-20">Estadísticas del Perfil</h3>
           <Button
             onClick={handleRefresh}
             variant="outline"
             size="sm"
             disabled={isRefreshing}
+            className="absolute top-0 right-0"
           >
-            <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
-            Actualizar
+            <RefreshCw className={cn("w-4 h-4 sm:mr-2", isRefreshing && "animate-spin")} />
+            <span className="hidden sm:inline">Actualizar</span>
           </Button>
         </div>
       )}
@@ -155,7 +156,7 @@ export function ProfileStatsImproved({ stats: propStats, className, showRefresh 
         <StatCard
           icon={Eye}
           value={profileStats.profileViews}
-          label="Vistas del perfil"
+          label="Vistas"
           color="text-blue-600"
           bgColor="bg-blue-50"
         />
@@ -208,14 +209,14 @@ export function ProfileStatsImproved({ stats: propStats, className, showRefresh 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-gray-700">Tasa de respuesta</span>
+                <span className="text-sm font-medium text-gray-700 leading-tight">Respuesta</span>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-gray-900">
                   {profileStats.responseRate}%
                 </div>
-                <div className="text-xs text-gray-500">
-                  Promedio de respuestas
+                <div className="text-xs text-gray-500 leading-tight">
+                  Promedio
                 </div>
               </div>
             </div>
@@ -278,7 +279,7 @@ export function ProfileStatsImproved({ stats: propStats, className, showRefresh 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             <AchievementBadge
               title="Primer Favorito"
               description="Recibiste tu primer favorito"
@@ -324,20 +325,22 @@ function StatCard({ icon: Icon, value, label, color = "text-gray-600", bgColor =
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center justify-center gap-3 text-center">
           <div className={cn("p-2 rounded-lg", bgColor)}>
             <Icon className={cn("w-5 h-5", color)} />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1">
-              <span className="text-2xl font-bold text-gray-900">
+          <div className="space-y-1">
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-xl font-bold text-gray-900">
                 {isRating ? value.toFixed(1) : value.toLocaleString()}
               </span>
               {suffix && (
                 <span className="text-xs text-gray-500">{suffix}</span>
               )}
             </div>
-            <p className="text-xs text-gray-600 truncate">{label}</p>
+            <p className="text-sm text-gray-600 font-medium">
+              {label}
+            </p>
           </div>
         </div>
       </CardContent>

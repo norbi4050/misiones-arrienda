@@ -142,10 +142,11 @@ export function ProfileAvatar({
       formData.append('file', compressedBlob, `avatar-${userId}-${Date.now()}.jpg`);
       formData.append('userId', userId || '');
 
-      // Subir a la API
+      // Subir a la API (sin Authorization header - usa cookies)
       const response = await fetch('/api/users/avatar', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Incluir cookies para autenticación
       });
 
       clearInterval(progressInterval);
@@ -193,6 +194,7 @@ export function ProfileAvatar({
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Incluir cookies para autenticación
       });
 
       if (!response.ok) {
