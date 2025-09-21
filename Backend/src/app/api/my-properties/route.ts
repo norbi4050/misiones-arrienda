@@ -81,42 +81,72 @@ export async function GET(request: NextRequest) {
 
     console.log(`[${requestId}] Propiedades encontradas:`, properties?.length || 0)
 
-    // Procesar propiedades para respuesta
+    // Procesar propiedades para respuesta con fallback robusto
     const processedProperties = await Promise.all(
       (properties || []).map(async (property: any) => {
-        // Procesar imágenes con fallback
-        let imageUrls = []
+        // PASO 1: Procesar imágenes con fallback híbrido
+        let imageUrls: string[] = []
         
-        // Intentar primero images_urls (nuevo)
+        // Intentar primero images_urls (nuevo sistema)
         if (property.images_urls) {
           try {
             const parsed = JSON.parse(property.images_urls)
-            imageUrls = Array.isArray(parsed) ? parsed : []
+            imageUrls = Array.isArray(parsed) ? parsed.filter(url => url && typeof url === 'string') : []
+            console.log(`[${requestId}] Images_urls encontradas para ${property.id}:`, imageUrls.length)
           } catch (e) {
             console.log(`[${requestId}] Error parseando images_urls para ${property.id}`)
           }
         }
         
-        // Fallback a images (legacy)
+        // Fallback a images (legacy) solo si images_urls está vacío
         if (imageUrls.length === 0 && property.images) {
           try {
             const parsed = JSON.parse(property.images)
-            imageUrls = Array.isArray(parsed) ? parsed : []
+            imageUrls = Array.isArray(parsed) ? parsed.filter(url => url && typeof url === 'string') : []
+            console.log(`[${requestId}] Images legacy encontradas para ${property.id}:`, imageUrls.length)
           } catch (e) {
             console.log(`[${requestId}] Error parseando images legacy para ${property.id}`)
           }
         }
         
-        // Si no hay imágenes, usar placeholder
+        // PASO 2: Fallback robusto - listar bucket si no hay imágenes
         if (imageUrls.length === 0) {
-          imageUrls = ['/placeholder-house-1.jpg']
+          console.log(`[${requestId}] Sin imágenes en DB para ${property.id}, intentando listar bucket`)
+          try {
+            const bucketPath = `${property.user_id}/${property.id}`
+            const { data: files, error: listError } = await supabase.storage
+              .from('properties')
+              .list(bucketPath)
+
+            if (!listError && files && files.length > 0) {
+              // Construir URLs públicas desde archivos del bucket
+              imageUrls = files
+                .filter(file => file.name && !file.name.includes('.emptyFolderPlaceholder'))
+                .map(file => {
+                  const { data: { publicUrl } } = supabase.storage
+                    .from('properties')
+                    .getPublicUrl(`${bucketPath}/${file.name}`)
+                  return publicUrl
+                })
+              
+              console.log(`[${requestId}] Imágenes recuperadas del bucket para ${property.id}:`, imageUrls.length)
+            }
+          } catch (bucketError) {
+            console.log(`[${requestId}] Error listando bucket para ${property.id}:`, bucketError)
+          }
         }
 
-        // Generar cover URL
-        const coverResult = await generateCoverUrl(
-          imageUrls[0], 
-          property.property_type
-        )
+        // PASO 3: NO usar placeholder - dejar array vacío si no hay imágenes reales
+        // Esto permite que el frontend maneje el estado sin imágenes apropiadamente
+        
+        // Generar cover URL solo si hay imágenes reales
+        const coverResult = imageUrls.length > 0 
+          ? await generateCoverUrl(imageUrls[0], property.property_type)
+          : {
+              coverUrl: null,
+              coverUrlExpiresAt: null,
+              isPlaceholder: true
+            }
 
         return {
           id: property.id,
@@ -144,6 +174,7 @@ export async function GET(request: NextRequest) {
           createdAt: property.created_at,
           updatedAt: property.updated_at,
           expiresAt: property.expires_at,
+          // Campo images: string[] mapeado desde images_urls (SSoT)
           images: imageUrls,
           coverUrl: coverResult.coverUrl,
           coverUrlExpiresAt: coverResult.coverUrlExpiresAt,

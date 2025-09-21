@@ -31,7 +31,7 @@ export function Navbar({ initialSession }: NavbarProps) {
   const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, loading, isAuthenticated, signOut } = useSupabaseAuth()
-  const { profile } = useUser()
+  const { profile, profileImage, updatedAt } = useUser()
   const { favoritesCount } = useUserFavorites()
   const { unreadCount } = useMessages()
 
@@ -41,6 +41,11 @@ export function Navbar({ initialSession }: NavbarProps) {
   const isUserAuthenticated = isAuthenticated || hasInitialSession
   const currentUser = user || initialSession?.user
   const displayName = profile?.name || currentUser?.email?.split('@')[0] || 'Usuario'
+
+  // Cache-busting para avatar
+  const avatarUrlWithCacheBust = profileImage && updatedAt 
+    ? `${profileImage}?v=${new Date(updatedAt).getTime()}`
+    : profileImage
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -132,11 +137,11 @@ export function Navbar({ initialSession }: NavbarProps) {
                     </Link>
 
                     {/* Profile Dropdown */}
-                    <ProfileDropdown 
-                      user={currentUser} 
+                    <ProfileDropdown
+                      user={currentUser}
                       onSignOut={signOut}
-                      profileImage={profile?.profile_image}
-                      updatedAt={profile?.updated_at}
+                      profileImage={avatarUrlWithCacheBust}
+                      updatedAt={updatedAt}
                     />
                   </>
                 ) : (
@@ -211,9 +216,9 @@ export function Navbar({ initialSession }: NavbarProps) {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 py-2">
                       <AvatarUniversal
-                        src={profile?.profile_image}
+                        src={avatarUrlWithCacheBust}
                         name={displayName}
-                        updatedAt={profile?.updated_at}
+                        updatedAt={updatedAt}
                         size="sm"
                         showFallback={true}
                       />

@@ -49,6 +49,10 @@ export interface UserContextType {
   // Funciones de avatar con cache-busting
   getAvatarUrlWithCacheBust: () => string | null;
 
+  // Campos expuestos para compatibilidad (SSoT: User.profile_image)
+  profileImage: string | null;
+  updatedAt: string | null;
+
   // Funciones de caché
   clearCache: () => void;
 }
@@ -122,11 +126,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const getAvatarUrlWithCacheBust = useCallback(() => {
     if (!profile?.profile_image) return null;
     
-    return getAvatarUrl({
-      profileImage: profile.profile_image,
-      updatedAt: profile.updated_at
-    });
+    // Cache-busting con timestamp epoch
+    const timestamp = profile.updated_at ? new Date(profile.updated_at).getTime() : Date.now();
+    return `${profile.profile_image}?v=${timestamp}`;
   }, [profile?.profile_image, profile?.updated_at]);
+
+  // Exponer profileImage y updatedAt para compatibilidad
+  const profileImage = profile?.profile_image || null;
+  const updatedAt = profile?.updated_at || null;
 
   // Cargar perfil del usuario
   const loadUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
@@ -415,6 +422,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     // Funciones de avatar con cache-busting
     getAvatarUrlWithCacheBust,
+
+    // Campos expuestos para compatibilidad
+    profileImage,
+    updatedAt,
 
     // Funciones de caché
     clearCache,

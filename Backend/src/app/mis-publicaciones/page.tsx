@@ -107,7 +107,7 @@ export default function MisPublicacionesPage() {
   const [communityError, setCommunityError] = useState<string | null>(null)
   const [communityPagination, setCommunityPagination] = useState<ApiResponse<CommunityProfile>['pagination'] | null>(null)
 
-  // Cargar propiedades del usuario
+  // Cargar propiedades del usuario con cache: 'no-store'
   const loadProperties = async () => {
     if (!isAuthenticated) return
 
@@ -123,7 +123,15 @@ export default function MisPublicacionesPage() {
         order: 'desc'
       })
 
-      const response = await fetch(`/api/my-properties?${params}`)
+      // Cache: 'no-store' para evitar imágenes viejas tras cambios
+      const response = await fetch(`/api/my-properties?${params}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
       
       if (!response.ok) {
         if (response.status === 401) {
@@ -133,6 +141,13 @@ export default function MisPublicacionesPage() {
       }
 
       const data: ApiResponse<Property> = await response.json()
+      console.log('📊 Propiedades cargadas:', data.properties?.length || 0)
+      
+      // Log para debugging de imágenes
+      data.properties?.forEach(prop => {
+        console.log(`🏠 Propiedad ${prop.id}: ${prop.images.length} imágenes`, prop.images)
+      })
+      
       setProperties(data.properties || [])
       setPropertiesPagination(data.pagination)
 
@@ -351,12 +366,12 @@ export default function MisPublicacionesPage() {
                           </Badge>
                         </div>
                         
-                        {/* Usar PropertyCard individual con TODAS las props necesarias */}
+                        {/* PropertyCard con imágenes reales - SIN placeholders */}
                         <PropertyCard
                           id={property.id}
                           title={property.title}
                           price={property.price}
-                          images={property.images}
+                          images={property.images} // Array real desde images_urls
                           coverUrl={property.coverUrl}
                           coverUrlExpiresAt={property.coverUrlExpiresAt}
                           isPlaceholder={property.isPlaceholder}
@@ -374,7 +389,15 @@ export default function MisPublicacionesPage() {
                       <div className="bg-white border rounded-lg p-3 shadow-sm">
                         <div className="text-xs text-gray-500 mb-3">
                           <div>Actualizado: {new Date(property.updatedAt).toLocaleDateString()}</div>
-                          <div>{property.imagesCount} imágenes</div>
+                          <div>
+                            {property.imagesCount > 0 
+                              ? `${property.imagesCount} imágenes reales` 
+                              : 'Sin imágenes - Agregar fotos'
+                            }
+                          </div>
+                          {property.isPlaceholder && (
+                            <div className="text-orange-600 font-medium">⚠️ Necesita imágenes</div>
+                          )}
                         </div>
 
                         <div className="flex gap-2">

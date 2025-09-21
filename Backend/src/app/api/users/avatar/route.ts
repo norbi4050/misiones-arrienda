@@ -1,377 +1,359 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { 
-  generateAvatarFilename, 
-  generateAvatarPath, 
-  extractAvatarPath,
-  getAvatarUrl 
-} from "@/utils/avatar";
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-async function getServerSupabase() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: "", ...options, maxAge: 0 });
-        },
-      },
-    }
-  );
-}
-
-// POST - Subir avatar con persistencia mejorada
+// POST - Subir avatar con SSoT en User.profile_image
 export async function POST(request: NextRequest) {
-  const supabase = await getServerSupabase();
-
+  console.log('=== POST /api/users/avatar - UPLOAD AVATAR ===')
+  
   try {
-    console.log('🚀 INICIANDO UPLOAD DE AVATAR...');
-    
+    // Crear cliente Supabase
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Verificar autenticación
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Token de autorización requerido' },
+        { status: 401 }
+      )
+    }
 
+    const token = authHeader.split(' ')[1]
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    
     if (authError || !user) {
-      console.log('❌ Error de autenticación:', authError);
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+      console.log('❌ Usuario no autenticado:', authError?.message)
+      return NextResponse.json(
+        { error: 'Usuario no autenticado' },
+        { status: 401 }
+      )
     }
 
-    console.log('✅ Usuario autenticado:', user.id);
+    console.log('✅ Usuario autenticado:', user.id)
 
-    // Obtener FormData
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const userId = formData.get('userId') as string;
-
+    // Obtener archivo del FormData
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+    
     if (!file) {
-      console.log('❌ No se proporcionó archivo');
-      return NextResponse.json({ error: "No se proporcionó archivo" }, { status: 400 });
-    }
-
-    console.log('📁 Archivo recibido:', file.name, 'Tamaño:', file.size, 'Tipo:', file.type);
-
-    // Verificar que el usuario solo puede subir su propio avatar
-    if (userId && userId !== user.id) {
-      console.log('❌ Usuario no autorizado:', userId, 'vs', user.id);
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Archivo requerido' },
+        { status: 400 }
+      )
     }
 
     // Validar tipo de archivo
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     if (!allowedTypes.includes(file.type)) {
-      console.log('❌ Tipo de archivo no permitido:', file.type);
-      return NextResponse.json({
-        error: "Tipo de archivo no permitido. Use JPEG, PNG o WebP"
-      }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Tipo de archivo no permitido. Use JPEG, PNG, WebP o GIF' },
+        { status: 400 }
+      )
     }
 
     // Validar tamaño (5MB máximo)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024 // 5MB
     if (file.size > maxSize) {
-      console.log('❌ Archivo muy grande:', file.size);
-      return NextResponse.json({
-        error: "Archivo muy grande. Máximo 5MB"
-      }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Archivo muy grande. Máximo 5MB' },
+        { status: 400 }
+      )
     }
 
-    // PASO 1: Obtener avatar anterior ANTES de hacer cualquier cambio
-    console.log('📋 PASO 1: Obteniendo avatar anterior...');
-    let oldAvatarPath = null;
+    console.log('📁 Archivo válido:', file.name, file.type, `${(file.size / 1024 / 1024).toFixed(2)}MB`)
+
+    // PASO 1: Obtener avatar anterior para limpieza
+    let oldAvatarPath = null
     try {
-      const { data: oldUserData, error: oldDataError } = await supabase
+      const { data: userData } = await supabase
         .from('User')
         .select('profile_image')
         .eq('id', user.id)
-        .single();
+        .single()
 
-      if (oldDataError) {
-        console.log('⚠️ Error obteniendo datos anteriores:', oldDataError);
-      } else if (oldUserData?.profile_image) {
-        oldAvatarPath = extractAvatarPath(oldUserData.profile_image, user.id);
-        console.log('📋 Avatar anterior encontrado:', oldAvatarPath);
-      } else {
-        console.log('📋 No hay avatar anterior');
+      if (userData?.profile_image) {
+        // Extraer path del URL público
+        const url = new URL(userData.profile_image)
+        oldAvatarPath = url.pathname.replace('/storage/v1/object/public/avatars/', '')
+        console.log('🗂️ Avatar anterior encontrado:', oldAvatarPath)
       }
     } catch (error) {
-      console.warn('⚠️ No se pudo obtener avatar anterior:', error);
+      console.log('⚠️ No se pudo obtener avatar anterior:', error)
     }
 
-    // PASO 2: Generar nombres únicos y subir archivo
-    console.log('📤 PASO 2: Subiendo archivo...');
-    const fileName = generateAvatarFilename(user.id, file.name);
-    const filePath = generateAvatarPath(user.id, fileName);
-    
-    console.log('📁 Archivo generado:', fileName);
-    console.log('📂 Path completo:', filePath);
+    // PASO 2: Generar path único para el nuevo avatar
+    const timestamp = Date.now()
+    const fileExtension = file.name.split('.').pop()
+    const fileName = `${timestamp}-avatar.${fileExtension}`
+    const filePath = `${user.id}/avatar/${fileName}`
 
-    // Convertir File a ArrayBuffer
-    const arrayBuffer = await file.arrayBuffer();
-    const fileBuffer = new Uint8Array(arrayBuffer);
+    console.log('📤 Subiendo a:', filePath)
 
-    // Subir archivo a Supabase Storage
+    // PASO 3: Convertir archivo a buffer
+    const fileBuffer = await file.arrayBuffer()
+
+    // PASO 4: Subir archivo a Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, fileBuffer, {
         contentType: file.type,
+        cacheControl: '3600',
         upsert: false
-      });
+      })
 
     if (uploadError) {
-      console.error('❌ Error uploading to storage:', uploadError);
-      return NextResponse.json({
-        error: "Error al subir archivo: " + uploadError.message
-      }, { status: 500 });
+      console.error('❌ Error subiendo archivo:', uploadError)
+      return NextResponse.json(
+        { error: `Error subiendo archivo: ${uploadError.message}` },
+        { status: 500 }
+      )
     }
 
-    console.log('✅ Archivo subido exitosamente:', uploadData.path);
+    console.log('✅ Archivo subido exitosamente')
 
-    // PASO 3: Obtener URL pública
-    console.log('🔗 PASO 3: Obteniendo URL pública...');
+    // PASO 5: Obtener URL pública
     const { data: urlData } = supabase.storage
       .from('avatars')
-      .getPublicUrl(filePath);
+      .getPublicUrl(filePath)
 
-    if (!urlData?.publicUrl) {
-      console.log('❌ Error obteniendo URL pública');
-      return NextResponse.json({
-        error: "Error al obtener URL pública"
-      }, { status: 500 });
-    }
+    const publicUrl = urlData.publicUrl
+    console.log('🔗 URL pública generada:', publicUrl)
 
-    const imageUrl = urlData.publicUrl;
-    console.log('🔗 URL pública obtenida:', imageUrl);
-
-    // PASO 4: Actualizar perfil del usuario
-    console.log('💾 PASO 4: Actualizando perfil...');
-    const now = new Date().toISOString();
-    const { error: updateError } = await supabase
+    // PASO 6: Actualizar User.profile_image (SSoT)
+    const now = new Date().toISOString()
+    const { data: updatedUser, error: updateError } = await supabase
       .from('User')
       .update({
-        profile_image: imageUrl,
+        profile_image: publicUrl,
         updated_at: now
       })
-      .eq('id', user.id);
+      .eq('id', user.id)
+      .select('id, name, email, profile_image, updated_at')
+      .single()
 
     if (updateError) {
-      console.error('❌ Error updating user profile_image:', updateError);
+      console.error('❌ Error actualizando perfil:', updateError)
       
-      // Si falla la actualización del perfil, eliminar archivo subido
-      console.log('🗑️ Eliminando archivo subido por error...');
+      // Limpiar archivo subido si falla la actualización
       await supabase.storage
         .from('avatars')
-        .remove([filePath]);
+        .remove([filePath])
 
-      return NextResponse.json({
-        error: "Error al actualizar perfil: " + updateError.message
-      }, { status: 500 });
+      return NextResponse.json(
+        { error: `Error actualizando perfil: ${updateError.message}` },
+        { status: 500 }
+      )
     }
 
-    console.log('✅ Perfil actualizado exitosamente');
+    console.log('✅ Perfil actualizado exitosamente')
 
-    // PASO 5: Verificar que la actualización fue exitosa
-    console.log('🔍 PASO 5: Verificando actualización...');
-    const { data: verifyData, error: verifyError } = await supabase
-      .from('User')
-      .select('profile_image, updated_at')
-      .eq('id', user.id)
-      .single();
-
-    if (verifyError) {
-      console.log('⚠️ Error verificando actualización:', verifyError);
-    } else {
-      console.log('✅ Verificación exitosa - profile_image:', verifyData.profile_image);
-      console.log('✅ updated_at:', verifyData.updated_at);
-    }
-
-    // PASO 6: Eliminar avatar anterior SOLO si todo fue exitoso
+    // PASO 7: Limpiar avatar anterior
     if (oldAvatarPath && oldAvatarPath !== filePath) {
-      console.log('🗑️ PASO 6: Eliminando avatar anterior...');
+      console.log('🧹 Limpiando avatar anterior:', oldAvatarPath)
       try {
-        const { error: deleteError } = await supabase.storage
+        await supabase.storage
           .from('avatars')
-          .remove([oldAvatarPath]);
-        
-        if (deleteError) {
-          console.log('⚠️ Error eliminando avatar anterior:', deleteError);
-        } else {
-          console.log('✅ Avatar anterior eliminado:', oldAvatarPath);
-        }
+          .remove([oldAvatarPath])
+        console.log('✅ Avatar anterior eliminado')
       } catch (error) {
-        console.warn('⚠️ Failed to cleanup old avatar:', error);
+        console.log('⚠️ Error limpiando avatar anterior:', error)
       }
-    } else {
-      console.log('📋 No hay avatar anterior para eliminar o es el mismo archivo');
     }
 
-    // PASO 7: Generar URL con cache-busting
-    console.log('🔄 PASO 7: Generando URL con cache-busting...');
-    const cacheBustedUrl = getAvatarUrl({
-      profileImage: verifyData?.profile_image || imageUrl,
-      updatedAt: verifyData?.updated_at || now
-    });
-
-    console.log('🔗 URL final con cache-busting:', cacheBustedUrl);
-
-    const response = {
-      imageUrl: cacheBustedUrl || imageUrl,
-      originalUrl: imageUrl,
-      message: "Avatar actualizado correctamente",
-      cacheBusted: !!cacheBustedUrl,
-      debug: {
-        filePath,
-        oldAvatarPath,
-        timestamp: now,
-        verified: !!verifyData
-      }
-    };
-
-    console.log('✅ UPLOAD COMPLETADO EXITOSAMENTE');
-    return NextResponse.json(response, { status: 200 });
+    // PASO 8: Responder con perfil actualizado para rehidratar UserContext
+    return NextResponse.json({
+      success: true,
+      message: 'Avatar actualizado exitosamente',
+      user: updatedUser,
+      imageUrl: `${publicUrl}?v=${new Date(now).getTime()}` // Cache-busting
+    })
 
   } catch (error) {
-    console.error('💥 Unexpected error in avatar upload:', error);
+    console.error('💥 Error crítico en avatar upload:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}
+
+// GET - Obtener información del avatar actual
+export async function GET(request: NextRequest) {
+  console.log('=== GET /api/users/avatar - GET AVATAR INFO ===')
+  
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    // Verificar autenticación
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Token de autorización requerido' },
+        { status: 401 }
+      )
+    }
+
+    const token = authHeader.split(' ')[1]
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Usuario no autenticado' },
+        { status: 401 }
+      )
+    }
+
+    // Obtener datos del avatar desde User table (SSoT)
+    const { data: userData, error: fetchError } = await supabase
+      .from('User')
+      .select('profile_image, name, updated_at')
+      .eq('id', user.id)
+      .single()
+
+    if (fetchError) {
+      console.error('❌ Error obteniendo datos del usuario:', fetchError)
+      return NextResponse.json(
+        { error: 'Error obteniendo datos del usuario' },
+        { status: 500 }
+      )
+    }
+
+    // Generar URL con cache-busting
+    const imageUrl = userData?.profile_image && userData?.updated_at
+      ? `${userData.profile_image}?v=${new Date(userData.updated_at).getTime()}`
+      : userData?.profile_image
+
     return NextResponse.json({
-      error: "Error interno del servidor",
-      details: error instanceof Error ? error.message : 'Error desconocido'
-    }, { status: 500 });
+      success: true,
+      profile_image: userData?.profile_image || null,
+      imageUrl,
+      name: userData?.name,
+      updated_at: userData?.updated_at
+    })
+
+  } catch (error) {
+    console.error('💥 Error crítico en avatar GET:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }
 
 // DELETE - Eliminar avatar
 export async function DELETE(request: NextRequest) {
-  const supabase = await getServerSupabase();
-
+  console.log('=== DELETE /api/users/avatar - DELETE AVATAR ===')
+  
   try {
-    console.log('🗑️ INICIANDO ELIMINACIÓN DE AVATAR...');
-    
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Verificar autenticación
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Token de autorización requerido' },
+        { status: 401 }
+      )
+    }
 
+    const token = authHeader.split(' ')[1]
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    
     if (authError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Usuario no autenticado' },
+        { status: 401 }
+      )
     }
 
-    const { userId } = await request.json();
-
-    // Verificar que el usuario solo puede eliminar su propio avatar
-    if (userId && userId !== user.id) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-    }
-
-    // Obtener URL actual del avatar
+    // Obtener avatar actual
     const { data: userData, error: fetchError } = await supabase
       .from('User')
       .select('profile_image')
       .eq('id', user.id)
-      .single();
+      .single()
 
     if (fetchError) {
-      return NextResponse.json({
-        error: "Error al obtener datos del usuario"
-      }, { status: 500 });
+      console.error('❌ Error obteniendo datos del usuario:', fetchError)
+      return NextResponse.json(
+        { error: 'Error obteniendo datos del usuario' },
+        { status: 500 }
+      )
     }
 
     // Eliminar archivo del storage si existe
     if (userData?.profile_image) {
       try {
-        const oldPath = extractAvatarPath(userData.profile_image, user.id);
+        const url = new URL(userData.profile_image)
+        const filePath = url.pathname.replace('/storage/v1/object/public/avatars/', '')
         
-        if (oldPath) {
-          await supabase.storage
-            .from('avatars')
-            .remove([oldPath]);
-          
-          console.log('✅ Archivo eliminado del storage:', oldPath);
-        }
+        await supabase.storage
+          .from('avatars')
+          .remove([filePath])
+        
+        console.log('✅ Archivo eliminado del storage')
       } catch (error) {
-        console.warn('Failed to delete avatar file:', error);
+        console.log('⚠️ Error eliminando archivo del storage:', error)
       }
     }
 
-    // Actualizar perfil del usuario removiendo la URL
-    const now = new Date().toISOString();
+    // Actualizar User.profile_image a null (SSoT)
+    const now = new Date().toISOString()
     const { error: updateError } = await supabase
       .from('User')
       .update({
         profile_image: null,
         updated_at: now
       })
-      .eq('id', user.id);
+      .eq('id', user.id)
 
     if (updateError) {
-      return NextResponse.json({
-        error: "Error al actualizar perfil: " + updateError.message
-      }, { status: 500 });
+      console.error('❌ Error actualizando perfil:', updateError)
+      return NextResponse.json(
+        { error: 'Error eliminando avatar del perfil' },
+        { status: 500 }
+      )
     }
 
-    console.log('✅ AVATAR ELIMINADO EXITOSAMENTE');
+    console.log('✅ Avatar eliminado exitosamente')
+
     return NextResponse.json({
-      message: "Avatar eliminado correctamente"
-    }, { status: 200 });
+      success: true,
+      message: 'Avatar eliminado exitosamente'
+    })
 
   } catch (error) {
-    console.error('Unexpected error in avatar deletion:', error);
-    return NextResponse.json({
-      error: "Error interno del servidor",
-      details: error instanceof Error ? error.message : 'Error desconocido'
-    }, { status: 500 });
-  }
-}
-
-// GET - Obtener información del avatar actual
-export async function GET() {
-  const supabase = await getServerSupabase();
-
-  try {
-    // Verificar autenticación
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    }
-
-    // Obtener URL actual del avatar con datos para cache-busting
-    const { data: userData, error: fetchError } = await supabase
-      .from('User')
-      .select('profile_image, name, updated_at')
-      .eq('id', user.id)
-      .single();
-
-    if (fetchError) {
-      return NextResponse.json({
-        error: "Error al obtener datos del usuario"
-      }, { status: 500 });
-    }
-
-    // Generar URL con cache-busting si existe imagen
-    const cacheBustedUrl = getAvatarUrl({
-      profileImage: userData?.profile_image,
-      updatedAt: userData?.updated_at
-    });
-
-    console.log('📋 Avatar actual:', userData?.profile_image);
-    console.log('🔗 URL con cache-busting:', cacheBustedUrl);
-
-    return NextResponse.json({
-      imageUrl: cacheBustedUrl,
-      originalUrl: userData?.profile_image || null,
-      name: userData?.name || 'Usuario',
-      cacheBusted: !!cacheBustedUrl && !!userData?.updated_at
-    }, { status: 200 });
-
-  } catch (error) {
-    console.error('Unexpected error in avatar fetch:', error);
-    return NextResponse.json({
-      error: "Error interno del servidor",
-      details: error instanceof Error ? error.message : 'Error desconocido'
-    }, { status: 500 });
+    console.error('💥 Error crítico en avatar DELETE:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
   }
 }
