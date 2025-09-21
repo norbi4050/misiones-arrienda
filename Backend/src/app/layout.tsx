@@ -9,6 +9,7 @@ import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/components/auth-provider'
 import { UserProvider } from '@/contexts/UserContext'
+import { MessagesProvider } from '@/contexts/MessagesContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,35 +32,36 @@ export default async function RootLayout({
       <body className={inter.className}>
         <AuthProvider initialSession={session}>
           <UserProvider>
-            {/* REMOVIDO MessagesProvider temporalmente */}
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem={false}
-              disableTransitionOnChange
-            >
-              <Navbar initialSession={session} />
-              {children}
+            <MessagesProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                enableSystem={false}
+                disableTransitionOnChange
+              >
+                <Navbar initialSession={session} />
+                {children}
 
-              <ConditionalWhatsAppButton />
-              <AIChatbot />
-              <BuildBadge />
+                <ConditionalWhatsAppButton />
+                <AIChatbot />
+                <BuildBadge />
 
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                    fontSize: '14px',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    maxWidth: '400px',
-                  },
-                }}
-              />
-            </ThemeProvider>
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: '#363636',
+                      color: '#fff',
+                      fontSize: '14px',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      maxWidth: '400px',
+                    },
+                  }}
+                />
+              </ThemeProvider>
+            </MessagesProvider>
           </UserProvider>
         </AuthProvider>
       </body>

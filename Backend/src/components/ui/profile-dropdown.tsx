@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { User, Settings, LogOut, Heart, MessageCircle, ChevronDown } from "lucide-react"
+import { User, FileText, LogOut, Heart, MessageCircle, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AvatarUniversal } from "@/components/ui/avatar-universal"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
@@ -74,12 +74,12 @@ export function ProfileDropdown({ user, profileImage, updatedAt, onSignOut }: Pr
                 Mensajes
               </Link>
               <Link
-                href="/profile/inquilino"
+                href="/mis-publicaciones"
                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsOpen(false)}
               >
-                <Settings className="mr-2 h-4 w-4" />
-                Dashboard
+                <FileText className="mr-2 h-4 w-4" />
+                Mis publicaciones
               </Link>
             </div>
 

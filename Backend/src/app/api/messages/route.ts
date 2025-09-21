@@ -29,6 +29,28 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Primero obtener el UserProfile del usuario autenticado
+    const { data: userProfile, error: profileError } = await supabase
+      .from('UserProfile')
+      .select('id')
+      .eq('userId', user.id)
+      .single()
+
+    if (profileError || !userProfile) {
+      console.log('Sistema de mensajes no disponible - perfil de usuario no configurado')
+      return NextResponse.json({
+        conversations: [],
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false
+        }
+      })
+    }
+
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -38,37 +60,38 @@ export async function GET(request: NextRequest) {
     // Calcular offset para paginación
     const offset = (params.page! - 1) * params.limit!
 
-    // Obtener conversaciones donde el usuario participa
+    // Obtener conversaciones donde el usuario participa usando su UserProfile ID
     const { data: conversations, error: conversationsError } = await supabase
-      .from('conversations')
+      .from('Conversation')
       .select(`
         id,
         created_at,
         updated_at,
-        user1_id,
-        user2_id,
-        last_message_content,
-        last_message_at,
-        user1:user1_id (
+        aId,
+        bId,
+        lastMessageAt,
+        a:UserProfile!Conversation_aId_fkey (
           id,
-          name,
-          avatar
+          userId,
+          city,
+          role
         ),
-        user2:user2_id (
+        b:UserProfile!Conversation_bId_fkey (
           id,
-          name,
-          avatar
+          userId,
+          city,
+          role
         )
       `)
-      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .or(`aId.eq.${userProfile.id},bId.eq.${userProfile.id}`)
+      .order('lastMessageAt', { ascending: false, nullsFirst: false })
       .order('updated_at', { ascending: false })
       .range(offset, offset + params.limit! - 1)
 
     if (conversationsError) {
       console.error('Error fetching conversations:', conversationsError)
       return NextResponse.json(
-        { error: 'Error al obtener conversaciones' },
+        { error: 'Error al obtener conversaciones', details: conversationsError.message },
         { status: 500 }
       )
     }
@@ -76,33 +99,37 @@ export async function GET(request: NextRequest) {
     // Procesar conversaciones para mostrar el otro usuario y calcular no leídos
     const processedConversations = await Promise.all(
       (conversations || []).map(async (conversation: any) => {
-        const otherUser = conversation.user1_id === user.id ? conversation.user2 : conversation.user1
+        const otherUserProfile = conversation.aId === userProfile.id ? conversation.b : conversation.a
         
         // Calcular mensajes no leídos para este usuario
         const { count: unreadCount } = await supabase
-          .from('messages')
+          .from('Message')
           .select('*', { count: 'exact', head: true })
-          .eq('conversation_id', conversation.id)
-          .eq('is_read', false)
-          .neq('sender_id', user.id)
+          .eq('conversationId', conversation.id)
+          .eq('isRead', false)
+          .neq('senderId', userProfile.id)
 
         return {
           id: conversation.id,
           created_at: conversation.created_at,
           updated_at: conversation.updated_at,
-          last_message_content: conversation.last_message_content,
-          last_message_at: conversation.last_message_at,
+          last_message_at: conversation.lastMessageAt,
           unread_count: unreadCount || 0,
-          other_user: otherUser
+          other_user: {
+            id: otherUserProfile?.userId,
+            name: `Usuario ${otherUserProfile?.city}`,
+            avatar: null,
+            role: otherUserProfile?.role
+          }
         }
       })
     )
 
     // Obtener total para paginación
     const { count, error: countError } = await supabase
-      .from('conversations')
+      .from('Conversation')
       .select('*', { count: 'exact', head: true })
-      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+      .or(`aId.eq.${userProfile.id},bId.eq.${userProfile.id}`)
 
     const total = count || 0
     const totalPages = Math.ceil(total / params.limit!)
@@ -150,13 +177,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Obtener el UserProfile del usuario autenticado
+    const { data: userProfile, error: profileError } = await supabase
+      .from('UserProfile')
+      .select('id')
+      .eq('userId', user.id)
+      .single()
+
+    if (profileError || !userProfile) {
+      return NextResponse.json(
+        { error: 'Perfil de usuario no configurado' },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const { conversationId, content, type } = sendMessageSchema.parse(body)
 
     // Verificar que la conversación existe y el usuario participa
     const { data: conversation, error: conversationError } = await supabase
-      .from('conversations')
-      .select('id, user1_id, user2_id')
+      .from('Conversation')
+      .select('id, aId, bId')
       .eq('id', conversationId)
       .single()
 
@@ -167,7 +208,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (conversation.user1_id !== user.id && conversation.user2_id !== user.id) {
+    if (conversation.aId !== userProfile.id && conversation.bId !== userProfile.id) {
       return NextResponse.json(
         { error: 'No tienes permisos para enviar mensajes en esta conversación' },
         { status: 403 }
@@ -176,43 +217,36 @@ export async function POST(request: NextRequest) {
 
     // Crear el mensaje
     const { data: newMessage, error: messageError } = await supabase
-      .from('messages')
+      .from('Message')
       .insert({
-        conversation_id: conversationId,
-        sender_id: user.id,
-        content,
-        type,
-        is_read: false,
+        conversationId: conversationId,
+        senderId: userProfile.id,
+        body: content,
+        isRead: false,
         created_at: new Date().toISOString()
       })
       .select(`
         id,
-        content,
-        type,
+        body,
         created_at,
-        is_read,
-        sender:sender_id (
-          id,
-          name,
-          avatar
-        )
+        isRead,
+        senderId
       `)
       .single()
 
     if (messageError) {
       console.error('Error creating message:', messageError)
       return NextResponse.json(
-        { error: 'Error al enviar mensaje' },
+        { error: 'Error al enviar mensaje', details: messageError.message },
         { status: 500 }
       )
     }
 
     // Actualizar la conversación con el último mensaje
     const { error: updateError } = await supabase
-      .from('conversations')
+      .from('Conversation')
       .update({
-        last_message_content: content,
-        last_message_at: new Date().toISOString(),
+        lastMessageAt: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', conversationId)
@@ -259,6 +293,20 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // Obtener el UserProfile del usuario autenticado
+    const { data: userProfile, error: profileError } = await supabase
+      .from('UserProfile')
+      .select('id')
+      .eq('userId', user.id)
+      .single()
+
+    if (profileError || !userProfile) {
+      return NextResponse.json(
+        { error: 'Perfil de usuario no configurado' },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const { conversationId } = z.object({
       conversationId: z.string().min(1)
@@ -266,8 +314,8 @@ export async function PUT(request: NextRequest) {
 
     // Verificar que la conversación existe y el usuario participa
     const { data: conversation, error: conversationError } = await supabase
-      .from('conversations')
-      .select('id, user1_id, user2_id')
+      .from('Conversation')
+      .select('id, aId, bId')
       .eq('id', conversationId)
       .single()
 
@@ -278,7 +326,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    if (conversation.user1_id !== user.id && conversation.user2_id !== user.id) {
+    if (conversation.aId !== userProfile.id && conversation.bId !== userProfile.id) {
       return NextResponse.json(
         { error: 'No tienes permisos para modificar esta conversación' },
         { status: 403 }
@@ -287,11 +335,11 @@ export async function PUT(request: NextRequest) {
 
     // Marcar mensajes como leídos (solo los que no son míos)
     const { error: updateError } = await supabase
-      .from('messages')
-      .update({ is_read: true })
-      .eq('conversation_id', conversationId)
-      .neq('sender_id', user.id)
-      .eq('is_read', false)
+      .from('Message')
+      .update({ isRead: true })
+      .eq('conversationId', conversationId)
+      .neq('senderId', userProfile.id)
+      .eq('isRead', false)
 
     if (updateError) {
       console.error('Error marking messages as read:', updateError)
