@@ -40,42 +40,51 @@ export function PropertyCard({
   area,
   propertyType,
 }: PropertyCardProps) {
-  // Usar solo imágenes reales - NO placeholders
+  // Regla de imagen: mainImage = coverUrl ?? images?.[0] ?? placeholder
   const coverSrc = useMemo(() => {
-    // 1. Prioridad: coverUrl del API SOLO si NO es placeholder
-    if (coverUrl && coverUrl.trim() && !isPlaceholder) {
+    // 1. Prioridad: coverUrl del API (ya procesado)
+    if (coverUrl && coverUrl.trim()) {
       return coverUrl
     }
     
-    // 2. Fallback: parsear images para encontrar imágenes REALES
-    if (images) {
-      try {
-        const parsedImages = typeof images === 'string' 
-          ? JSON.parse(images) 
-          : Array.isArray(images) 
-            ? images 
-            : []
-        
-        // Filtrar solo URLs completas (no keys de storage)
-        const validUrls = parsedImages.filter((img: any) => 
-          img && 
-          typeof img === 'string' && 
-          (img.startsWith('http') || img.startsWith('/')) &&
-          !img.includes('/placeholder-') &&
-          !img.includes('data:')
-        )
-        
-        if (validUrls.length > 0) {
-          return validUrls[0]
+    // 2. Fallback: primera imagen del array images (ya son URLs absolutas)
+    if (images && Array.isArray(images) && images.length > 0) {
+      const firstImage = images[0]
+      // Guard: verificar que sea URL absoluta
+      if (firstImage && typeof firstImage === 'string') {
+        if (!firstImage.startsWith('http') && process.env.NODE_ENV !== 'production') {
+          console.warn('[CARD] imagen no absoluta', firstImage)
         }
-      } catch {
-        // Si falla el parsing, continuar
+        return firstImage
       }
     }
     
-    // 3. NO usar placeholder - retornar null para mostrar estado "sin imágenes"
-    return null
-  }, [coverUrl, images, propertyType, isPlaceholder])
+    // 3. Fallback: parsear images si es string (compatibilidad legacy)
+    if (images && typeof images === 'string') {
+      try {
+        const parsedImages = JSON.parse(images)
+        if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+          return parsedImages[0]
+        }
+      } catch {
+        // Si falla el parsing, continuar con placeholder
+      }
+    }
+    
+    // 4. Placeholder final basado en tipo de propiedad
+    const placeholders = {
+      'HOUSE': '/placeholder-house-1.jpg',
+      'APARTMENT': '/placeholder-apartment-1.jpg',
+      'COMMERCIAL': '/placeholder-house-2.jpg',
+      'LAND': '/placeholder-house-2.jpg',
+      'OFFICE': '/placeholder-apartment-2.jpg',
+      'WAREHOUSE': '/placeholder-house-2.jpg',
+      'PH': '/placeholder-apartment-1.jpg',
+      'STUDIO': '/placeholder-apartment-2.jpg'
+    }
+    
+    return placeholders[propertyType as keyof typeof placeholders] || '/placeholder-house-1.jpg'
+  }, [coverUrl, images, propertyType])
 
   // Usar imagesCount directamente del API
   const totalImages = useMemo(() => {

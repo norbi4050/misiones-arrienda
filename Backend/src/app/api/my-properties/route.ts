@@ -81,71 +81,71 @@ export async function GET(request: NextRequest) {
 
     console.log(`[${requestId}] Propiedades encontradas:`, properties?.length || 0)
 
-    // Procesar propiedades para respuesta con fallback robusto
+    // Base URL pública para bucket property-images
+    const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/`
+    
+    // Procesar propiedades para respuesta con URLs públicas
     const processedProperties = await Promise.all(
       (properties || []).map(async (property: any) => {
-        // PASO 1: Procesar imágenes con fallback híbrido
-        let imageUrls: string[] = []
+        // Procesar imágenes: convertir keys a URLs públicas
+        let images = []
         
-        // Intentar primero images_urls (nuevo sistema)
-        if (property.images_urls) {
+        // 1. Prioridad: images_urls (nuevo) - manejar tanto arrays como JSON
+        if (Array.isArray(property.images_urls)) {
+          // Array PostgreSQL directo
+          images = property.images_urls.map((k: string) => 
+            k.startsWith('http') ? k : `${publicBase}${k}`
+          )
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`✅ [MIS-PROPS] images_urls (array): ${property.id} → ${images.length} URLs`)
+          }
+        } else if (property.images_urls) {
+          // String JSON
           try {
             const parsed = JSON.parse(property.images_urls)
-            imageUrls = Array.isArray(parsed) ? parsed.filter(url => url && typeof url === 'string') : []
-            console.log(`[${requestId}] Images_urls encontradas para ${property.id}:`, imageUrls.length)
+            if (Array.isArray(parsed)) {
+              images = parsed.map((k: string) => 
+                k.startsWith('http') ? k : `${publicBase}${k}`
+              )
+              if (process.env.NODE_ENV !== 'production') {
+                console.log(`✅ [MIS-PROPS] images_urls (JSON): ${property.id} → ${images.length} URLs`)
+              }
+            }
           } catch (e) {
-            console.log(`[${requestId}] Error parseando images_urls para ${property.id}`)
+            if (process.env.NODE_ENV !== 'production') {
+              console.log(`⚠️ [MIS-PROPS] Error parseando images_urls: ${property.id}`)
+            }
           }
         }
         
-        // Fallback a images (legacy) solo si images_urls está vacío
-        if (imageUrls.length === 0 && property.images) {
+        // 2. Fallback: images (legacy) si images_urls está vacío
+        if (images.length === 0 && property.images) {
           try {
             const parsed = JSON.parse(property.images)
-            imageUrls = Array.isArray(parsed) ? parsed.filter(url => url && typeof url === 'string') : []
-            console.log(`[${requestId}] Images legacy encontradas para ${property.id}:`, imageUrls.length)
+            if (Array.isArray(parsed)) {
+              images = parsed.map((k: string) => 
+                k.startsWith('http') ? k : `${publicBase}${k}`
+              )
+              if (process.env.NODE_ENV !== 'production') {
+                console.log(`✅ [MIS-PROPS] images (legacy): ${property.id} → ${images.length} URLs`)
+              }
+            }
           } catch (e) {
-            console.log(`[${requestId}] Error parseando images legacy para ${property.id}`)
+            if (process.env.NODE_ENV !== 'production') {
+              console.log(`⚠️ [MIS-PROPS] Error parseando images legacy: ${property.id}`)
+            }
           }
         }
         
-        // PASO 2: Fallback robusto - listar bucket si no hay imágenes
-        if (imageUrls.length === 0) {
-          console.log(`[${requestId}] Sin imágenes en DB para ${property.id}, intentando listar bucket`)
-          try {
-            const bucketPath = `${property.user_id}/${property.id}`
-            const { data: files, error: listError } = await supabase.storage
-              .from('properties')
-              .list(bucketPath)
-
-            if (!listError && files && files.length > 0) {
-              // Construir URLs públicas desde archivos del bucket
-              imageUrls = files
-                .filter(file => file.name && !file.name.includes('.emptyFolderPlaceholder'))
-                .map(file => {
-                  const { data: { publicUrl } } = supabase.storage
-                    .from('properties')
-                    .getPublicUrl(`${bucketPath}/${file.name}`)
-                  return publicUrl
-                })
-              
-              console.log(`[${requestId}] Imágenes recuperadas del bucket para ${property.id}:`, imageUrls.length)
-            }
-          } catch (bucketError) {
-            console.log(`[${requestId}] Error listando bucket para ${property.id}:`, bucketError)
-          }
-        }
-
-        // PASO 3: NO usar placeholder - dejar array vacío si no hay imágenes reales
-        // Esto permite que el frontend maneje el estado sin imágenes apropiadamente
+        // 3. coverUrl = primera imagen real o null
+        const coverUrl = images.length > 0 ? images[0] : null
         
-        // Generar cover URL solo si hay imágenes reales - NO usar placeholders
-        const coverResult = imageUrls.length > 0 
-          ? generatePublicCoverUrl(imageUrls[0], property.property_type)
-          : {
-              coverUrl: null,  // NO generar placeholder - dejar null
-              isPlaceholder: true
-            }
+        // Mantener lógica existente de isPlaceholder y coverUrlExpiresAt
+        const coverResult = {
+          coverUrl: coverUrl,
+          coverUrlExpiresAt: coverUrl ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
+          isPlaceholder: coverUrl === null
+        }
 
         return {
           id: property.id,
@@ -174,10 +174,11 @@ export async function GET(request: NextRequest) {
           updatedAt: property.updated_at,
           expiresAt: property.expires_at,
           // Campo images: string[] mapeado desde images_urls (SSoT)
-          images: imageUrls,
+          images: images,
           coverUrl: coverResult.coverUrl,
+          coverUrlExpiresAt: coverResult.coverUrlExpiresAt,
           isPlaceholder: coverResult.isPlaceholder,
-          imagesCount: imageUrls.length
+          imagesCount: images.length
         }
       })
     )
