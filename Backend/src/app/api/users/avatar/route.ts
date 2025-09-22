@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Usuario autenticado:', user.id)
+    console.log('[avatar] user.id', user?.id)
 
     // Obtener archivo del FormData
     const formData = await request.formData()
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     let oldAvatarPath = null
     try {
       const { data: userData } = await supabase
-        .from('User')
+        .from('users')
         .select('profile_image')
         .eq('id', user.id)
         .single()
@@ -131,34 +132,23 @@ export async function POST(request: NextRequest) {
 
     const publicUrl = urlData.publicUrl
     console.log('🔗 URL pública generada:', publicUrl)
+    console.log('[avatar] publicUrl', publicUrl)
 
-    // PASO 6: Actualizar User.profile_image (SSoT)
-    const now = new Date().toISOString()
-    const { data: updatedUser, error: updateError } = await supabase
-      .from('User')
-      .update({
-        profile_image: publicUrl,
-        updated_at: now
-      })
-      .eq('id', user.id)
-      .select('id, name, email, profile_image, updated_at')
+    // PASO 6: Actualizar users.profile_image (SSoT) - user.id es string, NO castear a uuid
+    // No tocar updated_at a mano, lo hace el trigger
+    const { data, error } = await supabase
+      .from('users') // 👈 minúsculas
+      .update({ profile_image: publicUrl }) // no tocar updated_at
+      .eq('id', user.id) // 👈 id es string (no castear a uuid)
+      .select('id, profile_image, updated_at')
       .single()
 
-    if (updateError) {
-      console.error('❌ Error actualizando perfil:', updateError)
-      
-      // Limpiar archivo subido si falla la actualización
-      await supabase.storage
-        .from('avatars')
-        .remove([filePath])
-
-      return NextResponse.json(
-        { error: `Error actualizando perfil: ${updateError.message}` },
-        { status: 500 }
-      )
+    if (error) {
+      console.error('[avatar] UPDATE error', error)
+      return NextResponse.json({ success: false, error }, { status: 500 })
     }
 
-    console.log('✅ Perfil actualizado exitosamente')
+    console.log('[avatar] UPDATE ok', data)
 
     // PASO 7: Limpiar avatar anterior
     if (oldAvatarPath && oldAvatarPath !== filePath) {
@@ -174,12 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     // PASO 8: Responder con perfil actualizado para rehidratar UserContext
-    return NextResponse.json({
-      success: true,
-      message: 'Avatar actualizado exitosamente',
-      user: updatedUser,
-      imageUrl: `${publicUrl}?v=${new Date(now).getTime()}` // Cache-busting
-    })
+    return NextResponse.json({ success: true, user: data })
 
   } catch (error) {
     console.error('💥 Error crítico en avatar upload:', error)
@@ -208,9 +193,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Obtener datos del avatar desde User table (SSoT)
+    // Obtener datos del avatar desde users table (SSoT)
     const { data: userData, error: fetchError } = await supabase
-      .from('User')
+      .from('users')
       .select('profile_image, name, updated_at')
       .eq('id', user.id)
       .single()
@@ -265,7 +250,7 @@ export async function DELETE(request: NextRequest) {
 
     // Obtener avatar actual
     const { data: userData, error: fetchError } = await supabase
-      .from('User')
+      .from('users')
       .select('profile_image')
       .eq('id', user.id)
       .single()
@@ -294,15 +279,13 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    // Actualizar User.profile_image a null (SSoT)
-    const now = new Date().toISOString()
-    const { error: updateError } = await supabase
-      .from('User')
-      .update({
-        profile_image: null,
-        updated_at: now
-      })
+    // Actualizar users.profile_image a null (SSoT)
+    const { data: deleteData, error: updateError } = await supabase
+      .from('users')
+      .update({ profile_image: null })
       .eq('id', user.id)
+      .select('id, profile_image, updated_at')
+      .single()
 
     if (updateError) {
       console.error('❌ Error actualizando perfil:', updateError)

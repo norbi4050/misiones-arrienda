@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseBrowser } from '@/lib/supabase-browser'
 import { Button } from '@/components/ui/button'
 import { Upload, X, Image as ImageIcon, Loader2, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -17,10 +17,6 @@ import {
   getFileInfo,
   type ImageValidationError
 } from '@/lib/image-validation'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 interface ImageUploadProps {
   value?: string[]
@@ -337,6 +333,7 @@ export function ProfileImageUpload({
         // Clean up old avatar from storage if it exists
         if (oldAvatarUrl && oldAvatarUrl !== imageUrl) {
           try {
+            const supabase = getSupabaseBrowser()
             const urlParts = oldAvatarUrl.split('/storage/v1/object/public/avatars/')
             if (urlParts.length === 2) {
               const filePath = urlParts[1]

@@ -14,6 +14,8 @@ import { cn } from "@/utils";
 import toast from 'react-hot-toast';
 import { AvatarUniversal } from './avatar-universal';
 import { getAvatarUrl } from '@/utils/avatar';
+import { useUser } from '@/contexts/UserContext';
+import { useRouter } from 'next/navigation';
 
 interface ProfileAvatarProps {
   src?: string;
@@ -47,6 +49,10 @@ export function ProfileAvatar({
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Hooks para refrescar contexto
+  const { refreshProfile } = useUser();
+  const router = useRouter();
 
   // Actualizar imagen cuando cambie la prop src
   useEffect(() => {
@@ -160,15 +166,22 @@ export function ProfileAvatar({
       const data = await response.json();
       
       // Actualizar estado local inmediatamente
-      setCurrentImageUrl(data.originalUrl || data.imageUrl);
+      setCurrentImageUrl(data.imageUrl || data.user?.profile_image);
       setPreviewUrl(null);
+      
+      // Refrescar UserContext para actualizar Navbar al instante
+      await refreshProfile();
+      
+      // Refrescar router para asegurar que todos los componentes se actualicen
+      router.refresh();
       
       // Notificar cambio para actualización optimista
       if (onImageChange) {
-        onImageChange(data.originalUrl || data.imageUrl);
+        onImageChange(data.imageUrl || data.user?.profile_image);
       }
 
       toast.success('Avatar actualizado correctamente');
+      console.log('✅ Avatar actualizado - URL con cache-busting:', data.imageUrl);
 
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -203,6 +216,12 @@ export function ProfileAvatar({
 
       setCurrentImageUrl(null);
       setPreviewUrl(null);
+      
+      // Refrescar UserContext para actualizar Navbar al instante
+      await refreshProfile();
+      
+      // Refrescar router para asegurar que todos los componentes se actualicen
+      router.refresh();
       
       // Notificar cambio para actualización optimista
       if (onImageChange) {

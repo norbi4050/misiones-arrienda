@@ -31,45 +31,31 @@ interface ProfileData {
   name: string;
   email: string;
   phone: string;
-  location: string;
   bio: string;
-  search_type: string;
-  budget_range: string;
-  preferred_areas: string;
-  family_size: number | null;
-  pet_friendly: boolean;
-  move_in_date: string;
-  employment_status: string;
-  monthly_income: number | null;
   profile_image?: string;
   verified?: boolean;
   rating?: number;
   reviewCount?: number;
+  // Campos del formulario
+  firstName?: string;
+  lastName?: string;
 }
 
 export default function InquilinoProfilePage() {
   const { user, loading, session, isAuthenticated, error, updateProfile } = useAuth();
   const [profileData, setProfileData] = useState<Partial<ProfileData>>({});
   const [activeTab, setActiveTab] = useState("overview");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Update profile data when user changes
   useEffect(() => {
     if (user) {
       setProfileData({
-        name: user.name || '',
+        name: (user as any).name || '',
         email: user.email || '',
-        phone: user.phone || '',
-        location: (user as any).location || '',
-        bio: user.bio || '',
-        search_type: (user as any).search_type || '',
-        budget_range: (user as any).budget_range || '',
-        preferred_areas: (user as any).preferred_areas || '',
-        family_size: (user as any).family_size || null,
-        pet_friendly: (user as any).pet_friendly || false,
-        move_in_date: (user as any).move_in_date || '',
-        employment_status: (user as any).employment_status || '',
-        monthly_income: (user as any).monthly_income || null,
-        profile_image: user.avatar || '',
+        phone: (user as any).phone || '',
+        bio: (user as any).bio || '',
+        profile_image: (user as any).avatar || '',
         verified: (user as any).verified || false,
         rating: (user as any).rating || 0,
         reviewCount: (user as any).reviewCount || 0
@@ -173,12 +159,48 @@ export default function InquilinoProfilePage() {
   }
 
   const handleSaveProfile = async (data: Partial<ProfileData>) => {
+    setIsSubmitting(true);
     try {
-      await updateProfile(data);
-      setProfileData(prev => ({ ...prev, ...data }));
+      // Hacer PATCH request al API
+      const response = await fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+          bio: data.bio
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar perfil');
+      }
+
+      const result = await response.json();
+      
+      // Actualizar estado local con los datos del servidor
+      setProfileData(prev => ({
+        ...prev,
+        name: result.profile.name,
+        phone: result.profile.phone,
+        bio: result.profile.bio
+      }));
+
+      // Mostrar mensaje de éxito
+      toast.success('✅ Perfil actualizado correctamente');
+      
+      // Refrescar la página para mostrar los cambios
+      window.location.reload();
+
     } catch (error) {
       console.error('Error saving profile:', error);
-      throw error;
+      toast.error(`❌ ${error instanceof Error ? error.message : 'Error al guardar el perfil'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -217,7 +239,6 @@ export default function InquilinoProfilePage() {
                     name={profileData.name}
                     userId={user.id}
                     size="xl"
-                    onUploadComplete={handleAvatarChange}
                     className="ring-4 ring-white shadow-xl"
                   />
                 </div>
@@ -230,22 +251,10 @@ export default function InquilinoProfilePage() {
                         {profileData.name || 'Usuario'}
                       </h1>
                       <div className="flex flex-wrap items-center gap-4 text-gray-600">
-                        {profileData.location && (
+                        {profileData.phone && (
                           <div className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" />
-                            <span>{profileData.location}</span>
-                          </div>
-                        )}
-                        {profileData.employment_status && (
-                          <div className="flex items-center gap-1">
-                            <Home className="w-4 h-4" />
-                            <span className="capitalize">{profileData.employment_status}</span>
-                          </div>
-                        )}
-                        {profileData.family_size && (
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4" />
-                            <span>{profileData.family_size} personas</span>
+                            <span>{profileData.phone}</span>
                           </div>
                         )}
                       </div>
@@ -325,7 +334,8 @@ export default function InquilinoProfilePage() {
           <TabsContent value="profile">
             <ProfileForm
               initialData={profileData}
-              onSave={handleSaveProfile}
+              onSubmit={handleSaveProfile}
+              isSubmitting={isSubmitting}
             />
           </TabsContent>
 

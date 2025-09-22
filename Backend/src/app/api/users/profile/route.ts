@@ -177,49 +177,90 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Obtener datos del cuerpo de la petición
-    const partialData = await request.json();
+    const body = await request.json();
 
     // Validar que se envíen datos
-    if (!partialData || Object.keys(partialData).length === 0) {
+    if (!body || Object.keys(body).length === 0) {
       return NextResponse.json({
         error: "No se proporcionaron datos para actualizar"
       }, { status: 400 });
     }
 
-    // Campos permitidos para actualización (solo campos básicos que existen)
-    const allowedFields = [
-      'name', 'email', 'phone', 'avatar', 'profileImage', 'bio'
-    ];
-
-    // Filtrar solo campos permitidos y normalizar nombres
-    const updateData: any = {};
-    for (const [key, value] of Object.entries(partialData)) {
-      if (allowedFields.includes(key)) {
-        // Normalizar profileImage → avatar
-        if (key === 'profileImage') {
-          updateData.avatar = value;
-        } else {
-          updateData[key] = value;
-        }
-      }
+    // Validación básica con límites de caracteres
+    const errors: string[] = [];
+    
+    if (body.firstName && (typeof body.firstName !== 'string' || body.firstName.length > 60)) {
+      errors.push('Nombre debe ser texto y máximo 60 caracteres');
+    }
+    
+    if (body.lastName && (typeof body.lastName !== 'string' || body.lastName.length > 60)) {
+      errors.push('Apellido debe ser texto y máximo 60 caracteres');
+    }
+    
+    if (body.phone && (typeof body.phone !== 'string' || body.phone.length > 20)) {
+      errors.push('Teléfono debe ser texto y máximo 20 caracteres');
+    }
+    
+    if (body.bio && (typeof body.bio !== 'string' || body.bio.length > 500)) {
+      errors.push('Biografía debe ser texto y máximo 500 caracteres');
     }
 
-    // Agregar timestamp de actualización
-    updateData.updatedAt = new Date().toISOString();
+    if (errors.length > 0) {
+      return NextResponse.json({
+        error: "Datos inválidos",
+        details: errors
+      }, { status: 400 });
+    }
+
+    // Mapear firstName + lastName a name
+    const updateData: any = {};
+    
+    if (body.firstName || body.lastName) {
+      const firstName = (body.firstName || '').trim();
+      const lastName = (body.lastName || '').trim();
+      const name = `${firstName} ${lastName}`.trim();
+      
+      if (name) {
+        updateData.name = name;
+      }
+    }
+    
+    if (body.phone !== undefined) {
+      updateData.phone = body.phone ? body.phone.trim() : null;
+    }
+    
+    if (body.bio !== undefined) {
+      updateData.bio = body.bio ? body.bio.trim() : null;
+    }
+
+    // Ignorar campos fantasma que no existen en BD
+    const ignoredFields = [
+      'search_type', 'budget_range', 'preferred_areas', 'family_size',
+      'pet_friendly', 'move_in_date', 'employment_status', 'monthly_income'
+    ];
+    
+    // Log de campos ignorados para debugging
+    const ignored = Object.keys(body).filter(key => ignoredFields.includes(key));
+    if (ignored.length > 0) {
+      console.log('Campos ignorados (no existen en BD):', ignored);
+    }
 
     // Verificar que hay campos válidos para actualizar
-    if (Object.keys(updateData).length <= 1) { // Solo updatedAt
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json({
         error: "No se proporcionaron campos válidos para actualizar"
       }, { status: 400 });
     }
+
+    // Agregar timestamp de actualización
+    updateData.updatedAt = new Date().toISOString();
 
     // Actualizar perfil en la base de datos
     const { data: updatedProfile, error: updateError } = await supabase
       .from('User')
       .update(updateData)
       .eq('id', user.id)
-      .select()
+      .select('id, name, email, phone, bio, updatedAt')
       .single();
 
     if (updateError) {

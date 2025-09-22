@@ -1,14 +1,11 @@
 'use client'
 
 import React, { useState, useRef, useCallback } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseBrowser } from '@/lib/supabase-browser'
 import { Button } from './button'
 import { Progress } from './progress'
 import { X, Upload, Image as ImageIcon, FileText, AlertTriangle } from 'lucide-react'
 import { cn } from "@/utils"
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 interface ImageUploadUniversalProps {
   bucket: 'avatars' | 'properties' | 'documents'
@@ -50,7 +47,7 @@ export function ImageUploadUniversal({
   const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  const supabase = getSupabaseBrowser()
 
   // Configuración por bucket
   const bucketConfig = {

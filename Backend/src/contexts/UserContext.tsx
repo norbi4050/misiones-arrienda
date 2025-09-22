@@ -139,7 +139,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const loadUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
       const { data, error } = await supabase
-        .from('User')
+        .from('users')
         .select('*')
         .eq('id', userId)
         .single();
@@ -243,7 +243,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const { error } = await supabase
-        .from('User')
+        .from('users')
         .update({
           ...data,
           updated_at: new Date().toISOString()
@@ -277,7 +277,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const now = new Date().toISOString();
       
       const { error } = await supabase
-        .from('User')
+        .from('users')
         .update({
           profile_image: imageUrl,
           updated_at: now
@@ -302,22 +302,40 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, supabase]);
 
-  // Función para refrescar perfil
+  // Función para refrescar perfil SIN CACHÉ
   const refreshProfile = useCallback(async () => {
     if (!user) return;
 
     try {
-      const profileData = await loadUserProfile(user.id);
-      if (profileData) {
-        setProfile(profileData);
-        if (session) {
-          saveToCache(profileData, session);
-        }
+      console.log('🔄 UserContext: Refrescando perfil sin caché...');
+      
+      // Hacer fetch directo sin caché para obtener datos actualizados
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('❌ Error refrescando perfil:', error);
+        return;
+      }
+
+      console.log('✅ Perfil refrescado exitosamente:', {
+        profile_image: data.profile_image,
+        updated_at: data.updated_at
+      });
+
+      const profileData = data as UserProfile;
+      setProfile(profileData);
+      
+      if (session) {
+        saveToCache(profileData, session);
       }
     } catch (error) {
-      console.error('Error refreshing profile:', error);
+      console.error('💥 Error crítico refrescando perfil:', error);
     }
-  }, [user, session, loadUserProfile, saveToCache]);
+  }, [user, session, supabase, saveToCache]);
 
   // Inicialización
   useEffect(() => {

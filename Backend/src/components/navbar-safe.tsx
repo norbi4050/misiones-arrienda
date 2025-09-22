@@ -135,7 +135,7 @@ export function NavbarSafe({ initialSession }: NavbarProps) {
                     {/* Profile Dropdown */}
                     <ProfileDropdown
                       user={currentUser!}
-                      profileImage={null}
+                      profileImage={profile?.profile_image}
                       updatedAt={profile?.updated_at}
                       onSignOut={signOut}
                     />
@@ -192,7 +192,7 @@ export function NavbarSafe({ initialSession }: NavbarProps) {
                     <div className="border-t pt-4 mt-4">
                       <div className="flex items-center px-3 py-2">
                         <AvatarUniversal
-                          src={null}
+                          src={profile?.profile_image}
                           name={displayName}
                           updatedAt={profile?.updated_at}
                           size="sm"

@@ -1,6 +1,7 @@
 'use client';
-import { getBrowserClient } from '@/lib/supabase/browser';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 // Alias para compatibilidad con código existente
-export const getBrowserSupabase = getBrowserClient;
-export { getBrowserClient };
+export const getBrowserSupabase = getSupabaseBrowser;
+export const getBrowserClient = getSupabaseBrowser;
+export { getSupabaseBrowser };
