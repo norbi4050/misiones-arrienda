@@ -132,7 +132,7 @@ export function useSupabaseAuth() {
 
       // Actualizar datos adicionales del perfil en la tabla de usuarios
       const { error: profileError } = await supabase
-        .from('User')
+        .from('users')
         .update(updateData)
         .eq('id', user.id);
 

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import ProfileAvatar from "@/components/ui/profile-avatar";
 import { ProfileForm } from "@/components/ui/profile-form";
@@ -22,7 +23,8 @@ import {
   Calendar,
   Home,
   Users,
-  Heart
+  Heart,
+  Phone
 } from "lucide-react";
 import { cn } from "@/utils";
 import toast from "react-hot-toast";
@@ -42,26 +44,65 @@ interface ProfileData {
 }
 
 export default function InquilinoProfilePage() {
+  const router = useRouter();
   const { user, loading, session, isAuthenticated, error, updateProfile } = useAuth();
   const [profileData, setProfileData] = useState<Partial<ProfileData>>({});
   const [activeTab, setActiveTab] = useState("overview");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Update profile data when user changes
+  // Cargar datos del perfil desde API (SSoT)
   useEffect(() => {
-    if (user) {
-      setProfileData({
-        name: (user as any).name || '',
-        email: user.email || '',
-        phone: (user as any).phone || '',
-        bio: (user as any).bio || '',
-        profile_image: (user as any).avatar || '',
-        verified: (user as any).verified || false,
-        rating: (user as any).rating || 0,
-        reviewCount: (user as any).reviewCount || 0
-      });
-    }
-  }, [user]);
+    const loadProfileFromAPI = async () => {
+      if (!user || !isAuthenticated) return;
+
+      try {
+        console.log('🔄 Cargando perfil desde API para user.id:', user.id);
+        
+        const response = await fetch('/api/users/profile', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          cache: 'no-store' // Anti-caché
+        });
+
+        if (!response.ok) {
+          console.error('❌ Error al cargar perfil:', response.status);
+          return;
+        }
+
+        const result = await response.json();
+        console.log('✅ Perfil cargado desde API:', result.profile);
+        
+        setProfileData({
+          name: result.profile.name || '',
+          email: result.profile.email || user.email || '',
+          phone: result.profile.phone || '',
+          bio: result.profile.bio || '',
+          profile_image: result.profile.avatar || '',
+          verified: result.profile.verified || false,
+          rating: 0, // Estos vienen de otros endpoints
+          reviewCount: 0
+        });
+
+      } catch (error) {
+        console.error('❌ Error loading profile from API:', error);
+        // Fallback a datos de auth si falla el API
+        setProfileData({
+          name: (user as any).name || '',
+          email: user.email || '',
+          phone: (user as any).phone || '',
+          bio: (user as any).bio || '',
+          profile_image: (user as any).avatar || '',
+          verified: (user as any).verified || false,
+          rating: 0,
+          reviewCount: 0
+        });
+      }
+    };
+
+    loadProfileFromAPI();
+  }, [user, isAuthenticated]);
   // Debug logging for authentication state
   useEffect(() => {
     }, [loading, isAuthenticated, user, session, error]);
@@ -158,46 +199,56 @@ export default function InquilinoProfilePage() {
     );
   }
 
-  const handleSaveProfile = async (data: Partial<ProfileData>) => {
+  const handleSaveProfile = async (data: any) => {
     setIsSubmitting(true);
     try {
+      console.log('📝 Datos recibidos del formulario:', data);
+      
+      // Mapear campos del formulario a la estructura de BD
+      const mappedData = {
+        name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
+        phone: data.phone || '',
+        bio: data.bio || ''
+        // Email no se incluye porque es solo lectura
+      };
+      
+      console.log('🔄 Datos mapeados para BD:', mappedData);
+
       // Hacer PATCH request al API
       const response = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          phone: data.phone,
-          bio: data.bio
-        })
+        body: JSON.stringify(mappedData)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ Error del servidor:', errorData);
         throw new Error(errorData.error || 'Error al actualizar perfil');
       }
 
       const result = await response.json();
+      console.log('✅ Respuesta del servidor:', result);
       
       // Actualizar estado local con los datos del servidor
       setProfileData(prev => ({
         ...prev,
         name: result.profile.name,
         phone: result.profile.phone,
-        bio: result.profile.bio
+        bio: result.profile.bio,
+        profile_image: result.profile.avatar || prev.profile_image
       }));
 
       // Mostrar mensaje de éxito
       toast.success('✅ Perfil actualizado correctamente');
       
-      // Refrescar la página para mostrar los cambios
-      window.location.reload();
+      // Refrescar la página para sincronizar todos los componentes
+      router.refresh();
 
     } catch (error) {
-      console.error('Error saving profile:', error);
+      console.error('❌ Error saving profile:', error);
       toast.error(`❌ ${error instanceof Error ? error.message : 'Error al guardar el perfil'}`);
     } finally {
       setIsSubmitting(false);
@@ -253,13 +304,13 @@ export default function InquilinoProfilePage() {
                       <div className="flex flex-wrap items-center gap-4 text-gray-600">
                         {profileData.phone && (
                           <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
+                            <Phone className="w-4 h-4" />
                             <span>{profileData.phone}</span>
                           </div>
                         )}
                       </div>
                       {profileData.bio && (
-                        <p className="text-gray-700 mt-3 max-w-2xl">
+                        <p className="text-black mt-3 max-w-2xl line-clamp-3 break-words overflow-hidden font-semibold">
                           {profileData.bio}
                         </p>
                       )}

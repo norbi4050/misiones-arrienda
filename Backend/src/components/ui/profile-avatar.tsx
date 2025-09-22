@@ -384,8 +384,8 @@ export function ProfileAvatar({
           )}
           onClick={openFileSelector}
         >
-          <Upload className="w-8 h-8 text-gray-400 mb-2" />
-          <span className="text-xs text-gray-500 text-center px-2">
+          <Upload className="w-8 h-8 text-gray-700 mb-2" />
+          <span className="text-xs text-gray-800 font-semibold text-center px-2">
             Arrastra una imagen o haz clic
           </span>
         </div>

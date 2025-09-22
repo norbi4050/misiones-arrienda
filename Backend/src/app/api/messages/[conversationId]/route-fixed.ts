@@ -25,11 +25,11 @@ export async function GET(
       )
     }
 
-    // Obtener el UserProfile del usuario autenticado
+    // Obtener el perfil del usuario autenticado desde la tabla users
     const { data: userProfile, error: profileError } = await supabase
-      .from('UserProfile')
+      .from('users')
       .select('id')
-      .eq('userId', user.id)
+      .eq('id', user.id)
       .single()
 
     if (profileError || !userProfile) {
@@ -171,11 +171,11 @@ export async function POST(
       )
     }
 
-    // Obtener el UserProfile del usuario autenticado
+    // Obtener el perfil del usuario autenticado desde la tabla users
     const { data: userProfile, error: profileError } = await supabase
-      .from('UserProfile')
+      .from('users')
       .select('id')
-      .eq('userId', user.id)
+      .eq('id', user.id)
       .single()
 
     if (profileError || !userProfile) {

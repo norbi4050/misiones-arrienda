@@ -110,17 +110,22 @@ export function ProfileForm({ onSubmit, initialData, className, isSubmitting = f
             <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
               Biografía
             </label>
-            <textarea
-              id="bio"
-              name="bio"
-              rows={3}
-              defaultValue={initialData?.bio || ''}
-              placeholder="Cuéntanos sobre ti..."
-              maxLength={500}
-              onChange={handleInputChange}
-              disabled={isSubmitting}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-            />
+            <div className="relative">
+              <textarea
+                id="bio"
+                name="bio"
+                rows={3}
+                defaultValue={initialData?.bio || ''}
+                placeholder="Cuéntanos sobre ti..."
+                maxLength={500}
+                onChange={handleInputChange}
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 resize-none"
+              />
+              <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white px-1 rounded">
+                {(initialData?.bio || '').length}/500
+              </div>
+            </div>
             <p className="text-xs text-gray-500 mt-1">Máximo 500 caracteres</p>
           </div>
 

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+// Forzar dynamic rendering para evitar caché
+export const dynamic = 'force-dynamic';
+
 async function getServerSupabase() {
   const cookieStore = await cookies();
   return createServerClient(
@@ -35,9 +38,9 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    // Obtener perfil completo del usuario (solo campos básicos que existen)
+    // Obtener perfil completo del usuario (usando tabla 'users' con snake_case)
     const { data: profile, error: profileError } = await supabase
-      .from('User')
+      .from('users')
       .select(`
         id,
         name,
@@ -46,8 +49,8 @@ export async function GET() {
         avatar,
         bio,
         verified,
-        createdAt,
-        updatedAt
+        created_at,
+        updated_at
       `)
       .eq('id', user.id)
       .single();
@@ -63,13 +66,13 @@ export async function GET() {
     // Si no existe perfil, crear uno básico
     if (!profile) {
       const { data: newProfile, error: createError } = await supabase
-        .from('User')
+        .from('users')
         .insert({
           id: user.id,
           email: user.email,
           name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .select()
         .single();
@@ -124,19 +127,19 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Preparar datos para actualización (solo campos básicos que existen)
+    // Preparar datos para actualización (usando snake_case)
     const updateData = {
       name: profileData.name,
       email: profileData.email,
       phone: profileData.phone || null,
       avatar: profileData.avatar || profileData.profileImage || null,
       bio: profileData.bio || null,
-      updatedAt: new Date().toISOString()
+      updated_at: new Date().toISOString()
     };
 
     // Actualizar perfil en la base de datos
     const { data: updatedProfile, error: updateError } = await supabase
-      .from('User')
+      .from('users')
       .update(updateData)
       .eq('id', user.id)
       .select()
@@ -253,14 +256,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Agregar timestamp de actualización
-    updateData.updatedAt = new Date().toISOString();
+    updateData.updated_at = new Date().toISOString();
 
     // Actualizar perfil en la base de datos
     const { data: updatedProfile, error: updateError } = await supabase
-      .from('User')
+      .from('users')
       .update(updateData)
       .eq('id', user.id)
-      .select('id, name, email, phone, bio, updatedAt')
+      .select('id, name, email, phone, bio, updated_at')
       .single();
 
     if (updateError) {
@@ -300,10 +303,10 @@ export async function DELETE() {
 
     // Marcar perfil como eliminado (soft delete)
     const { error: deleteError } = await supabase
-      .from('User')
+      .from('users')
       .update({
-        deletedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .eq('id', user.id);
 

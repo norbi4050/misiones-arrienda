@@ -48,6 +48,39 @@ interface ApiResponse {
   }
 }
 
+// Componente Skeleton simple
+function Skeleton({ className }: { className: string }) {
+  return (
+    <div className={`animate-pulse bg-gray-200 rounded ${className}`}></div>
+  )
+}
+
+// Componente para manejar imágenes de propiedades
+function PropertyImage({ property, alt }: { property: Property; alt: string }) {
+  const [imageUrl, setImageUrl] = useState<string>('/placeholder-house-1.jpg')
+
+  useEffect(() => {
+    // Usar la primera imagen disponible o fallback
+    if (property.images && property.images.length > 0) {
+      setImageUrl(property.images[0])
+    } else if (property.coverUrl) {
+      setImageUrl(property.coverUrl)
+    }
+  }, [property.images, property.coverUrl])
+
+  return (
+    <Image
+      src={imageUrl}
+      alt={alt}
+      fill
+      className="object-cover"
+      onError={() => {
+        setImageUrl('/placeholder-house-1.jpg')
+      }}
+    />
+  )
+}
+
 export default function MisPropiedadesPage() {
   const { user, isAuthenticated } = useUser()
   const [properties, setProperties] = useState<Property[]>([])
@@ -239,11 +272,9 @@ export default function MisPropiedadesPage() {
                   <Card key={property.id} className="overflow-hidden">
                     {/* Imagen */}
                     <div className="relative h-48">
-                      <Image
-                        src={property.coverUrl || property.images[0] || '/placeholder-house-1.jpg'}
+                      <PropertyImage 
+                        property={property}
                         alt={property.title}
-                        fill
-                        className="object-cover"
                       />
                       <div className="absolute top-2 right-2">
                         <Badge className={getStatusBadgeColor(property.status)}>
