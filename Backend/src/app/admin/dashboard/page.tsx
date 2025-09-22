@@ -10,12 +10,12 @@ import {
   Users, 
   Image, 
   Shield, 
-  Activity, 
+  TrendingUp as Activity, 
   AlertTriangle,
-  CheckCircle,
-  Clock,
+  CheckCircle2 as CheckCircle,
+  Timer as Clock,
   TrendingUp,
-  Database,
+  HardDrive as Database,
   Server
 } from 'lucide-react';
 

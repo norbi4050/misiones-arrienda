@@ -12,13 +12,13 @@ import {
   StarOff,
   Eye,
   EyeOff,
-  Archive,
+  FolderArchive as Archive,
   ArchiveRestore,
-  Download,
+  ArrowDown as Download,
   Upload,
   MoreHorizontal,
   AlertTriangle,
-  Check,
+  CheckCircle2 as Check,
   X
 } from 'lucide-react';
 

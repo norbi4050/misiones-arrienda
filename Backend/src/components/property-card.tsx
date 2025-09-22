@@ -40,14 +40,14 @@ export function PropertyCard({
   area,
   propertyType,
 }: PropertyCardProps) {
-  // Usar coverUrl directamente del API (ya viene procesado)
+  // Usar solo imágenes reales - NO placeholders
   const coverSrc = useMemo(() => {
-    // 1. Prioridad: coverUrl del API (signed URL o placeholder)
-    if (coverUrl && coverUrl.trim()) {
+    // 1. Prioridad: coverUrl del API SOLO si NO es placeholder
+    if (coverUrl && coverUrl.trim() && !isPlaceholder) {
       return coverUrl
     }
     
-    // 2. Fallback: parsear images (compatibilidad con versiones anteriores)
+    // 2. Fallback: parsear images para encontrar imágenes REALES
     if (images) {
       try {
         const parsedImages = typeof images === 'string' 
@@ -56,28 +56,26 @@ export function PropertyCard({
             ? images 
             : []
         
-        if (parsedImages.length > 0 && parsedImages[0]) {
-          return parsedImages[0]
+        // Filtrar solo URLs completas (no keys de storage)
+        const validUrls = parsedImages.filter((img: any) => 
+          img && 
+          typeof img === 'string' && 
+          (img.startsWith('http') || img.startsWith('/')) &&
+          !img.includes('/placeholder-') &&
+          !img.includes('data:')
+        )
+        
+        if (validUrls.length > 0) {
+          return validUrls[0]
         }
       } catch {
-        // Si falla el parsing, continuar con placeholder
+        // Si falla el parsing, continuar
       }
     }
     
-    // 3. Placeholder final basado en tipo de propiedad
-    const placeholders = {
-      'HOUSE': '/placeholder-house-1.jpg',
-      'APARTMENT': '/placeholder-apartment-1.jpg',
-      'COMMERCIAL': '/placeholder-house-2.jpg',
-      'LAND': '/placeholder-house-2.jpg',
-      'OFFICE': '/placeholder-apartment-2.jpg',
-      'WAREHOUSE': '/placeholder-house-2.jpg',
-      'PH': '/placeholder-apartment-1.jpg',
-      'STUDIO': '/placeholder-apartment-2.jpg'
-    }
-    
-    return placeholders[propertyType as keyof typeof placeholders] || '/placeholder-house-1.jpg'
-  }, [coverUrl, images, propertyType])
+    // 3. NO usar placeholder - retornar null para mostrar estado "sin imágenes"
+    return null
+  }, [coverUrl, images, propertyType, isPlaceholder])
 
   // Usar imagesCount directamente del API
   const totalImages = useMemo(() => {
@@ -108,31 +106,21 @@ export function PropertyCard({
       <div className="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
         {/* Contenedor con altura fija para que la imagen no sea gigante */}
         <div className="relative w-full h-56 sm:h-56 md:h-60 lg:h-64 overflow-hidden rounded-md">
-          <Image
-            src={coverSrc}
-            alt={title}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={() => {
-              // Fallback robusto si la signed URL falla
-              const img = document.querySelector(`img[alt="${title}"]`) as HTMLImageElement
-              if (img && !img.src.includes('/placeholder-')) {
-                // Usar placeholder específico por tipo de propiedad
-                const placeholders = {
-                  'HOUSE': '/placeholder-house-1.jpg',
-                  'APARTMENT': '/placeholder-apartment-1.jpg',
-                  'COMMERCIAL': '/placeholder-house-2.jpg',
-                  'LAND': '/placeholder-house-2.jpg',
-                  'OFFICE': '/placeholder-apartment-2.jpg',
-                  'WAREHOUSE': '/placeholder-house-2.jpg',
-                  'PH': '/placeholder-apartment-1.jpg',
-                  'STUDIO': '/placeholder-apartment-2.jpg'
-                }
-                img.src = placeholders[propertyType as keyof typeof placeholders] || '/placeholder-house-1.jpg'
-              }
-            }}
-          />
+          {coverSrc ? (
+            <Image
+              src={coverSrc}
+              alt={title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-500">
+              <FileImage className="w-12 h-12 mb-2" />
+              <span className="text-sm font-medium">Sin imágenes</span>
+              <span className="text-xs">Agregar fotos</span>
+            </div>
+          )}
 
           <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <FavoriteButton

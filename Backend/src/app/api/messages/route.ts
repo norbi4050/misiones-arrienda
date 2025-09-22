@@ -29,120 +29,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Primero obtener el perfil del usuario autenticado desde la tabla users
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !userProfile) {
-      console.log('Sistema de mensajes no disponible - perfil de usuario no configurado')
-      return NextResponse.json({
-        conversations: [],
-        pagination: {
-          page: 1,
-          limit: 20,
-          total: 0,
-          totalPages: 0,
-          hasNextPage: false,
-          hasPrevPage: false
-        }
-      })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-
-    const params = getConversationsSchema.parse({ page, limit })
-
-    // Calcular offset para paginación
-    const offset = (params.page! - 1) * params.limit!
-
-    // Obtener conversaciones donde el usuario participa usando su UserProfile ID
-    const { data: conversations, error: conversationsError } = await supabase
-      .from('Conversation')
-      .select(`
-        id,
-        created_at,
-        updated_at,
-        aId,
-        bId,
-        lastMessageAt,
-        a:UserProfile!Conversation_aId_fkey (
-          id,
-          userId,
-          city,
-          role
-        ),
-        b:UserProfile!Conversation_bId_fkey (
-          id,
-          userId,
-          city,
-          role
-        )
-      `)
-      .or(`aId.eq.${userProfile.id},bId.eq.${userProfile.id}`)
-      .order('lastMessageAt', { ascending: false, nullsFirst: false })
-      .order('updated_at', { ascending: false })
-      .range(offset, offset + params.limit! - 1)
-
-    if (conversationsError) {
-      console.error('Error fetching conversations:', conversationsError)
-      return NextResponse.json(
-        { error: 'Error al obtener conversaciones', details: conversationsError.message },
-        { status: 500 }
-      )
-    }
-
-    // Procesar conversaciones para mostrar el otro usuario y calcular no leídos
-    const processedConversations = await Promise.all(
-      (conversations || []).map(async (conversation: any) => {
-        const otherUserProfile = conversation.aId === userProfile.id ? conversation.b : conversation.a
-        
-        // Calcular mensajes no leídos para este usuario
-        const { count: unreadCount } = await supabase
-          .from('Message')
-          .select('*', { count: 'exact', head: true })
-          .eq('conversationId', conversation.id)
-          .eq('isRead', false)
-          .neq('senderId', userProfile.id)
-
-        return {
-          id: conversation.id,
-          created_at: conversation.created_at,
-          updated_at: conversation.updated_at,
-          last_message_at: conversation.lastMessageAt,
-          unread_count: unreadCount || 0,
-          other_user: {
-            id: otherUserProfile?.userId,
-            name: `Usuario ${otherUserProfile?.city}`,
-            avatar: null,
-            role: otherUserProfile?.role
-          }
-        }
-      })
-    )
-
-    // Obtener total para paginación
-    const { count, error: countError } = await supabase
-      .from('Conversation')
-      .select('*', { count: 'exact', head: true })
-      .or(`aId.eq.${userProfile.id},bId.eq.${userProfile.id}`)
-
-    const total = count || 0
-    const totalPages = Math.ceil(total / params.limit!)
-
+    // TEMPORAL: Sistema de mensajes deshabilitado por problemas de schema
+    console.log('Sistema de mensajes temporalmente deshabilitado - schema no configurado')
     return NextResponse.json({
-      conversations: processedConversations,
+      conversations: [],
       pagination: {
-        page: params.page,
-        limit: params.limit,
-        total,
-        totalPages,
-        hasNextPage: params.page! < totalPages,
-        hasPrevPage: params.page! > 1
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false
       }
     })
 

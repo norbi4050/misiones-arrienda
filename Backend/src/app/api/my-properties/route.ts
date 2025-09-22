@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
-import { generateCoverUrl } from '@/lib/signed-urls'
+import { generatePublicCoverUrl } from '@/lib/signed-urls'
 
 // Schema para validar parámetros de consulta
 const getMyPropertiesSchema = z.object({
@@ -139,12 +139,11 @@ export async function GET(request: NextRequest) {
         // PASO 3: NO usar placeholder - dejar array vacío si no hay imágenes reales
         // Esto permite que el frontend maneje el estado sin imágenes apropiadamente
         
-        // Generar cover URL solo si hay imágenes reales
+        // Generar cover URL solo si hay imágenes reales - NO usar placeholders
         const coverResult = imageUrls.length > 0 
-          ? await generateCoverUrl(imageUrls[0], property.property_type)
+          ? generatePublicCoverUrl(imageUrls[0], property.property_type)
           : {
-              coverUrl: null,
-              coverUrlExpiresAt: null,
+              coverUrl: null,  // NO generar placeholder - dejar null
               isPlaceholder: true
             }
 
@@ -177,7 +176,6 @@ export async function GET(request: NextRequest) {
           // Campo images: string[] mapeado desde images_urls (SSoT)
           images: imageUrls,
           coverUrl: coverResult.coverUrl,
-          coverUrlExpiresAt: coverResult.coverUrlExpiresAt,
           isPlaceholder: coverResult.isPlaceholder,
           imagesCount: imageUrls.length
         }

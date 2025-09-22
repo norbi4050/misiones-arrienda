@@ -19,7 +19,7 @@ export interface Property {
   latitude?: number
   longitude?: number
   propertyType: 'APARTMENT' | 'HOUSE' | 'COMMERCIAL' | 'LAND' | 'OFFICE' | 'WAREHOUSE' | 'PH' | 'STUDIO'
-  status: 'AVAILABLE' | 'RENTED' | 'SOLD' | 'MAINTENANCE' | 'RESERVED' | 'EXPIRED'
+  status: 'AVAILABLE' | 'RENTED' | 'SOLD' | 'MAINTENANCE' | 'RESERVED' | 'EXPIRED' | 'DRAFT'
   listingType?: 'SALE' | 'RENT' // Campo faltante agregado
   images: string[] // Array de URLs de imágenes
   coverImagePath?: string // Nueva propiedad para portada

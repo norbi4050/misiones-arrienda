@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ImageUpload } from "@/components/ui/image-upload"
-import { MapPin, Upload, DollarSign, Home, Loader2, Shield, Clock, Lock } from "lucide-react"
+import { MapPin, Upload, DollarSign, Home, Loader2, Shield, Clock, Lock, Save } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
@@ -181,61 +181,63 @@ export default function PublicarPage() {
   }
 
   const onSubmit = async (data: any) => {
+    return await submitProperty(data, 'AVAILABLE')
+  }
+
+  const submitProperty = async (data: any, status: 'DRAFT' | 'AVAILABLE' = 'AVAILABLE') => {
     setIsProcessing(true)
 
     try {
       if (selectedPlan === 'basico') {
-        // PASO A: Crear DRAFT con payload mínimo (solo campos esenciales)
-        const minimalPayload: any = {
-          // Campos mínimos requeridos
+        // Crear payload con todos los campos del formulario
+        const payload: any = {
           title: String(data.title || '').trim(),
+          description: String(data.description || '').trim(),
+          price: Number(data.price) || 0,
+          currency: data.currency || 'ARS',
+          propertyType: data.propertyType || 'HOUSE',
+          bedrooms: Number(data.bedrooms) || 0,
+          bathrooms: Number(data.bathrooms) || 0,
+          garages: Number(data.garages) || 0,
+          area: Number(data.area) || 0,
+          address: String(data.address || '').trim(),
           city: String(data.city || '').trim(),
           province: 'Misiones',
-          price: Number(data.price) || 0
+          postalCode: String(data.postalCode || '3300').trim(),
+          contact_phone: String(data.contact_phone || '').trim(),
+          images: data.images || [],
+          amenities: data.amenities || [],
+          features: data.features || [],
+          status: status, // ← Usar status pasado como parámetro
         }
         
-        // Campos opcionales (solo si tienen valor válido)
-        if (data.propertyType && String(data.propertyType).trim()) {
-          minimalPayload.property_type = String(data.propertyType).trim()
-        }
+        console.log(`📤 CREANDO ${status}:`, Object.keys(payload))
         
-        if (data.bedrooms && !isNaN(Number(data.bedrooms)) && Number(data.bedrooms) > 0) {
-          minimalPayload.bedrooms = Number(data.bedrooms)
-        }
-        
-        if (data.bathrooms && !isNaN(Number(data.bathrooms)) && Number(data.bathrooms) > 0) {
-          minimalPayload.bathrooms = Number(data.bathrooms)
-        }
-        
-        if (data.area && !isNaN(Number(data.area)) && Number(data.area) > 0) {
-          minimalPayload.area = Number(data.area)
-        }
-        
-        console.log('📤 PAYLOAD MÍNIMO PARA DRAFT:', minimalPayload)
-        console.log('📊 Campos enviados:', Object.keys(minimalPayload).length)
-        
-        // PASO A: Crear DRAFT con datos mínimos
-        const response = await fetch('/api/properties', {
+        const response = await fetch('/api/properties/create', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           credentials: 'include',
-          body: JSON.stringify(minimalPayload)
+          body: JSON.stringify(payload)
         })
 
         if (response.ok) {
-          toast.success('¡Propiedad publicada exitosamente!')
-          reset()
-          router.push('/properties')
+          if (status === 'DRAFT') {
+            toast.success('¡Borrador guardado exitosamente!')
+            reset()
+            router.push('/mis-propiedades?filter=DRAFT')
+          } else {
+            toast.success('¡Propiedad publicada exitosamente!')
+            reset()
+            router.push('/properties')
+          }
         } else {
-          // Verificar si la respuesta contiene JSON válido
           let errorMessage = 'Error al crear la propiedad'
           try {
             const errorData = await response.json()
             errorMessage = errorData.error || errorMessage
           } catch (jsonError) {
-            // Si no se puede parsear como JSON, usar mensaje genérico
             console.warn('Response is not valid JSON:', jsonError)
             errorMessage = `Error ${response.status}: ${response.statusText || 'Error del servidor'}`
           }
@@ -684,27 +686,59 @@ export default function PublicarPage() {
                 <Button variant="outline" onClick={() => setCurrentStep(2)}>
                   Anterior
                 </Button>
-                <Button
-                  onClick={handleSubmit(onSubmit)}
-                  className="bg-green-600 hover:bg-green-700"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      {selectedPlan === 'basico' ? (
-                        <span className="inline-block w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                
+                {selectedPlan === 'basico' ? (
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const formData = watchedValues
+                        submitProperty(formData, 'DRAFT')
+                      }}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
-                        <span className="inline-block w-4 h-4 bg-blue-500 rounded-full mr-2"></span>
+                        <Save className="h-4 w-4 mr-2" />
                       )}
-                      {selectedPlan === 'basico' ? 'Publicar Gratis' : `Pagar $${plans[selectedPlan].price.toLocaleString()}`}
-                    </>
-                  )}
-                </Button>
+                      Guardar Borrador
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const formData = watchedValues
+                        submitProperty(formData, 'AVAILABLE')
+                      }}
+                      className="bg-green-600 hover:bg-green-700"
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      Publicar Gratis
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleSubmit(onSubmit)}
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <span className="inline-block w-4 h-4 bg-blue-500 rounded-full mr-2"></span>
+                        Pagar ${plans[selectedPlan].price.toLocaleString()}
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           )}

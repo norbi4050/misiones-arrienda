@@ -40,7 +40,6 @@ export const propertySchema = z.object({
   // Contacto
   contact_name: z.string().max(100, 'El nombre es muy largo').optional(),
   contact_phone: z.string().min(1, 'El teléfono de contacto es requerido').max(20, 'Teléfono inválido'),
-  contact_email: z.string().email('Email inválido').optional(),
 
   // Multimedia - VALIDACIÓN JSON ESTRUCTURADA
   images: jsonArraySchema.refine(
@@ -58,8 +57,8 @@ export const propertySchema = z.object({
   floor: z.number().min(0, 'Piso inválido').max(200, 'Piso muy alto').optional(),
   totalFloors: z.number().min(1, 'Total de pisos inválido').max(200, 'Demasiados pisos').optional(),
 
-  // Estado - SINCRONIZADO CON PRISMA
-  status: z.enum(['AVAILABLE', 'RENTED', 'SOLD', 'MAINTENANCE', 'RESERVED', 'EXPIRED']).default('AVAILABLE'),
+  // Estado - SINCRONIZADO CON PRISMA + DRAFT para borradores
+  status: z.enum(['AVAILABLE', 'RENTED', 'SOLD', 'MAINTENANCE', 'RESERVED', 'EXPIRED', 'DRAFT']).default('DRAFT'),
   featured: z.boolean().default(false),
 
   // Campos específicos del formulario (no en Prisma)
@@ -148,7 +147,7 @@ export const propertyFiltersSchema = z.object({
   minBedrooms: z.number().min(0).optional(),
   minBathrooms: z.number().min(0).optional(),
   featured: z.boolean().optional(),
-  status: z.enum(['AVAILABLE', 'RENTED', 'SOLD', 'MAINTENANCE', 'RESERVED', 'EXPIRED']).optional(),
+  status: z.enum(['AVAILABLE', 'RENTED', 'SOLD', 'MAINTENANCE', 'RESERVED', 'EXPIRED', 'DRAFT']).optional(),
   page: z.number().min(1).default(1),
   limit: z.number().min(1).max(100).default(10)
 });

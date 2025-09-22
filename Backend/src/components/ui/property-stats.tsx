@@ -13,8 +13,8 @@ import {
   DollarSign,
   User,
   BarChart3,
-  PieChart,
-  Activity,
+  BarChart,
+  TrendingUp as ActivityIcon,
   Users,
   Star,
   AlertTriangle,
@@ -356,7 +356,7 @@ export function PropertyStats({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <div className="flex items-center mb-4">
-            <PieChart className="w-5 h-5 text-gray-600 mr-2" />
+            <BarChart className="w-5 h-5 text-gray-600 mr-2" />
             <h3 className="text-lg font-semibold text-gray-900">Distribución por Estado</h3>
           </div>
           <div className="space-y-3">
@@ -587,7 +587,7 @@ export function PropertyStats({
               </div>
             </div>
             <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-              <Activity className="w-8 h-8 text-blue-600 mr-3" />
+              <ActivityIcon className="w-8 h-8 text-blue-600 mr-3" />
               <div>
                 <div className="font-semibold text-blue-900">
                   {stats.recentActivity.updatedProperties} Actualizaciones

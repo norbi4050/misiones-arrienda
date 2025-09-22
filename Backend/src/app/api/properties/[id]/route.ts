@@ -66,17 +66,26 @@ export async function GET(
 
     console.log(`[${requestId}] Propiedad encontrada:`, property.title)
 
-    // Procesar imágenes con fallback entre campos legacy y nuevos
+    // Procesar imágenes con manejo robusto de arrays PostgreSQL
     let imageUrls = []
     
-    // Intentar primero images_urls (nuevo)
+    // Intentar primero images_urls (nuevo) - manejar tanto arrays como JSON
     if (property.images_urls) {
       try {
-        const parsed = JSON.parse(property.images_urls)
-        imageUrls = Array.isArray(parsed) ? parsed : []
-        console.log(`[${requestId}] Imágenes encontradas en images_urls:`, imageUrls.length)
+        // Si ya es un array (PostgreSQL text[]), usarlo directamente
+        if (Array.isArray(property.images_urls)) {
+          imageUrls = property.images_urls
+          console.log(`[${requestId}] Imágenes encontradas en images_urls (array PostgreSQL):`, imageUrls.length)
+        } else {
+          // Si es string, intentar parsear como JSON
+          const parsed = JSON.parse(property.images_urls)
+          imageUrls = Array.isArray(parsed) ? parsed : []
+          console.log(`[${requestId}] Imágenes encontradas en images_urls (JSON):`, imageUrls.length)
+        }
       } catch (e) {
         console.log(`[${requestId}] Error parseando images_urls:`, e)
+        console.log(`[${requestId}] Tipo de images_urls:`, typeof property.images_urls)
+        console.log(`[${requestId}] Contenido:`, property.images_urls)
       }
     }
     
@@ -132,13 +141,28 @@ export async function GET(
       updatedAt: property.updated_at,
       expiresAt: property.expires_at,
       
-      // Imágenes directas
-      images: imageUrls, // URLs directas
-      imagesSigned: imageUrls.map((url: string, index: number) => ({
-        url: url,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas desde ahora
-        key: `image-${index}`
-      })),
+      // Imágenes convertidas a URLs públicas completas
+      images: imageUrls.map((url: string) => {
+        // Si ya es una URL completa, devolverla tal como está
+        if (url.startsWith('http') || url.startsWith('/')) {
+          return url
+        }
+        // Si es una key de storage, convertir a URL pública
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        return `${supabaseUrl}/storage/v1/object/public/property-images/${url}`
+      }),
+      imagesSigned: imageUrls.map((url: string, index: number) => {
+        // Convertir key a URL pública completa para imagesSigned también
+        const fullUrl = url.startsWith('http') || url.startsWith('/') 
+          ? url 
+          : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${url}`
+        
+        return {
+          url: fullUrl,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas desde ahora
+          key: `image-${index}`
+        }
+      }),
       imagesCount: imageUrls.length,
       signedUrlsGenerated: imageUrls.length,
       signedUrlsErrors: 0,

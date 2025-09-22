@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateCoverUrl } from '@/lib/signed-urls'
+import { generatePublicCoverUrl } from '@/lib/signed-urls'
 
 // Función para mapear snake_case a camelCase con signed URLs
 async function mapPropertyToResponse(property: any) {
@@ -7,14 +7,23 @@ async function mapPropertyToResponse(property: any) {
   let imageUrls = []
   let coverImageKey = null
   
-  // Intentar primero images_urls (nuevo)
+  // Intentar primero images_urls (nuevo) - manejar tanto arrays como JSON
   if (property.images_urls) {
     try {
-      const parsed = JSON.parse(property.images_urls)
-      imageUrls = Array.isArray(parsed) ? parsed : []
-      console.log(`Imágenes encontradas en images_urls para propiedad ${property.id}:`, imageUrls.length)
+      // Si ya es un array (PostgreSQL text[]), usarlo directamente
+      if (Array.isArray(property.images_urls)) {
+        imageUrls = property.images_urls
+        console.log(`Imágenes encontradas en images_urls (array PostgreSQL) para propiedad ${property.id}:`, imageUrls.length)
+      } else {
+        // Si es string, intentar parsear como JSON
+        const parsed = JSON.parse(property.images_urls)
+        imageUrls = Array.isArray(parsed) ? parsed : []
+        console.log(`Imágenes encontradas en images_urls (JSON) para propiedad ${property.id}:`, imageUrls.length)
+      }
     } catch (e) {
       console.log(`Error parseando images_urls para propiedad ${property.id}:`, e)
+      console.log(`Tipo de images_urls:`, typeof property.images_urls)
+      console.log(`Contenido:`, property.images_urls)
     }
   }
   
@@ -38,8 +47,8 @@ async function mapPropertyToResponse(property: any) {
   // Usar primer imagen como cover
   coverImageKey = imageUrls.length > 0 ? imageUrls[0] : null
   
-  // Generar signed URL para cover image
-  const coverResult = await generateCoverUrl(
+  // Generar URL pública directa (bucket property-images es público)
+  const coverResult = generatePublicCoverUrl(
     coverImageKey, 
     property.property_type
   )
@@ -60,9 +69,8 @@ async function mapPropertyToResponse(property: any) {
     isActive: property.is_active,
     createdAt: property.created_at,
     operationType: property.operation_type,
-    // Campos optimizados con signed URLs
+    // Campos optimizados con URLs públicas
     coverUrl: coverResult.coverUrl,
-    coverUrlExpiresAt: coverResult.coverUrlExpiresAt,
     isPlaceholder: coverResult.isPlaceholder,
     imagesCount: imageUrls.length,
     // NO exponer user_id por seguridad

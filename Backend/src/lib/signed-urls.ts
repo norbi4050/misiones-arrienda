@@ -212,8 +212,8 @@ export function isValidStorageKey(key: string): boolean {
   // No debe ser demasiado largo (data URIs son muy largos)
   if (key.length > 500) return false
   
-  // Debe tener formato userId/propertyId/filename
-  const keyPattern = /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+$/
+  // Debe tener formato userId/propertyId/filename (permitir múltiples extensiones)
+  const keyPattern = /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.+-]+$/
   return keyPattern.test(key)
 }
 
@@ -238,6 +238,62 @@ export function extractStorageKeys(imagesJson: string | null): string[] {
   } catch {
     // Si falla el parsing, intentar como string simple
     return isValidStorageKey(imagesJson) ? [imagesJson] : []
+  }
+}
+
+/**
+ * Genera URL pública directa para bucket público property-images
+ * Más simple y eficiente que signed URLs cuando el bucket es público
+ */
+export function getPublicImageUrl(key: string): string {
+  if (!key || key.trim() === '') {
+    return '/placeholder-house-1.jpg'
+  }
+  
+  // Si ya es una URL completa, devolverla tal como está
+  if (key.startsWith('http') || key.startsWith('/')) {
+    return key
+  }
+  
+  // Validar que la key sea válida antes de generar URL
+  if (!isValidStorageKey(key)) {
+    console.warn(`Key inválida para URL pública: ${key}`)
+    return '/placeholder-house-1.jpg'
+  }
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  return `${supabaseUrl}/storage/v1/object/public/property-images/${key}`
+}
+
+/**
+ * Genera URL pública para cover image con fallback a placeholder
+ * Alternativa simple a generateCoverUrl para buckets públicos
+ */
+export function generatePublicCoverUrl(coverKey: string | null, propertyType?: string): {
+  coverUrl: string
+  isPlaceholder: boolean
+} {
+  // Si no hay cover key, usar placeholder
+  if (!coverKey || coverKey.trim() === '') {
+    return {
+      coverUrl: getPlaceholderUrl(propertyType),
+      isPlaceholder: true
+    }
+  }
+
+  // Validar key antes de generar URL pública
+  if (!isValidStorageKey(coverKey)) {
+    console.warn(`Fallback a placeholder para key inválida: ${coverKey}`)
+    return {
+      coverUrl: getPlaceholderUrl(propertyType),
+      isPlaceholder: true
+    }
+  }
+
+  // Generar URL pública directa
+  return {
+    coverUrl: getPublicImageUrl(coverKey),
+    isPlaceholder: false
   }
 }
 

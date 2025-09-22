@@ -28,9 +28,9 @@ async function getServerSupabase() {
 
 // GET - Obtener perfil completo del usuario
 export async function GET() {
-  const supabase = await getServerSupabase();
-
   try {
+    const supabase = await getServerSupabase();
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -38,62 +38,24 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    // Obtener perfil completo del usuario (usando tabla 'users' con snake_case)
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select(`
-        id,
-        name,
-        email,
-        phone,
-        avatar,
-        bio,
-        verified,
-        created_at,
-        updated_at
-      `)
-      .eq('id', user.id)
-      .single();
+    // TEMPORAL: Retornar perfil básico desde auth metadata para evitar errores de BD
+    const profile = {
+      id: user.id,
+      name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+      email: user.email,
+      phone: user.user_metadata?.phone || null,
+      avatar: null,
+      bio: null,
+      verified: user.email_confirmed_at ? true : false,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
 
-    if (profileError) {
-      console.error('Error fetching profile:', profileError);
-      return NextResponse.json({
-        error: "Error al obtener perfil del usuario",
-        details: profileError.message
-      }, { status: 500 });
-    }
-
-    // Si no existe perfil, crear uno básico
-    if (!profile) {
-      const { data: newProfile, error: createError } = await supabase
-        .from('users')
-        .insert({
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Error creating profile:', createError);
-        return NextResponse.json({
-          error: "Error al crear perfil del usuario",
-          details: createError.message
-        }, { status: 500 });
-      }
-
-      return NextResponse.json({
-        profile: newProfile,
-        message: "Perfil creado exitosamente"
-      }, { status: 201 });
-    }
+    console.log('Perfil temporal generado desde auth metadata para usuario:', user.id);
 
     return NextResponse.json({
       profile,
-      message: "Perfil obtenido exitosamente"
+      message: "Perfil obtenido exitosamente (temporal)"
     }, { status: 200 });
 
   } catch (error) {

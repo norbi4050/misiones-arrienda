@@ -100,13 +100,13 @@ export async function POST(req: NextRequest) {
       province: province || 'Misiones',
       postal_code: '3300', // Código postal por defecto
       property_type: propertyType || 'HOUSE', // ✅ CORRECTO: property_type (snake_case)
-      status: 'AVAILABLE',
+      status: body.status || 'DRAFT', // ← Permitir DRAFT como default
       images: JSON.stringify(images.length > 0 ? images : ['/placeholder.jpg']),
       amenities: JSON.stringify(amenities.length > 0 ? amenities : ['Agua', 'Luz']),
       features: JSON.stringify(features.length > 0 ? features : ['Cocina']),
       user_id: authenticatedUser.id, // ✅ CORRECTO: user_id (snake_case)
       agent_id: null, // ✅ USAR NULL para evitar constraint
-      is_active: true, // ✅ CORRECTO: is_active existe
+      is_active: (body.status || 'DRAFT') === 'AVAILABLE', // ← Solo activo si se publica directamente
       operation_type: 'rent',
       featured: false,
       is_paid: false
