@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/comunidad',
+        permanent: false, // ponelo true cuando quieras que sea permanente
+      },
+    ]
+  },
   images: {
     domains: [
       'images.unsplash.com',

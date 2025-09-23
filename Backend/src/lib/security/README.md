@@ -276,7 +276,6 @@ const customCSP = new SecurityHeaders({
       'img-src': [
         "'self'",
         'data:',
-        'https://images.unsplash.com',
         'https://res.cloudinary.com'
       ],
       'connect-src': [
