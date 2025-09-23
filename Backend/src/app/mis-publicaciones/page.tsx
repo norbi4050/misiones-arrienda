@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Settings, Eye, Trash2, Users, MapPin, Star, Heart, FileText } from 'lucide-react'
+import { Plus, Settings, Eye, Trash2, Users, MapPin, Star, Heart, FileText, Upload, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PropertyCard } from '@/components/property-card'
+import { useRouter } from 'next/navigation'
 
 // Interfaces para tipos de datos
 interface Property {
@@ -34,6 +35,8 @@ interface Property {
   createdAt: string
   updatedAt: string
   imagesCount: number
+  isPublishReady: boolean
+  missing: string[]
 }
 
 interface CommunityProfile {
@@ -93,6 +96,7 @@ interface ApiResponse<T> {
 
 export default function MisPublicacionesPage() {
   const { user, isAuthenticated } = useUser()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('propiedades')
   
   // Estados para propiedades
@@ -106,6 +110,9 @@ export default function MisPublicacionesPage() {
   const [communityLoading, setCommunityLoading] = useState(true)
   const [communityError, setCommunityError] = useState<string | null>(null)
   const [communityPagination, setCommunityPagination] = useState<ApiResponse<CommunityProfile>['pagination'] | null>(null)
+
+  // Estado de loading por item para botones
+  const [loadingId, setLoadingId] = useState<string | null>(null)
 
   // Cargar propiedades del usuario con cache: 'no-store'
   const loadProperties = async () => {
@@ -248,6 +255,91 @@ export default function MisPublicacionesPage() {
     }
 
     return preferences[type][pref as keyof typeof preferences[typeof type]] || pref
+  }
+
+  // Handlers para publicar/despublicar
+  const handlePublish = async (id: string) => {
+    try {
+      setLoadingId(id)
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`🚀 Publicando propiedad: ${id}`)
+      }
+
+      const response = await fetch(`/api/properties/${id}/publish`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al publicar')
+      }
+
+      const result = await response.json()
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`✅ Propiedad publicada:`, result)
+      }
+
+      // Toast de éxito (simple)
+      alert('Propiedad publicada correctamente')
+      
+      // Refresh para actualizar la lista
+      router.refresh()
+      loadProperties()
+
+    } catch (error) {
+      console.error('Error publishing property:', error)
+      // Toast de error (simple)
+      alert(error instanceof Error ? error.message : 'Error al publicar')
+    } finally {
+      setLoadingId(null)
+    }
+  }
+
+  const handleUnpublish = async (id: string) => {
+    try {
+      setLoadingId(id)
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`📤 Despublicando propiedad: ${id}`)
+      }
+
+      const response = await fetch(`/api/properties/${id}/unpublish`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al despublicar')
+      }
+
+      const result = await response.json()
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`✅ Propiedad despublicada:`, result)
+      }
+
+      // Toast de éxito (simple)
+      alert('Propiedad despublicada correctamente')
+      
+      // Refresh para actualizar la lista
+      router.refresh()
+      loadProperties()
+
+    } catch (error) {
+      console.error('Error unpublishing property:', error)
+      // Toast de error (simple)
+      alert(error instanceof Error ? error.message : 'Error al despublicar')
+    } finally {
+      setLoadingId(null)
+    }
   }
 
   // Si no está autenticado
@@ -400,19 +492,51 @@ export default function MisPublicacionesPage() {
                           )}
                         </div>
 
-                        <div className="flex gap-2">
-                          <Link href={`/properties/${property.id}`} className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full">
-                              <Eye className="w-4 h-4 mr-1" />
-                              Ver
-                            </Button>
-                          </Link>
-                          <Link href={`/mis-propiedades/${property.id}/editar`} className="flex-1">
-                            <Button size="sm" className="w-full">
-                              <Settings className="w-4 h-4 mr-1" />
-                              Editar
-                            </Button>
-                          </Link>
+                        <div className="space-y-2">
+                          {/* Primera fila: Ver y Editar */}
+                          <div className="flex gap-2">
+                            <Link href={`/properties/${property.id}`} className="flex-1">
+                              <Button variant="outline" size="sm" className="w-full">
+                                <Eye className="w-4 h-4 mr-1" />
+                                Ver
+                              </Button>
+                            </Link>
+                            <Link href={`/mis-propiedades/${property.id}/editar`} className="flex-1">
+                              <Button size="sm" className="w-full">
+                                <Settings className="w-4 h-4 mr-1" />
+                                Editar
+                              </Button>
+                            </Link>
+                          </div>
+
+                          {/* Segunda fila: Publicar/Despublicar */}
+                          <div className="flex gap-2">
+                            {property.status === 'DRAFT' && (
+                              <Button
+                                onClick={() => handlePublish(property.id)}
+                                disabled={!property.isPublishReady || loadingId === property.id}
+                                size="sm"
+                                className="w-full"
+                                title={!property.isPublishReady ? `Falta: ${property.missing.join(', ')}` : ''}
+                              >
+                                <Upload className="w-4 h-4 mr-1" />
+                                {loadingId === property.id ? 'Publicando...' : 'Publicar'}
+                              </Button>
+                            )}
+
+                            {property.status === 'PUBLISHED' && (
+                              <Button
+                                onClick={() => handleUnpublish(property.id)}
+                                disabled={loadingId === property.id}
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                              >
+                                <EyeOff className="w-4 h-4 mr-1" />
+                                {loadingId === property.id ? 'Despublicando...' : 'Despublicar'}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

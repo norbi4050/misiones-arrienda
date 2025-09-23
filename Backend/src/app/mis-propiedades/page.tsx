@@ -55,18 +55,30 @@ function Skeleton({ className }: { className: string }) {
   )
 }
 
-// Componente para manejar imágenes de propiedades
+// Componente para manejar imágenes de propiedades SIN placeholders
 function PropertyImage({ property, alt }: { property: Property; alt: string }) {
-  const [imageUrl, setImageUrl] = useState<string>('/placeholder-house-1.jpg')
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    // Usar la primera imagen disponible o fallback
+    // Usar la primera imagen disponible - NO fallback a placeholder
     if (property.images && property.images.length > 0) {
       setImageUrl(property.images[0])
     } else if (property.coverUrl) {
       setImageUrl(property.coverUrl)
+    } else {
+      setImageUrl(null)
     }
   }, [property.images, property.coverUrl])
+
+  if (!imageUrl) {
+    return (
+      <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-500">
+        <Eye className="w-12 h-12 mb-2" />
+        <span className="text-sm font-medium">Sin imágenes disponibles aún</span>
+        <span className="text-xs">Agregar fotos</span>
+      </div>
+    )
+  }
 
   return (
     <Image
@@ -75,7 +87,7 @@ function PropertyImage({ property, alt }: { property: Property; alt: string }) {
       fill
       className="object-cover"
       onError={() => {
-        setImageUrl('/placeholder-house-1.jpg')
+        setImageUrl(null)
       }}
     />
   )
@@ -224,9 +236,10 @@ export default function MisPropiedadesPage() {
                 <Skeleton className="h-4 w-3/4 mb-2" />
                 <Skeleton className="h-4 w-1/2 mb-2" />
                 <Skeleton className="h-4 w-1/4" />
-              </CardContent>
-            </Card>
-          ))}
+                    </CardContent>
+                  </Card>
+                  )
+                })}
         </div>
       )}
 
@@ -268,7 +281,19 @@ export default function MisPropiedadesPage() {
             <>
               {/* Grid de propiedades */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {properties.map((property) => (
+                {properties.map((property) => {
+                  // LOG TEMPORAL PARA DEBUGGING
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('[MIS-PROPS IMG]', { 
+                      id: property.id, 
+                      coverUrl: property.coverUrl, 
+                      imagesLen: property.images?.length,
+                      status: property.status,
+                      title: property.title.substring(0, 20)
+                    })
+                  }
+                  
+                  return (
                   <Card key={property.id} className="overflow-hidden">
                     {/* Imagen */}
                     <div className="relative h-48">

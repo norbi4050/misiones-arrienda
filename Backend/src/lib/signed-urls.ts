@@ -145,17 +145,20 @@ export async function generateSignedUrls(keys: string[]): Promise<{
 }
 
 /**
- * Genera signed URL para cover image con fallback a placeholder
+ * Genera signed URL para cover image SIN fallback a placeholder
  */
 export async function generateCoverUrl(coverKey: string | null, propertyType?: string): Promise<{
-  coverUrl: string
+  coverUrl: string | null
   coverUrlExpiresAt?: string
   isPlaceholder: boolean
 }> {
-  // Si no hay cover key, usar placeholder
+  // Si no hay cover key, NO usar placeholder
   if (!coverKey || coverKey.trim() === '') {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[NO-PLACEHOLDER] Sin cover key para tipo ${propertyType}`)
+    }
     return {
-      coverUrl: getPlaceholderUrl(propertyType),
+      coverUrl: null,
       isPlaceholder: true
     }
   }
@@ -170,31 +173,24 @@ export async function generateCoverUrl(coverKey: string | null, propertyType?: s
       isPlaceholder: false
     }
   } else {
-    // Si falla, usar placeholder
-    console.warn(`Fallback a placeholder para key ${coverKey}:`, result.error)
+    // Si falla, NO usar placeholder
+    console.warn(`[NO-PLACEHOLDER] Error generando signed URL para ${coverKey}:`, result.error)
     return {
-      coverUrl: getPlaceholderUrl(propertyType),
+      coverUrl: null,
       isPlaceholder: true
     }
   }
 }
 
 /**
- * Obtiene URL de placeholder basada en tipo de propiedad
+ * NO generar placeholders - retornar null para estado "sin imágenes"
  */
-function getPlaceholderUrl(propertyType?: string): string {
-  const placeholders = {
-    'HOUSE': '/placeholder-house-1.jpg',
-    'APARTMENT': '/placeholder-apartment-1.jpg',
-    'COMMERCIAL': '/placeholder-house-2.jpg',
-    'LAND': '/placeholder-house-2.jpg',
-    'OFFICE': '/placeholder-apartment-2.jpg',
-    'WAREHOUSE': '/placeholder-house-2.jpg',
-    'PH': '/placeholder-apartment-1.jpg',
-    'STUDIO': '/placeholder-apartment-2.jpg'
+function getPlaceholderUrl(propertyType?: string): null {
+  // Log de aviso solo en desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(`[BLOCKED] Placeholder demo solicitado para tipo ${propertyType} - retornando null`)
   }
-
-  return placeholders[propertyType as keyof typeof placeholders] || '/placeholder-house-1.jpg'
+  return null
 }
 
 /**
@@ -243,11 +239,14 @@ export function extractStorageKeys(imagesJson: string | null): string[] {
 
 /**
  * Genera URL pública directa para bucket público property-images
- * Más simple y eficiente que signed URLs cuando el bucket es público
+ * SIN fallback a placeholder
  */
-export function getPublicImageUrl(key: string): string {
+export function getPublicImageUrl(key: string): string | null {
   if (!key || key.trim() === '') {
-    return '/placeholder-house-1.jpg'
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[NO-PLACEHOLDER] Key vacía para URL pública')
+    }
+    return null
   }
   
   // Si ya es una URL completa, devolverla tal como está
@@ -257,8 +256,8 @@ export function getPublicImageUrl(key: string): string {
   
   // Validar que la key sea válida antes de generar URL
   if (!isValidStorageKey(key)) {
-    console.warn(`Key inválida para URL pública: ${key}`)
-    return '/placeholder-house-1.jpg'
+    console.warn(`[NO-PLACEHOLDER] Key inválida para URL pública: ${key}`)
+    return null
   }
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -266,26 +265,29 @@ export function getPublicImageUrl(key: string): string {
 }
 
 /**
- * Genera URL pública para cover image con fallback a placeholder
+ * Genera URL pública para cover image SIN fallback a placeholder
  * Alternativa simple a generateCoverUrl para buckets públicos
  */
 export function generatePublicCoverUrl(coverKey: string | null, propertyType?: string): {
-  coverUrl: string
+  coverUrl: string | null
   isPlaceholder: boolean
 } {
-  // Si no hay cover key, usar placeholder
+  // Si no hay cover key, NO usar placeholder
   if (!coverKey || coverKey.trim() === '') {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[NO-PLACEHOLDER] Sin cover key para tipo ${propertyType}`)
+    }
     return {
-      coverUrl: getPlaceholderUrl(propertyType),
+      coverUrl: null,
       isPlaceholder: true
     }
   }
 
   // Validar key antes de generar URL pública
   if (!isValidStorageKey(coverKey)) {
-    console.warn(`Fallback a placeholder para key inválida: ${coverKey}`)
+    console.warn(`[NO-PLACEHOLDER] Key inválida: ${coverKey}`)
     return {
-      coverUrl: getPlaceholderUrl(propertyType),
+      coverUrl: null,
       isPlaceholder: true
     }
   }

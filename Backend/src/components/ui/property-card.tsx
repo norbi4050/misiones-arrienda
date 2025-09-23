@@ -39,6 +39,7 @@ interface PropertyCardProps {
     propertyType: string;
     status: string;
     images: string[];
+    coverUrl?: string; // URL de imagen principal
     featured: boolean;
     createdAt: string;
     updatedAt: string;
@@ -149,9 +150,8 @@ export function PropertyCard({
   isSelected = false,
   onSelect
 }: PropertyCardProps) {
-  const mainImage = property.images && property.images.length > 0
-    ? property.images[0]
-    : '/images/placeholder-property.jpg';
+  // mainImage = coverUrl ?? images?.[0] ?? null
+  const mainImage = property.coverUrl ?? (property.images && property.images.length > 0 ? property.images[0] : null);
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSelect?.(property.id, e.target.checked);
@@ -175,14 +175,19 @@ export function PropertyCard({
 
       {/* Property Image */}
       <div className="relative h-48 bg-gray-200">
-        <img
-          src={mainImage}
-          alt={property.title}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/images/placeholder-property.jpg';
-          }}
-        />
+        {mainImage ? (
+          <img
+            src={mainImage}
+            alt={property.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-500">
+            <Eye className="w-12 h-12 mb-2" />
+            <span className="text-sm font-medium">Sin imágenes disponibles aún</span>
+            <span className="text-xs">Agregar fotos</span>
+          </div>
+        )}
 
         {/* Featured Badge */}
         {property.featured && (

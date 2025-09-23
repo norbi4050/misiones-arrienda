@@ -1,5 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateSignedUrls, extractStorageKeys } from '@/lib/signed-urls'
+import { z } from 'zod'
+
+// Schema específico para edición de propiedades
+const editPropertySchema = z.object({
+  title: z.string().min(3, 'Título muy corto').max(140, 'Título muy largo')
+    .transform(s => s.trim().replace(/\s+/g, ' ').replace(/[<>]/g, '')),
+  description: z.string().min(10, 'Descripción muy corta').max(2000, 'Descripción muy larga'),
+  price: z.number().min(0, 'Precio debe ser positivo'),
+  currency: z.string().optional().default('ARS'),
+  city: z.string().min(1, 'Ciudad requerida'),
+  province: z.string().min(1, 'Provincia requerida'),
+  address: z.string().optional(),
+  property_type: z.enum(['APARTMENT', 'HOUSE', 'COMMERCIAL', 'LAND', 'OFFICE', 'WAREHOUSE', 'PH', 'STUDIO']),
+  operation_type: z.enum(['RENT', 'SALE']),
+  bedrooms: z.number().min(0, 'Dormitorios no pueden ser negativos'),
+  bathrooms: z.number().min(0, 'Baños no pueden ser negativos'),
+  area: z.number().min(0, 'Área debe ser positiva'),
+  images_urls: z.array(z.string()).optional(),
+  amenities: z.array(z.string()).optional(),
+  features: z.array(z.string()).optional(),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional()
+}).partial()
 
 export async function GET(
   request: NextRequest,
@@ -20,95 +41,95 @@ export async function GET(
 
     console.log(`[${requestId}] Buscando propiedad:`, id)
 
-    // Crear cliente Supabase con Service Role
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    // Crear cliente Supabase con autenticación (opcional para visitantes)
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
 
-    // Buscar propiedad con todos los campos necesarios (incluyendo ambos campos de imágenes)
+    // Verificar autenticación (puede ser null para visitantes)
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    console.log(`[${requestId}] Usuario:`, user?.id || 'no autenticado')
+
+    // Buscar propiedad sin filtros iniciales
     const { data: property, error } = await supabase
       .from('properties')
       .select(`
         id, title, description, price, currency, city, province, address,
-        property_type, bedrooms, bathrooms, garages, area, lot_area,
-        images_urls, images, status, is_active,
+        property_type, operation_type, bedrooms, bathrooms, garages, area, lot_area,
+        images_urls, images, status, is_active, user_id,
         amenities, features, year_built, floor, total_floors,
         created_at, updated_at, expires_at
       `)
       .eq('id', id)
-      .in('status', ['PUBLISHED', 'AVAILABLE'])  // Propiedades publicadas o disponibles
-      .eq('is_active', true)                     // Solo propiedades activas
-      .single()
+      .maybeSingle()
 
-    if (error) {
+    if (error || !property) {
       console.error(`[${requestId}] Error buscando propiedad:`, error)
-      
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Propiedad no encontrada o no disponible' },
-          { status: 404 }
-        )
-      }
-
       return NextResponse.json(
-        { error: 'Error al buscar la propiedad' },
-        { status: 500 }
+        { error: 'Propiedad no encontrada' },
+        { status: 404 }
       )
     }
 
     console.log(`[${requestId}] Propiedad encontrada:`, property.title)
 
-    // Procesar imágenes con manejo robusto de arrays PostgreSQL
+    // Verificar ownership
+    const isOwner = user && property.user_id === user.id
+    console.log(`[${requestId}] Es dueño:`, isOwner)
+
+    // Si NO es el dueño, verificar que sea pública
+    if (!isOwner) {
+      const isPublic = (property.status === 'PUBLISHED' || property.status === 'AVAILABLE') && property.is_active
+      if (!isPublic) {
+        console.log(`[${requestId}] Propiedad no pública para visitante`)
+        return NextResponse.json(
+          { error: 'Propiedad no encontrada' },
+          { status: 404 }
+        )
+      }
+    }
+
+    // Procesar imágenes
     let imageUrls = []
+    let imageKeys = []
     
-    // Intentar primero images_urls (nuevo) - manejar tanto arrays como JSON
+    // Intentar primero images_urls (nuevo)
     if (property.images_urls) {
       try {
-        // Si ya es un array (PostgreSQL text[]), usarlo directamente
         if (Array.isArray(property.images_urls)) {
-          imageUrls = property.images_urls
-          console.log(`[${requestId}] Imágenes encontradas en images_urls (array PostgreSQL):`, imageUrls.length)
+          imageKeys = property.images_urls
         } else {
-          // Si es string, intentar parsear como JSON
           const parsed = JSON.parse(property.images_urls)
-          imageUrls = Array.isArray(parsed) ? parsed : []
-          console.log(`[${requestId}] Imágenes encontradas en images_urls (JSON):`, imageUrls.length)
+          imageKeys = Array.isArray(parsed) ? parsed : []
         }
+        console.log(`[${requestId}] Keys encontradas en images_urls:`, imageKeys.length)
       } catch (e) {
         console.log(`[${requestId}] Error parseando images_urls:`, e)
-        console.log(`[${requestId}] Tipo de images_urls:`, typeof property.images_urls)
-        console.log(`[${requestId}] Contenido:`, property.images_urls)
       }
     }
     
     // Fallback a images (legacy) si images_urls está vacío
-    if (imageUrls.length === 0 && property.images) {
+    if (imageKeys.length === 0 && property.images) {
       try {
         const parsed = JSON.parse(property.images)
-        imageUrls = Array.isArray(parsed) ? parsed : []
-        console.log(`[${requestId}] Imágenes encontradas en images (legacy):`, imageUrls.length)
+        imageKeys = Array.isArray(parsed) ? parsed : []
+        console.log(`[${requestId}] Keys encontradas en images (legacy):`, imageKeys.length)
       } catch (e) {
         console.log(`[${requestId}] Error parseando images legacy:`, e)
       }
     }
-    
-    // Si aún no hay imágenes, usar placeholder
-    if (imageUrls.length === 0) {
-      console.log(`[${requestId}] No se encontraron imágenes, usando placeholder`)
-      imageUrls = ['/placeholder-house-1.jpg']
-    }
+
+    // Convertir keys a URLs públicas absolutas
+    imageUrls = imageKeys.map((key: string) => {
+      if (key.startsWith('http') || key.startsWith('/')) {
+        return key
+      }
+      return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${key}`
+    })
+
     console.log(`[${requestId}] URLs de imágenes procesadas:`, imageUrls.length)
 
-    // Mapear a formato de respuesta
-    const response = {
+    // Campos públicos (para visitantes y dueños)
+    const publicResponse = {
       id: property.id,
       title: property.title,
       description: property.description,
@@ -118,6 +139,7 @@ export async function GET(
       province: property.province,
       address: property.address,
       propertyType: property.property_type,
+      operationType: property.operation_type,
       bedrooms: property.bedrooms,
       bathrooms: property.bathrooms,
       garages: property.garages || 0,
@@ -130,49 +152,28 @@ export async function GET(
       yearBuilt: property.year_built,
       floor: property.floor,
       totalFloors: property.total_floors,
-      
-      // Información de contacto (campos no disponibles en DB actual)
-      contactName: null,
-      contactPhone: null,
-      contactEmail: null,
-      
-      // Fechas
       createdAt: property.created_at,
       updatedAt: property.updated_at,
       expiresAt: property.expires_at,
       
-      // Imágenes convertidas a URLs públicas completas
-      images: imageUrls.map((url: string) => {
-        // Si ya es una URL completa, devolverla tal como está
-        if (url.startsWith('http') || url.startsWith('/')) {
-          return url
-        }
-        // Si es una key de storage, convertir a URL pública
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        return `${supabaseUrl}/storage/v1/object/public/property-images/${url}`
-      }),
-      imagesSigned: imageUrls.map((url: string, index: number) => {
-        // Convertir key a URL pública completa para imagesSigned también
-        const fullUrl = url.startsWith('http') || url.startsWith('/') 
-          ? url 
-          : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${url}`
-        
-        return {
-          url: fullUrl,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas desde ahora
-          key: `image-${index}`
-        }
-      }),
-      imagesCount: imageUrls.length,
-      signedUrlsGenerated: imageUrls.length,
-      signedUrlsErrors: 0,
-      
-      // NO exponer user_id por seguridad
+      // Imágenes: URLs absolutas para preview
+      images: imageUrls,
+      imagesCount: imageUrls.length
     }
 
-    console.log(`[${requestId}] URLs de imágenes procesadas:`, imageUrls.length)
+    // Si es el dueño, agregar campos adicionales para edición
+    if (isOwner) {
+      return NextResponse.json({
+        ...publicResponse,
+        // Keys para el uploader (solo para dueños)
+        images_urls: imageKeys,
+        // Campos adicionales para edición
+        isOwner: true
+      })
+    }
 
-    return NextResponse.json(response)
+    // Para visitantes, solo campos públicos
+    return NextResponse.json(publicResponse)
 
   } catch (error) {
     console.error(`[${requestId}] Error general:`, {
@@ -228,59 +229,69 @@ export async function PATCH(
       .from('properties')
       .select('id, user_id, status')
       .eq('id', id)
+      .eq('user_id', user.id)  // Validación de ownership
       .single()
 
     if (checkError || !existingProperty) {
       console.error(`[${requestId}] Propiedad no encontrada:`, checkError)
       return NextResponse.json(
-        { error: 'Propiedad no encontrada' },
+        { error: 'Propiedad no encontrada o no tienes permisos para editarla' },
         { status: 404 }
       )
     }
 
-    // Verificar que el usuario es el propietario
-    if (existingProperty.user_id !== user.id) {
-      console.log(`[${requestId}] Usuario no es propietario`)
-      return NextResponse.json(
-        { error: 'No tienes permisos para editar esta propiedad' },
-        { status: 403 }
-      )
-    }
-
-    // Parsear datos del cuerpo de la petición
+    // Parsear y validar datos del cuerpo de la petición
     const body = await request.json()
     console.log(`[${requestId}] Datos recibidos:`, Object.keys(body))
 
-    // Validar y preparar datos para actualización
+    // Validar con Zod schema
+    const validationResult = editPropertySchema.safeParse(body)
+    if (!validationResult.success) {
+      console.error(`[${requestId}] Errores de validación:`, validationResult.error.errors)
+      return NextResponse.json(
+        { 
+          error: 'Datos inválidos', 
+          details: validationResult.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        },
+        { status: 400 }
+      )
+    }
+
+    const validatedData = validationResult.data
+
+    // Preparar datos para actualización en base de datos
     const updateData: any = {
       updated_at: new Date().toISOString()
     }
 
-    // Campos editables básicos
-    if (body.title !== undefined) updateData.title = body.title
-    if (body.description !== undefined) updateData.description = body.description
-    if (body.price !== undefined) updateData.price = parseFloat(body.price)
-    if (body.currency !== undefined) updateData.currency = body.currency
-    if (body.city !== undefined) updateData.city = body.city
-    if (body.province !== undefined) updateData.province = body.province
-    if (body.address !== undefined) updateData.address = body.address
-    if (body.propertyType !== undefined) updateData.property_type = body.propertyType
-    if (body.operationType !== undefined) updateData.operation_type = body.operationType
+    // Mapear campos validados a campos de base de datos
+    if (validatedData.title !== undefined) updateData.title = validatedData.title
+    if (validatedData.description !== undefined) updateData.description = validatedData.description
+    if (validatedData.price !== undefined) updateData.price = validatedData.price
+    if (validatedData.currency !== undefined) updateData.currency = validatedData.currency
+    if (validatedData.city !== undefined) updateData.city = validatedData.city
+    if (validatedData.province !== undefined) updateData.province = validatedData.province
+    if (validatedData.address !== undefined) updateData.address = validatedData.address
+    if (validatedData.property_type !== undefined) updateData.property_type = validatedData.property_type
+    if (validatedData.operation_type !== undefined) updateData.operation_type = validatedData.operation_type
+    if (validatedData.bedrooms !== undefined) updateData.bedrooms = validatedData.bedrooms
+    if (validatedData.bathrooms !== undefined) updateData.bathrooms = validatedData.bathrooms
+    if (validatedData.area !== undefined) updateData.area = validatedData.area
+    if (validatedData.status !== undefined) updateData.status = validatedData.status
 
-    // Campos numéricos
-    if (body.bedrooms !== undefined) updateData.bedrooms = parseInt(body.bedrooms)
-    if (body.bathrooms !== undefined) updateData.bathrooms = parseInt(body.bathrooms)
-    if (body.garages !== undefined) updateData.garages = parseInt(body.garages)
-    if (body.area !== undefined) updateData.area = parseFloat(body.area)
-    if (body.lotArea !== undefined) updateData.lot_area = parseFloat(body.lotArea)
-    if (body.yearBuilt !== undefined) updateData.year_built = parseInt(body.yearBuilt)
-    if (body.floor !== undefined) updateData.floor = parseInt(body.floor)
-    if (body.totalFloors !== undefined) updateData.total_floors = parseInt(body.totalFloors)
-
-    // Arrays JSON
-    if (body.amenities !== undefined) updateData.amenities = JSON.stringify(body.amenities)
-    if (body.features !== undefined) updateData.features = JSON.stringify(body.features)
-    if (body.images !== undefined) updateData.images_urls = JSON.stringify(body.images)
+    // Arrays - guardar como JSON en base de datos
+    if (validatedData.images_urls !== undefined) {
+      updateData.images_urls = JSON.stringify(validatedData.images_urls)
+    }
+    if (validatedData.amenities !== undefined) {
+      updateData.amenities = JSON.stringify(validatedData.amenities)
+    }
+    if (validatedData.features !== undefined) {
+      updateData.features = JSON.stringify(validatedData.features)
+    }
 
     console.log(`[${requestId}] Campos a actualizar:`, Object.keys(updateData))
 
@@ -289,6 +300,7 @@ export async function PATCH(
       .from('properties')
       .update(updateData)
       .eq('id', id)
+      .eq('user_id', user.id)  // Doble validación de ownership
       .select(`
         id, title, description, price, currency, city, province, address,
         property_type, operation_type, bedrooms, bathrooms, garages, area, lot_area,
@@ -309,28 +321,38 @@ export async function PATCH(
     console.log(`[${requestId}] Propiedad actualizada exitosamente`)
 
     // Procesar imágenes para respuesta
+    let imageKeys = []
     let imageUrls = []
+    
     if (updatedProperty.images_urls) {
       try {
-        const parsed = JSON.parse(updatedProperty.images_urls)
-        imageUrls = Array.isArray(parsed) ? parsed : []
+        if (Array.isArray(updatedProperty.images_urls)) {
+          imageKeys = updatedProperty.images_urls
+        } else {
+          const parsed = JSON.parse(updatedProperty.images_urls)
+          imageKeys = Array.isArray(parsed) ? parsed : []
+        }
       } catch (e) {
         console.log(`[${requestId}] Error parseando images_urls`)
       }
     }
 
-    if (imageUrls.length === 0 && updatedProperty.images) {
+    if (imageKeys.length === 0 && updatedProperty.images) {
       try {
         const parsed = JSON.parse(updatedProperty.images)
-        imageUrls = Array.isArray(parsed) ? parsed : []
+        imageKeys = Array.isArray(parsed) ? parsed : []
       } catch (e) {
         console.log(`[${requestId}] Error parseando images legacy`)
       }
     }
 
-    if (imageUrls.length === 0) {
-      imageUrls = ['/placeholder-house-1.jpg']
-    }
+    // Convertir keys a URLs públicas
+    imageUrls = imageKeys.map((key: string) => {
+      if (key.startsWith('http') || key.startsWith('/')) {
+        return key
+      }
+      return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${key}`
+    })
 
     // Mapear respuesta
     const response = {
@@ -359,7 +381,11 @@ export async function PATCH(
       createdAt: updatedProperty.created_at,
       updatedAt: updatedProperty.updated_at,
       expiresAt: updatedProperty.expires_at,
+      
+      // Imágenes: URLs absolutas para preview
       images: imageUrls,
+      // Keys para el uploader
+      images_urls: imageKeys,
       imagesCount: imageUrls.length
     }
 
@@ -374,6 +400,13 @@ export async function PATCH(
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
     })
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', details: error.errors },
+        { status: 400 }
+      )
+    }
 
     return NextResponse.json(
       { error: 'Error interno del servidor' },

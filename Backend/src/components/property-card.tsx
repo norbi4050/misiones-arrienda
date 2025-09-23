@@ -71,19 +71,8 @@ export function PropertyCard({
       }
     }
     
-    // 4. Placeholder final basado en tipo de propiedad
-    const placeholders = {
-      'HOUSE': '/placeholder-house-1.jpg',
-      'APARTMENT': '/placeholder-apartment-1.jpg',
-      'COMMERCIAL': '/placeholder-house-2.jpg',
-      'LAND': '/placeholder-house-2.jpg',
-      'OFFICE': '/placeholder-apartment-2.jpg',
-      'WAREHOUSE': '/placeholder-house-2.jpg',
-      'PH': '/placeholder-apartment-1.jpg',
-      'STUDIO': '/placeholder-apartment-2.jpg'
-    }
-    
-    return placeholders[propertyType as keyof typeof placeholders] || '/placeholder-house-1.jpg'
+    // 4. NO usar placeholder - retornar null para mostrar estado "sin imágenes"
+    return null
   }, [coverUrl, images, propertyType])
 
   // Usar imagesCount directamente del API

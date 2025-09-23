@@ -140,6 +140,37 @@ export async function GET(request: NextRequest) {
         // 3. coverUrl = primera imagen real o null
         const coverUrl = images.length > 0 ? images[0] : null
         
+        // Calcular isPublishReady y campos faltantes
+        const hasTitle = !!property.title?.trim()
+        const hasPrice = typeof property.price === 'number' && property.price > 0
+        const hasLocation = !!property.city?.trim() && !!property.province?.trim()
+        const hasType = !!property.property_type?.trim()
+        const hasOperation = !!property.operation_type?.trim()
+        const imagesArray = Array.isArray(property.images_urls) ? property.images_urls : images
+        const hasImage = imagesArray.length > 0
+        const isPublishReady = hasTitle && hasPrice && hasLocation && hasType && hasOperation && hasImage
+        
+        const missing: string[] = []
+        if (!hasTitle) missing.push('title')
+        if (!hasPrice) missing.push('price')
+        if (!hasLocation) missing.push('location')
+        if (!hasType) missing.push('type')
+        if (!hasOperation) missing.push('operation')
+        if (!hasImage) missing.push('image')
+
+        // Logs solo en desarrollo
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`[${requestId}] ITEM:`, { 
+            id: property.id, 
+            status: property.status, 
+            is_active: property.is_active, 
+            imagesLen: images.length, 
+            coverUrl: coverUrl ? 'SET' : 'NULL',
+            isPublishReady,
+            missing: missing.length > 0 ? missing : 'none'
+          })
+        }
+
         // Mantener lógica existente de isPlaceholder y coverUrlExpiresAt
         const coverResult = {
           coverUrl: coverUrl,
@@ -178,7 +209,10 @@ export async function GET(request: NextRequest) {
           coverUrl: coverResult.coverUrl,
           coverUrlExpiresAt: coverResult.coverUrlExpiresAt,
           isPlaceholder: coverResult.isPlaceholder,
-          imagesCount: images.length
+          imagesCount: images.length,
+          // Nuevos campos para UI
+          isPublishReady: isPublishReady,
+          missing: missing
         }
       })
     )

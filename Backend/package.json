@@ -27,7 +27,7 @@
     "check:no-mock": "node scripts/check-no-mock.js"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.2.1",
+    "@hookform/resolvers": "^5.2.2",
     "@prisma/client": "^5.7.1",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -42,7 +42,7 @@
     "client-only": "^0.0.1",
     "clsx": "^2.1.1",
     "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^0.544.0",
+    "lucide-react": "0.469.0",
     "mercadopago": "^2.0.15",
     "next": "^15.5.3",
     "next-themes": "^0.4.6",
@@ -52,7 +52,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-easy-crop": "^5.5.0",
-    "react-hook-form": "^7.62.0",
+    "react-hook-form": "^7.63.0",
     "react-hot-toast": "^2.6.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.3.1",
