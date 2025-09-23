@@ -82,7 +82,7 @@ export default function RoommateDetailComponent({
 
   // Manejar compartir
   const handleShare = async () => {
-    const url = `${window.location.origin}/roommates/${roommate.slug || roommate.id}`
+    const url = `${window.location.origin}/roommates/${roommate.slug}`
     const title = roommate.title
     const text = `${title} - ${formatPrice(roommate.monthlyRent)} en ${roommate.city}, ${roommate.province}`
 

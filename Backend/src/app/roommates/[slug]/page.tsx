@@ -238,7 +238,7 @@ export default function RoommateDetailPage() {
             
             {roommate.canEdit && (
               <Link
-                href={`/roommates/${roommate.id}/editar`}
+                href={`/roommates/${roommate.slug}/editar`}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Edit className="w-4 h-4 mr-2" />

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { getAllProfiles, addProfile, getNextId, findProfileById, type MockProfile } from '@/lib/mock-community-profiles'
+import { createServerClient, type CookieOptions } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { extractUserName } from '@/lib/user-utils'
 
 // Schema de validación para crear/actualizar perfil
 const profileSchema = z.object({
@@ -34,88 +38,6 @@ const searchSchema = z.object({
   limit: z.number().min(1).max(50).optional()
 })
 
-// Mock data para demostración
-const mockProfiles = [
-  {
-    id: '1',
-    role: 'BUSCO',
-    city: 'Posadas',
-    neighborhood: 'Centro',
-    budgetMin: 120000,
-    budgetMax: 180000,
-    bio: 'Estudiante de medicina, busco habitación tranquila cerca de la universidad.',
-    age: 22,
-    petPref: 'SI_PET',
-    smokePref: 'NO_FUMADOR',
-    diet: 'VEGETARIANO',
-    tags: ['estudiante', 'ordenado', 'responsable'],
-    photos: ['/placeholder-apartment-1.jpg'],
-    user: {
-      id: '1',
-      name: 'María González',
-      avatar: '/placeholder-apartment-2.jpg',
-      rating: 4.8,
-      reviewCount: 12
-    },
-    _count: {
-      likesReceived: 8
-    },
-    createdAt: new Date('2024-01-15')
-  },
-  {
-    id: '2',
-    role: 'OFREZCO',
-    city: 'Oberá',
-    neighborhood: 'Villa Bonita',
-    budgetMin: 100000,
-    budgetMax: 150000,
-    bio: 'Tengo una casa grande, busco compañeros responsables para compartir.',
-    age: 32,
-    petPref: 'INDIFERENTE',
-    smokePref: 'NO_FUMADOR',
-    diet: 'NINGUNA',
-    tags: ['propietario', 'familiar', 'acogedor'],
-    photos: ['/placeholder-house-2.jpg'],
-    user: {
-      id: '2',
-      name: 'Carlos Mendoza',
-      avatar: '/placeholder-house-1.jpg',
-      rating: 4.9,
-      reviewCount: 25
-    },
-    _count: {
-      likesReceived: 15
-    },
-    createdAt: new Date('2024-01-10')
-  },
-  {
-    id: '3',
-    role: 'BUSCO',
-    city: 'Eldorado',
-    neighborhood: 'Centro',
-    budgetMin: 80000,
-    budgetMax: 120000,
-    bio: 'Trabajador joven, busco lugar tranquilo y bien ubicado.',
-    age: 28,
-    petPref: 'NO_PET',
-    smokePref: 'NO_FUMADOR',
-    diet: 'NINGUNA',
-    tags: ['trabajador', 'tranquilo', 'puntual'],
-    photos: ['/placeholder-apartment-3.jpg'],
-    user: {
-      id: '3',
-      name: 'Juan Pérez',
-      avatar: '/placeholder-house-2.jpg',
-      rating: 4.5,
-      reviewCount: 8
-    },
-    _count: {
-      likesReceived: 5
-    },
-    createdAt: new Date('2024-01-20')
-  }
-]
-
 // GET /api/comunidad/profiles - Listar perfiles con filtros
 export async function GET(request: NextRequest) {
   try {
@@ -139,8 +61,8 @@ export async function GET(request: NextRequest) {
     // Validar parámetros
     const validatedParams = searchSchema.parse(params)
 
-    // Filtrar mock data
-    let filteredProfiles = mockProfiles
+    // Obtener perfiles del mock data compartido
+    let filteredProfiles = getAllProfiles()
 
     if (validatedParams.role) {
       filteredProfiles = filteredProfiles.filter(p => p.role === validatedParams.role)
@@ -189,26 +111,105 @@ export async function GET(request: NextRequest) {
   }
 }
 
+async function getServerSupabase() {
+  const cookieStore = await cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options: CookieOptions) {
+          cookieStore.set({ name, value: "", ...options, maxAge: 0 })
+        },
+      },
+    }
+  )
+}
+
 // POST /api/comunidad/profiles - Crear/actualizar perfil del usuario autenticado
 export async function POST(request: NextRequest) {
   try {
+    // Verificar autenticación
+    const supabase = await getServerSupabase()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+
     const body = await request.json()
     const validatedData = profileSchema.parse(body)
 
-    // Simular creación de perfil
-    const newProfile = {
-      id: Date.now().toString(),
-      ...validatedData,
+    // Obtener datos del perfil del usuario directamente desde Supabase
+    let userProfile
+    try {
+      const { data: dbProfile, error: dbError } = await supabase
+        .from('users')
+        .select('id, name, email, phone, bio, avatar')
+        .eq('id', user.id)
+        .single()
+
+      if (!dbError && dbProfile) {
+        userProfile = dbProfile
+      }
+    } catch (error) {
+      console.log('No se pudo obtener perfil del usuario desde BD, usando datos básicos')
+    }
+
+    // Usar datos del usuario autenticado o fallback
+    const userName = userProfile?.name || extractUserName(user) || 'Usuario'
+    const userAvatar = userProfile?.avatar || user.user_metadata?.avatar_url || null // ✅ Usar avatar de auth si no hay en BD
+    
+    // Verificar si ya existe un anuncio para este usuario
+    const existingProfile = findProfileById(user.id)
+    
+    if (existingProfile) {
+      return NextResponse.json(
+        { error: "Ya tienes un anuncio publicado. Solo puedes tener uno activo." },
+        { status: 409 }
+      )
+    }
+
+    // Crear nuevo perfil vinculado al usuario real
+    const newProfile: MockProfile = {
+      id: user.id, // ✅ Usar ID real del usuario autenticado
+      role: validatedData.role,
+      city: validatedData.city,
+      neighborhood: validatedData.neighborhood || '',
+      budgetMin: validatedData.budgetMin,
+      budgetMax: validatedData.budgetMax,
+      bio: validatedData.bio || '',
+      age: validatedData.age || 25,
+      petPref: validatedData.petPref || 'INDIFERENTE',
+      smokePref: validatedData.smokePref || 'INDIFERENTE',
+      diet: validatedData.diet || 'NINGUNA',
+      scheduleNotes: validatedData.scheduleNotes || '',
+      tags: validatedData.tags || [],
+      photos: validatedData.photos || [],
+      acceptsMessages: validatedData.acceptsMessages ?? true,
       user: {
-        id: 'temp-user-id',
-        name: 'Usuario Temporal',
-        avatar: '/placeholder-apartment-3.jpg',
+        id: user.id, // ✅ ID real del usuario
+        name: userName, // ✅ Nombre real del usuario
+        avatar: userAvatar, // ✅ Avatar real del usuario
         rating: 5.0,
         reviewCount: 0
       },
-      createdAt: new Date(),
-      likesCount: 0
+      _count: {
+        likesReceived: 0
+      },
+      createdAt: user.created_at ? new Date(user.created_at) : new Date() // ✅ Fecha real de registro
     }
+
+    // Agregar al mock data compartido
+    addProfile(newProfile)
+
+    console.log(`✅ Perfil de comunidad creado para usuario: ${userName} (${user.id})`)
 
     return NextResponse.json(newProfile, { status: 201 })
 

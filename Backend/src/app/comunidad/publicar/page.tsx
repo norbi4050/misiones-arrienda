@@ -9,9 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ArrowLeft, Upload, X, Plus } from 'lucide-react'
+import { ArrowLeft, Upload, X, Plus, User, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { prepareUserDataForForm } from '@/lib/user-utils'
+import { validateUserProfileComplete, getProfileCompletionRedirectUrl } from '@/lib/profile-validation'
 
 interface ProfileFormData {
   role: 'BUSCO' | 'OFREZCO' | ''
@@ -60,7 +63,60 @@ export default function PublicarPerfilPage() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [newTag, setNewTag] = useState('')
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [autoFilled, setAutoFilled] = useState(false)
+  const [loadingProfile, setLoadingProfile] = useState(false)
   const router = useRouter()
+  const { user } = useSupabaseAuth()
+
+  // Función para cargar datos del usuario autenticado
+  const loadUserProfile = async () => {
+    if (!user) return
+    
+    setLoadingProfile(true)
+    try {
+      const response = await fetch('/api/users/profile')
+      if (response.ok) {
+        const { profile } = await response.json()
+        
+        // Validar que el perfil esté completo
+        const validation = validateUserProfileComplete(profile)
+        if (!validation.isComplete) {
+          alert(`⚠️ ${validation.message}\n\nSerás redirigido para completar tu perfil.`)
+          router.push(getProfileCompletionRedirectUrl())
+          return
+        }
+        
+        const userData = prepareUserDataForForm(profile)
+        
+        // Pre-llenar campos y SIEMPRE agregar avatar como primera foto
+        setFormData(prev => ({
+          ...prev,
+          age: prev.age || userData.age || '',
+          // SIEMPRE poner avatar como primera foto si existe
+          photos: userData.avatar 
+            ? [userData.avatar, ...prev.photos.filter(p => p !== userData.avatar)]
+            : prev.photos
+        }))
+        
+        setUserProfile(profile)
+        setAutoFilled(true)
+        
+        console.log(`✅ Datos cargados desde perfil de: ${userData.name}`)
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error)
+    } finally {
+      setLoadingProfile(false)
+    }
+  }
+
+  // useEffect para cargar datos del usuario al montar el componente
+  useEffect(() => {
+    if (user) {
+      loadUserProfile()
+    }
+  }, [user])
 
   const handleInputChange = (field: keyof ProfileFormData, value: any) => {
     setFormData(prev => ({
@@ -164,7 +220,9 @@ export default function PublicarPerfilPage() {
 
       if (response.ok) {
         const profile = await response.json()
-        router.push(`/comunidad/${profile.id}`)
+        // Redirección segura a la página principal de comunidad
+        alert('¡Perfil creado exitosamente! Tu perfil ya está visible en la comunidad.')
+        router.push('/comunidad')
       } else {
         const errorData = await response.json()
         alert('Error al crear el perfil: ' + (errorData.error || 'Error desconocido'))
@@ -189,10 +247,33 @@ export default function PublicarPerfilPage() {
                 Volver
               </Button>
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Crear Perfil de Comunidad</h1>
-              <p className="text-gray-600 mt-1">Completa tu perfil para encontrar compañeros de casa</p>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900">Crear Anuncio de Comunidad</h1>
+              <p className="text-gray-600 mt-1">Publica tu anuncio para encontrar compañeros de casa</p>
+              
+              {/* Indicador de auto-llenado */}
+              {autoFilled && userProfile && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
+                  <User className="w-4 h-4" />
+                  <span>Datos cargados desde tu perfil: {userProfile.name}</span>
+                </div>
+              )}
             </div>
+            
+            {/* Botón para recargar datos del perfil */}
+            {user && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={loadUserProfile}
+                disabled={loadingProfile}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${loadingProfile ? 'animate-spin' : ''}`} />
+                {loadingProfile ? 'Cargando...' : 'Cargar desde mi perfil'}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -460,11 +541,61 @@ export default function PublicarPerfilPage() {
           {/* Fotos */}
           <Card>
             <CardHeader>
-              <CardTitle>Fotos</CardTitle>
+              <CardTitle>Fotos Personales</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Subir archivos desde PC */}
               <div>
-                <Label htmlFor="photoUrl">Agregar foto (URL)</Label>
+                <Label htmlFor="photoFile">Subir fotos desde tu PC</Label>
+                <div className="flex gap-2 mt-1">
+                  <input
+                    id="photoFile"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || [])
+                      files.forEach(file => {
+                        if (formData.photos.length < 5) {
+                          const reader = new FileReader()
+                          reader.onload = (event) => {
+                            const result = event.target?.result as string
+                            if (result) {
+                              addPhoto(result)
+                            }
+                          }
+                          reader.readAsDataURL(file)
+                        }
+                      })
+                      // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
+                      e.target.value = ''
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const fileInput = document.getElementById('photoFile') as HTMLInputElement
+                      fileInput?.click()
+                    }}
+                    disabled={formData.photos.length >= 5}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Seleccionar Fotos
+                  </Button>
+                  <span className="text-sm text-gray-500 self-center">
+                    {formData.photos.length}/5 fotos
+                  </span>
+                </div>
+                <p className="text-gray-500 text-sm mt-1">
+                  💡 <strong>Sugerencia:</strong> Sube fotos de tu vida actual: fotos con amigos, foto de tu mascota, hobbies, tu espacio actual, etc. Esto ayuda a otros a conocerte mejor.
+                </p>
+              </div>
+
+              {/* Agregar por URL (opcional) */}
+              <div>
+                <Label htmlFor="photoUrl">O agregar foto por URL</Label>
                 <div className="flex gap-2 mt-1">
                   <Input
                     id="photoUrl"
@@ -473,10 +604,13 @@ export default function PublicarPerfilPage() {
                       if (e.key === 'Enter') {
                         e.preventDefault()
                         const input = e.target as HTMLInputElement
-                        addPhoto(input.value)
-                        input.value = ''
+                        if (input.value) {
+                          addPhoto(input.value)
+                          input.value = ''
+                        }
                       }
                     }}
+                    disabled={formData.photos.length >= 5}
                   />
                   <Button
                     type="button"
@@ -488,11 +622,11 @@ export default function PublicarPerfilPage() {
                         input.value = ''
                       }
                     }}
+                    disabled={formData.photos.length >= 5}
                   >
-                    <Upload className="w-4 h-4" />
+                    <Plus className="w-4 h-4" />
                   </Button>
                 </div>
-                <p className="text-gray-500 text-sm mt-1">Máximo 5 fotos</p>
               </div>
 
               {formData.photos.length > 0 && (
@@ -504,13 +638,17 @@ export default function PublicarPerfilPage() {
                         <img
                           src={photo}
                           alt={`Foto ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
+                          className="w-full h-32 object-cover rounded-lg border"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/placeholder-avatar.png'
+                          }}
                         />
                         <Button
                           type="button"
                           variant="destructive"
                           size="sm"
-                          className="absolute top-2 right-2"
+                          className="absolute top-2 right-2 h-6 w-6 p-0"
                           onClick={() => removePhoto(photo)}
                         >
                           <X className="w-3 h-3" />
@@ -550,7 +688,7 @@ export default function PublicarPerfilPage() {
               </Button>
             </Link>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Creando perfil...' : 'Crear Perfil'}
+              {loading ? 'Creando anuncio...' : 'Crear Anuncio'}
             </Button>
           </div>
         </form>

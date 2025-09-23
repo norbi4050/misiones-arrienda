@@ -71,6 +71,9 @@ Thumbs.db
 tmp/
 temp/
 
+# Mock data persistence (local testing only)
+data/
+
 # Variables de entorno
 .env.local
 .env

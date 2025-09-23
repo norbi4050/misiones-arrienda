@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Heart, MessageCircle, MapPin, Calendar, ArrowLeft, Loader2 } from 'lucide-react'
+import { Heart, MessageCircle, MapPin, Calendar, ArrowLeft, Loader2, Image as ImageIcon, X } from 'lucide-react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import Image from 'next/image'
+import { NewUserBadge } from '@/components/ui/new-user-badge'
 
 interface ProfileDetailClientProps {
   profile: {
@@ -14,23 +16,28 @@ interface ProfileDetailClientProps {
     user: {
       id: string
       name: string
-      email: string
+      avatar?: string
+      rating?: number
+      reviewCount?: number
     }
     role: 'BUSCO' | 'OFREZCO'
     city: string
     neighborhood: string
-    budget_min: number
-    budget_max: number
+    budgetMin: number
+    budgetMax: number
     bio: string
     age: number
     tags: string[]
-    preferences: {
-      pet_friendly: boolean
-      smoking_allowed: boolean
-      furnished: boolean
-      shared_spaces: boolean
+    petPref?: string
+    smokePref?: string
+    diet?: string
+    scheduleNotes?: string
+    photos?: string[]
+    acceptsMessages?: boolean
+    createdAt: string | Date
+    _count?: {
+      likesReceived: number
     }
-    created_at: string
   }
 }
 
@@ -41,6 +48,7 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
   const [isMatched, setIsMatched] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingAction, setLoadingAction] = useState<'like' | 'message' | null>(null)
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
 
   // Verificar si es el propio perfil
   const isOwnProfile = user?.id === profile.user.id
@@ -177,7 +185,7 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
             Volver
           </Button>
           <h1 className="text-2xl font-bold text-gray-900">
-            Perfil de {profile.user.name}
+            {profile.user.name}
           </h1>
         </div>
 
@@ -189,9 +197,12 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                      {profile.user.name}
-                    </h2>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        {profile.user.name}
+                      </h2>
+                      <NewUserBadge userCreatedAt={profile.createdAt} />
+                    </div>
                     <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
@@ -226,7 +237,7 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="font-medium text-gray-700 mb-2">Presupuesto</h3>
                   <p className="text-lg font-semibold text-green-600">
-                    {formatBudget(profile.budget_min)} - {formatBudget(profile.budget_max)}
+                    {formatBudget(profile.budgetMin)} - {formatBudget(profile.budgetMax)}
                   </p>
                 </div>
 
@@ -234,9 +245,88 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
                 {profile.bio && (
                   <div>
                     <h3 className="font-medium text-gray-700 mb-2">Descripción</h3>
-                    <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                      {profile.bio}
-                    </p>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere max-w-full">
+                        {profile.bio}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Carrusel de Fotos */}
+                {profile.photos && profile.photos.length > 0 && (
+                  <div>
+                    <h3 className="font-medium text-gray-700 mb-2">
+                      Fotos ({profile.photos.length})
+                    </h3>
+                    <div className="relative">
+                      {/* Foto principal */}
+                      <div className="relative h-64 md:h-80 bg-gray-100 rounded-lg overflow-hidden">
+                        <Image
+                          src={profile.photos[selectedImageIndex || 0]}
+                          alt={`Foto ${(selectedImageIndex || 0) + 1} de ${profile.user.name}`}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                        />
+                        
+                        {/* Navegación del carrusel */}
+                        {profile.photos.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => setSelectedImageIndex(
+                                (selectedImageIndex || 0) > 0 
+                                  ? (selectedImageIndex || 0) - 1 
+                                  : profile.photos!.length - 1
+                              )}
+                              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
+                            >
+                              ←
+                            </button>
+                            <button
+                              onClick={() => setSelectedImageIndex(
+                                (selectedImageIndex || 0) < profile.photos!.length - 1 
+                                  ? (selectedImageIndex || 0) + 1 
+                                  : 0
+                              )}
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-opacity"
+                            >
+                              →
+                            </button>
+                            
+                            {/* Indicador de posición */}
+                            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                              {(selectedImageIndex || 0) + 1} / {profile.photos.length}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* Miniaturas */}
+                      {profile.photos.length > 1 && (
+                        <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                          {profile.photos.map((photo, index) => (
+                            <div
+                              key={index}
+                              className={`relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border-2 transition-all ${
+                                (selectedImageIndex || 0) === index 
+                                  ? 'border-blue-500 opacity-100' 
+                                  : 'border-gray-200 opacity-70 hover:opacity-90'
+                              }`}
+                              onClick={() => setSelectedImageIndex(index)}
+                            >
+                              <Image
+                                src={photo}
+                                alt={`Miniatura ${index + 1}`}
+                                fill
+                                className="object-cover"
+                                sizes="64px"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -262,22 +352,43 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
                 <h3 className="text-lg font-semibold">Preferencias</h3>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(profile.preferences).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-3">
-                      <span className="text-2xl">
-                        {getPreferenceIcon(key, value)}
-                      </span>
+                <div className="grid grid-cols-1 gap-4">
+                  {profile.petPref && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🐕</span>
                       <div>
-                        <p className="font-medium text-gray-700">
-                          {getPreferenceLabel(key)}
-                        </p>
-                        <p className={`text-sm ${value ? 'text-green-600' : 'text-red-500'}`}>
-                          {value ? 'Sí' : 'No'}
-                        </p>
+                        <p className="font-medium text-gray-700">Mascotas</p>
+                        <p className="text-sm text-gray-600">{profile.petPref}</p>
                       </div>
                     </div>
-                  ))}
+                  )}
+                  {profile.smokePref && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🚬</span>
+                      <div>
+                        <p className="font-medium text-gray-700">Fumar</p>
+                        <p className="text-sm text-gray-600">{profile.smokePref}</p>
+                      </div>
+                    </div>
+                  )}
+                  {profile.diet && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🍽️</span>
+                      <div>
+                        <p className="font-medium text-gray-700">Dieta</p>
+                        <p className="text-sm text-gray-600">{profile.diet}</p>
+                      </div>
+                    </div>
+                  )}
+                  {profile.scheduleNotes && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">⏰</span>
+                      <div>
+                        <p className="font-medium text-gray-700">Horarios</p>
+                        <p className="text-sm text-gray-600">{profile.scheduleNotes}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -332,7 +443,7 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
               <CardContent className="space-y-3 text-sm text-gray-600">
                 <div>
                   <p className="font-medium">Miembro desde</p>
-                  <p>{new Date(profile.created_at).toLocaleDateString('es-AR')}</p>
+                  <p>{new Date(profile.createdAt).toLocaleDateString('es-AR')}</p>
                 </div>
                 <div>
                   <p className="font-medium">Tipo de perfil</p>
@@ -342,6 +453,61 @@ export default function ProfileDetailClient({ profile }: ProfileDetailClientProp
             </Card>
           </div>
         </div>
+
+        {/* Modal de Imagen */}
+        {selectedImageIndex !== null && profile.photos && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="relative max-w-4xl max-h-full">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedImageIndex(null)}
+                className="absolute top-4 right-4 z-10 bg-white hover:bg-gray-100"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+              
+              <div className="relative w-full h-full max-w-3xl max-h-[80vh]">
+                <Image
+                  src={profile.photos[selectedImageIndex]}
+                  alt={`Foto ${selectedImageIndex + 1} de ${profile.user.name}`}
+                  width={800}
+                  height={600}
+                  className="object-contain w-full h-full rounded-lg"
+                />
+              </div>
+
+              {/* Navegación entre imágenes */}
+              {profile.photos.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedImageIndex(
+                      selectedImageIndex > 0 ? selectedImageIndex - 1 : profile.photos!.length - 1
+                    )}
+                    className="bg-white hover:bg-gray-100"
+                  >
+                    ←
+                  </Button>
+                  <span className="bg-white px-3 py-1 rounded text-sm">
+                    {selectedImageIndex + 1} / {profile.photos.length}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedImageIndex(
+                      selectedImageIndex < profile.photos!.length - 1 ? selectedImageIndex + 1 : 0
+                    )}
+                    className="bg-white hover:bg-gray-100"
+                  >
+                    →
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

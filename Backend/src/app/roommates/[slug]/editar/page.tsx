@@ -12,12 +12,12 @@ import RoommateImageUploader from '@/components/ui/roommate-image-uploader'
 import { keysToPublicUrls } from '@/lib/roommates-images'
 
 interface EditRoommatePageProps {
-  params: { id: string }
+  params: { slug: string }
 }
 
 export default function EditRoommatePage({ params }: EditRoommatePageProps) {
   const router = useRouter()
-  const { id } = params
+  const { slug } = params
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -45,7 +45,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
   useEffect(() => {
     const fetchRoommate = async () => {
       try {
-        const response = await fetch(`/api/roommates/${id}`)
+        const response = await fetch(`/api/roommates/${slug}`)
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -89,7 +89,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
     }
 
     fetchRoommate()
-  }, [id, setValue])
+  }, [slug, setValue])
 
   // Manejar cambio de imágenes
   const handleImagesChange = (newKeys: string[]) => {
@@ -102,7 +102,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
     setError(null)
 
     try {
-      const response = await fetch(`/api/roommates/${id}`, {
+      const response = await fetch(`/api/roommates/${roommate.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -138,7 +138,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
     setError(null)
 
     try {
-      const response = await fetch(`/api/roommates/${id}/publish`, {
+      const response = await fetch(`/api/roommates/${roommate.id}/publish`, {
         method: 'PATCH'
       })
 
@@ -148,7 +148,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
       }
 
       alert('Roommate publicado exitosamente')
-      router.push(`/roommates/${roommate.slug || id}`)
+      router.push(`/roommates/${roommate.slug || slug}`)
 
     } catch (err) {
       console.error('Error publishing roommate:', err)
@@ -164,7 +164,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
     setError(null)
 
     try {
-      const response = await fetch(`/api/roommates/${id}/unpublish`, {
+      const response = await fetch(`/api/roommates/${roommate.id}/unpublish`, {
         method: 'PATCH'
       })
 
@@ -221,7 +221,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <Link
-              href={`/roommates/${roommate.slug || id}`}
+              href={`/roommates/${roommate.slug || slug}`}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
@@ -240,7 +240,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
 
               {/* Preview */}
               <Link
-                href={`/roommates/${roommate.slug || id}`}
+                href={`/roommates/${roommate.slug || slug}`}
                 className="flex items-center text-blue-600 hover:text-blue-700 transition-colors"
               >
                 <Eye className="w-4 h-4 mr-1" />
@@ -418,7 +418,7 @@ export default function EditRoommatePage({ params }: EditRoommatePageProps) {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Imágenes</h2>
             
             <RoommateImageUploader
-              postId={id}
+              postId={roommate?.id || slug}
               userId={roommate?.userId || ''}
               value={watchedData.imagesUrls || []}
               onChange={handleImagesChange}

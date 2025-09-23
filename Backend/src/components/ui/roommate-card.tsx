@@ -153,7 +153,7 @@ export default function RoommateCard({
         {showActions && (
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
             <Link
-              href={`/roommates/${roommate.slug || roommate.id}`}
+              href={`/roommates/${roommate.slug}`}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-md text-sm font-medium transition-colors mr-2"
             >
               Ver Detalle

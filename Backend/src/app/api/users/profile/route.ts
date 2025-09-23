@@ -38,24 +38,61 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    // TEMPORAL: Retornar perfil básico desde auth metadata para evitar errores de BD
-    const profile = {
-      id: user.id,
-      name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
-      email: user.email,
-      phone: user.user_metadata?.phone || null,
-      avatar: null,
-      bio: null,
-      verified: user.email_confirmed_at ? true : false,
-      created_at: user.created_at,
-      updated_at: user.updated_at
-    };
+    // Intentar obtener perfil desde la base de datos
+    const { data: dbProfile, error: dbError } = await supabase
+      .from('users')
+      .select('id, name, email, phone, bio, avatar, created_at, updated_at')
+      .eq('id', user.id)
+      .single();
 
-    console.log('Perfil temporal generado desde auth metadata para usuario:', user.id);
+    let profile;
+
+    if (dbError || !dbProfile) {
+      // Si no existe en BD, crear perfil básico y guardarlo
+      console.log('Perfil no encontrado en BD, creando nuevo perfil para usuario:', user.id);
+      
+      const newProfile = {
+        id: user.id,
+        name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+        email: user.email,
+        phone: user.user_metadata?.phone || null,
+        avatar: null,
+        bio: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Intentar insertar en BD
+      const { data: insertedProfile, error: insertError } = await supabase
+        .from('users')
+        .insert(newProfile)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error insertando perfil:', insertError);
+        // Fallback a perfil temporal si falla la inserción
+        profile = {
+          ...newProfile,
+          verified: user.email_confirmed_at ? true : false
+        };
+      } else {
+        profile = {
+          ...insertedProfile,
+          verified: user.email_confirmed_at ? true : false
+        };
+      }
+    } else {
+      // Perfil encontrado en BD
+      profile = {
+        ...dbProfile,
+        verified: user.email_confirmed_at ? true : false
+      };
+    }
 
     return NextResponse.json({
       profile,
-      message: "Perfil obtenido exitosamente (temporal)"
+      message: "Perfil obtenido exitosamente"
     }, { status: 200 });
 
   } catch (error) {

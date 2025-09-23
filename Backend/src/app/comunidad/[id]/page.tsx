@@ -20,7 +20,8 @@ async function getProfile(id: string) {
       return null
     }
 
-    return await response.json()
+    const data = await response.json()
+    return data.profile // El API devuelve { profile: {...} }
   } catch (error) {
     console.error('Error fetching profile:', error)
     return null
@@ -28,7 +29,8 @@ async function getProfile(id: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const profile = await getProfile(params.id)
+  const { id } = await params
+  const profile = await getProfile(id)
 
   if (!profile) {
     return {
@@ -43,7 +45,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ProfileDetailPage({ params }: PageProps) {
-  const profile = await getProfile(params.id)
+  const { id } = await params
+  const profile = await getProfile(id)
 
   if (!profile) {
     notFound()

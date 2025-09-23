@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from './button'
 import { Input } from './input'
 
@@ -13,26 +13,43 @@ interface ProfileFormProps {
 
 export function ProfileForm({ onSubmit, initialData, className, isSubmitting = false }: ProfileFormProps) {
   const [isDirty, setIsDirty] = useState(false)
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    bio: ''
+  })
+
+  // Actualizar formData cuando cambie initialData
+  useEffect(() => {
+    if (initialData) {
+      const fullName = initialData.name || ''
+      const nameParts = fullName.split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+
+      setFormData({
+        firstName,
+        lastName,
+        phone: initialData.phone || '',
+        bio: initialData.bio || ''
+      })
+    }
+  }, [initialData])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const data: Record<string, string> = {}
-    formData.forEach((value, key) => {
-      data[key] = value.toString()
-    })
-    onSubmit?.(data)
+    console.log('📝 Enviando datos del formulario:', formData)
+    onSubmit?.(formData)
   }
 
-  const handleInputChange = () => {
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
     setIsDirty(true)
   }
-
-  // Extraer firstName y lastName del name completo si existe
-  const fullName = initialData?.name || ''
-  const nameParts = fullName.split(' ')
-  const firstName = nameParts[0] || ''
-  const lastName = nameParts.slice(1).join(' ') || ''
 
   return (
     <div className={`space-y-6 ${className || ''}`}>
@@ -48,10 +65,10 @@ export function ProfileForm({ onSubmit, initialData, className, isSubmitting = f
                 id="firstName"
                 name="firstName"
                 type="text"
-                defaultValue={firstName}
+                value={formData.firstName}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
                 placeholder="Tu nombre"
                 maxLength={60}
-                onChange={handleInputChange}
                 disabled={isSubmitting}
                 required
               />
@@ -64,10 +81,10 @@ export function ProfileForm({ onSubmit, initialData, className, isSubmitting = f
                 id="lastName"
                 name="lastName"
                 type="text"
-                defaultValue={lastName}
+                value={formData.lastName}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
                 placeholder="Tu apellido"
                 maxLength={60}
-                onChange={handleInputChange}
                 disabled={isSubmitting}
                 required
               />
@@ -92,18 +109,20 @@ export function ProfileForm({ onSubmit, initialData, className, isSubmitting = f
 
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-              Teléfono
+              Teléfono <span className="text-red-500">*</span>
             </label>
             <Input
               id="phone"
               name="phone"
               type="tel"
-              defaultValue={initialData?.phone || ''}
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
               placeholder="+54 376 123456"
               maxLength={20}
-              onChange={handleInputChange}
               disabled={isSubmitting}
+              required
             />
+            <p className="text-xs text-gray-500 mt-1">Requerido para crear anuncios de comunidad</p>
           </div>
 
           <div>
@@ -115,15 +134,15 @@ export function ProfileForm({ onSubmit, initialData, className, isSubmitting = f
                 id="bio"
                 name="bio"
                 rows={3}
-                defaultValue={initialData?.bio || ''}
+                value={formData.bio}
+                onChange={(e) => handleInputChange('bio', e.target.value)}
                 placeholder="Cuéntanos sobre ti..."
                 maxLength={500}
-                onChange={handleInputChange}
                 disabled={isSubmitting}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 resize-none"
               />
               <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white px-1 rounded">
-                {(initialData?.bio || '').length}/500
+                {formData.bio.length}/500
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">Máximo 500 caracteres</p>
