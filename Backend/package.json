@@ -17,7 +17,8 @@
     "db:deploy": "prisma migrate deploy && prisma generate",
     "postinstall": "prisma generate",
     "snapshot": "node scripts/make-snapshot.mjs > scripts/snapshot.json",
-    "snapshot:diff": "node scripts/diff-snapshot.mjs --prev scripts/snapshot.json --out scripts/change-report.json"
+    "snapshot:diff": "node scripts/diff-snapshot.mjs --prev scripts/snapshot.json --out scripts/change-report.json",
+    "smoke:win": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
