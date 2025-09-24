@@ -40,6 +40,7 @@ interface PropertyCardProps {
     status: string;
     images: string[];
     featured: boolean;
+    featuredExpires?: string | null;
     createdAt: string;
     updatedAt: string;
     activePlan?: {
@@ -185,7 +186,7 @@ export function PropertyCard({
         />
         
         {/* Featured Badge */}
-        {property.featured && (
+        {property.featured && property.featuredExpires && new Date(property.featuredExpires) > new Date() && (
           <div className="absolute top-3 right-3">
             <Badge className="bg-yellow-500 text-white">
               <Star className="w-3 h-3 mr-1" />
