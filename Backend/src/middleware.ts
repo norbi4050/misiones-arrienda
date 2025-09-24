@@ -1,31 +1,88 @@
-// src/middleware.ts
-import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export function middleware(req: NextRequest) {
-  // Dejá pasar rutas públicas:
-  const publicPaths = [
-    '/',               // home
-    '/comunidad',      // pública
-    '/login',          // login público
-    '/api/community/profiles', // API pública
-  ]
-  
-  if (
-    publicPaths.includes(req.nextUrl.pathname) ||
-    req.nextUrl.pathname.startsWith('/_next') ||
-    req.nextUrl.pathname.startsWith('/api') || // si tus APIs públicas necesitan pasar
-    req.nextUrl.pathname.startsWith('/favicon') ||
-    req.nextUrl.pathname.startsWith('/assets') ||
-    req.nextUrl.pathname.startsWith('/images')
-  ) {
-    return NextResponse.next()
+export async function middleware(req: NextRequest) {
+  let res = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          req.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+          res = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          });
+          res.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: any) {
+          req.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+          res = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          });
+          res.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
+  // Rutas que requieren autenticación
+  const protectedRoutes = ['/profile', '/dashboard', '/publicar'];
+  const isProtectedRoute = protectedRoutes.some(route => 
+    req.nextUrl.pathname.startsWith(route)
+  );
+
+  if (isProtectedRoute) {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        // Redirigir a login si no está autenticado
+        const redirectUrl = new URL('/login', req.url);
+        redirectUrl.searchParams.set('redirect', req.nextUrl.pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+    } catch (error) {
+      console.error('Error en middleware:', error);
+      const redirectUrl = new URL('/login', req.url);
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
-  // si quisieras proteger otras rutas, acá harías el check de sesión con cookies header, etc.
-  return NextResponse.next()
+  return res;
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-}
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+};

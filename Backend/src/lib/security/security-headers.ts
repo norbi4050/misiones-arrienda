@@ -72,6 +72,7 @@ const DEFAULT_CONFIG: SecurityHeadersConfig = {
         'blob:',
         'https:',
         'http:',
+        'https://images.unsplash.com',
         'https://res.cloudinary.com',
         'https://www.facebook.com',
         'https://www.google-analytics.com'
