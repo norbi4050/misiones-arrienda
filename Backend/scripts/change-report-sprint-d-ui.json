@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-01-XX",
+  "sprint": "D-UI",
+  "description": "Interfaz completa de monetización con MercadoPago",
+  "branch": "feat/reconexion-flow",
+  "added": [
+    "src/components/ui/feature-payment-button.tsx",
+    "src/app/dashboard/billing/page.tsx",
+    "src/components/ui/free-tier-upsell.tsx",
+    "src/app/mis-propiedades/page.tsx",
+    "scripts/smoke-tests-sprint-d.ps1",
+    "docs/evidencias/SPRINT-D-UI-RESULTADOS.md"
+  ],
+  "removed": [],
+  "modified": [
+    "src/app/properties/[id]/page.tsx",
+    "src/components/ui/property-card.tsx",
+    "package.json"
+  ],
+  "moved": [],
+  "deprecated_tagged": [],
+  "moved_to_quarantine": [],
+  "features_implemented": {
+    "feature_button_property_detail": true,
+    "billing_dashboard": true,
+    "featured_badge_cards": true,
+    "free_tier_upsell": true,
+    "smoke_tests_updated": true
+  },
+  "ui_components": {
+    "FeaturePaymentButton": {
+      "file": "src/components/ui/feature-payment-button.tsx",
+      "purpose": "Botón destacar con estados y MercadoPago redirect",
+      "props": ["propertyId", "isOwner", "featured", "featuredExpires"]
+    },
+    "FreeTierUpsell": {
+      "file": "src/components/ui/free-tier-upsell.tsx",
+      "purpose": "Upsell contextual para free tier",
+      "variants": ["inline", "full"]
+    }
+  },
+  "pages_created": {
+    "/dashboard/billing": {
+      "file": "src/app/dashboard/billing/page.tsx",
+      "features": ["subscription_status", "payment_history", "plans_available", "upsell"]
+    },
+    "/mis-propiedades": {
+      "file": "src/app/mis-propiedades/page.tsx",
+      "features": ["property_grid", "stats_cards", "inline_upsell", "bulk_actions"]
+    }
+  },
+  "business_logic": {
+    "free_tier": {
+      "limit": 1,
+      "upsell_trigger": "user_property_count >= 1 && !has_active_subscription"
+    },
+    "featured_ads": {
+      "price": 999,
+      "currency": "ARS",
+      "duration_days": 30
+    },
+    "agency_plans": {
+      "BASIC": { "price": 2999, "currency": "ARS" },
+      "PRO": { "price": 4999, "currency": "ARS" }
+    }
+  },
+  "testing": {
+    "smoke_tests": {
+      "script": "scripts/smoke-tests-sprint-d.ps1",
+      "new_endpoints": [
+        "GET /dashboard/billing",
+        "POST /api/payments/feature",
+        "POST /api/payments/subscription",
+        "GET /mis-propiedades"
+      ]
+    }
+  },
+  "commits": [
+    "feat(payments-ui): feature button on property detail with MP redirect",
+    "feat(billing): billing dashboard with subscription status + payments list",
+    "feat(featured-ui): featured badge on property cards + detail",
+    "feat(business-ui): free tier messaging + inline upsell actions"
+  ]
+}
