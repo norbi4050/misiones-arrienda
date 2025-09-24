@@ -4,6 +4,8 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useRouter } from "next/navigation";
 import { User, Building2, Search } from "lucide-react";
 import { ProfileImageUpload } from "@/components/ui/image-upload";
+import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox";
+import { logConsent, CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -18,6 +20,11 @@ export default function RegisterPage() {
   });
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // Estado para consentimiento
+  const [checkedTerms, setCheckedTerms] = useState(false);
+  const [checkedPrivacy, setCheckedPrivacy] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
   
   const { register, isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
@@ -40,9 +47,17 @@ export default function RegisterPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
+    setConsentError(null);
     setLoading(true);
 
     try {
+      // Validar consentimiento
+      if (!checkedTerms || !checkedPrivacy) {
+        setConsentError("Debes aceptar los Términos y Condiciones y la Política de Privacidad para continuar");
+        setLoading(false);
+        return;
+      }
+
       // Validar que las contraseñas coincidan
       if (formData.password !== formData.confirmPassword) {
         setMsg("Error: Las contraseñas no coinciden");
@@ -279,10 +294,20 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* Consentimiento legal */}
+          <ConsentCheckbox
+            checkedTerms={checkedTerms}
+            checkedPrivacy={checkedPrivacy}
+            onChangeTerms={setCheckedTerms}
+            onChangePrivacy={setCheckedPrivacy}
+            error={consentError}
+            className="mt-6"
+          />
+
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !checkedTerms || !checkedPrivacy}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
             >
               {loading ? "Creando cuenta..." : "Crear cuenta"}
