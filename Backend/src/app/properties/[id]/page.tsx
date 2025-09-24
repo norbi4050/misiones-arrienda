@@ -12,6 +12,7 @@ import {
   generateBreadcrumbJsonLd,
   createJsonLdScript
 } from '@/lib/structured-data';
+import ImageCarousel from '@/components/ui/ImageCarousel';
 import { 
   MapPin, 
   Bed, 
@@ -127,37 +128,17 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Image Gallery */}
+            {/* Image Carousel */}
             <div className="mb-8">
-              {images.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <div className="relative h-96 rounded-lg overflow-hidden">
-                      <Image
-                        src={images[0]}
-                        alt={property.title}
-                        fill
-                        className="object-cover"
-                        priority
-                      />
-                    </div>
-                  </div>
-                  {images.slice(1, 5).map((image: string, index: number) => (
-                    <div key={index} className="relative h-48 rounded-lg overflow-hidden">
-                      <Image
-                        src={image}
-                        alt={`${property.title} - Imagen ${index + 2}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="relative h-96 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500">Sin imágenes disponibles</span>
-                </div>
-              )}
+              <ImageCarousel
+                images={images.map((src: string, index: number) => ({
+                  src,
+                  alt: `${property.title} - Imagen ${index + 1}`
+                }))}
+                className="w-full"
+                showThumbnails={images.length > 1}
+                enableZoom={true}
+              />
             </div>
 
             {/* Property Info */}
