@@ -1,294 +1,195 @@
-import { Property } from '@/types/property'
+import type { Property } from '@/types/property'
 
-export interface PropertySchema {
-  "@context": string
-  "@type": string
-  name: string
-  description: string
-  address: {
-    "@type": string
-    streetAddress: string
-    addressLocality: string
-    addressRegion: string
-    addressCountry: string
-    postalCode?: string
-  }
-  geo?: {
-    "@type": string
-    latitude?: number
-    longitude?: number
-  }
-  offers: {
-    "@type": string
-    price: number
-    priceCurrency: string
-    availability: string
-    priceValidUntil?: string
-  }
-  image: string[]
-  floorSize: {
-    "@type": string
-    value: number
-    unitCode: string
-  }
-  numberOfRooms?: number
-  numberOfBathroomsTotal?: number
-  petsAllowed?: boolean
-  smokingAllowed?: boolean
-  amenityFeature?: Array<{
-    "@type": string
-    name: string
-  }>
-}
-
-export function generatePropertySchema(property: any): PropertySchema {
-  // Parse images if they're stored as JSON string
-  let images: string[] = []
-  try {
-    images = typeof property.images === 'string' 
-      ? JSON.parse(property.images) 
-      : property.images || []
-  } catch {
-    images = ['/images/properties/default-1.jpg']
-  }
-
-  // Parse amenities if they're stored as JSON string
-  let amenities: string[] = []
-  try {
-    amenities = typeof property.amenities === 'string' 
-      ? JSON.parse(property.amenities) 
-      : property.amenities || []
-  } catch {
-    amenities = []
-  }
-
-  const schema: PropertySchema = {
+/**
+ * Generar JSON-LD structured data para propiedades
+ */
+export function generatePropertyJsonLd(property: Property, baseUrl: string) {
+  const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "RealEstate",
-    name: property.title,
-    description: property.description,
-    address: {
+    "@type": "RealEstateProperty",
+    "name": property.title,
+    "description": property.description,
+    "url": `${baseUrl}/properties/${property.id}`,
+    "address": {
       "@type": "PostalAddress",
-      streetAddress: property.address,
-      addressLocality: property.city,
-      addressRegion: property.province || "Misiones",
-      addressCountry: "AR",
-      ...(property.postalCode && { postalCode: property.postalCode })
+      "addressLocality": property.city,
+      "addressRegion": property.province,
+      "addressCountry": property.country
     },
-    offers: {
-      "@type": "Offer",
-      price: property.price,
-      priceCurrency: "ARS",
-      availability: property.status === 'AVAILABLE' 
-        ? "https://schema.org/InStock" 
-        : "https://schema.org/OutOfStock",
-      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    },
-    image: images.map(img => 
-      img.startsWith('http') ? img : `https://www.misionesarrienda.com.ar${img}`
-    ),
-    floorSize: {
-      "@type": "QuantitativeValue",
-      value: property.area || 0,
-      unitCode: "MTK"
-    }
-  }
-
-  // Add optional fields
-  if (property.latitude && property.longitude) {
-    schema.geo = {
+    "geo": property.latitude && property.longitude ? {
       "@type": "GeoCoordinates",
-      latitude: property.latitude,
-      longitude: property.longitude
-    }
-  }
-
-  if (property.bedrooms) {
-    schema.numberOfRooms = property.bedrooms
-  }
-
-  if (property.bathrooms) {
-    schema.numberOfBathroomsTotal = property.bathrooms
-  }
-
-  // Add amenities as features
-  if (amenities.length > 0) {
-    schema.amenityFeature = amenities.map(amenity => ({
+      "latitude": property.latitude,
+      "longitude": property.longitude
+    } : undefined,
+    "floorSize": {
+      "@type": "QuantitativeValue",
+      "value": property.area,
+      "unitCode": "MTK"
+    },
+    "numberOfRooms": property.bedrooms,
+    "numberOfBathroomsTotal": property.bathrooms,
+    "petsAllowed": property.amenities.includes('pets'),
+    "smokingAllowed": property.amenities.includes('smoking'),
+    "offers": {
+      "@type": "Offer",
+      "price": property.price,
+      "priceCurrency": "ARS",
+      "availability": property.status === 'AVAILABLE' ? "InStock" : "OutOfStock",
+      "validFrom": property.createdAt.toISOString(),
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": property.price,
+        "priceCurrency": "ARS",
+        "unitText": "MONTH"
+      }
+    },
+    "amenityFeature": property.amenities.map(amenity => ({
       "@type": "LocationFeatureSpecification",
-      name: amenity
-    }))
+      "name": amenity
+    })),
+    "image": property.images?.map(img => ({
+      "@type": "ImageObject",
+      "url": img,
+      "caption": property.title
+    })) || [],
+    "datePosted": property.createdAt.toISOString(),
+    "dateModified": property.updatedAt.toISOString(),
+    "landlord": {
+      "@type": "Person",
+      "name": property.agent?.name || "Propietario"
+    }
   }
 
-  return schema
+  // Remover campos undefined
+  return JSON.parse(JSON.stringify(jsonLd))
 }
 
-export interface OrganizationSchema {
-  "@context": string
-  "@type": string
-  name: string
-  url: string
-  logo: string
-  description: string
-  address: {
-    "@type": string
-    addressLocality: string
-    addressRegion: string
-    addressCountry: string
-  }
-  contactPoint: {
-    "@type": string
-    telephone: string
-    contactType: string
-    availableLanguage: string
-  }
-  sameAs: string[]
-  foundingDate: string
-  areaServed: {
-    "@type": string
-    name: string
-  }
-}
-
-export function generateOrganizationSchema(): OrganizationSchema {
+/**
+ * Generar OpenGraph meta tags para propiedades
+ */
+export function generatePropertyOpenGraph(property: Property, baseUrl: string) {
+  const coverImage = property.images?.[0] || `${baseUrl}/placeholder-apartment-1.jpg`
+  
   return {
-    "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    name: "Misiones Arrienda",
-    url: "https://www.misionesarrienda.com.ar",
-    logo: "https://www.misionesarrienda.com.ar/logo.png",
-    description: "La plataforma líder de alquiler de propiedades en Misiones, Argentina. Encuentra casas, departamentos y locales comerciales en Posadas, Oberá, Puerto Iguazú y más ciudades.",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Posadas",
-      addressRegion: "Misiones",
-      addressCountry: "AR"
-    },
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+54-3764-123456",
-      contactType: "customer service",
-      availableLanguage: "Spanish"
-    },
-    sameAs: [
-      "https://www.facebook.com/misionesarrienda",
-      "https://www.instagram.com/misionesarrienda",
-      "https://twitter.com/misionesarrienda"
+    title: `${property.title} - ${property.city}`,
+    description: property.description?.substring(0, 160) || `Propiedad en ${property.city}, ${property.province}. ${property.bedrooms} dormitorios, ${property.bathrooms} baños.`,
+    url: `${baseUrl}/properties/${property.id}`,
+    siteName: 'Misiones Arrienda',
+    images: [
+      {
+        url: coverImage,
+        width: 1200,
+        height: 630,
+        alt: property.title,
+      }
     ],
-    foundingDate: "2024",
-    areaServed: {
-      "@type": "State",
-      name: "Misiones, Argentina"
+    locale: 'es_AR',
+    type: 'website',
+  }
+}
+
+/**
+ * Generar Twitter Card meta tags
+ */
+export function generatePropertyTwitterCard(property: Property, baseUrl: string) {
+  const coverImage = property.images?.[0] || `${baseUrl}/placeholder-apartment-1.jpg`
+  
+  return {
+    card: 'summary_large_image',
+    title: `${property.title} - ${property.city}`,
+    description: property.description?.substring(0, 200) || `Propiedad en ${property.city}. ${property.bedrooms} dormitorios, ${property.bathrooms} baños. $${property.price}/mes`,
+    image: coverImage,
+    site: '@MisionesArrienda'
+  }
+}
+
+/**
+ * Generar meta tags completos para una propiedad
+ */
+export function generatePropertyMetaTags(property: Property, baseUrl: string) {
+  const openGraph = generatePropertyOpenGraph(property, baseUrl)
+  const twitterCard = generatePropertyTwitterCard(property, baseUrl)
+  
+  return {
+    title: openGraph.title,
+    description: openGraph.description,
+    keywords: [
+      'alquiler',
+      'propiedad',
+      property.city,
+      property.province,
+      property.propertyType,
+      'Misiones',
+      'Argentina'
+    ].join(', '),
+    openGraph,
+    twitter: twitterCard,
+    robots: {
+      index: property.status === 'AVAILABLE',
+      follow: true,
+      googleBot: {
+        index: property.status === 'AVAILABLE',
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    alternates: {
+      canonical: `${baseUrl}/properties/${property.id}`,
     }
   }
 }
 
-export interface BreadcrumbSchema {
-  "@context": string
-  "@type": string
-  itemListElement: Array<{
-    "@type": string
-    position: number
-    name: string
-    item: string
-  }>
-}
-
-export function generateBreadcrumbSchema(items: Array<{ name: string; url: string }>): BreadcrumbSchema {
+/**
+ * Generar breadcrumb JSON-LD
+ */
+export function generateBreadcrumbJsonLd(items: Array<{ name: string; url: string }>) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: items.map((item, index) => ({
+    "itemListElement": items.map((item, index) => ({
       "@type": "ListItem",
-      position: index + 1,
-      name: item.name,
-      item: `https://www.misionesarrienda.com.ar${item.url}`
+      "position": index + 1,
+      "name": item.name,
+      "item": item.url
     }))
   }
 }
 
-export interface WebSiteSchema {
-  "@context": string
-  "@type": string
-  name: string
-  url: string
-  description: string
-  potentialAction: {
-    "@type": string
-    target: {
-      "@type": string
-      urlTemplate: string
-    }
-    "query-input": string
-  }
-  publisher: {
-    "@type": string
-    name: string
-  }
-}
-
-export function generateWebSiteSchema(): WebSiteSchema {
+/**
+ * Generar Organization JSON-LD para el sitio
+ */
+export function generateOrganizationJsonLd(baseUrl: string) {
   return {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "Misiones Arrienda",
-    url: "https://www.misionesarrienda.com.ar",
-    description: "Encuentra las mejores propiedades en alquiler en Misiones, Argentina",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: "https://www.misionesarrienda.com.ar/properties?search={search_term_string}"
-      },
-      "query-input": "required name=search_term_string"
+    "@type": "Organization",
+    "name": "Misiones Arrienda",
+    "url": baseUrl,
+    "logo": `${baseUrl}/logo.png`,
+    "description": "Plataforma de alquiler de propiedades en Misiones, Argentina",
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "Misiones",
+      "addressCountry": "AR"
     },
-    publisher: {
-      "@type": "Organization",
-      name: "Misiones Arrienda"
-    }
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer service",
+      "availableLanguage": "Spanish"
+    },
+    "sameAs": [
+      "https://facebook.com/misionesarrienda",
+      "https://instagram.com/misionesarrienda"
+    ]
   }
 }
 
-// Utility function to inject structured data into pages
-export function injectStructuredData(schema: any): string {
-  return `<script type="application/ld+json">${JSON.stringify(schema, null, 2)}</script>`
-}
-
-// City-specific schema generation
-export interface CityPageSchema {
-  "@context": string
-  "@type": string
-  name: string
-  description: string
-  containedInPlace: {
-    "@type": string
-    name: string
+/**
+ * Utility para insertar JSON-LD en el head
+ */
+export function createJsonLdScript(data: object) {
+  return {
+    __html: JSON.stringify(data)
   }
-  geo?: {
-    "@type": string
-    latitude: number
-    longitude: number
-  }
-}
-
-export function generateCityPageSchema(cityName: string, description: string, coordinates?: { lat: number; lng: number }): CityPageSchema {
-  const schema: CityPageSchema = {
-    "@context": "https://schema.org",
-    "@type": "City",
-    name: cityName,
-    description: description,
-    containedInPlace: {
-      "@type": "State",
-      name: "Misiones, Argentina"
-    }
-  }
-
-  if (coordinates) {
-    schema.geo = {
-      "@type": "GeoCoordinates",
-      latitude: coordinates.lat,
-      longitude: coordinates.lng
-    }
-  }
-
-  return schema
 }
