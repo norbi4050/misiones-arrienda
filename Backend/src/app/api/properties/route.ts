@@ -24,6 +24,9 @@ const mockProperties = [
     contact_phone: '+54 376 123456',
     contact_email: 'juan@example.com',
     status: 'AVAILABLE',
+    featured: true,
+    lat: -27.3676,
+    lng: -55.8961,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -47,6 +50,9 @@ const mockProperties = [
     contact_phone: '+54 3757 987654',
     contact_email: 'maria@example.com',
     status: 'AVAILABLE',
+    featured: false,
+    lat: -25.5947,
+    lng: -54.5734,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -70,6 +76,9 @@ const mockProperties = [
     contact_phone: '+54 3755 456789',
     contact_email: 'carlos@example.com',
     status: 'AVAILABLE',
+    featured: false,
+    lat: -27.4878,
+    lng: -55.1199,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
@@ -79,7 +88,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
-    // Parámetros de búsqueda mejorados
+    // Parámetros de búsqueda mejorados + BBOX
     const city = searchParams.get('city');
     const type = searchParams.get('type');
     const minPrice = searchParams.get('minPrice');
@@ -89,10 +98,26 @@ export async function GET(request: NextRequest) {
     const minArea = searchParams.get('minArea');
     const maxArea = searchParams.get('maxArea');
     const amenities = searchParams.get('amenities');
+    const featured = searchParams.get('featured');
+    const bbox = searchParams.get('bbox'); // formato: minLng,minLat,maxLng,maxLat
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
+
+    // Parsear BBOX si existe
+    let bboxCoords = null;
+    if (bbox) {
+      const coords = bbox.split(',').map(c => parseFloat(c));
+      if (coords.length === 4 && coords.every(c => !isNaN(c))) {
+        bboxCoords = {
+          minLng: coords[0],
+          minLat: coords[1], 
+          maxLng: coords[2],
+          maxLat: coords[3]
+        };
+      }
+    }
 
     // Intentar conectar con Supabase primero
     const supabase = createClient();
@@ -138,6 +163,19 @@ export async function GET(request: NextRequest) {
 
       if (maxArea) {
         query = query.lte('area', parseFloat(maxArea));
+      }
+
+      if (featured === 'true') {
+        query = query.eq('featured', true);
+      }
+
+      // Filtro por BBOX (coordenadas geográficas)
+      if (bboxCoords) {
+        query = query
+          .gte('lng', bboxCoords.minLng)
+          .lte('lng', bboxCoords.maxLng)
+          .gte('lat', bboxCoords.minLat)
+          .lte('lat', bboxCoords.maxLat);
       }
 
       // Ordenamiento
@@ -208,6 +246,20 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      if (featured === 'true') {
+        filteredProperties = filteredProperties.filter(p => p.featured === true);
+      }
+
+      // Filtro por BBOX para datos mock (usando coordenadas incluidas)
+      if (bboxCoords) {
+        filteredProperties = filteredProperties.filter(p => {
+          return p.lng >= bboxCoords.minLng && 
+                 p.lng <= bboxCoords.maxLng &&
+                 p.lat >= bboxCoords.minLat && 
+                 p.lat <= bboxCoords.maxLat;
+        });
+      }
+
       // Ordenamiento para datos mock
       filteredProperties.sort((a, b) => {
         const aValue = a[sortBy as keyof typeof a];
@@ -246,7 +298,9 @@ export async function GET(request: NextRequest) {
           bathrooms,
           minArea,
           maxArea,
-          amenities
+          amenities,
+          featured,
+          bbox: bboxCoords
         },
         sorting: {
           sortBy,
@@ -388,6 +442,19 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Función auxiliar para obtener coordenadas mock de ciudades de Misiones
+function getMockCoordinates(city: string): { lat: number; lng: number } | null {
+  const cityCoords: Record<string, { lat: number; lng: number }> = {
+    'Posadas': { lat: -27.3676, lng: -55.8961 },
+    'Puerto Iguazú': { lat: -25.5947, lng: -54.5734 },
+    'Oberá': { lat: -27.4878, lng: -55.1199 },
+    'Eldorado': { lat: -26.4009, lng: -54.6156 },
+    'Leandro N. Alem': { lat: -27.6011, lng: -55.3206 }
+  };
+  
+  return cityCoords[city] || null;
+}
+
 // Función auxiliar para validar parámetros de consulta
 function validateQueryParams(searchParams: URLSearchParams) {
   const errors = [];
@@ -410,6 +477,14 @@ function validateQueryParams(searchParams: URLSearchParams) {
   const maxPrice = searchParams.get('maxPrice');
   if (maxPrice && (isNaN(parseInt(maxPrice)) || parseInt(maxPrice) < 0)) {
     errors.push('MaxPrice must be a non-negative number');
+  }
+
+  const bbox = searchParams.get('bbox');
+  if (bbox) {
+    const coords = bbox.split(',').map(c => parseFloat(c));
+    if (coords.length !== 4 || coords.some(c => isNaN(c))) {
+      errors.push('BBOX must be in format: minLng,minLat,maxLng,maxLat');
+    }
   }
   
   return errors;
