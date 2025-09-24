@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { getPropertyById, mockProperties } from '@/lib/mock-data-clean';
+import { createClient } from '@/lib/supabase/server';
+import { getPropertyImages } from '@/lib/property-images';
 import { 
   generatePropertyMetaTags,
   generatePropertyJsonLd,
@@ -31,9 +32,68 @@ interface PropertyDetailPageProps {
   params: { id: string };
 }
 
+// Obtener propiedad desde API real
+async function getPropertyFromAPI(id: string) {
+  try {
+    const supabase = createClient();
+    
+    const { data: property, error } = await supabase
+      .from('properties')
+      .select(`
+        *,
+        agent:user_profiles!properties_user_id_fkey(
+          id,
+          full_name,
+          email,
+          phone,
+          photos
+        )
+      `)
+      .eq('id', id)
+      .eq('status', 'PUBLISHED')
+      .single();
+
+    if (error || !property) {
+      console.error('Error fetching property:', error);
+      return null;
+    }
+
+    return property;
+  } catch (error) {
+    console.error('Error in getPropertyFromAPI:', error);
+    return null;
+  }
+}
+
+// Obtener propiedades similares desde API
+async function getSimilarProperties(property: any) {
+  try {
+    const supabase = createClient();
+    
+    const { data: similar, error } = await supabase
+      .from('properties')
+      .select('id, title, price, currency, bedrooms, bathrooms, images, city')
+      .eq('city', property.city)
+      .eq('property_type', property.property_type)
+      .eq('status', 'PUBLISHED')
+      .neq('id', property.id)
+      .limit(3);
+
+    if (error) {
+      console.error('Error fetching similar properties:', error);
+      return [];
+    }
+
+    return similar || [];
+  } catch (error) {
+    console.error('Error in getSimilarProperties:', error);
+    return [];
+  }
+}
+
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PropertyDetailPageProps): Promise<Metadata> {
-  const property = getPropertyById(params.id);
+  const property = await getPropertyFromAPI(params.id);
 
   if (!property) {
     return {
@@ -42,34 +102,45 @@ export async function generateMetadata({ params }: PropertyDetailPageProps): Pro
     };
   }
 
-  // Usar el sistema completo de SEO
+  // Obtener imágenes reales del bucket
+  const fallbackImages = property.images ? JSON.parse(property.images) : [];
+  const realImages = await getPropertyImages({
+    propertyId: property.id,
+    userId: property.user_id,
+    fallbackImages,
+    maxImages: 5
+  });
+
+  // Usar el sistema completo de SEO con imágenes reales
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app';
-  const metaTags = generatePropertyMetaTags(property, baseUrl);
+  const propertyWithImages = { ...property, images: realImages };
+  const metaTags = generatePropertyMetaTags(propertyWithImages, baseUrl);
 
   return metaTags;
 }
 
-export default function PropertyDetailPage({ params }: PropertyDetailPageProps) {
-  const property = getPropertyById(params.id);
+export default async function PropertyDetailPage({ params }: PropertyDetailPageProps) {
+  const property = await getPropertyFromAPI(params.id);
 
   if (!property) {
     notFound();
   }
 
-  // Parse images from JSON string
-  const images = JSON.parse(property.images || '[]');
-  const amenities = JSON.parse(property.amenities || '[]');
-  const features = JSON.parse(property.features || '[]');
+  // Obtener imágenes reales del bucket
+  const fallbackImages = property.images ? JSON.parse(property.images) : [];
+  const realImages = await getPropertyImages({
+    propertyId: property.id,
+    userId: property.user_id,
+    fallbackImages,
+    maxImages: 10
+  });
+
+  // Parse amenities and features
+  const amenities = property.amenities ? JSON.parse(property.amenities) : [];
+  const features = property.features ? JSON.parse(property.features) : [];
 
   // Get similar properties
-  const similarProperties = mockProperties
-    .filter(prop => 
-      prop.id !== property.id &&
-      prop.city === property.city &&
-      prop.propertyType === property.propertyType &&
-      prop.status === 'AVAILABLE'
-    )
-    .slice(0, 3);
+  const similarProperties = await getSimilarProperties(property);
 
   const formatPrice = (price: number, currency: string) => {
     return `${currency} ${price.toLocaleString()}`;
@@ -131,14 +202,27 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
             {/* Image Carousel */}
             <div className="mb-8">
               <ImageCarousel
-                images={images.map((src: string, index: number) => ({
+                images={realImages.map((src: string, index: number) => ({
                   src,
                   alt: `${property.title} - Imagen ${index + 1}`
                 }))}
                 className="w-full"
-                showThumbnails={images.length > 1}
+                showThumbnails={realImages.length > 1}
                 enableZoom={true}
               />
+              
+              {/* Indicador de fuente de imágenes */}
+              {realImages.length > 0 && (
+                <div className="mt-2 text-xs text-gray-500">
+                  {realImages[0].includes('supabase.co') ? (
+                    <span className="text-green-600">✓ Imágenes verificadas</span>
+                  ) : realImages[0].includes('placeholder') ? (
+                    <span className="text-orange-600">⚠ Sin imágenes disponibles</span>
+                  ) : (
+                    <span className="text-blue-600">📁 Imágenes de archivo</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Property Info */}
@@ -165,10 +249,10 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
 
               <div className="flex items-center space-x-4 mb-6">
                 <Badge variant="secondary">
-                  {getPropertyTypeLabel(property.propertyType)}
+                  {getPropertyTypeLabel(property.property_type)}
                 </Badge>
-                <Badge variant={property.status === 'AVAILABLE' ? 'default' : 'secondary'}>
-                  {property.status === 'AVAILABLE' ? 'Disponible' : 'No disponible'}
+                <Badge variant={property.status === 'PUBLISHED' ? 'default' : 'secondary'}>
+                  {property.status === 'PUBLISHED' ? 'Disponible' : 'No disponible'}
                 </Badge>
                 {property.featured && (
                   <Badge variant="destructive">Destacada</Badge>
@@ -249,23 +333,23 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
 
               {/* Additional Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t">
-                {property.yearBuilt && (
+                {property.year_built && (
                   <div className="flex items-center">
                     <Calendar className="h-5 w-5 text-gray-400 mr-2" />
                     <span className="text-sm text-gray-600">
-                      Año de construcción: {property.yearBuilt}
+                      Año de construcción: {property.year_built}
                     </span>
                   </div>
                 )}
                 {property.floor && (
                   <div className="text-sm text-gray-600">
                     Piso: {property.floor}
-                    {property.totalFloors && ` de ${property.totalFloors}`}
+                    {property.total_floors && ` de ${property.total_floors}`}
                   </div>
                 )}
-                {property.lotArea && (
+                {property.lot_area && (
                   <div className="text-sm text-gray-600">
-                    Terreno: {property.lotArea} m²
+                    Terreno: {property.lot_area} m²
                   </div>
                 )}
               </div>
@@ -279,11 +363,11 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {formatPrice(property.price, property.currency)}
+                    {formatPrice(property.price, property.currency || 'ARS')}
                   </div>
-                  {property.oldPrice && (
+                  {property.old_price && (
                     <div className="text-lg text-gray-500 line-through">
-                      {formatPrice(property.oldPrice, property.currency)}
+                      {formatPrice(property.old_price, property.currency || 'ARS')}
                     </div>
                   )}
                   <div className="text-sm text-gray-600">por mes</div>
@@ -302,8 +386,13 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
 
                 <div className="mt-6 pt-6 border-t text-center">
                   <p className="text-sm text-gray-600">
-                    Publicado el {new Date(property.createdAt).toLocaleDateString('es-AR')}
+                    Publicado el {new Date(property.created_at).toLocaleDateString('es-AR')}
                   </p>
+                  {property.agent && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Por: {property.agent.full_name || 'Propietario'}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -316,8 +405,8 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                     Propiedades similares
                   </h3>
                   <div className="space-y-4">
-                    {similarProperties.map((similar) => {
-                      const similarImages = JSON.parse(similar.images || '[]');
+                    {similarProperties.map((similar: any) => {
+                      const similarImages = similar.images ? JSON.parse(similar.images) : [];
                       return (
                         <Link
                           key={similar.id}
@@ -327,7 +416,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                           <div className="flex space-x-3">
                             <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                               <Image
-                                src={similarImages[0] || '/images/placeholder-property.jpg'}
+                                src={similarImages[0] || '/placeholder-apartment-1.jpg'}
                                 alt={similar.title}
                                 fill
                                 className="object-cover group-hover:scale-105 transition-transform"
@@ -338,7 +427,7 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
                                 {similar.title}
                               </h4>
                               <p className="text-sm text-gray-600 mt-1">
-                                {formatPrice(similar.price, similar.currency)}
+                                {formatPrice(similar.price, similar.currency || 'ARS')}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
                                 {similar.bedrooms} dorm • {similar.bathrooms} baños
