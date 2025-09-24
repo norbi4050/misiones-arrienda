@@ -4,7 +4,7 @@ import { getProperties } from '@/lib/api'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://misionesarrienda.com.ar'
   
-  // Páginas estáticas principales
+  // Páginas estáticas principales (solo core, excluir desarrollo/debug)
   const staticPages = [
     {
       url: baseUrl,
@@ -12,6 +12,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily' as const,
       priority: 1,
     },
+    {
+      url: `${baseUrl}/properties`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/roommates`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/comunidad`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    // Páginas de ciudades
     {
       url: `${baseUrl}/posadas`,
       lastModified: new Date(),
@@ -36,6 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.9,
     },
+    // Páginas de autenticación
     {
       url: `${baseUrl}/login`,
       lastModified: new Date(),
@@ -48,6 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority: 0.5,
     },
+    // Páginas legales
     {
       url: `${baseUrl}/terms`,
       lastModified: new Date(),
@@ -69,7 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const response = await getProperties({ limit: 1000 }) // Obtener todas las propiedades
     
     propertyPages = response.properties.map((property) => ({
-      url: `${baseUrl}/property/${property.id}`,
+      url: `${baseUrl}/properties/${property.id}`,
       lastModified: new Date(property.updatedAt || property.createdAt || new Date()),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -78,21 +99,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error generating sitemap for properties:', error)
   }
 
-  // Páginas adicionales del sitio
-  const additionalPages = [
-    {
-      url: `${baseUrl}/profiles`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/dashboard`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.4,
-    },
-  ]
+  // EXCLUIR rutas de desarrollo/debug (alineado con robots.ts)
+  // NO incluir en sitemap:
+  // - /api/* (todas las APIs)
+  // - /dashboard/* (páginas privadas)
+  // - /admin/* (páginas de administración)
+  // - /test-simple*, /page-debug*, /page-simple*, /page-temp-fix*
+  // - /layout-debug*, /layout-minimal*, /layout-temp*
+  // - /comunidad/page-simple*, /comunidad/page-new*, /comunidad/page-enterprise*
+  // - /docs/evidencias/*, /__tests__/*, /scripts/*
 
-  return [...staticPages, ...propertyPages, ...additionalPages]
+  return [...staticPages, ...propertyPages]
 }
