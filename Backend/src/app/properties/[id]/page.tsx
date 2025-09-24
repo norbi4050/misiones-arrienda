@@ -113,8 +113,7 @@ export async function generateMetadata({ params }: PropertyDetailPageProps): Pro
 
   // Usar el sistema completo de SEO con imágenes reales
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app';
-  const propertyWithImages = { ...property, images: realImages };
-  const metaTags = generatePropertyMetaTags(propertyWithImages, baseUrl);
+  const metaTags = generatePropertyMetaTags(property, baseUrl, realImages);
 
   return metaTags;
 }
@@ -160,9 +159,9 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
     return types[type] || type;
   };
 
-  // Generar JSON-LD structured data
+  // Generar JSON-LD structured data con imágenes reales
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app';
-  const propertyJsonLd = generatePropertyJsonLd(property, baseUrl);
+  const propertyJsonLd = generatePropertyJsonLd(property, baseUrl, realImages);
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: 'Inicio', url: baseUrl },
     { name: 'Propiedades', url: `${baseUrl}/properties` },
