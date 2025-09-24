@@ -9,9 +9,11 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ConsentCheckbox } from '@/components/ui/ConsentCheckbox'
 import { ArrowLeft, Upload, X, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { logConsent, CURRENT_POLICY_VERSION } from '@/lib/consent/logConsent'
 
 interface ProfileFormData {
   role: 'BUSCO' | 'OFREZCO' | ''
@@ -61,6 +63,11 @@ export default function PublicarPerfilPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [newTag, setNewTag] = useState('')
   const router = useRouter()
+  
+  // Estado para consentimiento
+  const [checkedTerms, setCheckedTerms] = useState(false)
+  const [checkedPrivacy, setCheckedPrivacy] = useState(false)
+  const [consentError, setConsentError] = useState<string | null>(null)
 
   const handleInputChange = (field: keyof ProfileFormData, value: any) => {
     setFormData(prev => ({
@@ -139,6 +146,13 @@ export default function PublicarPerfilPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setConsentError(null)
+    
+    // Validar consentimiento
+    if (!checkedTerms || !checkedPrivacy) {
+      setConsentError("Debes aceptar los Términos y Condiciones y la Política de Privacidad para crear un perfil de comunidad")
+      return
+    }
     
     if (!validateForm()) {
       return
@@ -164,6 +178,22 @@ export default function PublicarPerfilPage() {
 
       if (response.ok) {
         const profile = await response.json()
+        
+        // Loguear consentimiento después de crear el perfil exitosamente
+        try {
+          await logConsent({
+            userId: profile.user_id || profile.userId,
+            policyVersion: CURRENT_POLICY_VERSION,
+            acceptedTerms: checkedTerms,
+            acceptedPrivacy: checkedPrivacy,
+            ip: undefined, // Se obtiene en el servidor
+            userAgent: navigator.userAgent
+          })
+        } catch (consentLogError) {
+          console.error('Error logging consent:', consentLogError)
+          // Continuar aunque falle el logging
+        }
+        
         router.push(`/comunidad/${profile.id}`)
       } else {
         const errorData = await response.json()
@@ -528,7 +558,7 @@ export default function PublicarPerfilPage() {
             <CardHeader>
               <CardTitle>Configuración</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="acceptsMessages"
@@ -539,6 +569,15 @@ export default function PublicarPerfilPage() {
                   Acepto recibir mensajes de otros usuarios
                 </Label>
               </div>
+              
+              {/* Consentimiento legal */}
+              <ConsentCheckbox
+                checkedTerms={checkedTerms}
+                checkedPrivacy={checkedPrivacy}
+                onChangeTerms={setCheckedTerms}
+                onChangePrivacy={setCheckedPrivacy}
+                error={consentError}
+              />
             </CardContent>
           </Card>
 
@@ -549,7 +588,7 @@ export default function PublicarPerfilPage() {
                 Cancelar
               </Button>
             </Link>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !checkedTerms || !checkedPrivacy}>
               {loading ? 'Creando perfil...' : 'Crear Perfil'}
             </Button>
           </div>

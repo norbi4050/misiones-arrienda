@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ImageUpload } from "@/components/ui/image-upload"
+import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox"
 import { MapPin, Upload, DollarSign, Home, Check, Loader2, CreditCard, Shield, Clock, Lock } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import { propertyFormSchema } from "@/lib/validations/property"
+import { logConsent, CURRENT_POLICY_VERSION, getClientIP, getUserAgent } from "@/lib/consent/logConsent"
 
 // Componente de pantalla de autenticación requerida
 function AuthRequiredScreen() {
@@ -64,6 +66,11 @@ export default function PublicarPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedPlan, setSelectedPlan] = useState<'basico' | 'destacado' | 'full'>('basico')
   const [isProcessing, setIsProcessing] = useState(false)
+  
+  // Estado para consentimiento
+  const [checkedTerms, setCheckedTerms] = useState(false)
+  const [checkedPrivacy, setCheckedPrivacy] = useState(false)
+  const [consentError, setConsentError] = useState<string | null>(null)
   
   const form = useForm({
     resolver: zodResolver(propertyFormSchema),
@@ -181,9 +188,34 @@ export default function PublicarPage() {
   }
 
   const onSubmit = async (data: any) => {
+    setConsentError(null)
+    
+    // Validar consentimiento
+    if (!checkedTerms || !checkedPrivacy) {
+      setConsentError("Debes aceptar los Términos y Condiciones y la Política de Privacidad para publicar una propiedad")
+      return
+    }
+    
     setIsProcessing(true)
     
     try {
+      // Loguear consentimiento antes de proceder
+      if (user?.id) {
+        try {
+          await logConsent({
+            userId: user.id,
+            policyVersion: CURRENT_POLICY_VERSION,
+            acceptedTerms: checkedTerms,
+            acceptedPrivacy: checkedPrivacy,
+            ip: undefined, // Se obtiene en el servidor
+            userAgent: navigator.userAgent
+          })
+        } catch (consentLogError) {
+          console.error('Error logging consent:', consentLogError)
+          // Continuar con la publicación aunque falle el logging
+        }
+      }
+      
       if (selectedPlan === 'basico') {
         // Plan gratuito - crear propiedad directamente
         const response = await fetch('/api/properties', {
@@ -647,6 +679,16 @@ export default function PublicarPage() {
                 </div>
               )}
 
+              {/* Consentimiento legal */}
+              <ConsentCheckbox
+                checkedTerms={checkedTerms}
+                checkedPrivacy={checkedPrivacy}
+                onChangeTerms={setCheckedTerms}
+                onChangePrivacy={setCheckedPrivacy}
+                error={consentError}
+                className="mt-6"
+              />
+
               <div className="flex justify-between mt-6">
                 <Button variant="outline" onClick={() => setCurrentStep(2)}>
                   Anterior
@@ -654,7 +696,7 @@ export default function PublicarPage() {
                 <Button 
                   onClick={handleSubmit(onSubmit)} 
                   className="bg-green-600 hover:bg-green-700"
-                  disabled={isProcessing}
+                  disabled={isProcessing || !checkedTerms || !checkedPrivacy}
                 >
                   {isProcessing ? (
                     <>
