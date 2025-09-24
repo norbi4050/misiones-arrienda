@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import AvatarUniversal from '@/components/ui/avatar-universal';
 
 interface User {
   id: string;
@@ -78,9 +79,11 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
         )}
       >
         {/* Avatar */}
-        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-          {initials}
-        </div>
+        <AvatarUniversal
+          userId={user.id}
+          size="sm"
+          fallbackText={displayName}
+        />
         
         {/* User Name (hidden on mobile) */}
         <span className="hidden md:block text-sm font-medium text-gray-700 max-w-24 truncate">
@@ -100,9 +103,11 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                {initials}
-              </div>
+              <AvatarUniversal
+                userId={user.id}
+                size="md"
+                fallbackText={displayName}
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {displayName}

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ProfileDropdown } from "@/components/ui/profile-dropdown"
 import { useAuth } from "@/hooks/useAuth"
+import AvatarUniversal from "@/components/ui/avatar-universal"
 
 const navigation = [
   { name: 'Inicio', href: '/' },
@@ -176,9 +177,11 @@ export function Navbar() {
                 {isAuthenticated && user ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 py-2">
-                      <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                        {user.name?.slice(0, 2).toUpperCase() || user.email?.slice(0, 2).toUpperCase() || 'U'}
-                      </div>
+                      <AvatarUniversal
+                        userId={user.id}
+                        size="sm"
+                        fallbackText={user.name || user.email}
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {user.name || user.email?.split('@')[0] || 'Usuario'}
