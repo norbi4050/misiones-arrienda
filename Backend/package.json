@@ -15,7 +15,9 @@
     "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "db:deploy": "prisma migrate deploy && prisma generate",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "snapshot": "node scripts/make-snapshot.mjs > scripts/snapshot.json",
+    "snapshot:diff": "node scripts/diff-snapshot.mjs --prev scripts/snapshot.json --out scripts/change-report.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
