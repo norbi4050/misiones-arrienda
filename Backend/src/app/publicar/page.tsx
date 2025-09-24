@@ -15,6 +15,7 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import { propertyFormSchema } from "@/lib/validations/property"
 import { logConsent, CURRENT_POLICY_VERSION, getClientIP, getUserAgent } from "@/lib/consent/logConsent"
+import { analytics } from "@/lib/analytics/track"
 
 // Componente de pantalla de autenticación requerida
 function AuthRequiredScreen() {
@@ -120,6 +121,13 @@ export default function PublicarPage() {
   if (!user) {
     return <AuthRequiredScreen />
   }
+
+  // Track start_publish cuando el usuario llega a la página
+  useEffect(() => {
+    if (user) {
+      analytics.startPublish()
+    }
+  }, [user])
 
   const plans = {
     basico: {
@@ -233,6 +241,11 @@ export default function PublicarPage() {
         })
 
         if (response.ok) {
+          const propertyData = await response.json()
+          
+          // Track complete_publish
+          analytics.completePublish(propertyData.id || 'unknown', selectedPlan)
+          
           toast.success('¡Propiedad publicada exitosamente!')
           reset()
           router.push('/dashboard')

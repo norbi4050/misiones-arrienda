@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Loader2, CreditCard, Clock, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { analytics } from '@/lib/analytics/track';
 
 interface FeaturePaymentButtonProps {
   propertyId: string;
@@ -42,6 +43,9 @@ export function FeaturePaymentButton({
       return;
     }
 
+    // Track feature click
+    analytics.featureClick(propertyId);
+
     setIsProcessing(true);
 
     try {
@@ -65,6 +69,10 @@ export function FeaturePaymentButton({
 
       if (data.success && data.initPoint) {
         console.log('✅ Preferencia creada, redirigiendo a MercadoPago');
+        
+        // Track feature preference created
+        analytics.featurePrefCreated(propertyId, 999);
+        
         toast.success('Redirigiendo a MercadoPago...');
         
         // Redirigir a MercadoPago

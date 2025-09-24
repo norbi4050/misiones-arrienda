@@ -1,6 +1,7 @@
 import { HeroSection } from '@/components/hero-section'
 import { PropertyGridServer } from '@/components/property-grid-server'
 import { fetchRealProperties } from '@/lib/api'
+import { PageTracker } from '@/components/analytics/page-tracker'
 import { Metadata } from 'next'
 
 // Configuración para páginas dinámicas con searchParams
@@ -64,6 +65,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <main className="min-h-screen">
+      <PageTracker eventName="visit_home" />
       <HeroSection />
       <section id="propiedades">
         <PropertyGridServer 

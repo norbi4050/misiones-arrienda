@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { PropertiesPageClient } from './properties-client'
+import { PageTracker } from '@/components/analytics/page-tracker'
 
 export const metadata: Metadata = {
   title: 'Propiedades en Alquiler y Venta - Misiones | MisionesArrienda',
@@ -35,15 +36,18 @@ export const metadata: Metadata = {
 
 export default function PropertiesPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando propiedades...</p>
+    <>
+      <PageTracker eventName="visit_properties" />
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando propiedades...</p>
+          </div>
         </div>
-      </div>
-    }>
-      <PropertiesPageClient />
-    </Suspense>
+      }>
+        <PropertiesPageClient />
+      </Suspense>
+    </>
   )
 }
