@@ -16,6 +16,7 @@ import {
 import ImageCarousel from '@/components/ui/ImageCarousel';
 import PropertyLocationMap from '@/components/ui/PropertyLocationMap';
 import { ConsentCheckbox } from '@/components/ui/ConsentCheckbox';
+import { FeaturePaymentButton } from '@/components/ui/feature-payment-button';
 import { 
   MapPin, 
   Bed, 
@@ -30,7 +31,8 @@ import {
   Share2,
   Send,
   User,
-  AlertTriangle
+  AlertTriangle,
+  Star
 } from 'lucide-react';
 
 interface PropertyDetailPageProps {
@@ -129,6 +131,11 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
   if (!property) {
     notFound();
   }
+
+  // Obtener usuario autenticado para verificar si es el dueño
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isOwner = user?.id === property.user_id;
 
   // Obtener imágenes reales del bucket
   const fallbackImages = property.images ? JSON.parse(property.images) : [];
@@ -484,6 +491,15 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                 </div>
               </CardContent>
             </Card>
+
+            {/* Feature Payment Button (solo para dueños) */}
+            <FeaturePaymentButton
+              propertyId={property.id}
+              isOwner={isOwner}
+              featured={property.featured || false}
+              featuredExpires={property.featured_expires}
+              className="mb-6"
+            />
 
             {/* Similar Properties */}
             {similarProperties.length > 0 && (
