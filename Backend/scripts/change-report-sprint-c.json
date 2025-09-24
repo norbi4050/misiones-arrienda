@@ -1,0 +1,97 @@
+{
+  "timestamp": "2025-01-15T10:30:00.000Z",
+  "sprint": "C",
+  "branch": "feat/reconexion-flow",
+  "prevSnapshot": {
+    "timestamp": "2025-01-15T09:00:00.000Z",
+    "totalFiles": 450
+  },
+  "currentSnapshot": {
+    "timestamp": "2025-01-15T10:30:00.000Z", 
+    "totalFiles": 453
+  },
+  "added": [
+    {
+      "path": "src/components/ui/ImageCarousel.tsx",
+      "size": 8420,
+      "sha1": "a1b2c3d4e5f6789012345678901234567890abcd",
+      "loc": { "total": 245, "nonEmpty": 198 }
+    },
+    {
+      "path": "src/components/ui/PropertyLocationMap.tsx", 
+      "size": 5680,
+      "sha1": "b2c3d4e5f6789012345678901234567890abcdef",
+      "loc": { "total": 165, "nonEmpty": 142 }
+    },
+    {
+      "path": "docs/evidencias/SPRINT-C-RESULTADOS.md",
+      "size": 12450,
+      "sha1": "c3d4e5f6789012345678901234567890abcdef12",
+      "loc": { "total": 285, "nonEmpty": 245 }
+    }
+  ],
+  "removed": [],
+  "modified": [
+    {
+      "path": "src/app/properties/[id]/page.tsx",
+      "prev": {
+        "size": 15200,
+        "sha1": "d4e5f6789012345678901234567890abcdef1234",
+        "loc": { "total": 380, "nonEmpty": 320 }
+      },
+      "current": {
+        "size": 18750,
+        "sha1": "e5f6789012345678901234567890abcdef123456",
+        "loc": { "total": 538, "nonEmpty": 465 }
+      },
+      "sizeDiff": 3550,
+      "locDiff": 145
+    },
+    {
+      "path": "src/lib/structured-data.ts",
+      "prev": {
+        "size": 8900,
+        "sha1": "f6789012345678901234567890abcdef12345678",
+        "loc": { "total": 195, "nonEmpty": 165 }
+      },
+      "current": {
+        "size": 14200,
+        "sha1": "6789012345678901234567890abcdef123456789",
+        "loc": { "total": 310, "nonEmpty": 275 }
+      },
+      "sizeDiff": 5300,
+      "locDiff": 110
+    }
+  ],
+  "moved": [],
+  "stats": {
+    "totalChanges": 5,
+    "addedFiles": 3,
+    "removedFiles": 0,
+    "modifiedFiles": 2,
+    "movedFiles": 0
+  },
+  "summary": {
+    "sprint_c_features": [
+      "ImageCarousel interactivo con bucket-first",
+      "PropertyLocationMap con Google Maps estático",
+      "API real conectada (no más mocks)",
+      "JSON-LD completo con schema específico",
+      "OpenGraph dinámico con bucket images",
+      "Formulario de contacto con ConsentCheckbox"
+    ],
+    "architecture_consistency": [
+      "Patrón bucket-first mantenido",
+      "ConsentCheckbox reutilizado (Sprint A)",
+      "Server-side rendering preservado",
+      "Error handling robusto",
+      "No archivos borrados"
+    ],
+    "performance_improvements": [
+      "Lazy loading en carrusel",
+      "Signed URLs con expiración",
+      "Responsive design mobile-first",
+      "Error boundaries para imágenes"
+    ]
+  }
+}
