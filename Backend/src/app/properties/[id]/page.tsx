@@ -7,6 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getPropertyById, mockProperties } from '@/lib/mock-data-clean';
 import { 
+  generatePropertyMetaTags,
+  generatePropertyJsonLd,
+  generateBreadcrumbJsonLd,
+  createJsonLdScript
+} from '@/lib/structured-data';
+import { 
   MapPin, 
   Bed, 
   Bath, 
@@ -35,25 +41,11 @@ export async function generateMetadata({ params }: PropertyDetailPageProps): Pro
     };
   }
 
-  const images = JSON.parse(property.images || '[]');
-  const firstImage = images[0] || '/images/placeholder-property.jpg';
+  // Usar el sistema completo de SEO
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app';
+  const metaTags = generatePropertyMetaTags(property, baseUrl);
 
-  return {
-    title: `${property.title} - ${property.city}, Misiones | Misiones Arrienda`,
-    description: `${property.description.substring(0, 160)}... Precio: ${property.currency} ${property.price.toLocaleString()}`,
-    openGraph: {
-      title: property.title,
-      description: property.description,
-      images: [firstImage],
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: property.title,
-      description: property.description,
-      images: [firstImage],
-    },
-  };
+  return metaTags;
 }
 
 export default function PropertyDetailPage({ params }: PropertyDetailPageProps) {
@@ -96,8 +88,28 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
     return types[type] || type;
   };
 
+  // Generar JSON-LD structured data
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app';
+  const propertyJsonLd = generatePropertyJsonLd(property, baseUrl);
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Inicio', url: baseUrl },
+    { name: 'Propiedades', url: `${baseUrl}/properties` },
+    { name: property.title, url: `${baseUrl}/properties/${property.id}` }
+  ]);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={createJsonLdScript(propertyJsonLd)}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={createJsonLdScript(breadcrumbJsonLd)}
+      />
+      
+      <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -363,5 +375,6 @@ export default function PropertyDetailPage({ params }: PropertyDetailPageProps) 
         </div>
       </div>
     </div>
+    </>
   );
 }

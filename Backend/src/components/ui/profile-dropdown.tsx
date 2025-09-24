@@ -118,7 +118,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           <div className="py-1">
             {/* Mi Perfil */}
             <Link
-              href="/profile"
+              href="/profile/inquilino"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >

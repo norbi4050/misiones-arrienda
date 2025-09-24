@@ -176,13 +176,38 @@ export default function InquilinoProfilePage({ userId }: InquilinoProfilePagePro
       })
 
       if (response.ok) {
+        const result = await response.json()
         toast.success("Perfil actualizado exitosamente")
         setIsEditing(false)
 
-        // Refrescar datos del usuario para sincronizar con la base de datos
+        // Revalidar datos para asegurar persistencia tras F5
         if (refreshUserProfile) {
           await refreshUserProfile()
         }
+
+        // Forzar refresh del router para invalidar cache
+        router.refresh()
+
+        // Recargar datos del perfil para confirmar persistencia
+        setTimeout(async () => {
+          try {
+            const revalidateResponse = await fetch('/api/users/profile', {
+              method: 'GET',
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+              }
+            })
+            
+            if (revalidateResponse.ok) {
+              const revalidatedData = await revalidateResponse.json()
+              console.log('✅ Datos revalidados tras guardado:', revalidatedData.profile.name)
+            }
+          } catch (revalidateError) {
+            console.warn('⚠️ Error revalidando datos:', revalidateError)
+          }
+        }, 500)
+
       } else {
         const errorData = await response.json()
         toast.error(errorData.error || "Error al actualizar el perfil")

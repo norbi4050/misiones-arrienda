@@ -1,32 +1,17 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { createServerClient } from "@supabase/ssr";
-import InquilinoProfilePage from "./InquilinoProfilePage";
+import InquilinoProfilePage from './InquilinoProfilePage'
+import { InquilinoAuthCTA } from '@/components/ui/auth-cta'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function Page() {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        },
-      },
-    }
-  );
+  // Soft-guard: verificar auth sin redirect agresivo
+  const supabase = createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Si no hay usuario, mostrar CTA en lugar de redirect
+  if (!user || error) {
+    return <InquilinoAuthCTA />
+  }
 
-  if (!user) redirect("/login");
-
-  return <InquilinoProfilePage userId={user.id} />;
+  // Si hay usuario, renderizar perfil
+  return <InquilinoProfilePage userId={user.id} />
 }

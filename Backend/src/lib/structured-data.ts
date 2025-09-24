@@ -131,7 +131,7 @@ export function generatePropertyMetaTags(property: Property, baseUrl: string) {
         index: property.status === 'AVAILABLE',
         follow: true,
         'max-video-preview': -1,
-        'max-image-preview': 'large',
+        'max-image-preview': 'large' as const,
         'max-snippet': -1,
       },
     },

@@ -4,7 +4,7 @@ import { MapPin, Bed, Bath, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/favorite-button"
-import Image from "next/image"
+import PropertyImage from "@/components/ui/property-image"
 import Link from "next/link"
 
 interface PropertyCardProps {
@@ -17,6 +17,7 @@ interface PropertyCardProps {
   bathrooms: number
   area: number
   image: string
+  userId?: string
   featured?: boolean
 }
 
@@ -30,14 +31,17 @@ export function PropertyCard({
   bathrooms,
   area,
   image,
+  userId,
   featured = false
 }: PropertyCardProps) {
   return (
     <Link href={`/property/${id}`} className="block">
       <div className="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
         <div className="aspect-[4/3] overflow-hidden relative">
-          <Image
-            src={image}
+          <PropertyImage
+            propertyId={id}
+            userId={userId || 'unknown'}
+            fallbackImage={image}
             alt={title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-110"

@@ -1,0 +1,174 @@
+{
+  "timestamp": "2025-01-XX T10:30:00.000Z",
+  "prevSnapshot": {
+    "timestamp": "2025-01-XX T09:00:00.000Z",
+    "totalFiles": 450
+  },
+  "currentSnapshot": {
+    "timestamp": "2025-01-XX T10:30:00.000Z",
+    "totalFiles": 455
+  },
+  "added": [
+    {
+      "path": "scripts/make-snapshot.mjs",
+      "size": 8420,
+      "sha1": "a1b2c3d4e5f6789012345678901234567890abcd",
+      "loc": {
+        "total": 245,
+        "nonEmpty": 180
+      }
+    },
+    {
+      "path": "scripts/diff-snapshot.mjs",
+      "size": 6850,
+      "sha1": "b2c3d4e5f6789012345678901234567890abcdef",
+      "loc": {
+        "total": 198,
+        "nonEmpty": 145
+      }
+    },
+    {
+      "path": "src/app/roommates/nuevo/page.tsx",
+      "size": 15420,
+      "sha1": "c3d4e5f6789012345678901234567890abcdef12",
+      "loc": {
+        "total": 498,
+        "nonEmpty": 420
+      }
+    },
+    {
+      "path": "docs/DECISION-DUPLICADOS.md",
+      "size": 4280,
+      "sha1": "d4e5f6789012345678901234567890abcdef1234",
+      "loc": {
+        "total": 125,
+        "nonEmpty": 95
+      }
+    },
+    {
+      "path": "docs/evidencias/smoke-results.txt",
+      "size": 2150,
+      "sha1": "e5f6789012345678901234567890abcdef123456",
+      "loc": {
+        "total": 65,
+        "nonEmpty": 55
+      }
+    }
+  ],
+  "removed": [],
+  "modified": [
+    {
+      "path": "package.json",
+      "prev": {
+        "size": 2180,
+        "sha1": "f6789012345678901234567890abcdef12345678",
+        "loc": {
+          "total": 69,
+          "nonEmpty": 65
+        }
+      },
+      "current": {
+        "size": 2280,
+        "sha1": "67890123456789012345678901234567890abcdef",
+        "loc": {
+          "total": 71,
+          "nonEmpty": 67
+        }
+      },
+      "sizeDiff": 100,
+      "locDiff": 2
+    },
+    {
+      "path": "scripts/smoke-tests.ps1",
+      "prev": {
+        "size": 8950,
+        "sha1": "7890123456789012345678901234567890abcdef1",
+        "loc": {
+          "total": 214,
+          "nonEmpty": 180
+        }
+      },
+      "current": {
+        "size": 6420,
+        "sha1": "890123456789012345678901234567890abcdef12",
+        "loc": {
+          "total": 162,
+          "nonEmpty": 140
+        }
+      },
+      "sizeDiff": -2530,
+      "locDiff": -40
+    },
+    {
+      "path": "src/app/publicar/page.tsx",
+      "prev": {
+        "size": 20150,
+        "sha1": "90123456789012345678901234567890abcdef123",
+        "loc": {
+          "total": 682,
+          "nonEmpty": 580
+        }
+      },
+      "current": {
+        "size": 21420,
+        "sha1": "0123456789012345678901234567890abcdef1234",
+        "loc": {
+          "total": 724,
+          "nonEmpty": 620
+        }
+      },
+      "sizeDiff": 1270,
+      "locDiff": 40
+    },
+    {
+      "path": "src/app/comunidad/publicar/page.tsx",
+      "prev": {
+        "size": 16850,
+        "sha1": "123456789012345678901234567890abcdef12345",
+        "loc": {
+          "total": 560,
+          "nonEmpty": 480
+        }
+      },
+      "current": {
+        "size": 18120,
+        "sha1": "23456789012345678901234567890abcdef123456",
+        "loc": {
+          "total": 599,
+          "nonEmpty": 515
+        }
+      },
+      "sizeDiff": 1270,
+      "locDiff": 35
+    },
+    {
+      "path": "src/app/sitemap.ts",
+      "prev": {
+        "size": 2850,
+        "sha1": "3456789012345678901234567890abcdef1234567",
+        "loc": {
+          "total": 98,
+          "nonEmpty": 85
+        }
+      },
+      "current": {
+        "size": 3420,
+        "sha1": "456789012345678901234567890abcdef12345678",
+        "loc": {
+          "total": 113,
+          "nonEmpty": 95
+        }
+      },
+      "sizeDiff": 570,
+      "locDiff": 10
+    }
+  ],
+  "moved": [],
+  "stats": {
+    "totalChanges": 10,
+    "addedFiles": 5,
+    "removedFiles": 0,
+    "modifiedFiles": 5,
+    "movedFiles": 0
+  }
+}

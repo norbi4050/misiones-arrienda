@@ -63,9 +63,9 @@ export async function middleware(req: NextRequest) {
 
   if (isProtectedRoute) {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error || !session) {
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
         // Redirigir a login si no está autenticado
         const redirectUrl = new URL('/login', req.url);
         redirectUrl.searchParams.set('redirect', req.nextUrl.pathname);

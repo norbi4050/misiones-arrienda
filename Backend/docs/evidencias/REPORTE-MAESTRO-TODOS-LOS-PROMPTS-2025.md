@@ -130,6 +130,37 @@ d834f90 - docs: add final report and evidence documentation
 
 ---
 
+### PROMPT #4: FALLBACK IMÁGENES DE PROPIEDADES (BUCKET PRIVADO)
+**Fecha:** 2025-01-03  
+**Status:** 🔄 EN PROGRESO  
+**Rama:** `chore/reconexion-moderna-sept-2025` (continuando)
+
+#### Objetivo:
+Priorizar bucket `property-images/<userId>/<propertyId>/*` con signed URLs y usar `property.images` como fallback:
+- En listado y detalle, intentar primero signed URLs del bucket; si vacío, usar property.images
+- Mantener placeholder y deduplicación actual (no refactors)
+- Validar next.config.js -> images.remotePatterns incluye *.supabase.co
+
+#### Archivos a Modificar:
+```
+next.config.js (validar remotePatterns)
+src/components/property-card.tsx (listado)
+src/app/properties/[id]/page.tsx (detalle)
+src/lib/signed-urls.ts (verificar bucket-first logic)
+```
+
+#### Implementaciones Planeadas:
+- [ ] Verificar next.config.js remotePatterns
+- [ ] Implementar bucket-first fallback en property-card
+- [ ] Implementar bucket-first fallback en property detail
+- [ ] Testing con Network tab mostrando signed URLs
+- [ ] Evidencias visuales de bucket vs property.images
+
+#### Status Actual:
+🔄 Iniciando análisis de archivos existentes...
+
+---
+
 ## 🔄 TEMPLATE PARA PRÓXIMOS PROMPTS
 
 ### PROMPT #[NÚMERO]: [TÍTULO]

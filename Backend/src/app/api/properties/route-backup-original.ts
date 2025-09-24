@@ -1,4 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+// DEPRECATED: ver docs/DECISION-DUPLICADOS.md
+// Este archivo es una versión legacy mantenida por compatibilidad
+// Usar en su lugar: src/app/api/properties/route.ts
+
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server';
 import { propertySchema } from '@/lib/validations/property';
 

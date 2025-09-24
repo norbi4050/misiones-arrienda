@@ -54,7 +54,7 @@ export default function Thread({
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/comunidad/messages/${conversationId}`)
+      const response = await fetch(`/api/messages/${conversationId}`)
 
       if (!response.ok) {
         throw new Error('Error al cargar mensajes')
@@ -116,7 +116,7 @@ export default function Thread({
     if (!conversationId || !user || !content.trim()) return
 
     try {
-      const response = await fetch(`/api/comunidad/messages/${conversationId}`, {
+      const response = await fetch(`/api/messages/${conversationId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

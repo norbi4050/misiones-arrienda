@@ -8,6 +8,7 @@ import WhatsAppButton from '@/components/whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/components/auth-provider'
+import { MessagesProvider } from '@/contexts/MessagesContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -52,72 +53,74 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Navbar />
-            {children}
+          <MessagesProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <Navbar />
+              {children}
 
-            {/* WhatsApp Button Global - Siempre visible */}
-            <WhatsAppButton type="fixed" />
+              {/* WhatsApp Button Global - Siempre visible */}
+              <WhatsAppButton type="fixed" />
 
-            {/* AI Chatbot */}
-            <AIChatbot />
+              {/* AI Chatbot */}
+              <AIChatbot />
 
-            {/* Build Badge para debugging */}
-            <BuildBadge />
+              {/* Build Badge para debugging */}
+              <BuildBadge />
 
-            {/* Toast Notifications Mejoradas */}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                  fontSize: '14px',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  maxWidth: '400px',
-                },
-                success: {
-                  duration: 3000,
+              {/* Toast Notifications Mejoradas */}
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
                   style: {
-                    background: '#10b981',
+                    background: '#363636',
                     color: '#fff',
+                    fontSize: '14px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    maxWidth: '400px',
                   },
-                  iconTheme: {
-                    primary: '#fff',
-                    secondary: '#10b981',
+                  success: {
+                    duration: 3000,
+                    style: {
+                      background: '#10b981',
+                      color: '#fff',
+                    },
+                    iconTheme: {
+                      primary: '#fff',
+                      secondary: '#10b981',
+                    },
                   },
-                },
-                error: {
-                  duration: 5000,
-                  style: {
-                    background: '#ef4444',
-                    color: '#fff',
+                  error: {
+                    duration: 5000,
+                    style: {
+                      background: '#ef4444',
+                      color: '#fff',
+                    },
+                    iconTheme: {
+                      primary: '#fff',
+                      secondary: '#ef4444',
+                    },
                   },
-                  iconTheme: {
-                    primary: '#fff',
-                    secondary: '#ef4444',
+                  loading: {
+                    style: {
+                      background: '#3b82f6',
+                      color: '#fff',
+                    },
+                    iconTheme: {
+                      primary: '#fff',
+                      secondary: '#3b82f6',
+                    },
                   },
-                },
-                loading: {
-                  style: {
-                    background: '#3b82f6',
-                    color: '#fff',
-                  },
-                  iconTheme: {
-                    primary: '#fff',
-                    secondary: '#3b82f6',
-                  },
-                },
-              }}
-            />
-          </ThemeProvider>
+                }}
+              />
+            </ThemeProvider>
+          </MessagesProvider>
         </AuthProvider>
       </body>
     </html>
