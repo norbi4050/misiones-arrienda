@@ -137,10 +137,27 @@ async function processRetryQueue(): Promise<void> {
 }
 
 /**
+ * Verificar si el tracking está habilitado
+ */
+function isTrackingEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  // En desarrollo, siempre trackear para testing
+  if (process.env.NODE_ENV === 'development') return true;
+  
+  // En producción, verificar consentimiento del usuario
+  const consent = localStorage.getItem('analytics-consent');
+  return consent === 'true';
+}
+
+/**
  * Función principal de tracking
  */
 export async function track(eventName: string, payload?: Record<string, any>): Promise<void> {
   if (typeof window === 'undefined') return;
+  
+  // Verificar consentimiento antes de trackear
+  if (!isTrackingEnabled()) return;
   
   // Evitar eventos duplicados en corto tiempo
   const cacheKey = `${eventName}-${JSON.stringify(payload || {})}`;
