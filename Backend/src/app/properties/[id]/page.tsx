@@ -14,6 +14,8 @@ import {
   createJsonLdScript
 } from '@/lib/structured-data';
 import ImageCarousel from '@/components/ui/ImageCarousel';
+import PropertyLocationMap from '@/components/ui/PropertyLocationMap';
+import { ConsentCheckbox } from '@/components/ui/ConsentCheckbox';
 import { 
   MapPin, 
   Bed, 
@@ -25,7 +27,10 @@ import {
   Mail,
   ArrowLeft,
   Heart,
-  Share2
+  Share2,
+  Send,
+  User,
+  AlertTriangle
 } from 'lucide-react';
 
 interface PropertyDetailPageProps {
@@ -351,6 +356,90 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                     Terreno: {property.lot_area} m²
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Location Map */}
+            <div className="mb-8">
+              <PropertyLocationMap
+                property={{
+                  title: property.title,
+                  address: property.address,
+                  city: property.city,
+                  latitude: property.latitude,
+                  longitude: property.longitude,
+                  price: property.price,
+                  currency: property.currency || 'ARS'
+                }}
+                height="350px"
+                className="w-full"
+              />
+            </div>
+
+            {/* Contact Form */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Contactar al anunciante
+              </h2>
+              
+              {/* Agent Info */}
+              {property.agent && (
+                <div className="flex items-center space-x-3 mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      {property.agent.full_name || 'Propietario'}
+                    </h3>
+                    <p className="text-sm text-gray-600">Anunciante</p>
+                    {/* Advertencia para usuarios nuevos */}
+                    <div className="flex items-center mt-1">
+                      <AlertTriangle className="h-3 w-3 text-orange-500 mr-1" />
+                      <span className="text-xs text-orange-600">
+                        Usuario nuevo - Verificar referencias
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Form */}
+              <form className="space-y-4">
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                    Mensaje
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={`Hola, me interesa esta propiedad en ${property.city}. ¿Podríamos coordinar una visita?`}
+                    defaultValue={`Hola, me interesa esta propiedad en ${property.city}. ¿Podríamos coordinar una visita?`}
+                  />
+                </div>
+
+                {/* Consent Checkboxes */}
+                <ConsentCheckbox
+                  checkedTerms={false}
+                  checkedPrivacy={false}
+                  onChangeTerms={() => {}}
+                  onChangePrivacy={() => {}}
+                  className="my-4"
+                />
+
+                <Button type="submit" className="w-full" size="lg">
+                  <Send className="h-4 w-4 mr-2" />
+                  Enviar consulta
+                </Button>
+              </form>
+
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>💡 Tip:</strong> Sé específico en tu consulta. Menciona fechas de interés, 
+                  presupuesto y cualquier pregunta particular sobre la propiedad.
+                </p>
               </div>
             </div>
           </div>
