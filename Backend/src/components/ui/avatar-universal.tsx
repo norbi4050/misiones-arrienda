@@ -55,12 +55,31 @@ export default function AvatarUniversal({
       setError(null)
 
       const response = await fetch(`/api/users/avatar?userId=${targetUserId}`)
+      
+      // Manejar 404 o NO_AVATAR sin loggear error
+      if (response.status === 404) {
+        setAvatarUrl(null)
+        setLoading(false)
+        return
+      }
+
       const data = await response.json()
+
+      // Manejar NO_AVATAR específicamente
+      if (data.error === 'NO_AVATAR') {
+        setAvatarUrl(null)
+        setLoading(false)
+        return
+      }
 
       if (response.ok && data.success) {
         setAvatarUrl(data.avatar_url)
       } else {
-        setError(data.error || 'Error al cargar avatar')
+        // Solo loggear errores reales, no NO_AVATAR
+        if (data.error !== 'NO_AVATAR') {
+          console.error('Error loading avatar:', data.error)
+          setError(data.error || 'Error al cargar avatar')
+        }
         setAvatarUrl(null)
       }
     } catch (err) {
@@ -209,11 +228,30 @@ export function useAvatar(userId?: string) {
 
     try {
       const response = await fetch(`/api/users/avatar?userId=${userId}`)
+      
+      // Manejar 404 o NO_AVATAR sin loggear error
+      if (response.status === 404) {
+        setAvatarUrl(null)
+        setLoading(false)
+        return
+      }
+
       const data = await response.json()
+
+      // Manejar NO_AVATAR específicamente
+      if (data.error === 'NO_AVATAR') {
+        setAvatarUrl(null)
+        setLoading(false)
+        return
+      }
 
       if (response.ok && data.success) {
         setAvatarUrl(data.avatar_url)
       } else {
+        // Solo loggear errores reales, no NO_AVATAR
+        if (data.error !== 'NO_AVATAR') {
+          console.error('Error loading avatar:', data.error)
+        }
         setAvatarUrl(null)
       }
     } catch (err) {
