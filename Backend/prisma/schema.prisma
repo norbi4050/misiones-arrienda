@@ -431,15 +431,28 @@ model PaymentNotification {
   @@index([createdAt])
 }
 
+// Enums para el módulo Comunidad - Usando string union para flexibilidad
+// Los valores válidos se definen en src/domain/user/roles.ts
+
+enum PetPref {
+=======
+
+enum PetPref {
+=======
 // =============================================================================
 // MODELOS PARA MÓDULO COMUNIDAD (ESTILO FLATMATES)
 // =============================================================================
 
-// Enums para el módulo Comunidad
-enum CommunityRole {
-  BUSCO     // Busco habitación/compañeros
-  OFREZCO   // Ofrezco habitación/casa
-}
+// Enums para el módulo Comunidad - Usando string union para flexibilidad
+// Los valores válidos se definen en src/domain/user/roles.ts
+
+enum PetPref {
+=======
+// Enums para el módulo Comunidad - Usando string union para flexibilidad
+// Los valores válidos se definen en src/domain/user/roles.ts
+
+enum PetPref {
+=======
 
 enum PetPref {
   SI_PET        // Acepta mascotas
@@ -475,7 +488,7 @@ model UserProfile {
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Información básica del perfil
-  role                  CommunityRole
+  role                  String   @default("BUSCO") // Valores válidos: BUSCO, OFREZCO, TENANT, OWNER, AGENCY
   city                  String
   neighborhood          String?
   budgetMin             Int      // Presupuesto mínimo en ARS

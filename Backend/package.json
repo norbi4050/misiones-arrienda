@@ -20,7 +20,8 @@
     "snapshot:diff": "node scripts/diff-snapshot.mjs --prev scripts/snapshot.json --out scripts/change-report.json",
     "smoke:analytics": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests-analytics.ps1",
     "smoke:win": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests.ps1",
-    "smoke:sprint-d": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests-sprint-d.ps1"
+    "smoke:sprint-d": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests-sprint-d.ps1",
+    "test:avatar": "powershell -ExecutionPolicy Bypass -File scripts/test-avatar-flow.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

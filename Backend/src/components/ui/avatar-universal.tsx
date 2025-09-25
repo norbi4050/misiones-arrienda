@@ -59,9 +59,11 @@ export default function AvatarUniversal({
       if (response.ok) {
         const data = await response.json()
         
-        // Nueva API siempre devuelve 200 con avatarUrl: null si no hay avatar
-        if (data.avatarUrl) {
-          setAvatarUrl(data.avatarUrl)
+        // Nueva API devuelve { url, v } o { avatarUrl, ... } (backward compatibility)
+        const avatarUrl = data.url || data.avatarUrl
+        
+        if (avatarUrl) {
+          setAvatarUrl(avatarUrl)
         } else {
           // Sin avatar, pero no es error
           setAvatarUrl(null)
@@ -222,9 +224,11 @@ export function useAvatar(userId?: string) {
       if (response.ok) {
         const data = await response.json()
         
-        // Nueva API siempre devuelve 200 con avatarUrl: null si no hay avatar
-        if (data.avatarUrl) {
-          setAvatarUrl(data.avatarUrl)
+        // Nueva API devuelve { url, v } o { avatarUrl, ... } (backward compatibility)
+        const avatarUrl = data.url || data.avatarUrl
+        
+        if (avatarUrl) {
+          setAvatarUrl(avatarUrl)
         } else {
           // Sin avatar, pero no es error
           setAvatarUrl(null)

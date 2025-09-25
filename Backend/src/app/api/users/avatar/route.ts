@@ -5,6 +5,11 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
+// Helper para generar timestamp epoch
+function getTimestampEpoch(): number {
+  return Math.floor(Date.now() / 1000)
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
@@ -57,15 +62,16 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Retornar avatar con cache-busting
-    const avatarUrl = `${profile.avatar_url}?v=${profile.updated_at}`
+    // Retornar avatar con cache-busting usando epoch
+    const updatedAtEpoch = profile.updated_at ? Math.floor(new Date(profile.updated_at).getTime() / 1000) : getTimestampEpoch()
+    const avatarUrl = `${profile.avatar_url}?v=${updatedAtEpoch}`
 
     return NextResponse.json({
-      avatarUrl: avatarUrl,
+      url: avatarUrl,
+      v: updatedAtEpoch,
       source: 'supabase',
       user_id: userId,
-      full_name: profile.full_name,
-      updated_at: profile.updated_at
+      full_name: profile.full_name
     }, {
       status: 200,
       headers: {
@@ -90,10 +96,55 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = authHeader.replace('Bearer ', '')
-    const { avatar_url } = await request.json()
+    
+    // Verificar si es upload de archivo o URL directa
+    const contentType = request.headers.get('content-type')
+    let avatarUrl: string
 
-    if (!avatar_url) {
-      return NextResponse.json({ error: 'URL de avatar requerida' }, { status: 400 })
+    if (contentType?.includes('multipart/form-data')) {
+      // Upload de archivo al bucket avatars/<userId>/
+      const formData = await request.formData()
+      const file = formData.get('file') as File
+      
+      if (!file) {
+        return NextResponse.json({ error: 'Archivo requerido' }, { status: 400 })
+      }
+
+      // Generar nombre único para el archivo
+      const timestamp = Date.now()
+      const fileExt = file.name.split('.').pop()
+      const fileName = `avatar-${timestamp}.${fileExt}`
+      const filePath = `avatars/${userId}/${fileName}`
+
+      // Subir archivo a Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) {
+        console.error('Error uploading to storage:', uploadError)
+        return NextResponse.json({ error: 'Error al subir archivo' }, { status: 500 })
+      }
+
+      // Obtener URL pública
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      avatarUrl = publicUrlData.publicUrl
+
+    } else {
+      // URL directa desde JSON
+      const { avatar_url } = await request.json()
+      
+      if (!avatar_url) {
+        return NextResponse.json({ error: 'URL de avatar requerida' }, { status: 400 })
+      }
+      
+      avatarUrl = avatar_url
     }
 
     // Obtener perfil actual
@@ -110,14 +161,15 @@ export async function POST(request: NextRequest) {
 
     // Actualizar primera posición del array photos con nuevo avatar
     const updatedPhotos = currentProfile?.photos || []
-    updatedPhotos[0] = avatar_url
+    updatedPhotos[0] = avatarUrl
 
     // Actualizar perfil con nuevo avatar y timestamp
+    const now = new Date()
     const { data: updatedProfile, error: updateError } = await supabase
       .from('user_profiles')
       .update({ 
         photos: updatedPhotos,
-        updated_at: new Date().toISOString()
+        updated_at: now.toISOString()
       })
       .eq('id', userId)
       .select('id, photos, updated_at')
@@ -128,13 +180,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Error al actualizar avatar' }, { status: 500 })
     }
 
-    // Retornar avatar con cache-busting
-    const newAvatarUrl = `${avatar_url}?v=${updatedProfile.updated_at}`
+    // Retornar con formato optimizado
+    const updatedAtEpoch = Math.floor(now.getTime() / 1000)
 
     return NextResponse.json({ 
-      avatar_url: newAvatarUrl,
+      url: `${avatarUrl}?v=${updatedAtEpoch}`,
+      v: updatedAtEpoch,
       user_id: userId,
-      cache_version: updatedProfile.updated_at,
       success: true 
     })
 

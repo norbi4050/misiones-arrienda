@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { COMMUNITY_ROLES, type CommunityRole } from '@/domain/user/roles'
 
 // Schema de validación para crear/actualizar perfil
 const profileSchema = z.object({
-  role: z.enum(['BUSCO', 'OFREZCO']),
+  role: z.enum(COMMUNITY_ROLES),
   city: z.string().min(1),
   neighborhood: z.string().optional(),
   budgetMin: z.number().min(0),
@@ -21,7 +22,7 @@ const profileSchema = z.object({
 
 // Schema para filtros de búsqueda
 const searchSchema = z.object({
-  role: z.enum(['BUSCO', 'OFREZCO']).optional(),
+  role: z.enum(COMMUNITY_ROLES).optional(),
   city: z.string().optional(),
   budgetMin: z.number().optional(),
   budgetMax: z.number().optional(),
