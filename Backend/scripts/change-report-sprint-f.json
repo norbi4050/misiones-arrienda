@@ -1,0 +1,37 @@
+{
+  "sprint": "SPRINT-F-MAPA-BBOX",
+  "fecha": "2025-01-24",
+  "descripcion": "Implementación de API con BBOX y componente PropertiesMap",
+  "estado": "60% completado",
+  "added": [
+    "src/components/ui/PropertiesMap.tsx",
+    "sql-audit/CREATE-INDEXES-GEO.sql",
+    "docs/ENDPOINTS-PROPERTIES-BBOX.md",
+    "docs/evidencias/SPRINT-F-MAPA-BBOX-RESULTADOS.md"
+  ],
+  "removed": [],
+  "modified": [
+    "src/app/api/properties/route.ts",
+    "package.json"
+  ],
+  "moved": [],
+  "notas": [
+    "API /api/properties extendida con soporte BBOX y filtros geo",
+    "5 índices geoespaciales optimizados para consultas BBOX",
+    "Componente PropertiesMap con Leaflet y clustering",
+    "Documentación completa del endpoint geoespacial",
+    "Pendiente: sincronización bidireccional mapa ↔ filtros ↔ URL"
+  ],
+  "proximos_pasos": [
+    "TAREA 3: Sincronización bidireccional mapa ↔ filtros ↔ URL",
+    "TAREA 4: Performance (carga incremental, cache, accesibilidad)",
+    "TAREA 5: Tests, analytics y evidencias finales"
+  ],
+  "metricas": {
+    "archivos_modificados": 4,
+    "lineas_codigo_agregadas": 450,
+    "nuevos_parametros_api": 2,
+    "indices_optimizados": 5,
+    "componentes_react": 1
+  }
+}
