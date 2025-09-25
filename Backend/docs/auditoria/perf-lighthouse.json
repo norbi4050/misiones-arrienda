@@ -1,0 +1,16 @@
+{
+  "timestamp": "PENDING_RUN",
+  "baseUrl": "http://localhost:3000",
+  "summary": {
+    "total": 0,
+    "successful": 0,
+    "failed": 0,
+    "averages": {
+      "performance": null,
+      "accessibility": null,
+      "seo": null
+    }
+  },
+  "results": [],
+  "notes": "Run scripts/lighthouse-win.ps1 to generate real Lighthouse results and overwrite this placeholder."
+}

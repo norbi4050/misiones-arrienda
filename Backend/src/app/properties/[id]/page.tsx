@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/server';
-import { getPropertyImages } from '@/lib/property-images';
+import { getPropertyImages } from '@/lib/property-images.server';
 import { 
   generatePropertyMetaTags,
   generatePropertyJsonLd,

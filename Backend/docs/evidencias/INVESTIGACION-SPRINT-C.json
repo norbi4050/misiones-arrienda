@@ -1,0 +1,255 @@
+{
+  "sprint": "C",
+  "objetivo": "Mejorar /properties/[id] con carrusel, JSON-LD completo, OpenGraph dinámico y mapa interactivo",
+  "fecha_investigacion": "2025-01-15",
+  "rama": "feat/reconexion-flow",
+  
+  "archivos_relevantes": {
+    "paginas": [
+      "src/app/properties/[id]/page.tsx",
+      "src/app/properties/[id]/PropertyDetailClient-signed-urls.tsx",
+      "src/app/properties/page.tsx",
+      "src/app/properties/properties-client.tsx"
+    ],
+    "componentes": [
+      "src/components/ui/property-image.tsx",
+      "src/components/property-card.tsx",
+      "src/components/property-card-signed-urls.tsx",
+      "src/components/property-map.tsx",
+      "src/components/ui/property-filters.tsx"
+    ],
+    "libs": [
+      "src/lib/structured-data.ts",
+      "src/lib/property-images.ts",
+      "src/lib/signed-urls.ts",
+      "src/lib/propertyImages/fetchBucketImages-complete.ts"
+    ],
+    "tipos": [
+      "src/types/property.ts"
+    ],
+    "apis": [
+      "src/app/api/properties/[id]/route.ts",
+      "src/app/api/properties/route.ts"
+    ]
+  },
+
+  "problemas_detectados": {
+    "carrusel_imagenes": {
+      "estado": "FALTANTE",
+      "problemas": [
+        "No existe componente ImageCarousel.tsx",
+        "src/app/properties/[id]/page.tsx usa grid simple sin navegación",
+        "No hay zoom, lightbox o navegación entre imágenes",
+        "Falta integración con bucket-first system (src/lib/property-images.ts)",
+        "No maneja casos de error en carga de imágenes"
+      ],
+      "archivos_afectados": [
+        "src/app/properties/[id]/page.tsx",
+        "src/components/ui/property-image.tsx"
+      ]
+    },
+    
+    "json_ld_schema": {
+      "estado": "INCOMPLETO",
+      "problemas": [
+        "src/lib/structured-data.ts tiene schema básico pero falta:",
+        "- Información del agente/propietario completa",
+        "- Coordenadas geográficas (latitude/longitude)",
+        "- Detalles de construcción (yearBuilt, floor, totalFloors)",
+        "- Amenities mapeados correctamente",
+        "- Información de contacto",
+        "- Reviews/ratings si existen"
+      ],
+      "archivos_afectados": [
+        "src/lib/structured-data.ts",
+        "src/types/property.ts"
+      ]
+    },
+
+    "opengraph_dinamico": {
+      "estado": "BASICO",
+      "problemas": [
+        "generatePropertyOpenGraph() existe pero:",
+        "- No usa imágenes del bucket (solo fallback)",
+        "- Falta integración con signed URLs",
+        "- Description muy básica, no incluye precio/ubicación detallada",
+        "- No genera imágenes optimizadas para redes sociales",
+        "- Falta Twitter Card específica para propiedades"
+      ],
+      "archivos_afectados": [
+        "src/lib/structured-data.ts",
+        "src/app/properties/[id]/page.tsx"
+      ]
+    },
+
+    "mapa_interactivo": {
+      "estado": "DESCONECTADO",
+      "problemas": [
+        "src/components/property-map.tsx existe pero:",
+        "- No está integrado en /properties/[id]/page.tsx",
+        "- No sincroniza con filtros de búsqueda",
+        "- Falta mostrar propiedad individual en mapa",
+        "- No hay marcadores dinámicos",
+        "- Falta integración con coordenadas de property"
+      ],
+      "archivos_afectados": [
+        "src/components/property-map.tsx",
+        "src/app/properties/[id]/page.tsx",
+        "src/app/properties/properties-client.tsx"
+      ]
+    }
+  },
+
+  "integraciones_existentes": {
+    "bucket_images": {
+      "archivo": "src/lib/property-images.ts",
+      "estado": "FUNCIONAL",
+      "problema": "No integrado en /properties/[id]/page.tsx - usa mock data"
+    },
+    "signed_urls": {
+      "archivo": "src/lib/signed-urls.ts",
+      "estado": "FUNCIONAL", 
+      "problema": "No usado en página de detalle"
+    },
+    "seo_system": {
+      "archivo": "src/lib/structured-data.ts",
+      "estado": "PARCIAL",
+      "problema": "Implementado pero incompleto"
+    },
+    "property_api": {
+      "archivo": "src/app/api/properties/[id]/route.ts",
+      "estado": "FUNCIONAL",
+      "problema": "Endpoint correcto pero página usa mock data"
+    }
+  },
+
+  "testing_necesario": {
+    "flujos_criticos": [
+      "Propiedad con múltiples imágenes del bucket",
+      "Propiedad sin imágenes (fallback a placeholder)",
+      "Propiedad con datos incompletos (sin coordenadas, sin agente)",
+      "Navegación de carrusel (anterior/siguiente, zoom)",
+      "Mapa interactivo con marcador de propiedad",
+      "SEO tags en view-source (JSON-LD, OpenGraph)",
+      "Responsive design en mobile/tablet/desktop"
+    ],
+    "endpoints_api": [
+      "GET /api/properties/[id] - datos completos",
+      "Bucket signed URLs - carga de imágenes",
+      "Geolocalización - coordenadas válidas",
+      "Error handling - propiedad no encontrada"
+    ],
+    "edge_cases": [
+      "Propiedad sin imágenes",
+      "Coordenadas inválidas o faltantes", 
+      "Datos de agente incompletos",
+      "Amenities/features vacíos",
+      "Imágenes del bucket no disponibles"
+    ]
+  },
+
+  "arquitectura_consistencia": {
+    "patrones_sprint_a_b": [
+      "Usar AvatarUniversal para avatares de agentes",
+      "Implementar ConsentCheckbox si hay formularios de contacto",
+      "Seguir patrón bucket-first para imágenes",
+      "Mantener realtime si hay interacciones",
+      "Usar server actions para operaciones de DB"
+    ],
+    "estructura_recomendada": [
+      "Crear ImageCarousel como componente reutilizable",
+      "Extender structured-data.ts con campos faltantes",
+      "Integrar property-images.ts en página de detalle",
+      "Conectar property-map.tsx con datos reales",
+      "Mantener fallbacks robustos para todos los casos"
+    ]
+  },
+
+  "prioridades_sprint_c": [
+    {
+      "prioridad": 1,
+      "tarea": "Carrusel de Imágenes Interactivo",
+      "justificacion": "Crítico para UX - las imágenes son el factor #1 en decisión de alquiler",
+      "archivos": [
+        "src/components/ui/ImageCarousel.tsx (crear)",
+        "src/app/properties/[id]/page.tsx (integrar)"
+      ],
+      "dependencias": ["src/lib/property-images.ts"]
+    },
+    {
+      "prioridad": 2, 
+      "tarea": "Integración Bucket-First en Página de Detalle",
+      "justificacion": "Actualmente usa mock data - debe usar sistema real de imágenes",
+      "archivos": [
+        "src/app/properties/[id]/page.tsx (conectar a API real)",
+        "src/lib/property-images.ts (usar en lugar de mock)"
+      ],
+      "dependencias": ["src/app/api/properties/[id]/route.ts"]
+    },
+    {
+      "prioridad": 3,
+      "tarea": "JSON-LD Schema Completo",
+      "justificacion": "SEO crítico para indexación de Google - faltan campos importantes",
+      "archivos": [
+        "src/lib/structured-data.ts (extender schema)",
+        "src/types/property.ts (verificar campos)"
+      ],
+      "dependencias": ["datos de agente, coordenadas, construcción"]
+    },
+    {
+      "prioridad": 4,
+      "tarea": "OpenGraph Dinámico con Bucket Images",
+      "justificacion": "Compartir en redes sociales - debe usar imágenes reales del bucket",
+      "archivos": [
+        "src/lib/structured-data.ts (mejorar generatePropertyOpenGraph)",
+        "src/app/properties/[id]/page.tsx (metadata dinámica)"
+      ],
+      "dependencias": ["signed URLs, optimización de imágenes"]
+    },
+    {
+      "prioridad": 5,
+      "tarea": "Mapa Interactivo Integrado",
+      "justificacion": "Ubicación es factor clave - debe mostrar propiedad en contexto",
+      "archivos": [
+        "src/components/property-map.tsx (integrar)",
+        "src/app/properties/[id]/page.tsx (agregar mapa)"
+      ],
+      "dependencias": ["coordenadas válidas, API de mapas"]
+    },
+    {
+      "prioridad": 6,
+      "tarea": "Formulario de Contacto con Consent",
+      "justificacion": "Conversión - debe seguir patrón de Sprint A con ConsentCheckbox",
+      "archivos": [
+        "src/app/properties/[id]/page.tsx (agregar formulario)",
+        "src/components/ui/ConsentCheckbox.tsx (reutilizar)"
+      ],
+      "dependencias": ["src/lib/consent/logConsent.ts"]
+    }
+  ],
+
+  "estimacion_complejidad": {
+    "carrusel": "MEDIA - Componente nuevo pero patrón conocido",
+    "bucket_integration": "BAJA - Solo conectar sistemas existentes", 
+    "json_ld": "BAJA - Extender schema existente",
+    "opengraph": "MEDIA - Integración con signed URLs",
+    "mapa": "ALTA - Requiere configuración de API externa",
+    "formulario_contacto": "BAJA - Reutilizar componentes existentes"
+  },
+
+  "riesgos_identificados": [
+    "Página actual usa mock data - migración a API real puede romper funcionalidad",
+    "Bucket images pueden no estar disponibles - fallbacks críticos",
+    "Coordenadas pueden estar vacías - mapa no funcionará",
+    "Performance con múltiples signed URLs - optimización necesaria",
+    "SEO schema incompleto puede afectar indexación"
+  ],
+
+  "recomendaciones": [
+    "Implementar carrusel primero - mayor impacto visual",
+    "Migrar gradualmente de mock a API real con fallbacks",
+    "Validar coordenadas antes de mostrar mapa",
+    "Cachear signed URLs para mejor performance",
+    "Testing exhaustivo con datos reales y edge cases"
+  ]
+}

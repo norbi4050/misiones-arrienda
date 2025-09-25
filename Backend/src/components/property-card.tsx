@@ -17,6 +17,7 @@ interface PropertyCardProps {
   bathrooms: number
   area: number
   image: string
+  imageUrls?: string[]
   userId?: string
   featured?: boolean
 }
@@ -31,6 +32,7 @@ export function PropertyCard({
   bathrooms,
   area,
   image,
+  imageUrls,
   userId,
   featured = false
 }: PropertyCardProps) {
@@ -39,10 +41,9 @@ export function PropertyCard({
       <div className="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
         <div className="aspect-[4/3] overflow-hidden relative">
           <PropertyImage
-            propertyId={id}
-            userId={userId || 'unknown'}
-            fallbackImage={image}
+            src={imageUrls?.[0] || image}
             alt={title}
+            fallback={image}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-110"
           />

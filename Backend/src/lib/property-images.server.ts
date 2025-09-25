@@ -1,10 +1,8 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/server'
+import 'server-only';
+import { createServerSupabase } from '@/lib/supabase/server'
 
 /**
- * Sistema de fallback bucket-first para imágenes de propiedades
+ * Sistema de fallback bucket-first para imágenes de propiedades (SERVER-ONLY)
  * Prioridad: 1) Bucket privado con signed URLs, 2) property.images como fallback
  */
 
@@ -13,6 +11,15 @@ interface PropertyImageOptions {
   userId: string
   fallbackImages?: string[]
   maxImages?: number
+}
+
+/**
+ * Obtener URLs de imágenes de propiedad (para usar en server components)
+ */
+export async function getPropertyImageUrls(propertyId: string): Promise<string[]> {
+  // Esta función debe ser llamada desde server components que tengan acceso al userId
+  // Por ahora retornamos placeholder, pero debería recibir userId como parámetro
+  return ['/placeholder-apartment-1.jpg']
 }
 
 /**
@@ -60,7 +67,7 @@ export async function getPropertyImages({
  */
 async function getBucketImages(userId: string, propertyId: string, maxImages: number): Promise<string[]> {
   try {
-    const supabase = createClient()
+    const supabase = createServerSupabase()
     
     // Listar archivos en el bucket
     const { data: files, error: listError } = await supabase.storage
@@ -107,53 +114,6 @@ async function getBucketImages(userId: string, propertyId: string, maxImages: nu
     console.error('❌ Error en getBucketImages:', error)
     return []
   }
-}
-
-/**
- * Hook para usar en componentes React
- */
-export function usePropertyImages(propertyId: string, userId: string, fallbackImages: string[] = []) {
-  const [images, setImages] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-  const [source, setSource] = useState<'bucket' | 'fallback' | 'placeholder'>('placeholder')
-
-  useEffect(() => {
-    async function loadImages() {
-      setLoading(true)
-      
-      try {
-        const result = await getPropertyImages({
-          propertyId,
-          userId,
-          fallbackImages
-        })
-        
-        setImages(result)
-        
-        // Determinar fuente
-        if (result.length > 0 && result[0].includes('supabase.co')) {
-          setSource('bucket')
-        } else if (fallbackImages.length > 0 && result.some(img => fallbackImages.includes(img))) {
-          setSource('fallback')
-        } else {
-          setSource('placeholder')
-        }
-        
-      } catch (error) {
-        console.error('Error loading property images:', error)
-        setImages(['/placeholder-apartment-1.jpg'])
-        setSource('placeholder')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (propertyId && userId) {
-      loadImages()
-    }
-  }, [propertyId, userId, fallbackImages])
-
-  return { images, loading, source }
 }
 
 /**

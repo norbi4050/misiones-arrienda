@@ -1,11 +1,11 @@
-[2025-09-24 17:52:32] === SMOKE TESTS INICIADOS ===
-[2025-09-24 17:52:32] Base URL: http://localhost:3000
-[2025-09-24 17:52:33] Timestamp: 09/24/2025 17:52:33
-[2025-09-24 17:52:33] 
-[2025-09-24 17:52:33] === VERIFICANDO SERVIDOR ===
-[2025-09-24 17:52:33] Testing /...
-[2025-09-24 17:52:37] / - Connection error: No es posible conectar con el servidor remoto
+[2025-09-24 19:49:36] === SMOKE TESTS INICIADOS ===
+[2025-09-24 19:49:36] Base URL: http://localhost:3000
+[2025-09-24 19:49:36] Timestamp: 09/24/2025 19:49:36
+[2025-09-24 19:49:36] 
+[2025-09-24 19:49:36] === VERIFICANDO SERVIDOR ===
+[2025-09-24 19:49:36] Testing /...
+[2025-09-24 19:49:40] / - Connection error: No es posible conectar con el servidor remoto
 Result: FAIL
-[2025-09-24 17:52:37] ❌ SERVIDOR: No responde en http://localhost:3000
+[2025-09-24 19:49:40] ❌ SERVIDOR: No responde en http://localhost:3000
 Result: FAIL
-[2025-09-24 17:52:37] NOTA: Ejecutar 'npm run dev' en otra terminal
+[2025-09-24 19:49:40] NOTA: Ejecutar 'npm run dev' en otra terminal
