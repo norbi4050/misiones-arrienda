@@ -1,55 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createClient()
     
-    // Obtener userId del header de autorización o query params
-    const authHeader = request.headers.get('authorization')
+    // Obtener userId del query params (público)
     const { searchParams } = new URL(request.url)
-    const userId = authHeader?.replace('Bearer ', '') || searchParams.get('userId')
+    const userId = searchParams.get('userId')
 
     if (!userId) {
       return NextResponse.json({ error: 'Usuario no especificado' }, { status: 400 })
     }
 
-    // Obtener perfil del usuario con avatar
+    // Obtener perfil del usuario desde vista pública (evita RLS)
     const { data: profile, error } = await supabase
-      .from('user_profiles')
-      .select('id, photos, updated_at')
-      .eq('id', userId)
+      .from('public_user_profiles')
+      .select('user_id, full_name, avatar_url, updated_at')
+      .eq('user_id', userId)
       .single()
 
     if (error) {
       console.error('Error fetching user profile:', error)
-      return NextResponse.json({ error: 'Error al obtener perfil' }, { status: 500 })
+      return NextResponse.json({ error: 'NO_AVATAR' }, { status: 404 })
     }
 
-    // Extraer primera foto como avatar con cache-busting
-    const avatarUrl = profile?.photos?.[0] 
-      ? `${profile.photos[0]}?v=${profile.updated_at}`
-      : null
+    if (!profile?.avatar_url) {
+      return NextResponse.json({ error: 'NO_AVATAR' }, { status: 404 })
+    }
+
+    // Retornar avatar con cache-busting
+    const avatarUrl = `${profile.avatar_url}?v=${profile.updated_at}`
 
     return NextResponse.json({ 
       avatar_url: avatarUrl,
       user_id: userId,
+      full_name: profile.full_name,
       cache_version: profile.updated_at,
       success: true 
     })
 
   } catch (error) {
     console.error('Error in avatar GET:', error)
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+    return NextResponse.json({ error: 'NO_AVATAR' }, { status: 404 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createServiceClient(supabaseUrl, supabaseServiceKey)
     
     // Obtener userId del header de autorización
     const authHeader = request.headers.get('authorization')
@@ -114,7 +117,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createServiceClient(supabaseUrl, supabaseServiceKey)
     
     // Obtener userId del header de autorización
     const authHeader = request.headers.get('authorization')
