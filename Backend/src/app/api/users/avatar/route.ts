@@ -26,22 +26,51 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching user profile:', error)
-      return NextResponse.json({ error: 'NO_AVATAR' }, { status: 404 })
+      // Devolver 200 con avatarUrl null en lugar de 404
+      return NextResponse.json({
+        avatarUrl: null,
+        source: 'none',
+        user_id: userId,
+        full_name: null,
+        updated_at: null
+      }, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=60'
+        }
+      })
     }
 
+    // Siempre devolver 200, incluso sin avatar
     if (!profile?.avatar_url) {
-      return NextResponse.json({ error: 'NO_AVATAR' }, { status: 404 })
+      return NextResponse.json({
+        avatarUrl: null,
+        source: 'none',
+        user_id: userId,
+        full_name: profile?.full_name || null,
+        updated_at: profile?.updated_at || null
+      }, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=60'
+        }
+      })
     }
 
     // Retornar avatar con cache-busting
     const avatarUrl = `${profile.avatar_url}?v=${profile.updated_at}`
 
-    return NextResponse.json({ 
-      avatar_url: avatarUrl,
+    return NextResponse.json({
+      avatarUrl: avatarUrl,
+      source: 'supabase',
       user_id: userId,
       full_name: profile.full_name,
-      cache_version: profile.updated_at,
-      success: true 
+      updated_at: profile.updated_at
+    }, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, max-age=300'
+      }
     })
 
   } catch (error) {
