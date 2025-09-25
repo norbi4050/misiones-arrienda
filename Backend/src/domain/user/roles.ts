@@ -1,5 +1,5 @@
 // Definición única de roles de comunidad
-export const COMMUNITY_ROLES = ['BUSCO', 'OFREZCO', 'TENANT', 'OWNER', 'AGENCY'] as const;
+export const COMMUNITY_ROLES = ['BUSCO', 'OFREZCO', 'INDIVIDUAL', 'TENANT', 'OWNER', 'AGENCY'] as const;
 export type CommunityRole = typeof COMMUNITY_ROLES[number];
 
 // Valores por defecto
@@ -18,6 +18,7 @@ export function getCommunityRoleDefault(): CommunityRole {
 export const COMMUNITY_ROLE_LABELS: Record<CommunityRole, string> = {
   BUSCO: 'Busco habitación/compañeros',
   OFREZCO: 'Ofrezco habitación/casa',
+  INDIVIDUAL: 'Usuario individual',
   TENANT: 'Inquilino',
   OWNER: 'Propietario',
   AGENCY: 'Inmobiliaria'

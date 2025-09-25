@@ -147,41 +147,23 @@ export async function POST(request: NextRequest) {
       avatarUrl = avatar_url
     }
 
-    // Obtener perfil actual
-    const { data: currentProfile, error: fetchError } = await supabase
-      .from('user_profiles')
-      .select('photos')
-      .eq('id', userId)
-      .single()
-
-    if (fetchError) {
-      console.error('Error fetching current profile:', fetchError)
-      return NextResponse.json({ error: 'Error al obtener perfil actual' }, { status: 500 })
-    }
-
-    // Actualizar primera posición del array photos con nuevo avatar
-    const updatedPhotos = currentProfile?.photos || []
-    updatedPhotos[0] = avatarUrl
-
-    // Actualizar perfil con nuevo avatar y timestamp
+    // Actualizar photos[1] usando SQL directo para manejar text[] correctamente
     const now = new Date()
-    const { data: updatedProfile, error: updateError } = await supabase
-      .from('user_profiles')
-      .update({ 
-        photos: updatedPhotos,
-        updated_at: now.toISOString()
+    
+    // Usar SQL directo para actualizar text[] en PostgreSQL
+    const { data: updateResult, error: updateError } = await supabase
+      .rpc('update_user_avatar', {
+        user_id: userId,
+        new_avatar_url: avatarUrl
       })
-      .eq('id', userId)
-      .select('id, photos, updated_at')
-      .single()
 
     if (updateError) {
-      console.error('Error updating avatar:', updateError)
+      console.error('Error updating avatar with RPC:', updateError)
       return NextResponse.json({ error: 'Error al actualizar avatar' }, { status: 500 })
     }
 
-    // Retornar con formato optimizado
-    const updatedAtEpoch = Math.floor(now.getTime() / 1000)
+    // Obtener timestamp epoch del resultado
+    const updatedAtEpoch = updateResult?.[0]?.updated_at_epoch || Math.floor(now.getTime() / 1000)
 
     return NextResponse.json({ 
       url: `${avatarUrl}?v=${updatedAtEpoch}`,
@@ -208,38 +190,22 @@ export async function DELETE(request: NextRequest) {
 
     const userId = authHeader.replace('Bearer ', '')
 
-    // Obtener perfil actual
-    const { data: currentProfile, error: fetchError } = await supabase
-      .from('user_profiles')
-      .select('photos')
-      .eq('id', userId)
-      .single()
-
-    if (fetchError) {
-      console.error('Error fetching current profile:', fetchError)
-      return NextResponse.json({ error: 'Error al obtener perfil actual' }, { status: 500 })
-    }
-
-    // Remover primera foto (avatar) del array
-    const updatedPhotos = currentProfile?.photos || []
-    updatedPhotos[0] = null
-
-    // Actualizar perfil sin avatar
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({ 
-        photos: updatedPhotos,
-        updated_at: new Date().toISOString()
+    // Remover avatar usando función SQL
+    const { data: removeResult, error: removeError } = await supabase
+      .rpc('remove_user_avatar', {
+        user_id: userId
       })
-      .eq('id', userId)
 
-    if (updateError) {
-      console.error('Error removing avatar:', updateError)
+    if (removeError) {
+      console.error('Error removing avatar:', removeError)
       return NextResponse.json({ error: 'Error al eliminar avatar' }, { status: 500 })
     }
 
+    const updatedAtEpoch = removeResult?.[0]?.updated_at_epoch || Math.floor(Date.now() / 1000)
+
     return NextResponse.json({ 
-      avatar_url: null,
+      url: null,
+      v: updatedAtEpoch,
       user_id: userId,
       success: true 
     })
