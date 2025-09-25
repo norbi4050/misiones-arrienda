@@ -16,7 +16,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import toast from 'react-hot-toast'
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
-import { logConsent, CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent"
+import { logConsentClient } from "@/lib/consent/logConsent.client"
+import { CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent"
 
 export default function NuevoRoommatePage() {
   const { user, isLoading } = useSupabaseAuth()
@@ -87,12 +88,10 @@ export default function NuevoRoommatePage() {
       // Loguear consentimiento antes de proceder
       if (user?.id) {
         try {
-          await logConsent({
-            userId: user.id,
+          await logConsentClient({
             policyVersion: CURRENT_POLICY_VERSION,
             acceptedTerms: checkedTerms,
             acceptedPrivacy: checkedPrivacy,
-            ip: undefined, // Se obtiene en el servidor
             userAgent: navigator.userAgent
           })
         } catch (consentLogError) {

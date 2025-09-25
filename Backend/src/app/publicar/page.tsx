@@ -14,7 +14,8 @@ import toast from 'react-hot-toast'
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import { propertyFormSchema } from "@/lib/validations/property"
-import { logConsent, CURRENT_POLICY_VERSION, getClientIP, getUserAgent } from "@/lib/consent/logConsent"
+import { logConsentClient, ConsentLogPayload } from "@/lib/consent/logConsent.client"
+import { CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent"
 import { analytics } from "@/lib/analytics/track"
 
 // Componente de pantalla de autenticación requerida
@@ -208,20 +209,16 @@ export default function PublicarPage() {
     
     try {
       // Loguear consentimiento antes de proceder
-      if (user?.id) {
-        try {
-          await logConsent({
-            userId: user.id,
-            policyVersion: CURRENT_POLICY_VERSION,
-            acceptedTerms: checkedTerms,
-            acceptedPrivacy: checkedPrivacy,
-            ip: undefined, // Se obtiene en el servidor
-            userAgent: navigator.userAgent
-          })
-        } catch (consentLogError) {
-          console.error('Error logging consent:', consentLogError)
-          // Continuar con la publicación aunque falle el logging
-        }
+      try {
+        await logConsentClient({
+          policyVersion: CURRENT_POLICY_VERSION,
+          acceptedTerms: checkedTerms,
+          acceptedPrivacy: checkedPrivacy,
+          userAgent: navigator.userAgent
+        })
+      } catch (consentLogError) {
+        console.error('Error logging consent:', consentLogError)
+        // Continuar con la publicación aunque falle el logging
       }
       
       if (selectedPlan === 'basico') {

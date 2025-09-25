@@ -13,7 +13,8 @@ import { ConsentCheckbox } from '@/components/ui/ConsentCheckbox'
 import { ArrowLeft, Upload, X, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { logConsent, CURRENT_POLICY_VERSION } from '@/lib/consent/logConsent'
+import { logConsentClient } from '@/lib/consent/logConsent.client'
+import { CURRENT_POLICY_VERSION } from '@/lib/consent/logConsent'
 
 interface ProfileFormData {
   role: 'BUSCO' | 'OFREZCO' | ''
@@ -181,12 +182,10 @@ export default function PublicarPerfilPage() {
         
         // Loguear consentimiento después de crear el perfil exitosamente
         try {
-          await logConsent({
-            userId: profile.user_id || profile.userId,
+          await logConsentClient({
             policyVersion: CURRENT_POLICY_VERSION,
             acceptedTerms: checkedTerms,
             acceptedPrivacy: checkedPrivacy,
-            ip: undefined, // Se obtiene en el servidor
             userAgent: navigator.userAgent
           })
         } catch (consentLogError) {
