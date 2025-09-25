@@ -150,20 +150,26 @@ export async function POST(request: NextRequest) {
     // Actualizar photos[1] usando SQL directo para manejar text[] correctamente
     const now = new Date()
     
-    // Usar SQL directo para actualizar text[] en PostgreSQL
+    // Usar UPDATE directo con array literal PostgreSQL para text[]
     const { data: updateResult, error: updateError } = await supabase
-      .rpc('update_user_avatar', {
-        user_id: userId,
-        new_avatar_url: avatarUrl
+      .from('user_profiles')
+      .update({ 
+        photos: [avatarUrl],  // Prisma maneja automáticamente la conversión a text[]
+        updated_at: now.toISOString()
       })
+      .eq('id', userId)
+      .select('updated_at')
+      .single()
 
     if (updateError) {
-      console.error('Error updating avatar with RPC:', updateError)
+      console.error('Error updating avatar:', updateError)
       return NextResponse.json({ error: 'Error al actualizar avatar' }, { status: 500 })
     }
 
-    // Obtener timestamp epoch del resultado
-    const updatedAtEpoch = updateResult?.[0]?.updated_at_epoch || Math.floor(now.getTime() / 1000)
+    // Calcular timestamp epoch del resultado
+    const updatedAtEpoch = updateResult?.updated_at 
+      ? Math.floor(new Date(updateResult.updated_at).getTime() / 1000)
+      : Math.floor(now.getTime() / 1000)
 
     return NextResponse.json({ 
       url: `${avatarUrl}?v=${updatedAtEpoch}`,
@@ -190,18 +196,26 @@ export async function DELETE(request: NextRequest) {
 
     const userId = authHeader.replace('Bearer ', '')
 
-    // Remover avatar usando función SQL
+    // Remover avatar poniendo array vacío
+    const now = new Date()
     const { data: removeResult, error: removeError } = await supabase
-      .rpc('remove_user_avatar', {
-        user_id: userId
+      .from('user_profiles')
+      .update({ 
+        photos: [],  // Array vacío para remover avatar
+        updated_at: now.toISOString()
       })
+      .eq('id', userId)
+      .select('updated_at')
+      .single()
 
     if (removeError) {
       console.error('Error removing avatar:', removeError)
       return NextResponse.json({ error: 'Error al eliminar avatar' }, { status: 500 })
     }
 
-    const updatedAtEpoch = removeResult?.[0]?.updated_at_epoch || Math.floor(Date.now() / 1000)
+    const updatedAtEpoch = removeResult?.updated_at 
+      ? Math.floor(new Date(removeResult.updated_at).getTime() / 1000)
+      : Math.floor(now.getTime() / 1000)
 
     return NextResponse.json({ 
       url: null,

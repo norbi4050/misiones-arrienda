@@ -1,0 +1,21 @@
+﻿=== AVATAR FLOW TEST RESULTS ===
+Timestamp: 2025-09-25 11:24:59
+Overall Result: FAIL
+Total Tests: 3
+Passed: 2
+Cache-busting: FAILED
+
+DETAILED RESULTS:
+11:24:57 - PASS - Get initial avatar state
+  Response: v=, url=
+
+11:24:57 - FAIL - Update avatar with new URL
+  Error: Error en el servidor remoto: (500) Error interno del servidor.
+
+11:24:59 - PASS - Get avatar after update
+  Response: v=, url=
+
+
+
+CACHE-BUSTING VERIFICATION:
+âŒ Cache-busting failed   Timestamps not properly updated
