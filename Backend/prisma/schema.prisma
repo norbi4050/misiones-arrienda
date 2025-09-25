@@ -431,28 +431,12 @@ model PaymentNotification {
   @@index([createdAt])
 }
 
-// Enums para el módulo Comunidad - Usando string union para flexibilidad
-// Los valores válidos se definen en src/domain/user/roles.ts
-
-enum PetPref {
-=======
-
-enum PetPref {
-=======
 // =============================================================================
 // MODELOS PARA MÓDULO COMUNIDAD (ESTILO FLATMATES)
 // =============================================================================
 
 // Enums para el módulo Comunidad - Usando string union para flexibilidad
 // Los valores válidos se definen en src/domain/user/roles.ts
-
-enum PetPref {
-=======
-// Enums para el módulo Comunidad - Usando string union para flexibilidad
-// Los valores válidos se definen en src/domain/user/roles.ts
-
-enum PetPref {
-=======
 
 enum PetPref {
   SI_PET        // Acepta mascotas

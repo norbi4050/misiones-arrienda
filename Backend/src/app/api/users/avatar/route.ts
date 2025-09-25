@@ -22,38 +22,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Usuario no especificado' }, { status: 400 })
     }
 
-    // Obtener perfil del usuario desde vista pública (evita RLS)
-    const { data: profile, error } = await supabase
-      .from('public_user_profiles')
-      .select('user_id, full_name, avatar_url, updated_at')
-      .eq('user_id', userId)
-      .single()
+    // Obtener datos de user_profiles y users para construir avatar_url único
+    const [profilesResult, usersResult] = await Promise.all([
+      supabase.from('user_profiles').select('photos, updated_at, full_name').eq('id', userId).maybeSingle(),
+      supabase.from('users').select('profile_image, name').eq('id', userId).maybeSingle()
+    ])
 
-    if (error) {
-      console.error('Error fetching user profile:', error)
-      // Devolver 200 con avatarUrl null en lugar de 404
-      return NextResponse.json({
-        avatarUrl: null,
-        source: 'none',
-        user_id: userId,
-        full_name: null,
-        updated_at: null
-      }, {
-        status: 200,
-        headers: {
-          'Cache-Control': 'public, max-age=60'
-        }
-      })
-    }
+    const userProfile = profilesResult.data
+    const userData = usersResult.data
+    const fullName = userProfile?.full_name || userData?.name || 'Usuario'
 
-    // Siempre devolver 200, incluso sin avatar
-    if (!profile?.avatar_url) {
+    // Construir avatar_url con fuente única: photos[0] → profile_image (DEPRECATED) → fallback
+    const avatarUrl = 
+      userProfile?.photos?.[0] ??
+      userData?.profile_image ??  // DEPRECATED fallback temporal
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0D8ABC&color=fff&size=200`
+
+    // Calcular v = epoch de user_profiles.updated_at
+    const v = userProfile?.updated_at 
+      ? Math.floor(new Date(userProfile.updated_at).getTime() / 1000)
+      : 0
+
+    // Si no hay avatar personalizado, devolver sin cache-busting
+    if (!userProfile?.photos?.[0] && !userData?.profile_image) {
       return NextResponse.json({
-        avatarUrl: null,
-        source: 'none',
+        url: avatarUrl,  // Fallback URL sin ?v=
+        v: v,
+        source: 'fallback',
         user_id: userId,
-        full_name: profile?.full_name || null,
-        updated_at: profile?.updated_at || null
+        full_name: fullName
       }, {
         status: 200,
         headers: {
@@ -63,15 +60,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Retornar avatar con cache-busting usando epoch
-    const updatedAtEpoch = profile.updated_at ? Math.floor(new Date(profile.updated_at).getTime() / 1000) : getTimestampEpoch()
-    const avatarUrl = `${profile.avatar_url}?v=${updatedAtEpoch}`
+    const avatarUrlWithVersion = `${avatarUrl}?v=${v}`
 
     return NextResponse.json({
-      url: avatarUrl,
-      v: updatedAtEpoch,
-      source: 'supabase',
+      url: avatarUrlWithVersion,
+      v: v,
+      source: userProfile?.photos?.[0] ? 'photos' : 'profile_image_deprecated',
       user_id: userId,
-      full_name: profile.full_name
+      full_name: fullName
     }, {
       status: 200,
       headers: {

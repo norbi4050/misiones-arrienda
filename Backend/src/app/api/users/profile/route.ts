@@ -31,15 +31,37 @@ export async function GET(_req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  // Obtener datos de users y user_profiles para construir avatar_url único
+  const [usersResult, profilesResult] = await Promise.all([
+    supabase.from("users").select("*").eq("id", user.id).maybeSingle(),
+    supabase.from("user_profiles").select("photos, updated_at").eq("id", user.id).maybeSingle()
+  ]);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!data) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-  return NextResponse.json({ profile: data }, { status: 200 });
+  if (usersResult.error) return NextResponse.json({ error: usersResult.error.message }, { status: 500 });
+  if (!usersResult.data) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+
+  const userData = usersResult.data;
+  const userProfile = profilesResult.data;
+
+  // Construir avatar_url con fuente única: photos[0] → profile_image (DEPRECATED) → fallback
+  const avatarUrl = 
+    userProfile?.photos?.[0] ??
+    userData.profile_image ??  // DEPRECATED fallback temporal
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || 'User')}&background=0D8ABC&color=fff&size=200`;
+
+  // Calcular v = epoch de user_profiles.updated_at
+  const v = userProfile?.updated_at 
+    ? Math.floor(new Date(userProfile.updated_at).getTime() / 1000)
+    : 0;
+
+  // Construir respuesta con avatar_url único y v para cache-busting
+  const profileWithAvatar = {
+    ...userData,
+    avatar_url: avatarUrl,
+    v: v
+  };
+
+  return NextResponse.json({ profile: profileWithAvatar }, { status: 200 });
 }
 
 export async function PUT(req: NextRequest) {
