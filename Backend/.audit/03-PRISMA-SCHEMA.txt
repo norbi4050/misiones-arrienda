@@ -1,0 +1,636 @@
+﻿generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id         String   @id @default(cuid())
+  full_name  String?  @map("full_name")
+  avatar_url String?  @map("avatar_url")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  @@map("profiles")
+}
+
+model Property {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  currency    String   @default("ARS") // Moneda de la propiedad (ARS, USD, EUR, etc.)
+  oldPrice    Float?
+  bedrooms    Int
+  bathrooms   Int
+  garages     Int      @default(0)
+  area        Float
+  lotArea     Float?
+  address     String
+  city        String
+  province    String
+  postalCode  String
+  latitude    Float?
+  longitude   Float?
+  propertyType String  // APARTMENT, HOUSE, COMMERCIAL, LAND, OFFICE, WAREHOUSE, PH, STUDIO
+  status      String   @default("AVAILABLE") // AVAILABLE, RENTED, SOLD, MAINTENANCE, RESERVED, EXPIRED
+  images      String   // JSON string of array
+  virtualTourUrl String?
+  amenities   String   // JSON string of array
+  features    String   // JSON string of array
+  yearBuilt   Int?
+  floor       Int?
+  totalFloors Int?
+  featured    Boolean  @default(false)
+  
+  // Campos de contacto agregados para alinear con API
+  contact_name  String?
+  contact_phone String
+  contact_email String?
+  
+  // Campos para sistema de caducidad
+  expiresAt   DateTime?
+  highlightedUntil DateTime?
+  isPaid      Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // RelaciÃ³n con el usuario propietario
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  
+  // Hacer agentId opcional para evitar errores
+  agent       Agent?   @relation(fields: [agentId], references: [id])
+  agentId     String?
+  
+  // Relaciones existentes
+  inquiries   Inquiry[]
+  userInquiries UserInquiry[]
+  favorites   Favorite[]
+  rentalHistory RentalHistory[]
+  
+  // Nuevas relaciones para sistema de pagos
+  payments    Payment[]
+  subscriptions Subscription[]
+  
+  @@index([city, province])
+  @@index([price])
+  @@index([propertyType])
+  @@index([status])
+  @@index([featured])
+  @@index([userId])
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String
+  avatar      String?
+  bio         String?
+  license     String   @unique
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  properties  Property[]
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  message   String
+  type      String   // GENERAL, VISIT, FINANCING, OFFER
+  visitDate DateTime?
+  createdAt DateTime @default(now())
+  
+  property  Property @relation(fields: [propertyId], references: [id])
+  propertyId String
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String
+  password    String
+  avatar      String?
+  bio         String?
+  occupation  String?
+  age         Int?
+  verified    Boolean  @default(false)
+  emailVerified Boolean @default(false)
+  verificationToken String?
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  
+  // Nuevos campos para tipos de usuario
+  userType    String?  // inquilino, dueno_directo, inmobiliaria
+  companyName String?  // Solo para inmobiliarias
+  licenseNumber String? // Solo para inmobiliarias
+  propertyCount String? // Solo para dueÃ±os directos
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // RelaciÃ³n con propiedades que posee
+  properties  Property[]
+  
+  // Relaciones existentes
+  favorites   Favorite[]
+  inquiries   UserInquiry[]
+  reviewsGiven UserReview[] @relation("ReviewGiver")
+  reviewsReceived UserReview[] @relation("ReviewReceiver")
+  rentalHistory RentalHistory[]
+  searchHistory SearchHistory[]
+  
+  // Nuevas relaciones para sistema de pagos
+  payments    Payment[]
+  subscriptions Subscription[]
+  paymentMethods PaymentMethod[]
+  
+  // RelaciÃ³n con perfil de comunidad
+  communityProfile UserProfile?
+}
+
+model UserReview {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5 estrellas
+  comment     String
+  category    String   // TENANT, LANDLORD
+  verified    Boolean  @default(false) // Si el review es de un alquiler verificado
+  createdAt   DateTime @default(now())
+  
+  // Relaciones
+  reviewer    User     @relation("ReviewGiver", fields: [reviewerId], references: [id])
+  reviewerId  String
+  reviewed    User     @relation("ReviewReceiver", fields: [reviewedId], references: [id])
+  reviewedId  String
+  
+  // Opcional: relacionar con el alquiler especÃ­fico
+  rental      RentalHistory? @relation(fields: [rentalId], references: [id])
+  rentalId    String?
+}
+
+model RentalHistory {
+  id          String   @id @default(cuid())
+  startDate   DateTime
+  endDate     DateTime?
+  monthlyRent Float
+  deposit     Float?
+  status      String   @default("ACTIVE") // ACTIVE, COMPLETED, TERMINATED
+  createdAt   DateTime @default(now())
+  
+  // Relaciones
+  tenant      User     @relation(fields: [tenantId], references: [id])
+  tenantId    String
+  property    Property @relation(fields: [propertyId], references: [id])
+  propertyId  String
+  
+  // Reviews relacionados a este alquiler
+  reviews     UserReview[]
+}
+
+model UserInquiry {
+  id        String   @id @default(cuid())
+  message   String
+  type      String   // GENERAL, VISIT, FINANCING, OFFER
+  visitDate DateTime?
+  status    String   @default("PENDING") // PENDING, RESPONDED, CLOSED
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  property  Property @relation(fields: [propertyId], references: [id])
+  propertyId String
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  property   Property @relation(fields: [propertyId], references: [id])
+  propertyId String
+  createdAt  DateTime @default(now())
+  
+  @@unique([userId, propertyId])
+}
+
+model SearchHistory {
+  id           String   @id @default(cuid())
+  searchTerm   String
+  filters      String?  // JSON string con filtros aplicados
+  resultsCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  
+  @@index([userId, createdAt])
+}
+
+// =============================================================================
+// MODELOS PARA SISTEMA DE PAGOS MEJORADO
+// =============================================================================
+
+model Payment {
+  id                    String   @id @default(cuid())
+  
+  // Identificadores de MercadoPago
+  mercadopagoId         String   @unique // ID del pago en MercadoPago
+  preferenceId          String?  // ID de la preferencia
+  externalReference     String   // Referencia externa personalizada
+  
+  // InformaciÃ³n del pago
+  amount                Float
+  currency              String   @default("ARS")
+  status                String   // pending, approved, rejected, cancelled, refunded, etc.
+  statusDetail          String?  // Detalle del estado
+  paymentMethodId       String?  // visa, mastercard, efectivo, etc.
+  paymentTypeId         String?  // credit_card, debit_card, ticket, etc.
+  installments          Int      @default(1)
+  
+  // Fechas importantes
+  dateCreated           DateTime @default(now())
+  dateApproved          DateTime?
+  dateLastUpdated       DateTime @updatedAt
+  
+  // InformaciÃ³n del pagador
+  payerEmail            String
+  payerName             String?
+  payerIdentification   String?  // JSON con tipo y nÃºmero de identificaciÃ³n
+  
+  // Relaciones
+  user                  User     @relation(fields: [userId], references: [id])
+  userId                String
+  property              Property @relation(fields: [propertyId], references: [id])
+  propertyId            String
+  subscription          Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId        String?
+  
+  // RelaciÃ³n con notificaciones de webhook
+  notifications         PaymentNotification[]
+  
+  // Metadata adicional
+  metadata              String?  // JSON con informaciÃ³n adicional
+  webhookData           String?  // JSON con datos del webhook
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([mercadopagoId])
+  @@index([userId, status])
+  @@index([propertyId])
+  @@index([status, dateCreated])
+}
+
+model Subscription {
+  id                    String   @id @default(cuid())
+  
+  // InformaciÃ³n del plan
+  planType              String   // basic, featured, premium
+  planName              String
+  planPrice             Float
+  planDuration          Int      // dÃ­as
+  
+  // Estado de la suscripciÃ³n
+  status                String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED, SUSPENDED
+  
+  // Fechas
+  startDate             DateTime @default(now())
+  endDate               DateTime
+  renewalDate           DateTime?
+  cancelledAt           DateTime?
+  
+  // ConfiguraciÃ³n
+  autoRenew             Boolean  @default(false)
+  renewalAttempts       Int      @default(0)
+  maxRenewalAttempts    Int      @default(3)
+  
+  // Relaciones
+  user                  User     @relation(fields: [userId], references: [id])
+  userId                String
+  property              Property @relation(fields: [propertyId], references: [id])
+  propertyId            String
+  payments              Payment[]
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([userId, status])
+  @@index([propertyId, status])
+  @@index([endDate, status])
+  @@index([renewalDate])
+}
+
+model PaymentMethod {
+  id                    String   @id @default(cuid())
+  
+  // InformaciÃ³n del mÃ©todo de pago
+  type                  String   // credit_card, debit_card, bank_transfer, etc.
+  brand                 String?  // visa, mastercard, amex, etc.
+  lastFourDigits        String?  // Ãšltimos 4 dÃ­gitos de la tarjeta
+  expirationMonth       Int?
+  expirationYear        Int?
+  holderName            String?
+  
+  // Identificadores de MercadoPago
+  mercadopagoCardId     String?  // ID de la tarjeta en MercadoPago
+  mercadopagoCustomerId String?  // ID del customer en MercadoPago
+  
+  // Estado
+  isActive              Boolean  @default(true)
+  isDefault             Boolean  @default(false)
+  
+  // Relaciones
+  user                  User     @relation(fields: [userId], references: [id])
+  userId                String
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([userId, isActive])
+}
+
+model PaymentAnalytics {
+  id                    String   @id @default(cuid())
+  
+  // PerÃ­odo de anÃ¡lisis
+  date                  DateTime
+  period                String   // daily, weekly, monthly
+  
+  // MÃ©tricas de pagos
+  totalPayments         Int      @default(0)
+  successfulPayments    Int      @default(0)
+  failedPayments        Int      @default(0)
+  pendingPayments       Int      @default(0)
+  
+  // MÃ©tricas financieras
+  totalAmount           Float    @default(0)
+  successfulAmount      Float    @default(0)
+  averageAmount         Float    @default(0)
+  
+  // MÃ©tricas por mÃ©todo de pago
+  creditCardPayments    Int      @default(0)
+  debitCardPayments     Int      @default(0)
+  bankTransferPayments  Int      @default(0)
+  cashPayments          Int      @default(0)
+  
+  // MÃ©tricas por plan
+  basicPlanPayments     Int      @default(0)
+  featuredPlanPayments  Int      @default(0)
+  premiumPlanPayments   Int      @default(0)
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([date, period])
+  @@index([date])
+  @@index([period])
+}
+
+model PaymentNotification {
+  id                    String   @id @default(cuid())
+  
+  // InformaciÃ³n del webhook
+  mercadopagoId         String   // ID del pago en MercadoPago
+  topic                 String   // payment, merchant_order, etc.
+  type                  String   // payment, merchant_order, etc.
+  
+  // Estado del procesamiento
+  status                String   @default("PENDING") // PENDING, PROCESSED, FAILED
+  attempts              Int      @default(0)
+  maxAttempts           Int      @default(3)
+  
+  // Datos del webhook
+  webhookData           String   // JSON completo del webhook
+  errorMessage          String?  // Mensaje de error si fallÃ³ el procesamiento
+  
+  // RelaciÃ³n con el pago (opcional, puede no existir aÃºn)
+  payment               Payment? @relation(fields: [paymentId], references: [id])
+  paymentId             String?
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  processedAt           DateTime?
+  
+  @@index([mercadopagoId])
+  @@index([status, attempts])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// MODELOS PARA MÃ“DULO COMUNIDAD (ESTILO FLATMATES)
+// =============================================================================
+
+// Enums para el mÃ³dulo Comunidad - Usando string union para flexibilidad
+// Los valores vÃ¡lidos se definen en src/domain/user/roles.ts
+
+enum PetPref {
+  SI_PET        // Acepta mascotas
+  NO_PET        // No acepta mascotas
+  INDIFERENTE   // Indiferente
+}
+
+enum SmokePref {
+  FUMADOR       // Es fumador
+  NO_FUMADOR    // No fumador
+  INDIFERENTE   // Indiferente
+}
+
+enum Diet {
+  NINGUNA       // Sin restricciones
+  VEGETARIANO   // Vegetariano
+  VEGANO        // Vegano
+  CELIACO       // CelÃ­aco
+  OTRO          // Otras restricciones
+}
+
+enum RoomType {
+  PRIVADA       // HabitaciÃ³n privada
+  COMPARTIDA    // HabitaciÃ³n compartida
+  ESTUDIO       // Estudio/monoambiente
+}
+
+model UserProfile {
+  id                    String   @id @default(cuid())
+  
+  // VinculaciÃ³n con User existente
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // InformaciÃ³n bÃ¡sica del perfil
+  role                  String   @default("BUSCO") // Valores vÃ¡lidos: BUSCO, OFREZCO, TENANT, OWNER, AGENCY
+  city                  String
+  neighborhood          String?
+  budgetMin             Int      // Presupuesto mÃ­nimo en ARS
+  budgetMax             Int      // Presupuesto mÃ¡ximo en ARS
+  bio                   String?
+  photos                String[] // Array de URLs de fotos
+  
+  // Preferencias de convivencia
+  age                   Int?
+  petPref               PetPref  @default(INDIFERENTE)
+  smokePref             SmokePref @default(INDIFERENTE)
+  diet                  Diet     @default(NINGUNA)
+  scheduleNotes         String?  // horarios de trabajo/estudio
+  tags                  String[] // limpio, sociable, gym, gamer, etc.
+  
+  // ConfiguraciÃ³n
+  acceptsMessages       Boolean  @default(true)
+  highlightedUntil      DateTime?
+  isSuspended           Boolean  @default(false)
+  
+  // Campos para sistema de caducidad
+  expiresAt             DateTime?
+  isPaid                Boolean  @default(false)
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relaciones
+  rooms                 Room[]
+  likesGiven            Like[]   @relation("likes_given")
+  likesReceived         Like[]   @relation("likes_received")
+  conversationsA        Conversation[] @relation("conv_a")
+  conversationsB        Conversation[] @relation("conv_b")
+  messagesSent          Message[] @relation("message_sender")
+  reports               Report[]
+  
+  @@index([role, city])
+  @@index([budgetMin, budgetMax])
+  @@index([highlightedUntil])
+  @@index([isSuspended])
+}
+
+model Room {
+  id                    String   @id @default(cuid())
+  
+  // RelaciÃ³n con el perfil propietario
+  ownerId               String
+  owner                 UserProfile @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  // InformaciÃ³n de la habitaciÃ³n
+  title                 String
+  description           String
+  price                 Int      // Precio mensual en ARS
+  city                  String
+  neighborhood          String?
+  type                  RoomType
+  amenities             String[] // wifi, cochera, patio, etc.
+  photos                String[] // Array de URLs de fotos
+  rules                 String?  // no fiestas, etc.
+  
+  // Estado
+  isActive              Boolean  @default(true)
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([city, type])
+  @@index([price])
+  @@index([isActive])
+}
+
+model Like {
+  id                    String   @id @default(cuid())
+  
+  // Relaciones
+  fromId                String
+  toId                  String
+  from                  UserProfile @relation("likes_given", fields: [fromId], references: [id], onDelete: Cascade)
+  to                    UserProfile @relation("likes_received", fields: [toId], references: [id], onDelete: Cascade)
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  
+  @@unique([fromId, toId])
+  @@index([fromId])
+  @@index([toId])
+}
+
+model Conversation {
+  id                    String   @id @default(cuid())
+  
+  // Participantes (siempre 2 en MVP)
+  aId                   String
+  bId                   String
+  a                     UserProfile @relation("conv_a", fields: [aId], references: [id], onDelete: Cascade)
+  b                     UserProfile @relation("conv_b", fields: [bId], references: [id], onDelete: Cascade)
+  
+  // Estado
+  isActive              Boolean  @default(true)
+  lastMessageAt         DateTime?
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  // Relaciones
+  messages              Message[]
+  
+  @@unique([aId, bId])
+  @@index([aId, isActive])
+  @@index([bId, isActive])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id                    String   @id @default(cuid())
+  
+  // Relaciones
+  conversationId        String
+  conversation          Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId              String
+  sender                UserProfile @relation("message_sender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  // Contenido
+  body                  String
+  isRead                Boolean  @default(false)
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([isRead])
+}
+
+model Report {
+  id                    String   @id @default(cuid())
+  
+  // RelaciÃ³n con el perfil reportado
+  targetId              String
+  target                UserProfile @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  
+  // InformaciÃ³n del reporte
+  reason                String   // spam, contenido_inapropiado, acoso, etc.
+  details               String?
+  reporterEmail         String?  // Email del reportador (puede ser anÃ³nimo)
+  
+  // Estado
+  status                String   @default("PENDING") // PENDING, REVIEWED, RESOLVED, DISMISSED
+  adminNotes            String?
+  
+  // AuditorÃ­a
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([targetId, status])
+  @@index([status, createdAt])
+}
+
