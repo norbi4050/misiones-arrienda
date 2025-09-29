@@ -301,6 +301,38 @@ export function generateOrganizationJsonLd(baseUrl: string) {
 }
 
 /**
+ * Generar schema para páginas de ciudad
+ */
+export function generateCityPageSchema(params: {
+  city: string; url: string; description?: string;
+}) {
+  const { city, url, description = `${city} - propiedades y alquileres` } = params
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: `Propiedades en ${city}`,
+    description,
+    url,
+  }
+}
+
+/**
+ * Generar breadcrumb schema (función adicional para compatibilidad)
+ */
+export function generateBreadcrumbSchema(items: Array<{ name: string; url: string }>) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      item: it.url,
+    })),
+  }
+}
+
+/**
  * Utility para insertar JSON-LD en el head
  */
 export function createJsonLdScript(data: object) {

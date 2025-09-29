@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+
+function getServerClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name: string) => cookies().get(name)?.value,
+        set: (name: string, value: string, options: CookieOptions) => {
+          try { cookies().set({ name, value, ...options }) } catch {}
+        },
+        remove: (name: string, options: CookieOptions) => {
+          try { cookies().delete({ name, ...options }) } catch {}
+        },
+      },
+    }
+  )
+}
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -12,7 +31,7 @@ function getTimestampEpoch(): number {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = getServerClient()
     
     // Obtener userId del query params (público)
     const { searchParams } = new URL(request.url)
@@ -23,51 +42,35 @@ export async function GET(request: NextRequest) {
     }
 
     // Obtener datos de user_profiles y users para construir avatar_url único
-    const [profilesResult, usersResult] = await Promise.all([
-      supabase.from('user_profiles').select('photos, updated_at, full_name').eq('id', userId).maybeSingle(),
-      supabase.from('users').select('profile_image, name').eq('id', userId).maybeSingle()
+    const [{ data: userData }, { data: profile }] = await Promise.all([
+      supabase.from('users').select('id,name,profile_image').eq('id', userId).maybeSingle(),
+      supabase.from('user_profiles').select('photos,updated_at').eq('user_id', userId).maybeSingle(),
     ])
 
-    const userProfile = profilesResult.data
-    const userData = usersResult.data
-    const fullName = userProfile?.full_name || userData?.name || 'Usuario'
-
-    // Construir avatar_url con fuente única: photos[0] → profile_image (DEPRECATED) → fallback
-    const avatarUrl = 
-      userProfile?.photos?.[0] ??
-      userData?.profile_image ??  // DEPRECATED fallback temporal
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0D8ABC&color=fff&size=200`
-
-    // Calcular v = epoch de user_profiles.updated_at
-    const v = userProfile?.updated_at 
-      ? Math.floor(new Date(userProfile.updated_at).getTime() / 1000)
-      : 0
-
-    // Si no hay avatar personalizado, devolver sin cache-busting
-    if (!userProfile?.photos?.[0] && !userData?.profile_image) {
-      return NextResponse.json({
-        url: avatarUrl,  // Fallback URL sin ?v=
-        v: v,
-        source: 'fallback',
-        user_id: userId,
-        full_name: fullName
-      }, {
-        status: 200,
-        headers: {
-          'Cache-Control': 'public, max-age=60'
-        }
-      })
+    if (!userData) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    // Retornar avatar con cache-busting usando epoch
-    const avatarUrlWithVersion = `${avatarUrl}?v=${v}`
+    const primaryUrl = profile?.photos?.[0] ?? null;
+    const deprecatedUrl = userData?.profile_image ?? null; // fallback temporal
+    const displayName = userData?.name ?? 'User';
 
+    const url =
+      primaryUrl ??
+      deprecatedUrl ??
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff&size=200`;
+
+    const v = primaryUrl && profile?.updated_at
+      ? Math.floor(new Date(profile.updated_at).getTime() / 1000)
+      : 0;
+
+    // Devolver URL cruda sin ?v= - el frontend se encarga del cache-busting
     return NextResponse.json({
-      url: avatarUrlWithVersion,
+      url: url,  // URL cruda sin ?v=
       v: v,
-      source: userProfile?.photos?.[0] ? 'photos' : 'profile_image_deprecated',
+      source: primaryUrl ? 'photos' : (deprecatedUrl ? 'profile_image_deprecated' : 'fallback'),
       user_id: userId,
-      full_name: fullName
+      full_name: displayName
     }, {
       status: 200,
       headers: {
@@ -81,102 +84,54 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const supabase = createServiceClient(supabaseUrl, supabaseServiceKey)
-    
-    // Obtener userId del header de autorización
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    const supabase = getServerClient()
+
+    // 1) Autenticación por cookies (SSR)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
+    // 2) Archivo
+    const form = await req.formData()
+    const file = form.get('file') as File | null
+    if (!file) return NextResponse.json({ error: 'file required' }, { status: 400 })
+
+    const ext = (file.type?.split('/')?.[1] || 'jpg').toLowerCase()
+    const path = `${user.id}/avatar.${ext}`
+
+    // 3) Subir a Storage (bucket: avatars)
+    const { error: upErr } = await supabase
+      .storage.from('avatars')
+      .upload(path, file, { upsert: true, cacheControl: '3600' })
+
+    if (upErr) {
+      console.error('upload error:', upErr)
+      return NextResponse.json({ error: upErr.message }, { status: 500 })
     }
 
-    const userId = authHeader.replace('Bearer ', '')
-    
-    // Verificar si es upload de archivo o URL directa
-    const contentType = request.headers.get('content-type')
-    let avatarUrl: string
+    // 4) URL pública
+    const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
+    const url = pub.publicUrl
+    const v = Math.floor(Date.now() / 1000)
 
-    if (contentType?.includes('multipart/form-data')) {
-      // Upload de archivo al bucket avatars/<userId>/
-      const formData = await request.formData()
-      const file = formData.get('file') as File
-      
-      if (!file) {
-        return NextResponse.json({ error: 'Archivo requerido' }, { status: 400 })
-      }
-
-      // Generar nombre único para el archivo
-      const timestamp = Date.now()
-      const fileExt = file.name.split('.').pop()
-      const fileName = `avatar-${timestamp}.${fileExt}`
-      const filePath = `avatars/${userId}/${fileName}`
-
-      // Subir archivo a Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        })
-
-      if (uploadError) {
-        console.error('Error uploading to storage:', uploadError)
-        return NextResponse.json({ error: 'Error al subir archivo' }, { status: 500 })
-      }
-
-      // Obtener URL pública
-      const { data: publicUrlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath)
-
-      avatarUrl = publicUrlData.publicUrl
-
-    } else {
-      // URL directa desde JSON
-      const { avatar_url } = await request.json()
-      
-      if (!avatar_url) {
-        return NextResponse.json({ error: 'URL de avatar requerida' }, { status: 400 })
-      }
-      
-      avatarUrl = avatar_url
-    }
-
-    // Actualizar photos[1] usando SQL directo para manejar text[] correctamente
-    const now = new Date()
-    
-    // Usar UPDATE directo con array literal PostgreSQL para text[]
-    const { data: updateResult, error: updateError } = await supabase
+    // 5) Guardar en user_profiles (¡usar user_id!)
+    const { error: updErr } = await supabase
       .from('user_profiles')
-      .update({ 
-        photos: [avatarUrl],  // Prisma maneja automáticamente la conversión a text[]
-        updated_at: now.toISOString()
-      })
-      .eq('id', userId)
-      .select('updated_at')
-      .single()
+      .update({ photos: [url], updated_at: new Date().toISOString() })
+      .eq('user_id', user.id)
 
-    if (updateError) {
-      console.error('Error updating avatar:', updateError)
-      return NextResponse.json({ error: 'Error al actualizar avatar' }, { status: 500 })
+    // Si no existe la fila aún, upsert rápido
+    if (updErr?.code === 'PGRST116' /* 0 rows */ || updErr == null) {
+      await supabase
+        .from('user_profiles')
+        .upsert({ user_id: user.id, photos: [url], updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
     }
 
-    // Calcular timestamp epoch del resultado
-    const updatedAtEpoch = updateResult?.updated_at 
-      ? Math.floor(new Date(updateResult.updated_at).getTime() / 1000)
-      : Math.floor(now.getTime() / 1000)
-
-    return NextResponse.json({ 
-      url: `${avatarUrl}?v=${updatedAtEpoch}`,
-      v: updatedAtEpoch,
-      user_id: userId,
-      success: true 
-    })
-
-  } catch (error) {
-    console.error('Error in avatar POST:', error)
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+    return NextResponse.json({ url: `${url}?v=${v}`, v, success: true })
+  } catch (e) {
+    console.error('avatar POST error:', e)
+    return NextResponse.json({ error: 'server error' }, { status: 500 })
   }
 }
 

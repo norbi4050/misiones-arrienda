@@ -182,7 +182,7 @@ const PropertiesMap: React.FC<PropertiesMapProps> = ({
               ${property.propertyType} • ${property.bedrooms || 0} dorm. • ${property.city}
             </p>
             <button 
-              onclick="window.location.href='/properties/${property.id}'"
+              onclick="window.location.href='/properties/${encodeURIComponent(property.id)}'"
               class="w-full bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
             >
               Ver Detalle

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { v4 as uuidv4 } from 'uuid';
 
 // Rate limiting simple en memoria (por IP + minuto)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -65,7 +64,7 @@ function getOrCreateSessionId(request: NextRequest): { sessionId: string; setCoo
   }
   
   // Crear nueva sesión
-  const newSessionId = uuidv4();
+  const newSessionId = crypto.randomUUID();
   const expires = new Date();
   expires.setDate(expires.getDate() + 90); // 90 días
   

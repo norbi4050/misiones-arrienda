@@ -37,8 +37,11 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json()
       setConversations(data.conversations || [])
     } catch (err: any) {
-      console.error('Error fetching conversations:', err)
-      setError(err.message)
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Error fetching conversations (non-blocking):', err)
+      }
+      setConversations([]) // No bloquear el wizard
+      setError(null) // No mostrar error en UI
     } finally {
       setLoading(false)
     }

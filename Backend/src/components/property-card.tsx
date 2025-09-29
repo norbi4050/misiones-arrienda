@@ -3,7 +3,7 @@
 import { MapPin, Bed, Bath, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FavoriteButton } from "@/components/favorite-button"
+import { FavoriteButton } from "@/components/ui/FavoriteButton"
 import PropertyImage from "@/components/ui/property-image"
 import Link from "next/link"
 
@@ -18,6 +18,7 @@ interface PropertyCardProps {
   area: number
   image: string
   imageUrls?: string[]
+  coverUrl?: string
   userId?: string
   featured?: boolean
 }
@@ -33,17 +34,21 @@ export function PropertyCard({
   area,
   image,
   imageUrls,
+  coverUrl,
   userId,
   featured = false
 }: PropertyCardProps) {
+  // Robustecer el src con OR-chain seguro, priorizando coverUrl
+  const src = coverUrl ?? image ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
+  
   return (
-    <Link href={`/property/${id}`} className="block">
+    <Link href={`/properties/${id}`} className="block">
       <div className="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
         <div className="aspect-[4/3] overflow-hidden relative">
           <PropertyImage
-            src={imageUrls?.[0] || image}
+            src={src}
             alt={title}
-            fallback={image}
+            fallback="/placeholder-apartment-1.jpg"
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-110"
           />
@@ -53,11 +58,7 @@ export function PropertyCard({
             </Badge>
           )}
           <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <FavoriteButton 
-              propertyId={id}
-              size="sm"
-              className="bg-white/80 backdrop-blur-sm hover:bg-white"
-            />
+            <FavoriteButton propertyId={id} />
           </div>
           
           {/* Overlay gradient on hover */}
@@ -104,7 +105,7 @@ export function PropertyCard({
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              window.location.href = `/property/${id}`
+              window.location.href = `/properties/${id}`
             }}
           >
             Ver detalles

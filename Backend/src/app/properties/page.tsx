@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import { PropertiesPageClient } from './properties-client'
+import { PropertiesPageClient } from './properties-client-new'
 import { PageTracker } from '@/components/analytics/page-tracker'
 
 export const metadata: Metadata = {

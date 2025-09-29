@@ -1,12 +1,13 @@
+import 'server-only';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { createClient } from '@/lib/supabase/server';
-import { getPropertyImages } from '@/lib/property-images.server';
+import { createServerSupabase } from '@/lib/supabase/server';
 import { 
   generatePropertyMetaTags,
   generatePropertyJsonLd,
@@ -15,7 +16,11 @@ import {
 } from '@/lib/structured-data';
 import ImageCarousel from '@/components/ui/ImageCarousel';
 import PropertyLocationMap from '@/components/ui/PropertyLocationMap';
-import { ConsentCheckbox } from '@/components/ui/ConsentCheckbox';
+import PropertyContactForm from '@/components/ui/PropertyContactForm';
+import ContactPanel from '@/components/contact/ContactPanel';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import { ShareButton } from '@/components/ui/ShareButton';
+import OwnerActions from '@/components/ui/OwnerActions';
 import { FeaturePaymentButton } from '@/components/ui/feature-payment-button';
 import { 
   MapPin, 
@@ -39,35 +44,73 @@ interface PropertyDetailPageProps {
   params: { id: string };
 }
 
-// Obtener propiedad desde API real
+// Obtener imágenes finales con bucket-first + fallback
+async function getImagesFinal(property: any) {
+  const supabase = createServerSupabase();
+
+  // 1) bucket-first
+  const { data: list } = await supabase
+    .storage.from('property-images')
+    .list(`${property.user_id}/${property.id}`, { limit: 50 });
+  
+  const v = Math.floor(new Date(property.updated_at).getTime() / 1000);
+  const bucketUrls =
+    (list ?? [])
+      .filter(o => o?.name)
+      .map(o =>
+        supabase.storage
+          .from('property-images')
+          .getPublicUrl(`${property.user_id}/${property.id}/${o.name}`).data.publicUrl + `?v=${v}`
+      );
+
+  // 2) fallback: images_urls (array de paths relativo al bucket)
+  const fromImagesUrls =
+    Array.isArray(property.images_urls)
+      ? property.images_urls.map((key: string) =>
+          supabase.storage.from('property-images').getPublicUrl(key).data.publicUrl + `?v=${v}`
+        )
+      : [];
+
+  // 3) demo/placeholder si todo vacío
+  const final = bucketUrls.length ? bucketUrls : fromImagesUrls;
+  return final;
+}
+
+// Obtener propiedad desde API unificada
 async function getPropertyFromAPI(id: string) {
   try {
-    const supabase = createClient();
-    
-    const { data: property, error } = await supabase
-      .from('properties')
-      .select(`
-        *,
-        agent:user_profiles!properties_user_id_fkey(
-          id,
-          full_name,
-          email,
-          phone,
-          photos
-        )
-      `)
-      .eq('id', id)
-      .eq('status', 'PUBLISHED')
-      .single();
+    // Evitar depender de NEXT_PUBLIC_BASE_URL. Construir URL absoluta usando headers
+    const h = headers()
+    const host = h.get('x-forwarded-host') ?? h.get('host')
+    const proto = (h.get('x-forwarded-proto') ?? 'http')
+    const base = `${proto}://${host}`
 
-    if (error || !property) {
-      console.error('Error fetching property:', error);
+    const res = await fetch(`${base}/api/properties/${id}`, { 
+      cache: 'no-store' 
+    });
+
+    // Parsear respuesta según shape actual de la API
+    if (res.status === 404) {
+      return null; // notFound()
+    }
+    
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status} ${res.statusText}`);
+    }
+
+    const result = await res.json();
+    
+    // Esperado: { ok: true, property, agent }
+    if (!result.ok || !result.property) {
       return null;
     }
 
-    return property;
+    return {
+      property: result.property,
+      agent: result.agent || null
+    };
   } catch (error) {
-    console.error('Error in getPropertyFromAPI:', error);
+    console.error('Error fetching property from API:', error);
     return null;
   }
 }
@@ -75,14 +118,13 @@ async function getPropertyFromAPI(id: string) {
 // Obtener propiedades similares desde API
 async function getSimilarProperties(property: any) {
   try {
-    const supabase = createClient();
+    const supabase = createServerSupabase();
     
     const { data: similar, error } = await supabase
       .from('properties')
       .select('id, title, price, currency, bedrooms, bathrooms, images, city')
       .eq('city', property.city)
       .eq('property_type', property.property_type)
-      .eq('status', 'PUBLISHED')
       .neq('id', property.id)
       .limit(3);
 
@@ -100,23 +142,19 @@ async function getSimilarProperties(property: any) {
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PropertyDetailPageProps): Promise<Metadata> {
-  const property = await getPropertyFromAPI(params.id);
+  const result = await getPropertyFromAPI(params.id);
 
-  if (!property) {
+  if (!result) {
     return {
       title: 'Propiedad no encontrada - Misiones Arrienda',
       description: 'La propiedad que buscas no existe o ha sido removida.',
     };
   }
 
-  // Obtener imágenes reales del bucket
-  const fallbackImages = property.images ? JSON.parse(property.images) : [];
-  const realImages = await getPropertyImages({
-    propertyId: property.id,
-    userId: property.user_id,
-    fallbackImages,
-    maxImages: 5
-  });
+  const { property } = result;
+
+  // Obtener imágenes finales usando bucket-first
+  const realImages = await getImagesFinal(property);
 
   // Usar el sistema completo de SEO con imágenes reales
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app';
@@ -126,25 +164,22 @@ export async function generateMetadata({ params }: PropertyDetailPageProps): Pro
 }
 
 export default async function PropertyDetailPage({ params }: PropertyDetailPageProps) {
-  const property = await getPropertyFromAPI(params.id);
+  // Usar API unificada en lugar de consulta directa
+  const result = await getPropertyFromAPI(params.id);
 
-  if (!property) {
+  if (!result) {
     notFound();
   }
 
+  const { property, agent } = result;
+
   // Obtener usuario autenticado para verificar si es el dueño
-  const supabase = createClient();
+  const supabase = createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   const isOwner = user?.id === property.user_id;
 
-  // Obtener imágenes reales del bucket
-  const fallbackImages = property.images ? JSON.parse(property.images) : [];
-  const realImages = await getPropertyImages({
-    propertyId: property.id,
-    userId: property.user_id,
-    fallbackImages,
-    maxImages: 10
-  });
+  // Obtener imágenes finales usando bucket-first
+  const realImages = await getImagesFinal(property);
 
   // Parse amenities and features
   const amenities = property.amenities ? JSON.parse(property.amenities) : [];
@@ -172,7 +207,11 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
   };
 
   // Generar JSON-LD structured data con imágenes reales
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app';
+  const h = headers()
+  const host = h.get('x-forwarded-host') ?? h.get('host')
+  const proto = (h.get('x-forwarded-proto') ?? 'http')
+  const baseUrl = `${proto}://${host}`
+  
   const propertyJsonLd = generatePropertyJsonLd(property, baseUrl, realImages);
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: 'Inicio', url: baseUrl },
@@ -212,27 +251,45 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
           <div className="lg:col-span-2">
             {/* Image Carousel */}
             <div className="mb-8">
-              <ImageCarousel
-                images={realImages.map((src: string, index: number) => ({
-                  src,
-                  alt: `${property.title} - Imagen ${index + 1}`
-                }))}
-                className="w-full"
-                showThumbnails={realImages.length > 1}
-                enableZoom={true}
-              />
-              
-              {/* Indicador de fuente de imágenes */}
-              {realImages.length > 0 && (
-                <div className="mt-2 text-xs text-gray-500">
-                  {realImages[0].includes('supabase.co') ? (
-                    <span className="text-green-600">✓ Imágenes verificadas</span>
-                  ) : realImages[0].includes('placeholder') ? (
-                    <span className="text-orange-600">⚠ Sin imágenes disponibles</span>
-                  ) : (
-                    <span className="text-blue-600">📁 Imágenes de archivo</span>
-                  )}
-                </div>
+              {realImages.length > 0 ? (
+                <>
+                  <ImageCarousel
+                    images={realImages.map((src: string, index: number) => ({
+                      src,
+                      alt: `${property.title} - Imagen ${index + 1}`
+                    }))}
+                    className="w-full"
+                    showThumbnails={realImages.length > 1}
+                    enableZoom={true}
+                  />
+                  
+                  {/* Indicador de fuente de imágenes */}
+                  <div className="mt-2 text-xs text-gray-500">
+                    {realImages[0].includes('supabase.co') ? (
+                      <span className="text-green-600">✓ Imágenes verificadas</span>
+                    ) : realImages[0].includes('placeholder') ? (
+                      <span className="text-orange-600">⚠ Sin imágenes disponibles</span>
+                    ) : (
+                      <span className="text-blue-600">📁 Imágenes de archivo</span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Placeholder cuando no hay imágenes */}
+                  <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <div className="text-6xl mb-4">🏠</div>
+                      <div className="text-lg font-medium">Sin imágenes disponibles</div>
+                      <div className="text-sm">Esta propiedad no tiene fotos cargadas</div>
+                    </div>
+                  </div>
+                  
+                  {/* Estado "Sin imágenes" */}
+                  <div className="mt-2 text-amber-600 text-sm flex items-center gap-2">
+                    ⚠️ Sin imágenes disponibles
+                  </div>
+                </>
               )}
             </div>
 
@@ -248,14 +305,12 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                     <span>{property.address}, {property.city}, {property.province}</span>
                   </div>
                 </div>
-                <div className="flex space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                {!isOwner && (
+                  <div className="flex space-x-2">
+                    <FavoriteButton propertyId={property.id} />
+                    <ShareButton url={`${baseUrl}/properties/${property.id}`} />
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center space-x-4 mb-6">
@@ -263,7 +318,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                   {getPropertyTypeLabel(property.property_type)}
                 </Badge>
                 <Badge variant={property.status === 'PUBLISHED' ? 'default' : 'secondary'}>
-                  {property.status === 'PUBLISHED' ? 'Disponible' : 'No disponible'}
+                  {property.status === 'PUBLISHED' ? 'Disponible' : property.status || 'Estado desconocido'}
                 </Badge>
                 {property.featured && (
                   <Badge variant="destructive">Destacada</Badge>
@@ -368,138 +423,132 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
 
             {/* Location Map */}
             <div className="mb-8">
-              <PropertyLocationMap
-                property={{
-                  title: property.title,
-                  address: property.address,
-                  city: property.city,
-                  latitude: property.latitude,
-                  longitude: property.longitude,
-                  price: property.price,
-                  currency: property.currency || 'ARS'
-                }}
-                height="350px"
-                className="w-full"
-              />
-            </div>
-
-            {/* Contact Form */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Contactar al anunciante
-              </h2>
-              
-              {/* Agent Info */}
-              {property.agent && (
-                <div className="flex items-center space-x-3 mb-6 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">
-                      {property.agent.full_name || 'Propietario'}
-                    </h3>
-                    <p className="text-sm text-gray-600">Anunciante</p>
-                    {/* Advertencia para usuarios nuevos */}
-                    <div className="flex items-center mt-1">
-                      <AlertTriangle className="h-3 w-3 text-orange-500 mr-1" />
-                      <span className="text-xs text-orange-600">
-                        Usuario nuevo - Verificar referencias
-                      </span>
-                    </div>
-                  </div>
+              {property.latitude && property.longitude ? (
+                <PropertyLocationMap
+                  property={{
+                    title: property.title,
+                    address: property.address,
+                    city: property.city,
+                    latitude: property.latitude,
+                    longitude: property.longitude,
+                    price: property.price,
+                    currency: property.currency || 'ARS'
+                  }}
+                  height="350px"
+                  className="w-full"
+                />
+              ) : (
+                <div className="rounded-xl border p-4 text-sm text-gray-600">
+                  <div className="font-medium mb-1">Ubicación aproximada</div>
+                  <div>Las coordenadas exactas no están disponibles para esta propiedad.</div>
+                  <div className="mt-1 text-gray-500">{property.address}, {property.city}</div>
                 </div>
               )}
+            </div>
 
-              {/* Contact Form */}
-              <form className="space-y-4">
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                    Mensaje
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder={`Hola, me interesa esta propiedad en ${property.city}. ¿Podríamos coordinar una visita?`}
-                    defaultValue={`Hola, me interesa esta propiedad en ${property.city}. ¿Podríamos coordinar una visita?`}
-                  />
-                </div>
+            {/* Contact Form - Solo para no dueños */}
+            {!isOwner && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Contactar al anunciante
+                </h2>
+                
+                {/* Agent Info */}
+                {agent && (
+                  <div className="flex items-center space-x-3 mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">
+                        {agent.full_name || 'Propietario'}
+                      </h3>
+                      <p className="text-sm text-gray-600">Anunciante</p>
+                      {/* Advertencia para usuarios nuevos */}
+                      <div className="flex items-center mt-1">
+                        <AlertTriangle className="h-3 w-3 text-orange-500 mr-1" />
+                        <span className="text-xs text-orange-600">
+                          Usuario nuevo - Verificar referencias
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                {/* Consent Checkboxes */}
-                <ConsentCheckbox
-                  checkedTerms={false}
-                  checkedPrivacy={false}
-                  onChangeTerms={() => {}}
-                  onChangePrivacy={() => {}}
-                  className="my-4"
+                {/* Contact Panel - Client Component */}
+                <ContactPanel 
+                  propertyId={property.id} 
+                  ownerId={property.user_id}
+                  propertyCity={property.city}
                 />
 
-                <Button type="submit" className="w-full" size="lg">
-                  <Send className="h-4 w-4 mr-2" />
-                  Enviar consulta
-                </Button>
-              </form>
-
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>💡 Tip:</strong> Sé específico en tu consulta. Menciona fechas de interés, 
-                  presupuesto y cualquier pregunta particular sobre la propiedad.
-                </p>
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>💡 Tip:</strong> Sé específico en tu consulta. Menciona fechas de interés, 
+                    presupuesto y cualquier pregunta particular sobre la propiedad.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            {/* Price & Contact */}
-            <Card className="mb-6">
-              <CardContent className="p-6">
-                <div className="text-center mb-6">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {formatPrice(property.price, property.currency || 'ARS')}
-                  </div>
-                  {property.old_price && (
-                    <div className="text-lg text-gray-500 line-through">
-                      {formatPrice(property.old_price, property.currency || 'ARS')}
+            {/* Price & Contact - Solo para no dueños */}
+            {!isOwner && (
+              <Card className="mb-6">
+                <CardContent className="p-6">
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold text-blue-600 mb-2">
+                      {formatPrice(property.price, property.currency || 'ARS')}
                     </div>
-                  )}
-                  <div className="text-sm text-gray-600">por mes</div>
-                </div>
+                    {property.old_price && (
+                      <div className="text-lg text-gray-500 line-through">
+                        {formatPrice(property.old_price, property.currency || 'ARS')}
+                      </div>
+                    )}
+                    <div className="text-sm text-gray-600">por mes</div>
+                  </div>
 
-                <div className="space-y-3">
-                  <Button className="w-full" size="lg">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Contactar
-                  </Button>
-                  <Button variant="outline" className="w-full" size="lg">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Enviar consulta
-                  </Button>
-                </div>
+                  <ContactPanel 
+                    propertyId={property.id} 
+                    ownerId={property.user_id}
+                    propertyCity={property.city}
+                  />
 
-                <div className="mt-6 pt-6 border-t text-center">
-                  <p className="text-sm text-gray-600">
-                    Publicado el {new Date(property.created_at).toLocaleDateString('es-AR')}
-                  </p>
-                  {property.agent && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Por: {property.agent.full_name || 'Propietario'}
+                  <div className="mt-6 pt-6 border-t text-center">
+                    <p className="text-sm text-gray-600">
+                      Publicado el {new Date(property.created_at).toLocaleDateString('es-AR')}
                     </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    {agent && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Por: {agent.full_name || 'Propietario'}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Owner Actions - Solo para dueños */}
+            {isOwner && (
+              <OwnerActions
+                propertyId={property.id}
+                highlightPrice="999 ARS"
+                className="mb-6"
+              />
+            )}
 
             {/* Feature Payment Button (solo para dueños) */}
-            <FeaturePaymentButton
-              propertyId={property.id}
-              isOwner={isOwner}
-              featured={property.featured || false}
-              featuredExpires={property.featured_expires}
-              className="mb-6"
-            />
+            {isOwner && (
+              <FeaturePaymentButton
+                propertyId={property.id}
+                isOwner={isOwner}
+                featured={property.featured || false}
+                featuredExpires={property.featured_expires}
+                className="mb-6"
+              />
+            )}
 
             {/* Similar Properties */}
             {similarProperties.length > 0 && (

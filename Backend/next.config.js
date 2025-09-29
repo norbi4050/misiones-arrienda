@@ -23,7 +23,16 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'qfeyhaaxyemmnohqdele.supabase.co',
-        port: '',
+        pathname: '/storage/v1/object/public/avatars/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'qfeyhaaxyemmnohqdele.supabase.co',
+        pathname: '/storage/v1/object/public/property-images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com',
         pathname: '/**',
       },
       {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { withVersion } from '@/lib/url'
 
 interface AvatarUniversalProps {
   userId?: string
@@ -59,13 +60,15 @@ export default function AvatarUniversal({
       if (response.ok) {
         const data = await response.json()
         
-        // Nueva API devuelve { url, v } o { avatarUrl, ... } (backward compatibility)
-        const avatarUrl = data.url || data.avatarUrl
+        // FUENTE ÚNICA: Solo user_profiles.photos[0] (sin fallback a profile_image)
+        const baseUrl = data?.url || '';
+        const v = data?.v || 0;
+        const src = withVersion(baseUrl, v);
         
-        if (avatarUrl) {
-          setAvatarUrl(avatarUrl)
+        if (baseUrl) {
+          setAvatarUrl(src)
         } else {
-          // Sin avatar, pero no es error
+          // Sin avatar válido → usar fallback ui-avatars
           setAvatarUrl(null)
         }
       } else {
@@ -94,12 +97,12 @@ export default function AvatarUniversal({
       // Crear FormData para subir archivo
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('userId', targetUserId)
 
-      // Subir archivo (esto requeriría un endpoint de upload)
-      const uploadResponse = await fetch('/api/upload/avatar', {
+      // Subir archivo al endpoint correcto (maneja upload + update en una sola llamada)
+      const uploadResponse = await fetch('/api/users/avatar', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'include'
       })
 
       if (!uploadResponse.ok) {
@@ -107,27 +110,12 @@ export default function AvatarUniversal({
       }
 
       const uploadData = await uploadResponse.json()
-      const newAvatarUrl = uploadData.url
-
-      // Actualizar avatar en perfil
-      const updateResponse = await fetch('/api/users/avatar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${targetUserId}`
-        },
-        body: JSON.stringify({ avatar_url: newAvatarUrl })
-      })
-
-      if (!updateResponse.ok) {
-        throw new Error('Error al actualizar avatar')
-      }
-
-      const updateData = await updateResponse.json()
       
-      if (updateData.success) {
-        setAvatarUrl(updateData.avatar_url)
-        onAvatarChange?.(updateData.avatar_url)
+      if (uploadData.success && uploadData.url) {
+        setAvatarUrl(uploadData.url)
+        onAvatarChange?.(uploadData.url)
+        // Recargar avatar para obtener nueva versión
+        await loadAvatar()
       }
 
     } catch (err) {
@@ -167,6 +155,8 @@ export default function AvatarUniversal({
             fill
             className="object-cover"
             sizes={`${sizeClasses[size].split(' ')[0].replace('w-', '')}px`}
+            unoptimized
+            priority
             onError={() => {
               setAvatarUrl(null)
               setError('Error al cargar imagen')
@@ -225,10 +215,12 @@ export function useAvatar(userId?: string) {
         const data = await response.json()
         
         // Nueva API devuelve { url, v } o { avatarUrl, ... } (backward compatibility)
-        const avatarUrl = data.url || data.avatarUrl
+        const baseUrl = data?.url || data?.avatarUrl || '';
+        const v = data?.v || 0;
+        const src = withVersion(baseUrl, v);
         
-        if (avatarUrl) {
-          setAvatarUrl(avatarUrl)
+        if (baseUrl) {
+          setAvatarUrl(src)
         } else {
           // Sin avatar, pero no es error
           setAvatarUrl(null)

@@ -9,6 +9,7 @@ import BuildBadge from '@/components/BuildBadge'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/components/auth-provider'
 import { MessagesProvider } from '@/contexts/MessagesContext'
+import ToasterProvider from '@/components/toaster-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -72,53 +73,8 @@ export default function RootLayout({
               {/* Build Badge para debugging */}
               <BuildBadge />
 
-              {/* Toast Notifications Mejoradas */}
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                    fontSize: '14px',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    maxWidth: '400px',
-                  },
-                  success: {
-                    duration: 3000,
-                    style: {
-                      background: '#10b981',
-                      color: '#fff',
-                    },
-                    iconTheme: {
-                      primary: '#fff',
-                      secondary: '#10b981',
-                    },
-                  },
-                  error: {
-                    duration: 5000,
-                    style: {
-                      background: '#ef4444',
-                      color: '#fff',
-                    },
-                    iconTheme: {
-                      primary: '#fff',
-                      secondary: '#ef4444',
-                    },
-                  },
-                  loading: {
-                    style: {
-                      background: '#3b82f6',
-                      color: '#fff',
-                    },
-                    iconTheme: {
-                      primary: '#fff',
-                      secondary: '#3b82f6',
-                    },
-                  },
-                }}
-              />
+              {/* Toast Notifications Sonner */}
+              <ToasterProvider />
             </ThemeProvider>
           </MessagesProvider>
         </AuthProvider>

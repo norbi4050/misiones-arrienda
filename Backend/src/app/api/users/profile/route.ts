@@ -2,6 +2,29 @@
 import { NextResponse, NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { z } from "zod";
+
+// Zod schema for user_profiles validation
+const UserProfileSchema = z.object({
+  role: z.enum(['BUSCO', 'OFREZCO', 'TENANT', 'OWNER', 'AGENCY']).optional(),
+  city: z.string().min(1).optional(),
+  neighborhood: z.string().nullable().optional(),
+  budgetMin: z.number().min(0).optional(),
+  budgetMax: z.number().min(0).optional(),
+  bio: z.string().nullable().optional(),
+  photos: z.array(z.string()).nullable().optional(),
+  age: z.number().min(0).max(120).nullable().optional(),
+  petPref: z.enum(['SI_PET', 'NO_PET', 'INDIFERENTE']).nullable().optional(),
+  smokePref: z.enum(['FUMADOR', 'NO_FUMADOR', 'INDIFERENTE']).nullable().optional(),
+  diet: z.enum(['NINGUNA', 'VEGETARIANO', 'VEGANO', 'CELIACO', 'OTRO']).nullable().optional(),
+  scheduleNotes: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  acceptsMessages: z.boolean().nullable().optional(),
+  highlightedUntil: z.string().nullable().optional(),
+  isSuspended: z.boolean().nullable().optional(),
+  expiresAt: z.string().nullable().optional(),
+  isPaid: z.boolean().nullable().optional(),
+});
 
 function getServerSupabase() {
   const cookieStore = cookies();
@@ -14,11 +37,9 @@ function getServerSupabase() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          // Next 13/14: set acepta objeto con name/value/opciones
           cookieStore.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          // eliminar = set con maxAge pasado
           cookieStore.set({ name, value: "", ...options });
         },
       },
@@ -31,223 +52,167 @@ export async function GET(_req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  // Obtener datos de users y user_profiles para construir avatar_url único
-  const [usersResult, profilesResult] = await Promise.all([
-    supabase.from("users").select("*").eq("id", user.id).maybeSingle(),
-    supabase.from("user_profiles").select("photos, updated_at").eq("id", user.id).maybeSingle()
-  ]);
+  try {
+    // Get profile from user_profiles table
+    const { data: profile, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-  if (usersResult.error) return NextResponse.json({ error: usersResult.error.message }, { status: 500 });
-  if (!usersResult.data) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return NextResponse.json({ error: "Error fetching profile" }, { status: 500 });
+    }
 
-  const userData = usersResult.data;
-  const userProfile = profilesResult.data;
+    // If no profile found, return empty profile ready for editing
+    if (!profile) {
+      return NextResponse.json({ 
+        profile: {
+          role: 'BUSCO',
+          city: '',
+          neighborhood: null,
+          budgetMin: null,
+          budgetMax: null,
+          bio: null,
+          photos: null,
+          age: null,
+          petPref: null,
+          smokePref: null,
+          diet: null,
+          scheduleNotes: null,
+          tags: null,
+          acceptsMessages: true,
+          highlightedUntil: null,
+          isSuspended: false,
+          expiresAt: null,
+          isPaid: false,
+        }
+      });
+    }
 
-  // Construir avatar_url con fuente única: photos[0] → profile_image (DEPRECATED) → fallback
-  const avatarUrl = 
-    userProfile?.photos?.[0] ??
-    userData.profile_image ??  // DEPRECATED fallback temporal
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || 'User')}&background=0D8ABC&color=fff&size=200`;
+    // Convert snake_case to camelCase for frontend
+    const payload = {
+      role: profile.role,
+      city: profile.city,
+      neighborhood: profile.neighborhood,
+      budgetMin: profile.budget_min,
+      budgetMax: profile.budget_max,
+      bio: profile.bio,
+      photos: profile.photos,
+      age: profile.age,
+      petPref: profile.pet_pref,
+      smokePref: profile.smoke_pref,
+      diet: profile.diet,
+      scheduleNotes: profile.schedule_notes,
+      tags: profile.tags,
+      acceptsMessages: profile.accepts_messages,
+      highlightedUntil: profile.highlighted_until,
+      isSuspended: profile.is_suspended,
+      expiresAt: profile.expires_at,
+      isPaid: profile.is_paid,
+    };
 
-  // Calcular v = epoch de user_profiles.updated_at
-  const v = userProfile?.updated_at 
-    ? Math.floor(new Date(userProfile.updated_at).getTime() / 1000)
-    : 0;
-
-  // Construir respuesta con avatar_url único y v para cache-busting
-  const profileWithAvatar = {
-    ...userData,
-    avatar_url: avatarUrl,
-    v: v
-  };
-
-  return NextResponse.json({ profile: profileWithAvatar }, { status: 200 });
+    return NextResponse.json({ profile: payload });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function PUT(req: NextRequest) {
-  const supabase = getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-
-  let body: any = {};
-  try { body = await req.json(); } catch {}
-
-  // Transform data types to match database schema
-  const transformedBody: any = { ...body };
-
-  // Convert familySize to integer
-  if (transformedBody.familySize !== undefined) {
-    if (transformedBody.familySize === "") {
-      transformedBody.family_size = null;
-    } else {
-      const familySizeNum = parseInt(transformedBody.familySize);
-      transformedBody.family_size = isNaN(familySizeNum) ? null : familySizeNum;
-    }
-    delete transformedBody.familySize;
-  }
-
-  // Convert petFriendly to boolean
-  if (transformedBody.petFriendly !== undefined) {
-    transformedBody.pet_friendly = transformedBody.petFriendly === "true" || transformedBody.petFriendly === true;
-    delete transformedBody.petFriendly;
-  }
-
-  // Convert moveInDate to date or null
-  if (transformedBody.moveInDate !== undefined) {
-    if (transformedBody.moveInDate === "" || transformedBody.moveInDate === "flexible") {
-      transformedBody.move_in_date = null;
-    } else {
-      // Try to parse the date, if it fails, set to null
-      const date = new Date(transformedBody.moveInDate);
-      transformedBody.move_in_date = isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
-    }
-    delete transformedBody.moveInDate;
-  }
-
-  // Convert monthlyIncome to numeric
-  if (transformedBody.monthlyIncome !== undefined) {
-    if (transformedBody.monthlyIncome === "") {
-      transformedBody.monthly_income = null;
-    } else {
-      // Remove any non-numeric characters except decimal point
-      const cleanIncome = transformedBody.monthlyIncome.toString().replace(/[^\d.]/g, '');
-      const incomeNum = parseFloat(cleanIncome);
-      transformedBody.monthly_income = isNaN(incomeNum) ? null : incomeNum;
-    }
-    delete transformedBody.monthlyIncome;
-  }
-
-  // Rename camelCase fields to snake_case
-  if (transformedBody.searchType !== undefined) {
-    transformedBody.search_type = transformedBody.searchType;
-    delete transformedBody.searchType;
-  }
-
-  if (transformedBody.budgetRange !== undefined) {
-    transformedBody.budget_range = transformedBody.budgetRange;
-    delete transformedBody.budgetRange;
-  }
-
-  if (transformedBody.profileImage !== undefined) {
-    transformedBody.profile_image = transformedBody.profileImage;
-    delete transformedBody.profileImage;
-  }
-
-  if (transformedBody.preferredAreas !== undefined) {
-    transformedBody.preferred_areas = transformedBody.preferredAreas;
-    delete transformedBody.preferredAreas;
-  }
-
-  if (transformedBody.employmentStatus !== undefined) {
-    transformedBody.employment_status = transformedBody.employmentStatus;
-    delete transformedBody.employmentStatus;
-  }
-
-  const payload = { id: user.id, ...transformedBody };
-
-  const { data, error } = await supabase
-    .from("users")
-    .upsert(payload, { onConflict: "id" })
-    .select()
-    .maybeSingle();
-
-  if (error) {
-    console.error('Profile update error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json({ profile: data }, { status: 200 });
+  return handleProfileUpdate(req);
 }
 
 export async function PATCH(req: NextRequest) {
+  return handleProfileUpdate(req);
+}
+
+async function handleProfileUpdate(req: NextRequest) {
   const supabase = getServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-  let body: any = {};
-  try { body = await req.json(); } catch {}
-
-  // Transform data types to match database schema
-  const transformedBody: any = { ...body };
-
-  // Convert familySize to integer
-  if (transformedBody.familySize !== undefined) {
-    if (transformedBody.familySize === "") {
-      transformedBody.family_size = null;
-    } else {
-      const familySizeNum = parseInt(transformedBody.familySize);
-      transformedBody.family_size = isNaN(familySizeNum) ? null : familySizeNum;
+  try {
+    let body: any = {};
+    try { 
+      body = await req.json(); 
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
-    delete transformedBody.familySize;
-  }
 
-  // Convert petFriendly to boolean
-  if (transformedBody.petFriendly !== undefined) {
-    transformedBody.pet_friendly = transformedBody.petFriendly === "true" || transformedBody.petFriendly === true;
-    delete transformedBody.petFriendly;
-  }
-
-  // Convert moveInDate to date or null
-  if (transformedBody.moveInDate !== undefined) {
-    if (transformedBody.moveInDate === "" || transformedBody.moveInDate === "flexible") {
-      transformedBody.move_in_date = null;
-    } else {
-      // Try to parse the date, if it fails, set to null
-      const date = new Date(transformedBody.moveInDate);
-      transformedBody.move_in_date = isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
+    // Validate with Zod
+    const validation = UserProfileSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json({ 
+        error: "Validation failed", 
+        details: validation.error.errors 
+      }, { status: 400 });
     }
-    delete transformedBody.moveInDate;
-  }
 
-  // Convert monthlyIncome to numeric
-  if (transformedBody.monthlyIncome !== undefined) {
-    if (transformedBody.monthlyIncome === "") {
-      transformedBody.monthly_income = null;
-    } else {
-      // Remove any non-numeric characters except decimal point
-      const cleanIncome = transformedBody.monthlyIncome.toString().replace(/[^\d.]/g, '');
-      const incomeNum = parseFloat(cleanIncome);
-      transformedBody.monthly_income = isNaN(incomeNum) ? null : incomeNum;
+    const validatedData = validation.data;
+
+    // Convert camelCase to snake_case for database
+    const dbPayload: any = {
+      user_id: user.id, // Always include user_id for upsert
+    };
+
+    if (validatedData.role !== undefined) dbPayload.role = validatedData.role;
+    if (validatedData.city !== undefined) dbPayload.city = validatedData.city;
+    if (validatedData.neighborhood !== undefined) dbPayload.neighborhood = validatedData.neighborhood;
+    if (validatedData.budgetMin !== undefined) dbPayload.budget_min = validatedData.budgetMin;
+    if (validatedData.budgetMax !== undefined) dbPayload.budget_max = validatedData.budgetMax;
+    if (validatedData.bio !== undefined) dbPayload.bio = validatedData.bio;
+    if (validatedData.photos !== undefined) dbPayload.photos = validatedData.photos;
+    if (validatedData.age !== undefined) dbPayload.age = validatedData.age;
+    if (validatedData.petPref !== undefined) dbPayload.pet_pref = validatedData.petPref;
+    if (validatedData.smokePref !== undefined) dbPayload.smoke_pref = validatedData.smokePref;
+    if (validatedData.diet !== undefined) dbPayload.diet = validatedData.diet;
+    if (validatedData.scheduleNotes !== undefined) dbPayload.schedule_notes = validatedData.scheduleNotes;
+    if (validatedData.tags !== undefined) dbPayload.tags = validatedData.tags;
+    if (validatedData.acceptsMessages !== undefined) dbPayload.accepts_messages = validatedData.acceptsMessages;
+    if (validatedData.highlightedUntil !== undefined) dbPayload.highlighted_until = validatedData.highlightedUntil;
+    if (validatedData.isSuspended !== undefined) dbPayload.is_suspended = validatedData.isSuspended;
+    if (validatedData.expiresAt !== undefined) dbPayload.expires_at = validatedData.expiresAt;
+    if (validatedData.isPaid !== undefined) dbPayload.is_paid = validatedData.isPaid;
+
+    // Upsert to user_profiles table
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .upsert(dbPayload, { onConflict: 'user_id' })
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error('Profile update error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    delete transformedBody.monthlyIncome;
+
+    // Convert response back to camelCase
+    const responsePayload = {
+      role: data.role,
+      city: data.city,
+      neighborhood: data.neighborhood,
+      budgetMin: data.budget_min,
+      budgetMax: data.budget_max,
+      bio: data.bio,
+      photos: data.photos,
+      age: data.age,
+      petPref: data.pet_pref,
+      smokePref: data.smoke_pref,
+      diet: data.diet,
+      scheduleNotes: data.schedule_notes,
+      tags: data.tags,
+      acceptsMessages: data.accepts_messages,
+      highlightedUntil: data.highlighted_until,
+      isSuspended: data.is_suspended,
+      expiresAt: data.expires_at,
+      isPaid: data.is_paid,
+    };
+
+    return NextResponse.json({ profile: responsePayload }, { status: 200 });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  // Rename camelCase fields to snake_case
-  if (transformedBody.searchType !== undefined) {
-    transformedBody.search_type = transformedBody.searchType;
-    delete transformedBody.searchType;
-  }
-
-  if (transformedBody.budgetRange !== undefined) {
-    transformedBody.budget_range = transformedBody.budgetRange;
-    delete transformedBody.budgetRange;
-  }
-
-  if (transformedBody.profileImage !== undefined) {
-    transformedBody.profile_image = transformedBody.profileImage;
-    delete transformedBody.profileImage;
-  }
-
-  if (transformedBody.preferredAreas !== undefined) {
-    transformedBody.preferred_areas = transformedBody.preferredAreas;
-    delete transformedBody.preferredAreas;
-  }
-
-  if (transformedBody.employmentStatus !== undefined) {
-    transformedBody.employment_status = transformedBody.employmentStatus;
-    delete transformedBody.employmentStatus;
-  }
-
-  const payload = { id: user.id, ...transformedBody };
-
-  const { data, error } = await supabase
-    .from("users")
-    .upsert(payload, { onConflict: "id" })
-    .select()
-    .maybeSingle();
-
-  if (error) {
-    console.error('Profile patch error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json({ profile: data }, { status: 200 });
 }

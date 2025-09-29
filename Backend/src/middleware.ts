@@ -3,6 +3,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
+  const url = new URL(req.url);
+  const isProd = process.env.NODE_ENV === 'production';
+  
+  // Block dev/debug routes in production
+  if (isProd && (url.pathname.startsWith('/api/dev') || url.pathname.startsWith('/api/debug'))) {
+    return NextResponse.json({ error: 'Disabled in production' }, { status: 404 });
+  }
   let res = NextResponse.next({
     request: {
       headers: req.headers,

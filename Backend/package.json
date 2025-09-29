@@ -21,7 +21,8 @@
     "smoke:analytics": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests-analytics.ps1",
     "smoke:win": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests.ps1",
     "smoke:sprint-d": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests-sprint-d.ps1",
-    "test:avatar": "powershell -ExecutionPolicy Bypass -File scripts/test-avatar-flow.ps1"
+    "test:avatar": "powershell -ExecutionPolicy Bypass -File scripts/test-avatar-flow.ps1",
+    "test:avatar-fase2": "powershell -ExecutionPolicy Bypass -File scripts/test-avatar-flow-enhanced.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -29,6 +30,7 @@
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
+    "@react-leaflet/core": "2.1.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.57.0",
     "bcryptjs": "^2.4.3",
@@ -48,8 +50,9 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.62.0",
     "react-hot-toast": "^2.6.0",
-    "react-leaflet": "^5.0.0",
+    "react-leaflet": "4.2.1",
     "server-only": "^0.0.1",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "zod": "^3.25.76"
   },

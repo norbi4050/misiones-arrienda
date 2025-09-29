@@ -70,7 +70,7 @@ export function HeroSection() {
                 onPropertyClick={(property) => {
                   console.log("Clicked property:", property.title)
                   // Could redirect to property detail page
-                  window.location.href = `/property/${property.id}`
+                  window.location.href = `/properties/${property.id}`
                 }}
               />
             ) : (

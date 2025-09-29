@@ -127,10 +127,13 @@ export async function GET(request: NextRequest) {
 
     try {
       // Construir query de Supabase
+      const nowIso = new Date().toISOString();
       let query = supabase
-        .from('Property')
+        .from('properties')
         .select('*', { count: 'exact' })
-        .eq('status', 'AVAILABLE');
+        .eq('status', 'PUBLISHED')
+        .eq('is_active', true)
+        .or(`expires_at.is.null,expires_at.gte.${nowIso}`);
 
       // Aplicar filtros avanzados
       if (city) {
@@ -178,8 +181,10 @@ export async function GET(request: NextRequest) {
           .lte('lat', bboxCoords.maxLat);
       }
 
-      // Ordenamiento
-      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+      // Orden optimizado: published_at DESC primario, updated_at como fallback
+      query = query
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .order('updated_at', { ascending: false });
 
       // Aplicar paginación
       const startIndex = (page - 1) * limit;
@@ -193,6 +198,46 @@ export async function GET(request: NextRequest) {
       } else {
         properties = supabaseProperties || [];
         totalCount = count || 0;
+        
+        // Agregar coverUrl e imagesCount a cada propiedad
+        properties = await Promise.all(properties.map(async (property: any) => {
+          // Parsear images si viene como string JSON
+          let imgs: string[] = [];
+          try {
+            if (typeof property.images === 'string') {
+              imgs = JSON.parse(property.images);
+            } else if (Array.isArray(property.images)) {
+              imgs = property.images;
+            }
+          } catch {
+            imgs = [];
+          }
+          
+          // Determinar coverUrl con fallback a Storage
+          let coverUrl = imgs[0];
+          if (!coverUrl && property.userId && property.id) {
+            // Fallback a primer archivo en property-images/${userId}/${id}/
+            try {
+              const { getPropertyImages } = await import('@/lib/property-images.server');
+              const storageImages = await getPropertyImages({
+                propertyId: property.id,
+                userId: property.userId,
+                fallbackImages: [],
+                maxImages: 1
+              });
+              coverUrl = storageImages[0];
+            } catch {
+              // Si falla el storage, usar placeholder
+              coverUrl = '/placeholder-apartment-1.jpg';
+            }
+          }
+          
+          return {
+            ...property,
+            coverUrl: coverUrl || '/placeholder-apartment-1.jpg',
+            imagesCount: imgs.length
+          };
+        }));
       }
 
     } catch (supabaseError) {
@@ -200,8 +245,8 @@ export async function GET(request: NextRequest) {
       useSupabase = false;
     }
 
-    // Fallback a datos mock si Supabase falla
-    if (!useSupabase) {
+    // Fallback a datos mock solo si el feature flag está habilitado
+    if (!useSupabase && process.env.NEXT_PUBLIC_USE_MOCK_PROPERTIES === 'true') {
       let filteredProperties = [...mockProperties];
 
       // Aplicar filtros a datos mock
@@ -277,6 +322,10 @@ export async function GET(request: NextRequest) {
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       properties = filteredProperties.slice(startIndex, endIndex);
+    } else if (!useSupabase) {
+      // Si Supabase falla y no hay flag de mock, devolver vacío
+      properties = [];
+      totalCount = 0;
     }
 
     return NextResponse.json({
@@ -322,124 +371,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    
-    // Validación mejorada con schema
-    const validationResult = propertySchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Validation failed', 
-          details: validationResult.error.errors,
-          timestamp: new Date().toISOString()
-        },
-        { status: 400 }
-      );
-    }
-    
-    const propertyData = validationResult.data;
-    
-    // Validaciones adicionales de negocio
-    if (!propertyData.contact_phone) {
-      return NextResponse.json(
-        { 
-          error: 'Contact phone is required',
-          timestamp: new Date().toISOString()
-        },
-        { status: 400 }
-      );
-    }
-
-    // Intentar usar Supabase primero
-    const supabase = createClient();
-    let useSupabase = true;
-    let newProperty = null;
-
-    try {
-      // Obtener usuario actual (si está autenticado)
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Preparar datos para inserción
-      const insertData = {
-        ...propertyData,
-        userId: user?.id || null,
-        propertyType: propertyData.propertyType, // Mapear type a propertyType
-        images: JSON.stringify(propertyData.images || []),
-        amenities: JSON.stringify(propertyData.amenities || []),
-        features: JSON.stringify(propertyData.features || []),
-        contact_name: propertyData.contact_name || 'Sin nombre',
-        contact_phone: propertyData.contact_phone,
-        contact_email: propertyData.contact_email || '',
-        country: propertyData.country || 'Argentina',
-        status: 'AVAILABLE',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Insertar en Supabase
-      const { data: supabaseProperty, error } = await supabase
-        .from('Property')
-        .insert([insertData])
-        .select()
-        .single();
-
-      if (error) {
-        console.warn('Supabase insert error, using mock response:', error);
-        useSupabase = false;
-      } else {
-        newProperty = supabaseProperty;
-      }
-
-    } catch (supabaseError) {
-      console.warn('Supabase connection failed for POST, using mock response:', supabaseError);
-      useSupabase = false;
-    }
-
-    // Fallback a respuesta mock si Supabase falla
-    if (!useSupabase) {
-      newProperty = {
-        id: (mockProperties.length + 1).toString(),
-        ...propertyData,
-        propertyType: propertyData.propertyType,
-        contact_name: propertyData.contact_name || 'Sin nombre',
-        contact_phone: propertyData.contact_phone,
-        contact_email: propertyData.contact_email || '',
-        status: 'AVAILABLE',
-        country: propertyData.country || 'Argentina',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      // Agregar a datos mock (solo en memoria)
-      mockProperties.push(newProperty);
-    }
-
-    return NextResponse.json(
-      { 
-        message: 'Property created successfully',
-        property: newProperty,
-        meta: {
-          dataSource: useSupabase ? 'supabase' : 'mock',
-          timestamp: new Date().toISOString()
-        }
-      },
-      { status: 201 }
-    );
-
-  } catch (error) {
-    console.error('Error in POST properties API:', error);
-    return NextResponse.json(
-      { 
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  return NextResponse.json(
+    { error: 'Usá /api/properties/draft para crear un borrador y /api/properties/[id]/publish para publicar.' },
+    { status: 405 }
+  );
 }
 
 // Función auxiliar para obtener coordenadas mock de ciudades de Misiones
