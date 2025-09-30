@@ -92,12 +92,12 @@ export function Navbar() {
                 {isAuthenticated && user ? (
                   <>
                     {/* Quick Actions for authenticated users */}
-                    <Link href="/dashboard?tab=favorites">
+                    <Link href="/favorites">
                       <Button variant="ghost" size="sm" title="Mis Favoritos">
                         <Heart className="h-4 w-4" />
                       </Button>
                     </Link>
-                    <Link href="/dashboard?tab=messages">
+                    <Link href="/messages">
                       <Button variant="ghost" size="sm" title="Mensajes">
                         <MessageCircle className="h-4 w-4" />
                       </Button>
@@ -115,8 +115,12 @@ export function Navbar() {
                       </Button>
                     </Link>
                     <Link href="/register">
-                      <Button variant="default" size="sm">
-                        Registrarse
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md"
+                      >
+                        Crear Cuenta
                       </Button>
                     </Link>
                   </>
@@ -199,14 +203,14 @@ export function Navbar() {
                       Mi Perfil
                     </Link>
                     <Link
-                      href="/dashboard?tab=favorites"
+                      href="/favorites"
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
                       Mis Favoritos
                     </Link>
                     <Link
-                      href="/dashboard?tab=messages"
+                      href="/messages"
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
@@ -233,10 +237,10 @@ export function Navbar() {
                     </Link>
                     <Link
                       href="/register"
-                      className="block px-3 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md text-center"
+                      className="block px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md text-center font-semibold shadow-md"
                       onClick={() => setIsOpen(false)}
                     >
-                      Registrarse
+                      Crear Cuenta
                     </Link>
                   </div>
                 )}

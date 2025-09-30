@@ -96,6 +96,9 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
           const imgs = parseImages(property.images);
           const cover = imgs[0] ?? '/placeholder-apartment-1.jpg';
           
+          // Log de diagnóstico para auditoría
+          console.debug('[Grid] item=', property.id, 'cover_url=', (property as any).cover_url);
+          
           return (
             <PropertyCard 
               key={property.id} 
@@ -110,6 +113,7 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
               image={cover}
               imageUrls={imgs}
               coverUrl={(property as any).coverUrl}
+              cover_url={(property as any).cover_url}  // ✅ AGREGAR: Pasar cover_url del API
               featured={property.featured}
             />
           );

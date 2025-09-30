@@ -15,9 +15,10 @@ import {
   createJsonLdScript
 } from '@/lib/structured-data';
 import ImageCarousel from '@/components/ui/ImageCarousel';
-import PropertyLocationMap from '@/components/ui/PropertyLocationMap';
+import PropertyLocationMap from '@/components/property/PropertyLocationMap';
 import PropertyContactForm from '@/components/ui/PropertyContactForm';
 import ContactPanel from '@/components/contact/ContactPanel';
+import ContactButton from '@/components/ui/ContactButton';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { ShareButton } from '@/components/ui/ShareButton';
 import OwnerActions from '@/components/ui/OwnerActions';
@@ -421,30 +422,50 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
               </div>
             </div>
 
-            {/* Location Map */}
-            <div className="mb-8">
+            {/* Location Section */}
+            <section className="mt-8">
+              <h2 className="text-xl font-semibold mb-3">Ubicación</h2>
+              
               {property.latitude && property.longitude ? (
-                <PropertyLocationMap
-                  property={{
-                    title: property.title,
-                    address: property.address,
-                    city: property.city,
-                    latitude: property.latitude,
-                    longitude: property.longitude,
-                    price: property.price,
-                    currency: property.currency || 'ARS'
-                  }}
-                  height="350px"
-                  className="w-full"
-                />
+                <>
+                  <PropertyLocationMap 
+                    lat={property.latitude} 
+                    lng={property.longitude} 
+                    className="h-72 rounded-xl overflow-hidden border" 
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Zona aproximada. La ubicación exacta se comparte con el interesado.
+                  </p>
+                </>
               ) : (
-                <div className="rounded-xl border p-4 text-sm text-gray-600">
-                  <div className="font-medium mb-1">Ubicación aproximada</div>
-                  <div>Las coordenadas exactas no están disponibles para esta propiedad.</div>
-                  <div className="mt-1 text-gray-500">{property.address}, {property.city}</div>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <MapPin className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {property.address || property.city}
+                        </h3>
+                        <Badge variant="secondary" className="text-xs">
+                          No informada
+                        </Badge>
+                      </div>
+                      <p className="text-gray-600 mb-4">
+                        La ubicación exacta no está disponible en el mapa. 
+                        Contactá al propietario para obtener más detalles sobre la ubicación.
+                      </p>
+                      <ContactButton 
+                        propertyId={property.id}
+                        ownerId={property.user_id}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
+            </section>
 
             {/* Contact Form - Solo para no dueños */}
             {!isOwner && (
@@ -559,7 +580,13 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                   </h3>
                   <div className="space-y-4">
                     {similarProperties.map((similar: any) => {
-                      const similarImages = similar.images ? JSON.parse(similar.images) : [];
+                      let similarImages = [];
+                      try {
+                        similarImages = similar.images && similar.images.trim() ? JSON.parse(similar.images) : [];
+                      } catch (e) {
+                        console.warn('Error parsing similar property images:', e);
+                        similarImages = [];
+                      }
                       return (
                         <Link
                           key={similar.id}

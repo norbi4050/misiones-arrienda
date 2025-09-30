@@ -143,7 +143,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
             {/* Favoritos */}
             <Link
-              href="/dashboard?tab=favorites"
+              href="/favorites"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >
@@ -153,7 +153,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
             {/* Mensajes */}
             <Link
-              href="/dashboard?tab=messages"
+              href="/messages"
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
             >

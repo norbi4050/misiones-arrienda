@@ -3,10 +3,10 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
 import { AIChatbot } from '@/components/ai-chatbot'
 import WhatsAppButton from '@/components/whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
-import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/components/auth-provider'
 import { MessagesProvider } from '@/contexts/MessagesContext'
 import ToasterProvider from '@/components/toaster-provider'
@@ -61,8 +61,13 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <Navbar />
-              {children}
+              <div className="flex flex-col min-h-screen">
+                <Navbar />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <Footer />
+              </div>
 
               {/* WhatsApp Button Global - Siempre visible */}
               <WhatsAppButton type="fixed" />

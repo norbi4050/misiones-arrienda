@@ -11,6 +11,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import AvatarUniversal from '@/components/ui/avatar-universal'
 import type { CommunityPost, CommunityPostsResponse, CommunityRole } from '@/types/community'
+import { useQueryParamsState } from '@/hooks/useQueryParamsState'
 
 interface CommunityListClientProps {
   initialData: CommunityPostsResponse
@@ -18,18 +19,30 @@ interface CommunityListClientProps {
 
 const cities = ['Posadas', 'Oberá', 'Eldorado', 'Puerto Iguazú', 'Apóstoles', 'Leandro N. Alem']
 
+type RoleState = '' | 'BUSCO' | 'OFREZCO'
+type SortState = 'recent' | 'highlight'
+
 export default function CommunityListClient({ initialData }: CommunityListClientProps) {
   const [posts, setPosts] = useState<CommunityPost[]>(initialData.posts)
   const [loading, setLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
-  
-  // Filtros
-  const [city, setCity] = useState('')
-  const [role, setRole] = useState<CommunityRole | ''>('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [sort, setSort] = useState<'recent' | 'highlight'>('recent')
+
+  // Filtros con persistencia en URL
+  const { state, set } = useQueryParamsState<{
+    q: string
+    city: string
+    role: RoleState
+    min: string
+    max: string
+    sort: SortState
+  }>({
+    q: '',
+    city: '',
+    role: '',
+    min: '',
+    max: '',
+    sort: 'recent'
+  })
 
   // Helper null-safe para parsing de imágenes
   const parseImages = (val: any): string[] => {
@@ -79,12 +92,12 @@ export default function CommunityListClient({ initialData }: CommunityListClient
     try {
       const params = new URLSearchParams()
       
-      if (city) params.append('city', city)
-      if (role) params.append('role', role)
-      if (searchTerm) params.append('q', searchTerm)
-      if (minPrice) params.append('min', minPrice)
-      if (maxPrice) params.append('max', maxPrice)
-      params.append('sort', sort)
+      if (state.city) params.append('city', String(state.city))
+      if (state.role) params.append('role', String(state.role))
+      if (state.q) params.append('q', String(state.q))
+      if (state.min) params.append('min', String(state.min))
+      if (state.max) params.append('max', String(state.max))
+      params.append('sort', String(state.sort || 'recent'))
 
       const response = await fetch(`/api/comunidad/posts?${params}`)
       if (response.ok) {
@@ -111,8 +124,8 @@ export default function CommunityListClient({ initialData }: CommunityListClient
           <div className="flex-1">
             <Input
               placeholder="Buscar por título, descripción..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={String(state.q)}
+              onChange={(e) => set('q', e.target.value)}
               className="w-full"
             />
           </div>
@@ -136,22 +149,22 @@ export default function CommunityListClient({ initialData }: CommunityListClient
         {/* Tabs de rol */}
         <div className="flex gap-2 mb-4">
           <Button
-            variant={role === '' ? 'default' : 'outline'}
-            onClick={() => setRole('')}
+            variant={state.role === '' ? 'default' : 'outline'}
+            onClick={() => set('role', '')}
             size="sm"
           >
             Todos
           </Button>
           <Button
-            variant={role === 'BUSCO' ? 'default' : 'outline'}
-            onClick={() => setRole('BUSCO')}
+            variant={state.role === 'BUSCO' ? 'default' : 'outline'}
+            onClick={() => set('role', 'BUSCO')}
             size="sm"
           >
             Busco habitación
           </Button>
           <Button
-            variant={role === 'OFREZCO' ? 'default' : 'outline'}
-            onClick={() => setRole('OFREZCO')}
+            variant={state.role === 'OFREZCO' ? 'default' : 'outline'}
+            onClick={() => set('role', 'OFREZCO')}
             size="sm"
           >
             Ofrezco habitación
@@ -160,7 +173,7 @@ export default function CommunityListClient({ initialData }: CommunityListClient
 
         {showFilters && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t">
-            <Select value={city} onValueChange={setCity}>
+            <Select value={String(state.city)} onValueChange={(value) => set('city', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Ciudad" />
               </SelectTrigger>
@@ -175,18 +188,18 @@ export default function CommunityListClient({ initialData }: CommunityListClient
             <Input
               type="number"
               placeholder="Precio mín."
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
+              value={String(state.min)}
+              onChange={(e) => set('min', e.target.value)}
             />
 
             <Input
               type="number"
               placeholder="Precio máx."
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
+              value={String(state.max)}
+              onChange={(e) => set('max', e.target.value)}
             />
 
-            <Select value={sort} onValueChange={(value: 'recent' | 'highlight') => setSort(value)}>
+            <Select value={String(state.sort)} onValueChange={(value: 'recent' | 'highlight') => set('sort', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Ordenar por" />
               </SelectTrigger>

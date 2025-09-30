@@ -21,11 +21,14 @@ export async function POST(req: Request) {
       city: body.city ?? null,     // si usás city_id, ajustá
       province: body.province ?? null,
       address: body.address ?? null,
+      latitude: body.latitude ?? null,    // coordenadas del mapa
+      longitude: body.longitude ?? null,  // coordenadas del mapa
       bedrooms: body.bedrooms ?? 0,
       bathrooms: body.bathrooms ?? 0,
       area_m2: body.area_m2 ?? 0,
       property_type: body.property_type ?? 'HOUSE', // mapeá a tu enum real
-      user_id: user.id,           // ← usar UUID
+      user_id: user.id,           // moderno (uuid)
+      user_id_text: user.id,      // legacy (text) ← ESTA LÍNEA EVITA EL 500
       contact_phone: phone ?? null,
       status: 'DRAFT',
       is_active: true,
@@ -39,7 +42,7 @@ export async function POST(req: Request) {
     const { data, error } = await supabase
       .from('properties')
       .insert(payload)
-      .select('id,user_id,updated_at')
+      .select('id, user_id, user_id_text, updated_at')
       .single();
 
     if (error) {

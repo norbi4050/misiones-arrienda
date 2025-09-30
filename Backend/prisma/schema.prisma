@@ -36,6 +36,7 @@ model Property {
   latitude    Float?
   longitude   Float?
   propertyType String  // APARTMENT, HOUSE, COMMERCIAL, LAND, OFFICE, WAREHOUSE, PH, STUDIO
+  operationType String  @default("BOTH") // RENT, SALE, BOTH
   status      String   @default("AVAILABLE") // AVAILABLE, RENTED, SOLD, MAINTENANCE, RESERVED, EXPIRED
   images      String   // JSON string of array
   virtualTourUrl String?

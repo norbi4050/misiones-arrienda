@@ -27,6 +27,7 @@ export interface CommunityPost {
   tags: string[]
   images: string[]
   is_active: boolean
+  status?: string
   expires_at?: string
   views_count?: number
   created_at: string

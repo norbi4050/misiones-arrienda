@@ -17,6 +17,7 @@ import { propertyFormSchema } from "@/lib/validations/property"
 import { logConsentClient, ConsentLogPayload } from "@/lib/consent/logConsent.client"
 import { CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent"
 import { analytics } from "@/lib/analytics/track"
+import MapPicker from "@/components/property/MapPicker"
 
 export default function PublishWizardImproved() {
   console.debug('[Wizard NUEVO] montado')
@@ -30,6 +31,7 @@ export default function PublishWizardImproved() {
   const [propertyId, setPropertyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [imagesCount, setImagesCount] = useState(0)
+  const [images, setImages] = useState<string[]>([]) // CONTROLLED COMPONENT: estado local para preview
   
   // Paso 2 -> gating real por imágenes
   const canContinueStep2 = imagesCount >= 1;
@@ -64,6 +66,8 @@ export default function PublishWizardImproved() {
       country: "Argentina",
       postalCode: "",
       contact_phone: user?.phone || "",
+      latitude: undefined,
+      longitude: undefined,
       images: [],
       amenities: [],
       features: [],
@@ -79,11 +83,13 @@ export default function PublishWizardImproved() {
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = form
   const watchedValues = watch()
 
-  // Validación mínima del Paso 1 (sin depender de imágenes)
+  // Validación mínima del Paso 1 (incluye coordenadas obligatorias)
   const canContinueStep1 = 
     watchedValues.title?.trim().length >= 3 &&
     watchedValues.city?.trim() &&
-    Number(watchedValues.price) > 0;
+    Number(watchedValues.price) > 0 &&
+    watchedValues.latitude !== undefined &&
+    watchedValues.longitude !== undefined;
 
   // Track start_publish cuando el usuario llega a la página
   useEffect(() => {
@@ -122,7 +128,9 @@ export default function PublishWizardImproved() {
             area: watchedValues.area,
             description: watchedValues.description,
             contact_phone: watchedValues.contact_phone,
-            garages: watchedValues.garages
+            garages: watchedValues.garages,
+            latitude: watchedValues.latitude,
+            longitude: watchedValues.longitude
           }),
         });
         
@@ -135,8 +143,9 @@ export default function PublishWizardImproved() {
         
         const { property } = await res.json();
         console.debug('[Wizard] draft OK', property);
-        setPropertyId(property.id);
-        setUserId(property.user_id);
+        setPropertyId(property.id);        // viene del draft
+        setUserId(property.user_id);       // IMPORTANTE: usar el owner real
+        console.debug('[Wizard] IDs seteados - propertyId:', property.id, 'ownerId:', property.user_id);
         setImagesCount(0); // resetea el contador al entrar al paso de imágenes
         setCurrentStep(2);
         toast.success("Borrador creado. Ahora agregá las imágenes.");
@@ -504,6 +513,47 @@ export default function PublishWizardImproved() {
                     {...register("description")}
                   />
                 </div>
+
+                {/* Ubicación en el mapa */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <MapPin className="h-4 w-4 inline mr-1" />
+                    Ubicación en el mapa *
+                  </label>
+                  <p className="text-sm text-gray-500 mb-3">
+                    Arrastra el pin para marcar la ubicación exacta de tu propiedad
+                  </p>
+                  
+                  {/* Mensaje de error si no hay coordenadas */}
+                  {(!watchedValues.latitude || !watchedValues.longitude) && (
+                    <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="flex items-center">
+                        <AlertCircle className="h-4 w-4 text-amber-600 mr-2 flex-shrink-0" />
+                        <p className="text-sm text-amber-800">
+                          Seleccioná una ubicación en el mapa para continuar
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <MapPicker
+                    value={watchedValues.latitude && watchedValues.longitude ? {
+                      lat: watchedValues.latitude,
+                      lng: watchedValues.longitude
+                    } : null}
+                    onChange={(coords) => {
+                      setValue('latitude', coords.lat);
+                      setValue('longitude', coords.lng);
+                    }}
+                    className="h-72 rounded-lg border"
+                  />
+                  {watchedValues.latitude && watchedValues.longitude && (
+                    <p className="text-xs text-green-600 mt-2 flex items-center">
+                      <Check className="h-3 w-3 mr-1" />
+                      Coordenadas: {watchedValues.latitude.toFixed(4)}, {watchedValues.longitude.toFixed(4)}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-end mt-6">
@@ -514,12 +564,19 @@ export default function PublishWizardImproved() {
                   {creatingDraft ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creando borrador...
+                      Guardando...
                     </>
                   ) : (
                     "Continuar"
                   )}
                 </Button>
+                {!canContinueStep1 && !creatingDraft && (
+                  <p className="text-sm text-red-600 mt-2 ml-4">
+                    {!watchedValues.latitude || !watchedValues.longitude 
+                      ? "Seleccioná una ubicación en el mapa" 
+                      : "Completá todos los campos obligatorios"}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -530,8 +587,10 @@ export default function PublishWizardImproved() {
               <h2 className="text-xl font-semibold mb-6">Imágenes de la Propiedad</h2>
               
               <PropertyImageUpload
-                propertyId={propertyId}
-                userId={userId}
+                propertyId={propertyId!}
+                userId={userId!}
+                value={images}
+                onChange={setImages}
                 onChangeCount={handleImageCount}
                 maxImages={selectedPlan === 'basico' ? 3 : selectedPlan === 'destacado' ? 8 : 20}
               />

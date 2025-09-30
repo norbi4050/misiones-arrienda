@@ -44,15 +44,23 @@ export default function ConversationPage({
       setLoading(true)
       setError(null)
 
-      // Obtener detalles de la conversación desde la lista de conversaciones
-      const response = await fetch('/api/messages')
+      // Obtener detalles de la conversación desde la lista de hilos
+      const response = await fetch('/api/messages/threads', {
+        credentials: 'include'
+      })
+      
+      if (response.status === 401) {
+        router.push('/login')
+        return
+      }
+      
       if (!response.ok) {
         throw new Error('Error al cargar conversación')
       }
 
       const data = await response.json()
-      const foundConversation = data.conversations?.find(
-        (conv: any) => conv.id === params.conversationId
+      const foundConversation = data.threads?.find(
+        (thread: any) => thread.id === params.conversationId
       )
 
       if (!foundConversation) {

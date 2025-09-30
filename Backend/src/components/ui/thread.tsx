@@ -54,7 +54,9 @@ export default function Thread({
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/messages/${conversationId}`)
+      const response = await fetch(`/api/messages/threads/${conversationId}`, {
+        credentials: 'include'
+      })
 
       if (!response.ok) {
         throw new Error('Error al cargar mensajes')
@@ -116,8 +118,9 @@ export default function Thread({
     if (!conversationId || !user || !content.trim()) return
 
     try {
-      const response = await fetch(`/api/messages/${conversationId}`, {
+      const response = await fetch(`/api/messages/threads/${conversationId}/messages`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },

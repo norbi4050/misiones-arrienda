@@ -36,23 +36,48 @@ export default function ContactPanel({
     setIsSubmitting(true);
     
     try {
-      const res = await fetch(`/api/comunidad/messages/send`, {
+      // Crear/abrir hilo usando el nuevo contrato
+      const threadRes = await fetch('/api/messages/threads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ 
           propertyId, 
-          toUserId: ownerId, 
-          message: msg.trim() 
+          toUserId: ownerId
         })
       });
 
-      if (res.ok) {
+      if (threadRes.status === 401) {
+        toast.error('Iniciá sesión para enviar mensajes');
+        return;
+      }
+
+      if (!threadRes.ok) {
+        toast.error('Error al crear conversación');
+        return;
+      }
+
+      const threadData = await threadRes.json();
+      const threadId = threadData.threadId;
+
+      // Enviar mensaje al hilo
+      const msgRes = await fetch(`/api/messages/threads/${threadId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          content: msg.trim()
+        })
+      });
+
+      if (msgRes.ok) {
         toast.success('Mensaje enviado correctamente');
         setMsg(`Hola, me interesa esta propiedad en ${propertyCity}. ¿Podríamos coordinar una visita?`);
-      } else if (res.status === 403) {
-        toast.error('No autorizado. Inicia sesión para enviar mensajes.');
-      } else if (res.status === 400) {
-        toast.error('Error en los datos enviados');
+        
+        // Navegar al hilo de mensajes
+        window.location.href = `/messages?thread=${threadId}`;
+      } else if (msgRes.status === 401) {
+        toast.error('Iniciá sesión para enviar mensajes');
       } else {
         toast.error('Error al enviar mensaje');
       }

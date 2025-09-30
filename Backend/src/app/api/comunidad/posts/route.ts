@@ -140,64 +140,88 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const validatedData = createCommunityPostSchema.parse(body)
+    // Leer body UNA sola vez y loguear
+    const raw = await request.json()
+    console.log('[POST /comunidad/posts] RAW BODY:', JSON.stringify(raw))
+    
+    // Validar con safeParse
+    const parsed = createCommunityPostSchema.safeParse(raw)
+    
+    if (!parsed.success) {
+      // Mapear issues con path y message
+      const issues = parsed.error.issues.map(i => ({
+        path: i.path.join('.'),
+        message: i.message,
+        code: i.code
+      }))
+      
+      console.error('[POST /comunidad/posts] ZOD ERROR:', issues)
+      
+      return NextResponse.json(
+        { 
+          error: 'VALIDATION_ERROR',
+          issues,
+          echo: raw // Para debugging
+        },
+        { status: 400 }
+      )
+    }
+    
+    // Loguear datos parseados
+    console.log('[POST /comunidad/posts] PARSED DATA:', parsed.data)
+    
+    const d = parsed.data
 
-    // Mapear camelCase → snake_case para Supabase
-    const postData = {
+    // Mapear explícito camelCase → snake_case ANTES de insertar
+    const insert = {
       user_id: user.id,
-      role: validatedData.role,
-      title: validatedData.title,
-      description: validatedData.description,
-      city: validatedData.city,
-      neighborhood: validatedData.neighborhood,
-      price: validatedData.price,
-      budget_min: validatedData.budgetMin,
-      budget_max: validatedData.budgetMax,
-      available_from: validatedData.availableFrom,
-      lease_term: validatedData.leaseTerm,
-      room_type: validatedData.roomType,
-      occupants: validatedData.occupants,
-      pet_pref: validatedData.petPref,
-      smoke_pref: validatedData.smokePref,
-      diet: validatedData.diet,
-      amenities: validatedData.amenities,
-      tags: validatedData.tags,
-      images: validatedData.images,
+      role: d.role,
+      title: d.title,
+      description: d.description,
+      city: d.city,
+      neighborhood: d.neighborhood ?? null,
+      price: d.price ?? null,
+      budget_min: d.budgetMin ?? null,
+      budget_max: d.budgetMax ?? null,
+      available_from: d.availableFrom ?? null,
+      lease_term: d.leaseTerm ?? null,
+      room_type: d.roomType,
+      occupants: d.occupants ?? null,
+      pet_pref: d.petPref,
+      smoke_pref: d.smokePref,
+      diet: d.diet,
+      amenities: d.amenities ?? [],
+      tags: d.tags ?? [],
+      images: d.images ?? [],
       is_active: true
-      // No incluir created_at/updated_at - manejados por triggers
+      // status: 'ACTIVE' - Comentado: columna no existe en Supabase aún
     }
 
-    // Insert directo (no upsert)
+    // Insert con select
     const { data, error } = await supabase
       .from('community_posts')
-      .insert(postData)
+      .insert(insert)
       .select('id')
       .single()
 
     if (error) {
-      console.error('Error creating community post:', error)
+      console.error('[POST /comunidad/posts] DB ERROR:', error)
       return NextResponse.json(
-        { error: 'Error al crear el post de comunidad' },
+        { error: 'Error al crear el post de comunidad', details: error.message },
         { status: 500 }
       )
     }
 
+    console.log('[POST /comunidad/posts] SUCCESS:', data.id)
+    
     return NextResponse.json(
       { id: data.id, message: 'Post creado exitosamente' },
       { status: 201 }
     )
 
   } catch (error) {
-    console.error('Error in POST /api/comunidad/posts:', error)
+    console.error('[POST /comunidad/posts] CATCH ERROR:', error)
     
-    if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Datos inválidos', details: error.message },
-        { status: 400 }
-      )
-    }
-
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

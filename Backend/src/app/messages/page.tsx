@@ -1,8 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import ChatInterface from '@/components/ui/ChatInterface'
+import { subscribeToConversations, unsubscribeFromChannel, type ConversationRealtimePayload } from '@/lib/realtime-messages'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 interface Conversation {
   id: string
@@ -22,7 +25,10 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
+  const realtimeChannelRef = useRef<RealtimeChannel | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -34,30 +40,82 @@ export default function MessagesPage() {
     if (user) {
       fetchConversations()
       
-      // Suscribirse a actualizaciones de conversaciones
-      import('@/lib/realtime').then(({ subscribeToConversations, unsubscribeFromConversations }) => {
-        const channel = subscribeToConversations(user.id, (updatedConversation) => {
-          console.log('🔴 Conversación actualizada:', updatedConversation)
-          // Recargar lista de conversaciones cuando hay cambios
-          fetchConversations()
-        })
-        
-        return () => {
-          unsubscribeFromConversations(channel)
-        }
-      })
+      // Cargar threadId de la query si existe
+      const threadId = searchParams.get('thread')
+      if (threadId) {
+        setSelectedThreadId(threadId)
+      }
+      
+      // Configurar suscripción real-time para actualizaciones de threads
+      setupConversationsRealtime()
     }
-  }, [user])
+
+    // Cleanup al desmontar
+    return () => {
+      if (realtimeChannelRef.current) {
+        unsubscribeFromChannel(realtimeChannelRef.current)
+        realtimeChannelRef.current = null
+      }
+    }
+  }, [user, searchParams])
+
+  const setupConversationsRealtime = () => {
+    if (!user) return
+
+    // Limpiar suscripción anterior
+    if (realtimeChannelRef.current) {
+      unsubscribeFromChannel(realtimeChannelRef.current)
+    }
+
+    // Suscribirse a actualizaciones de conversaciones
+    const channel = subscribeToConversations(
+      user.id,
+      (updatedConversation: ConversationRealtimePayload) => {
+        console.log('🔴 Conversation updated via realtime:', updatedConversation)
+        
+        // Actualizar la conversación específica en el estado
+        setConversations(prev => {
+          const updated = prev.map(conv => {
+            if (conv.id === updatedConversation.id) {
+              return {
+                ...conv,
+                last_message: updatedConversation.last_message,
+                last_message_time: updatedConversation.last_message_time,
+                unread_count: updatedConversation.unread_count
+              }
+            }
+            return conv
+          })
+          
+          // Reordenar por last_message_time (más reciente primero)
+          return updated.sort((a, b) => 
+            new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime()
+          )
+        })
+      }
+    )
+
+    realtimeChannelRef.current = channel
+  }
 
   const fetchConversations = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/messages')
+      const response = await fetch('/api/messages/threads', {
+        credentials: 'include'
+      })
+      
+      if (response.status === 401) {
+        router.push('/login')
+        return
+      }
+      
       if (!response.ok) {
         throw new Error('Error al cargar conversaciones')
       }
+      
       const data = await response.json()
-      setConversations(data.conversations || [])
+      setConversations(data.threads || [])
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -82,6 +140,92 @@ export default function MessagesPage() {
     conversation.other_user_name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  // Si hay un thread seleccionado, mostrar el panel de chat
+  if (selectedThreadId) {
+    return (
+      <div className="h-screen flex bg-gray-50">
+        {/* Panel izquierdo - Lista de threads */}
+        <div className="w-1/3 border-r border-gray-200 bg-white flex flex-col">
+          {/* Header del panel izquierdo */}
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Mensajes</h2>
+            <p className="text-sm text-gray-600">
+              {conversations.length} {conversations.length === 1 ? 'conversación' : 'conversaciones'}
+            </p>
+          </div>
+
+          {/* Search */}
+          {conversations.length > 0 && (
+            <div className="p-4 border-b border-gray-200">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 pl-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                  <span className="text-gray-400 text-sm">🔍</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Lista de conversaciones */}
+          <div className="flex-1 overflow-y-auto">
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            )}
+
+            {!loading && filteredConversations.map((conversation: Conversation) => (
+              <div
+                key={conversation.id}
+                onClick={() => {
+                  setSelectedThreadId(conversation.id)
+                  router.push(`/messages?thread=${conversation.id}`)
+                }}
+                className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                  selectedThreadId === conversation.id ? 'bg-blue-50 border-blue-200' : ''
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <img
+                    src={conversation.property_image || '/placeholder-house-1.jpg'}
+                    alt={conversation.property_title}
+                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-sm font-medium text-gray-900 truncate">
+                        {conversation.property_title}
+                      </h4>
+                      {conversation.unread_count > 0 && (
+                        <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                          {conversation.unread_count}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">{conversation.other_user_name}</p>
+                    <p className="text-xs text-gray-500 truncate">{conversation.last_message}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Panel derecho - Chat interface */}
+        <div className="flex-1 flex flex-col">
+          <ChatInterface threadId={selectedThreadId} onThreadUpdate={fetchConversations} />
+        </div>
+      </div>
+    )
+  }
+
+  // Vista de lista completa cuando no hay thread seleccionado
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -182,8 +326,13 @@ export default function MessagesPage() {
             {filteredConversations.map((conversation: Conversation) => (
               <div
                 key={conversation.id}
-                onClick={() => router.push(`/messages/${conversation.id}`)}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => {
+                  setSelectedThreadId(conversation.id)
+                  router.push(`/messages?thread=${conversation.id}`)
+                }}
+                className={`bg-white rounded-lg border p-6 hover:shadow-md transition-shadow cursor-pointer ${
+                  selectedThreadId === conversation.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                }`}
               >
                 <div className="flex items-start space-x-4">
                   {/* Property Image */}

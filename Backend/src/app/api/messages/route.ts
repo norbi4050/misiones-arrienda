@@ -9,28 +9,165 @@ function getSupabase(req: NextRequest) {
   })
 }
 
+// PROMPT 2: Detectar esquema
+async function detectSchema(supabase: any): Promise<'PRISMA' | 'SUPABASE' | null> {
+  try {
+    const { error: prismaError } = await supabase
+      .from('Conversation')
+      .select('id')
+      .limit(1)
+    if (!prismaError) return 'PRISMA'
+  } catch {}
+
+  try {
+    const { error: supabaseError } = await supabase
+      .from('conversations')
+      .select('id')
+      .limit(1)
+    if (!supabaseError) return 'SUPABASE'
+  } catch {}
+
+  return null
+}
+
 export async function GET(req: NextRequest) {
+  const startTime = Date.now()
+  
   try {
     const { searchParams } = new URL(req.url)
-    const conversationId = searchParams.get('conversationId')
-    if (!conversationId) {
-      return NextResponse.json({ error: 'conversationId is required' }, { status: 400 })
+    
+    // PROMPT 1: Aceptar ambos nombres (threadId prioritario, conversationId legacy)
+    const threadId = searchParams.get('threadId') || searchParams.get('conversationId')
+    
+    // PROMPT 6: Log RAW QUERY
+    console.log('[RAW QUERY]', { threadId_param: searchParams.get('threadId'), conversationId_param: searchParams.get('conversationId') })
+    
+    if (!threadId) {
+      return NextResponse.json({ 
+        error: 'VALIDATION_ERROR',
+        issues: [{ path: 'threadId', message: 'threadId is required' }]
+      }, { status: 400 })
     }
 
     const supabase = getSupabase(req)
 
-    const { data, error } = await supabase
-      .from('messages')
-      .select('id, conversation_id, sender_id, body, is_read, created_at')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true })
-
-    if (error) {
-      return NextResponse.json({ error: error.message, code: error.code ?? null }, { status: 500 })
+    // PROMPT 3: Auth consistente
+    const { data: auth, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !auth?.user?.id) {
+      console.log('[AUTH] ❌ No autorizado')
+      return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 })
     }
 
-    return NextResponse.json({ messages: data ?? [] })
+    const userId = auth.user.id
+    console.log('[RESOLVED PARAMS]', { threadId, userId })
+
+    // PROMPT 2 & 3: Detectar esquema y verificar ownership
+    const schema = await detectSchema(supabase)
+    console.log('[SCHEMA BRANCH]', schema)
+
+    if (!schema) {
+      return NextResponse.json({ 
+        error: 'DB_ERROR',
+        details: 'No se encontró tabla de conversaciones válida'
+      }, { status: 500 })
+    }
+
+    // PROMPT 3: Verificar que el usuario es participante del hilo
+    let isParticipant = false
+    let userProfileId: string | null = null
+
+    if (schema === 'PRISMA') {
+      // Obtener UserProfile del usuario
+      const { data: userProfile } = await supabase
+        .from('UserProfile')
+        .select('id')
+        .eq('userId', userId)
+        .single()
+
+      if (userProfile) {
+        userProfileId = userProfile.id
+        
+        // Verificar si es participante (aId o bId)
+        const { data: conversation } = await supabase
+          .from('Conversation')
+          .select('id')
+          .eq('id', threadId)
+          .or(`aId.eq.${userProfile.id},bId.eq.${userProfile.id}`)
+          .single()
+
+        isParticipant = !!conversation
+      }
+    } else if (schema === 'SUPABASE') {
+      // Verificar si es participante (sender_id o receiver_id)
+      const { data: conversation } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('id', threadId)
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+        .single()
+
+      isParticipant = !!conversation
+    }
+
+    if (!isParticipant) {
+      console.log('[OWNERSHIP] ❌ Usuario no es participante del hilo')
+      return NextResponse.json({ 
+        error: 'FORBIDDEN',
+        details: 'No tienes acceso a este hilo'
+      }, { status: 403 })
+    }
+
+    console.log('[OWNERSHIP] ✅ Usuario es participante')
+
+    // Obtener mensajes
+    const messagesTable = schema === 'PRISMA' ? 'Message' : 'messages'
+    const conversationIdField = schema === 'PRISMA' ? 'conversationId' : 'conversation_id'
+    const senderIdField = schema === 'PRISMA' ? 'senderId' : 'sender_id'
+    const bodyField = 'body'
+    const isReadField = schema === 'PRISMA' ? 'isRead' : 'is_read'
+    const createdAtField = schema === 'PRISMA' ? 'createdAt' : 'created_at'
+
+    const { data, error } = await supabase
+      .from(messagesTable)
+      .select(`id, ${conversationIdField}, ${senderIdField}, ${bodyField}, ${isReadField}, ${createdAtField}`)
+      .eq(conversationIdField, threadId)
+      .order(createdAtField, { ascending: true })
+
+    if (error) {
+      console.error('[DB] ❌ Error al obtener mensajes:', error)
+      return NextResponse.json({ 
+        error: 'DB_ERROR',
+        details: error.message 
+      }, { status: 500 })
+    }
+
+    // PROMPT 5: Formato uniforme con isMine
+    const messages = (data ?? []).map((msg: any) => ({
+      id: msg.id,
+      content: msg[bodyField],
+      createdAt: msg[createdAtField],
+      senderId: msg[senderIdField],
+      isMine: schema === 'PRISMA' 
+        ? msg[senderIdField] === userProfileId
+        : msg[senderIdField] === userId,
+      isRead: msg[isReadField]
+    }))
+
+    const duration = Date.now() - startTime
+    console.log(`[MESSAGES GET] ✅ ${messages.length} mensajes en ${duration}ms, rama: ${schema}`)
+
+    // PROMPT 1 & 5: Responder con formato unificado
+    return NextResponse.json({ 
+      threadId,
+      messages,
+      _meta: {
+        schema,
+        count: messages.length,
+        duration_ms: duration
+      }
+    })
   } catch (err: any) {
+    console.error('[MESSAGES GET] ❌ Error:', err)
     return NextResponse.json({ error: err?.message ?? 'Unhandled' }, { status: 500 })
   }
 }
@@ -39,9 +176,19 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabase(req)
     const body = await req.json().catch(() => ({}))
-    const { conversationId, text }:{ conversationId?: string, text?: string } = body || {}
-    if (!conversationId || !text) {
-      return NextResponse.json({ error: 'conversationId and text are required' }, { status: 400 })
+    
+    // PROMPT 1: Aceptar ambos nombres (threadId prioritario, conversationId legacy)
+    const threadId = body.threadId || body.conversationId
+    const text = body.text
+    
+    if (!threadId || !text) {
+      return NextResponse.json({ 
+        error: 'VALIDATION_ERROR',
+        issues: [
+          ...(!threadId ? [{ path: 'threadId', message: 'threadId is required' }] : []),
+          ...(!text ? [{ path: 'text', message: 'text is required' }] : [])
+        ]
+      }, { status: 400 })
     }
 
     // 1) Obtener el usuario autenticado
@@ -66,7 +213,7 @@ export async function POST(req: NextRequest) {
     const { data: inserted, error: insErr } = await supabase
       .from('messages')
       .insert({
-        conversation_id: String(conversationId),
+        conversation_id: String(threadId),
         sender_id: String(prof.id),
         body: String(text),
       })
@@ -77,7 +224,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insErr.message, code: insErr.code ?? null }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, message: inserted })
+    // PROMPT 1: Responder siempre con threadId (nombre oficial)
+    return NextResponse.json({ 
+      ok: true, 
+      threadId,
+      message: inserted 
+    })
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? 'Unhandled' }, { status: 500 })
   }

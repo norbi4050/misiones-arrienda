@@ -1,78 +1,125 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { createServerSupabase } from '@/lib/supabase/server'
+import FavoritesClient from './favorites-client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
-import { PropertyCard } from '@/components/property-card'
-import { Property } from '@/types/property'
+interface Property {
+  id: string
+  title: string
+  price: number
+  currency: string
+  propertyType: string
+  bedrooms: number
+  bathrooms: number
+  area: number
+  address: string
+  city: string
+  latitude?: number
+  longitude?: number
+  images: string[]
+  cover_url: string
+  featured: boolean
+  status: string
+  created_at: string
+  updated_at: string
+  user_id: string
+}
 
-export default function FavoritesPage() {
-  const { user, isLoading: authLoading } = useSupabaseAuth()
-  const [favorites, setFavorites] = useState<Property[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const router = useRouter()
+async function getFavoriteProperties(): Promise<Property[]> {
+  const supabase = createServerSupabase()
+  
+  // Verificar autenticación
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    redirect('/login')
+  }
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
+  try {
+    // Obtener favoritos directamente desde Supabase
+    const { data, error } = await supabase
+      .from("favorites")
+      .select(`
+        property_id,
+        properties!inner (
+          id,
+          title,
+          price,
+          currency,
+          property_type,
+          bedrooms,
+          bathrooms,
+          area,
+          address,
+          city,
+          latitude,
+          longitude,
+          images,
+          cover_url,
+          featured,
+          status,
+          created_at,
+          updated_at,
+          user_id
+        )
+      `)
+      .eq("user_id", user.id)
+      .eq("properties.status", "PUBLISHED")
+
+    if (error) {
+      console.error('Error fetching favorites:', error)
+      return []
     }
-  }, [user, authLoading, router])
 
-  useEffect(() => {
-    if (user) {
-      fetchFavorites()
-    }
-  }, [user])
-
-  const fetchFavorites = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/users/favorites')
-      if (!response.ok) {
-        throw new Error('Error al cargar favoritos')
+    // Formatear propiedades con cover_url resuelto
+    const properties = (data ?? []).map((fav: any) => {
+      const property = Array.isArray(fav.properties) ? fav.properties[0] : fav.properties
+      
+      // Aplicar regla de prioridad cover_url
+      let imageUrls = []
+      try {
+        imageUrls = property.images && typeof property.images === 'string' 
+          ? JSON.parse(property.images) 
+          : Array.isArray(property.images) 
+            ? property.images 
+            : []
+      } catch (e) {
+        console.warn('Error parsing images for property:', property.id)
+        imageUrls = []
       }
-      const data = await response.json()
-      setFavorites(data.favorites || [])
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  const removeFavorite = async (propertyId: string) => {
-    try {
-      const response = await fetch('/api/users/favorites', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ propertyId })
-      })
-      if (response.ok) {
-        setFavorites(prev => prev.filter(p => p.id !== propertyId))
+      const cover_url = property.cover_url ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg'
+
+      return {
+        id: property.id,
+        title: property.title,
+        price: property.price,
+        currency: property.currency || 'ARS',
+        propertyType: property.property_type,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        area: property.area,
+        address: property.address,
+        city: property.city,
+        latitude: property.latitude,
+        longitude: property.longitude,
+        images: imageUrls,
+        cover_url: cover_url,
+        featured: property.featured,
+        status: property.status,
+        created_at: property.created_at,
+        updated_at: property.updated_at,
+        user_id: property.user_id
       }
-    } catch (err) {
-      console.error('Error removing favorite:', err)
-    }
-  }
+    })
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-rose-500"></div>
-      </div>
-    )
+    return properties
+  } catch (error) {
+    console.error('Error in getFavoriteProperties:', error)
+    return []
   }
+}
 
-  if (!user) {
-    return null
-  }
-
-  const filteredFavorites = favorites.filter((property: Property) =>
-    property.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.address?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+export default async function FavoritesPage() {
+  const favorites = await getFavoriteProperties()
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -87,114 +134,25 @@ export default function FavoritesPage() {
           </p>
         </div>
 
-        {/* Search */}
-        {favorites.length > 0 && (
-          <div className="mb-6">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar en favoritos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-400">🔍</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500"></div>
-            <span className="ml-3 text-gray-600">Cargando favoritos...</span>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <span className="text-red-600 text-4xl mb-4 block">⚠️</span>
-            <h3 className="text-lg font-semibold text-red-800 mb-2">
-              Error al cargar favoritos
-            </h3>
-            <p className="text-red-600 mb-4">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Reintentar
-            </button>
-          </div>
-        )}
-
         {/* Empty State */}
-        {!loading && !error && favorites.length === 0 && (
+        {favorites.length === 0 ? (
           <div className="text-center py-12">
             <span className="text-gray-400 text-6xl mb-6 block">❤️</span>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No tienes favoritos aún
+              Aún no tenés favoritos
             </h3>
             <p className="text-gray-600 mb-6">
-              Explora propiedades y guarda las que más te gusten
+              Explorá propiedades y guardá las que más te gusten
             </p>
-            <button
-              onClick={() => router.push('/properties')}
-              className="bg-rose-500 text-white px-6 py-3 rounded-lg hover:bg-rose-600 transition-colors font-medium"
+            <a
+              href="/properties"
+              className="inline-block bg-rose-500 text-white px-6 py-3 rounded-lg hover:bg-rose-600 transition-colors font-medium"
             >
               Explorar Propiedades
-            </button>
+            </a>
           </div>
-        )}
-
-        {/* No Results */}
-        {!loading && !error && favorites.length > 0 && filteredFavorites.length === 0 && (
-          <div className="text-center py-12">
-            <span className="text-gray-400 text-6xl mb-6 block">🔍</span>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No se encontraron resultados
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Intenta con otros términos de búsqueda
-            </p>
-            <button
-              onClick={() => setSearchTerm('')}
-              className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors font-medium"
-            >
-              Limpiar búsqueda
-            </button>
-          </div>
-        )}
-
-        {/* Properties Grid */}
-        {!loading && !error && filteredFavorites.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredFavorites.map((property: Property) => (
-              <div key={property.id} className="relative">
-                <PropertyCard
-                  id={property.id}
-                  title={property.title}
-                  price={property.price}
-                  type={property.propertyType}
-                  location={property.address || property.city || 'Ubicación no disponible'}
-                  bedrooms={property.bedrooms || 0}
-                  bathrooms={property.bathrooms || 0}
-                  area={property.area || 0}
-                  image={property.images?.[0] || '/placeholder-house-1.jpg'}
-                  featured={property.featured}
-                />
-                <button
-                  onClick={() => removeFavorite(property.id)}
-                  className="absolute top-3 right-3 bg-white/90 hover:bg-white text-red-500 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-                  title="Eliminar de favoritos"
-                >
-                  <span className="text-lg">❤️</span>
-                </button>
-              </div>
-            ))}
-          </div>
+        ) : (
+          <FavoritesClient initialFavorites={favorites} />
         )}
       </div>
     </div>

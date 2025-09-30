@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Upload, X, Loader2, AlertCircle, Image as ImageIcon } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'react-hot-toast'
+import { createBrowserSupabase } from '@/lib/supabase/browser'
 
 interface PropertyImageUploadProps {
   propertyId: string
@@ -50,116 +51,154 @@ export default function PropertyImageUpload({
   className = '',
   disabled = false
 }: PropertyImageUploadProps) {
+  console.debug('[Uploader UI] v2 (server-side) cargado');
   const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const supabase = createBrowserSupabase()
 
-  const currentImages = value || []
+  // CONTROLLED COMPONENT: usar siempre value como fuente única de verdad
+  const currentImages = value ?? []
   const canAddMore = currentImages.length < maxImages
 
-  // Refresh images from server
-  const refreshImages = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/properties/${propertyId}/images`)
-      if (response.ok) {
-        const data = await response.json()
-        const images = data.images || []
-        onChange?.(images)
-        onChangeCount?.(images.length)
-        return images
-      }
-      return []
-    } catch (error) {
-      console.error('Error refreshing images:', error)
-      return []
+  // Debug logging para diagnóstico
+  useEffect(() => {
+    const prefix = `${userId}/${propertyId}`;
+    console.debug('[Uploader] prefix =', prefix);
+    if (!userId || !propertyId) {
+      console.error('[Uploader] Falta userId o propertyId para subir imágenes', { userId, propertyId });
+      toast.error('Falta userId o propertyId para subir imágenes');
+      return;
     }
-  }, [propertyId, onChange, onChangeCount])
+  }, [userId, propertyId]);
+
+  // Refresh images from server using Service Role endpoints
+  const refreshImages = useCallback(async () => {
+    if (!userId || !propertyId) {
+      onChangeCount?.(0);
+      return;
+    }
+
+    try {
+      console.debug('[Uploader] refreshImages called for:', { userId, propertyId });
+      
+      const res = await fetch(`/api/properties/${propertyId}/images/list?ownerId=${userId}&t=${Date.now()}`) // Cache bust
+      const json = await res.json()
+      
+      console.debug('[Uploader] API response:', { 
+        ok: res.ok, 
+        status: res.status,
+        json 
+      });
+      
+      if (!res.ok) {
+        console.error('[Uploader] list error:', json)
+        toast.error(json.error || 'No se pudieron listar imágenes')
+        onChangeCount?.(0)
+        return
+      }
+
+      const urls = json.items?.map((item: any) => item.url) || []
+      const count = json.count ?? 0
+      
+      console.debug('[Uploader] refreshImages response:', {
+        count,
+        itemsLength: json.items?.length,
+        urls: urls.length,
+        firstUrl: urls[0],
+        allUrls: urls
+      });
+      
+      // CONTROLLED COMPONENT: sincronizar via onChange
+      onChange?.([...urls]);
+      onChangeCount?.(count);
+      
+      console.debug('[Uploader] state updated via onChange:', {
+        newCount: count,
+        urlsLength: urls.length
+      });
+      
+    } catch (error) {
+      console.error('[Uploader] list exception:', error)
+      toast.error('Error inesperado listando imágenes')
+      onChangeCount?.(0)
+    }
+  }, [propertyId, userId, onChange, onChangeCount])
 
   // Load initial images on mount and when propertyId changes
   useEffect(() => {
-    if (propertyId) {
+    if (propertyId && userId) {
       refreshImages()
     }
-  }, [propertyId, refreshImages])
+  }, [propertyId, userId]) // Remover refreshImages de dependencies para evitar loop
 
-  // Handle file upload
+  // Handle file upload using server-side endpoint
   const handleUpload = useCallback(async (files: FileList) => {
     if (!files.length || disabled) return
 
-    // Validar archivos
-    const validFiles: File[] = []
-    const errors: string[] = []
-
-    Array.from(files).forEach(file => {
-      const validation = validateFile(file)
-      if (validation.valid) {
-        validFiles.push(file)
-      } else {
-        errors.push(`${file.name}: ${validation.error}`)
-      }
-    })
-
-    if (errors.length > 0) {
-      toast.error(`Errores de validación:\n${errors.join('\n')}`)
+    // 0) guardias
+    if (!userId || !propertyId) {
+      toast.error('Falta userId o propertyId para subir imágenes');
+      return;
     }
 
-    if (validFiles.length === 0) return
+    // 1) subir
+    const file = files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) return toast.error('Máximo 2MB');
+    const allowed = ['image/jpeg','image/png','image/webp','image/avif'];
+    if (!allowed.includes(file.type)) return toast.error('Formato no soportado');
 
-    // Verificar límite
-    const totalAfterUpload = currentImages.length + validFiles.length
-    if (totalAfterUpload > maxImages) {
-      const allowed = maxImages - currentImages.length
-      toast.error(`Solo puedes subir ${allowed} imagen(es) más. Límite: ${maxImages}`)
-      return
-    }
-
-    setIsUploading(true)
+    setIsUploading(true);
 
     try {
-      const formData = new FormData()
-      validFiles.forEach(file => {
-        formData.append('files', file)
-      })
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('ownerId', userId)
 
-      const response = await fetch(`/api/properties/${propertyId}/images`, {
+      const res = await fetch(`/api/properties/${propertyId}/images/upload`, {
         method: 'POST',
-        body: formData
+        body: fd,
       })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        toast.success(`${data.uploaded} imagen(es) subida(s) correctamente`)
-        
-        if (data.errors && data.errors.length > 0) {
-          toast.error(`Algunos archivos fallaron:\n${data.errors.join('\n')}`)
-        }
-
-        // Refresh para obtener lista actualizada
-        await refreshImages()
-      } else {
-        throw new Error(data.error || 'Error al subir imágenes')
+      
+      const json = await res.json()
+      
+      if (!res.ok) {
+        console.error('[Uploader] upload error:', json)
+        toast.error(json.error || 'Error al subir imagen')
+        return
       }
-    } catch (error) {
-      console.error('Upload error:', error)
-      toast.error(error instanceof Error ? error.message : 'Error al subir imágenes')
+
+      console.debug('[Uploader] upload success, refreshing images...');
+      toast.success('Imagen subida');
+      
+      // CONTROLLED COMPONENT: refresh sincroniza via onChange
+      await refreshImages();
+    } catch (e: any) {
+      console.error('[Uploader] upload exception:', e);
+      toast.error(e?.message ?? 'Error inesperado subiendo imagen');
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }, [propertyId, currentImages.length, maxImages, disabled, refreshImages])
+  }, [propertyId, userId, disabled, refreshImages])
 
   // Handle file deletion
   const handleDelete = useCallback(async (imageUrl: string) => {
     if (disabled) return
 
     try {
-      // Extraer key del URL
+      // Extraer key del URL - buscar tanto property-images como avatars (bucket temporal)
       const url = new URL(imageUrl.split('?')[0]) // Remover query params
       const pathParts = url.pathname.split('/')
-      const bucketIndex = pathParts.findIndex(part => part === 'property-images')
+      let bucketIndex = pathParts.findIndex(part => part === 'property-images')
+      
+      // Si no encuentra property-images, buscar avatars (bucket temporal)
+      if (bucketIndex === -1) {
+        bucketIndex = pathParts.findIndex(part => part === 'avatars')
+      }
       
       if (bucketIndex === -1) {
-        throw new Error('URL de imagen inválida')
+        throw new Error('URL de imagen inválida - bucket no encontrado')
       }
 
       const key = pathParts.slice(bucketIndex + 1).join('/')

@@ -152,42 +152,72 @@ export default async function CommunityPostDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contenido principal */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Carrusel de imágenes */}
-            {post.images.length > 0 && (
-              <Card>
-                <CardContent className="p-0">
-                  <div className="relative h-96 rounded-lg overflow-hidden">
-                    <Image
-                      src={post.images[0]}
-                      alt={post.title}
-                      fill
-                      className="object-cover"
-                    />
-                    {post.images.length > 1 && (
-                      <div className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white text-sm px-3 py-1 rounded">
-                        1 de {post.images.length}
+            {/* Galería de imágenes mejorada */}
+            {(() => {
+              // Normalizar images a array, limitar a 5, filtrar vacíos
+              const images = Array.isArray(post.images) 
+                ? post.images.filter(Boolean).slice(0, 5)
+                : []
+
+              if (images.length === 0) {
+                return (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-600">Sin fotos disponibles</p>
+                    </CardContent>
+                  </Card>
+                )
+              }
+
+              return (
+                <Card>
+                  <CardContent className="p-0">
+                    {/* Imagen principal */}
+                    <div className="relative h-96 bg-gray-100 rounded-t-lg overflow-hidden">
+                      <Image
+                        src={images[0]}
+                        alt={`Foto 1 de ${post.title}`}
+                        fill
+                        className="object-cover"
+                        loading="lazy"
+                      />
+                      {images.length > 1 && (
+                        <div className="absolute bottom-4 right-4 bg-black bg-opacity-70 text-white text-sm px-3 py-1.5 rounded-full">
+                          1 de {images.length}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Miniaturas (si hay más de 1 imagen) */}
+                    {images.length > 1 && (
+                      <div className="p-4 bg-white">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {images.slice(1).map((image, index) => (
+                            <div 
+                              key={index} 
+                              className="relative h-20 sm:h-24 bg-gray-100 rounded overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                            >
+                              <Image
+                                src={image}
+                                alt={`Foto ${index + 2} de ${post.title}`}
+                                fill
+                                className="object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
-                  </div>
-                  {post.images.length > 1 && (
-                    <div className="p-4">
-                      <div className="grid grid-cols-4 gap-2">
-                        {post.images.slice(1, 5).map((image, index) => (
-                          <div key={index} className="relative h-20 rounded overflow-hidden">
-                            <Image
-                              src={image}
-                              alt={`Imagen ${index + 2}`}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                  </CardContent>
+                </Card>
+              )
+            })()}
 
             {/* Descripción */}
             <Card>
@@ -303,12 +333,18 @@ export default async function CommunityPostDetailPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                <Link href={`/messages?userId=${post.user_id}`}>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Enviar mensaje
-                  </Button>
-                </Link>
+                {!isOwnPost ? (
+                  <Link href={`/messages?userId=${post.user_id}`}>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Enviar mensaje
+                    </Button>
+                  </Link>
+                ) : (
+                  <div className="text-sm text-gray-600 italic text-center py-2">
+                    Este es tu anuncio
+                  </div>
+                )}
               </CardContent>
             </Card>
 

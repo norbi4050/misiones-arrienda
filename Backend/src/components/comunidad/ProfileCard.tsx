@@ -5,13 +5,17 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Heart, MessageCircle, MapPin, Calendar } from 'lucide-react'
 import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface ProfileCardProps {
   profile: {
     id: string
+    user_id?: string
     user: {
       name: string
       email: string
+      id?: string
     }
     role: 'BUSCO' | 'OFREZCO'
     city: string
@@ -61,11 +65,52 @@ export default function ProfileCard({
     }
   }, [onLike, loading, profile.id, liked])
 
-  const handleMessage = useCallback(() => {
+  const router = useRouter()
+
+  const handleMessage = useCallback(async () => {
     if (onMessage) {
       onMessage(profile.id)
+      return
     }
-  }, [onMessage, profile.id])
+
+    // Implementar conexión directa al sistema de mensajes
+    setLoading(true)
+    try {
+      const response = await fetch('/api/messages/threads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          toUserId: profile.user_id || profile.user.id || profile.id, // Usar el ID del usuario del perfil
+          propertyId: null // Sin propiedad para mensajes de comunidad
+        })
+      })
+
+      if (response.status === 401) {
+        toast.error('Iniciá sesión para enviar mensajes')
+        router.push('/login')
+        return
+      }
+
+      if (!response.ok) {
+        toast.error('Error al crear conversación')
+        return
+      }
+
+      const data = await response.json()
+      const threadId = data.threadId
+
+      // Navegar al hilo de mensajes
+      router.push(`/messages?thread=${threadId}`)
+      toast.success('Conversación iniciada')
+
+    } catch (error) {
+      console.error('Error creating thread:', error)
+      toast.error('Error de conexión')
+    } finally {
+      setLoading(false)
+    }
+  }, [onMessage, profile.id, profile.user_id, profile.user.id, router])
 
   const formatBudget = (amount: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -183,17 +228,16 @@ export default function ProfileCard({
               {liked ? 'Te gusta' : 'Me gusta'}
             </Button>
             
-            {isMatched && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleMessage}
-                className="flex-1"
-              >
-                <MessageCircle className="w-4 h-4 mr-1" />
-                Mensaje
-              </Button>
-            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleMessage}
+              disabled={loading}
+              className="flex-1"
+            >
+              <MessageCircle className="w-4 h-4 mr-1" />
+              {loading ? 'Conectando...' : 'Enviar mensaje'}
+            </Button>
           </div>
         )}
 

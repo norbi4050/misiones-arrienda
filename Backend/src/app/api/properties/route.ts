@@ -88,9 +88,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
-    // Parámetros de búsqueda mejorados + BBOX
+    // Parámetros de búsqueda mejorados + BBOX + operation_type
     const city = searchParams.get('city');
     const type = searchParams.get('type');
+    const operationType = searchParams.get('operation_type'); // RENT, SALE, BOTH
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const bedrooms = searchParams.get('bedrooms');
@@ -142,6 +143,11 @@ export async function GET(request: NextRequest) {
       
       if (type) {
         query = query.eq('propertyType', type);
+      }
+      
+      // Filtro por tipo de operación (RENT, SALE, BOTH)
+      if (operationType && operationType !== 'BOTH') {
+        query = query.eq('operationType', operationType);
       }
       
       if (minPrice) {
@@ -199,8 +205,20 @@ export async function GET(request: NextRequest) {
         properties = supabaseProperties || [];
         totalCount = count || 0;
         
-        // Agregar coverUrl e imagesCount a cada propiedad
-        properties = await Promise.all(properties.map(async (property: any) => {
+        // Paso 3: Incluir cover_url en las respuestas de APIs de listado
+        const BUCKET = process.env.NEXT_PUBLIC_PROPERTY_IMAGES_BUCKET || 'property-images';
+        const PLACEHOLDER = '/placeholder-apartment-1.jpg';
+
+        const toCoverUrl = (coverPath?: string) => {
+          if (!coverPath) return PLACEHOLDER;
+          // URL pública del objeto (bucket público)
+          const supabaseAdmin = createClient();
+          const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(coverPath);
+          return data.publicUrl || PLACEHOLDER;
+        };
+
+        // Agregar cover_url e imagesCount a cada propiedad
+        properties = properties.map((property: any) => {
           // Parsear images si viene como string JSON
           let imgs: string[] = [];
           try {
@@ -213,31 +231,12 @@ export async function GET(request: NextRequest) {
             imgs = [];
           }
           
-          // Determinar coverUrl con fallback a Storage
-          let coverUrl = imgs[0];
-          if (!coverUrl && property.userId && property.id) {
-            // Fallback a primer archivo en property-images/${userId}/${id}/
-            try {
-              const { getPropertyImages } = await import('@/lib/property-images.server');
-              const storageImages = await getPropertyImages({
-                propertyId: property.id,
-                userId: property.userId,
-                fallbackImages: [],
-                maxImages: 1
-              });
-              coverUrl = storageImages[0];
-            } catch {
-              // Si falla el storage, usar placeholder
-              coverUrl = '/placeholder-apartment-1.jpg';
-            }
-          }
-          
           return {
             ...property,
-            coverUrl: coverUrl || '/placeholder-apartment-1.jpg',
+            cover_url: toCoverUrl(property.cover_path),
             imagesCount: imgs.length
           };
-        }));
+        });
       }
 
     } catch (supabaseError) {
@@ -295,6 +294,12 @@ export async function GET(request: NextRequest) {
         filteredProperties = filteredProperties.filter(p => p.featured === true);
       }
 
+      // Filtro por operation_type para datos mock
+      if (operationType && operationType !== 'BOTH') {
+        // Mock data no tiene operationType, asumir BOTH para todos
+        // En producción real, esto filtraría correctamente
+      }
+
       // Filtro por BBOX para datos mock (usando coordenadas incluidas)
       if (bboxCoords) {
         filteredProperties = filteredProperties.filter(p => {
@@ -341,6 +346,7 @@ export async function GET(request: NextRequest) {
         filters: {
           city,
           type,
+          operationType,
           minPrice,
           maxPrice,
           bedrooms,

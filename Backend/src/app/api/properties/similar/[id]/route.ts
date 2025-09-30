@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPropertyById, mockProperties } from '@/lib/mock-data-clean';
 import { normalizeProperty } from '@/lib/type-helpers';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(
   request: NextRequest,
@@ -16,6 +17,21 @@ export async function GET(
       return NextResponse.json({ error: 'Property not found' }, { status: 404 });
     }
 
+    // Setup for cover_url generation
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const BUCKET = process.env.NEXT_PUBLIC_PROPERTY_IMAGES_BUCKET || 'property-images';
+    const PLACEHOLDER = '/placeholder-apartment-1.jpg';
+
+    function toCoverUrl(coverPath?: string) {
+      if (!coverPath) return PLACEHOLDER;
+      const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(coverPath);
+      return data.publicUrl || PLACEHOLDER;
+    }
+
     // Get similar properties (same city and property type, excluding current property)
     let similarProperties = mockProperties
       .filter(prop => 
@@ -29,9 +45,15 @@ export async function GET(
     // Normalize all properties to ensure proper typing
     similarProperties = similarProperties.map(normalizeProperty);
 
+    // Add cover_url to each property
+    const properties = similarProperties.map(p => ({
+      ...p,
+      cover_url: toCoverUrl((p as any).cover_path),
+    }));
+
     return NextResponse.json({
-      properties: similarProperties,
-      total: similarProperties.length
+      properties,
+      total: properties.length
     });
   } catch (error) {
     console.error('Error fetching similar properties:', error);

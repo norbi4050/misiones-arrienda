@@ -18,16 +18,19 @@ import { CURRENT_POLICY_VERSION } from '@/lib/consent/logConsent'
 
 interface ProfileFormData {
   role: 'BUSCO' | 'OFREZCO' | ''
+  title: string
   city: string
   neighborhood: string
   budgetMin: number | ''
   budgetMax: number | ''
+  price: number | ''
   bio: string
   photos: string[]
   age: number | ''
   petPref: string
   smokePref: string
   diet: string
+  roomType: string
   scheduleNotes: string
   tags: string[]
   acceptsMessages: boolean
@@ -35,16 +38,19 @@ interface ProfileFormData {
 
 const initialFormData: ProfileFormData = {
   role: '',
+  title: '',
   city: '',
   neighborhood: '',
   budgetMin: '',
   budgetMax: '',
+  price: '',
   bio: '',
   photos: [],
   age: '',
   petPref: 'INDIFERENTE',
   smokePref: 'INDIFERENTE',
   diet: 'NINGUNA',
+  roomType: 'INDIVIDUAL',
   scheduleNotes: '',
   tags: [],
   acceptsMessages: true
@@ -63,6 +69,7 @@ export default function PublicarPerfilPage() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [newTag, setNewTag] = useState('')
+  const [uploadingImages, setUploadingImages] = useState(false)
   const router = useRouter()
   
   // Estado para consentimiento
@@ -96,9 +103,62 @@ export default function PublicarPerfilPage() {
     handleInputChange('tags', formData.tags.filter(tag => tag !== tagToRemove))
   }
 
-  const addPhoto = (url: string) => {
-    if (url && !formData.photos.includes(url) && formData.photos.length < 5) {
-      handleInputChange('photos', [...formData.photos, url])
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    // Validar límite de 5 fotos
+    if (formData.photos.length + files.length > 5) {
+      alert('Máximo 5 fotos permitidas')
+      return
+    }
+
+    setUploadingImages(true)
+
+    try {
+      const newPhotos: string[] = []
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+
+        // Validar tipo
+        if (!file.type.startsWith('image/')) {
+          alert(`${file.name} no es una imagen válida`)
+          continue
+        }
+
+        // Validar tamaño (máximo 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          alert(`${file.name} es muy grande. Máximo 2MB`)
+          continue
+        }
+
+        // Crear FormData
+        const formDataUpload = new FormData()
+        formDataUpload.append('file', file)
+
+        // Subir a Supabase usando el endpoint de avatar (reutilizando infraestructura existente)
+        const response = await fetch('/api/users/avatar', {
+          method: 'POST',
+          body: formDataUpload
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          newPhotos.push(data.url)
+        } else {
+          alert(`Error subiendo ${file.name}`)
+        }
+      }
+
+      if (newPhotos.length > 0) {
+        handleInputChange('photos', [...formData.photos, ...newPhotos])
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error)
+      alert('Error subiendo imágenes')
+    } finally {
+      setUploadingImages(false)
     }
   }
 
@@ -113,16 +173,36 @@ export default function PublicarPerfilPage() {
       newErrors.role = 'Selecciona si buscas o ofreces habitación'
     }
 
+    if (!formData.title || formData.title.length < 10) {
+      newErrors.title = 'El título debe tener al menos 10 caracteres'
+    }
+
+    if (formData.title && formData.title.length > 100) {
+      newErrors.title = 'El título no puede exceder 100 caracteres'
+    }
+
+    if (!formData.roomType) {
+      newErrors.roomType = 'El tipo de habitación es obligatorio'
+    }
+
     if (!formData.city) {
       newErrors.city = 'La ciudad es obligatoria'
     }
 
-    if (!formData.budgetMin || formData.budgetMin <= 0) {
-      newErrors.budgetMin = 'El presupuesto mínimo es obligatorio'
+    // Validación condicional de price
+    if (formData.role === 'OFREZCO' && (!formData.price || formData.price <= 0)) {
+      newErrors.price = 'El precio es obligatorio si ofreces habitación'
     }
 
-    if (!formData.budgetMax || formData.budgetMax <= 0) {
-      newErrors.budgetMax = 'El presupuesto máximo es obligatorio'
+    // Validación condicional de budget
+    if (formData.role === 'BUSCO') {
+      if (!formData.budgetMin || formData.budgetMin <= 0) {
+        newErrors.budgetMin = 'El presupuesto mínimo es obligatorio si buscas habitación'
+      }
+
+      if (!formData.budgetMax || formData.budgetMax <= 0) {
+        newErrors.budgetMax = 'El presupuesto máximo es obligatorio si buscas habitación'
+      }
     }
 
     if (formData.budgetMin && formData.budgetMax && formData.budgetMin > formData.budgetMax) {
@@ -137,8 +217,8 @@ export default function PublicarPerfilPage() {
       newErrors.bio = 'La descripción debe tener al menos 50 caracteres'
     }
 
-    if (formData.bio && formData.bio.length > 500) {
-      newErrors.bio = 'La descripción no puede exceder 500 caracteres'
+    if (formData.bio && formData.bio.length > 1000) {
+      newErrors.bio = 'La descripción no puede exceder 1000 caracteres'
     }
 
     setErrors(newErrors)
@@ -148,10 +228,11 @@ export default function PublicarPerfilPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setConsentError(null)
+    setErrors({}) // Limpiar errores previos
     
     // Validar consentimiento
     if (!checkedTerms || !checkedPrivacy) {
-      setConsentError("Debes aceptar los Términos y Condiciones y la Política de Privacidad para crear un perfil de comunidad")
+      setConsentError("Debes aceptar los Términos y Condiciones y la Política de Privacidad para crear un anuncio de comunidad")
       return
     }
     
@@ -159,17 +240,37 @@ export default function PublicarPerfilPage() {
       return
     }
 
+    // Validar límite de imágenes
+    if (formData.photos.length > 5) {
+      setErrors({ photos: 'Máximo 5 fotos permitidas' })
+      return
+    }
+
     setLoading(true)
 
     try {
+      // Helper de normalización defensiva
+      const up = (s: string) => (s ? s.trim().toUpperCase().replace(/\s+/g, '_') : s)
+      
       const submitData = {
-        ...formData,
-        budgetMin: Number(formData.budgetMin),
-        budgetMax: Number(formData.budgetMax),
-        age: formData.age ? Number(formData.age) : undefined
+        role: up(formData.role),
+        title: formData.title,
+        description: formData.bio,
+        city: formData.city,
+        neighborhood: formData.neighborhood || undefined,
+        price: formData.role === 'OFREZCO' ? formData.price : undefined,
+        budgetMin: formData.role === 'BUSCO' ? formData.budgetMin : undefined,
+        budgetMax: formData.role === 'BUSCO' ? formData.budgetMax : undefined,
+        roomType: up(formData.roomType),
+        petPref: up(formData.petPref),
+        smokePref: up(formData.smokePref),
+        diet: up(formData.diet),
+        tags: formData.tags ?? [],
+        images: (formData.photos ?? []).slice(0, 5),
+        amenities: []
       }
 
-      const response = await fetch('/api/comunidad/profiles', {
+      const response = await fetch('/api/comunidad/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -178,9 +279,9 @@ export default function PublicarPerfilPage() {
       })
 
       if (response.ok) {
-        const profile = await response.json()
+        const result = await response.json()
         
-        // Loguear consentimiento después de crear el perfil exitosamente
+        // Loguear consentimiento después de crear el post exitosamente
         try {
           await logConsentClient({
             policyVersion: CURRENT_POLICY_VERSION,
@@ -193,14 +294,36 @@ export default function PublicarPerfilPage() {
           // Continuar aunque falle el logging
         }
         
-        router.push(`/comunidad/${profile.id}`)
+        router.push(`/comunidad/${result.id}`)
       } else {
         const errorData = await response.json()
-        alert('Error al crear el perfil: ' + (errorData.error || 'Error desconocido'))
+        
+        // Procesar errores de validación estructurados
+        if (errorData.error === 'VALIDATION_ERROR' && errorData.issues) {
+          const newErrors: Record<string, string> = {}
+          
+          for (const it of errorData.issues) {
+            const k = (it.path || 'general').toString()
+            if (!newErrors[k]) newErrors[k] = it.message
+          }
+          
+          setErrors(newErrors)
+          
+          // Scrollear al primero
+          const first = Object.keys(newErrors)[0]
+          if (first !== 'general') {
+            const el = document.getElementById(first)
+            el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            el?.focus?.()
+          }
+        } else {
+          // Error genérico
+          alert('Error al crear el anuncio: ' + (errorData.error || 'Error desconocido'))
+        }
       }
     } catch (error) {
-      console.error('Error submitting profile:', error)
-      alert('Error al crear el perfil. Inténtalo de nuevo.')
+      console.error('Error submitting post:', error)
+      alert('Error al crear el anuncio. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -228,12 +351,32 @@ export default function PublicarPerfilPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Errores globales */}
+          {errors.general && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800 text-sm font-medium">{errors.general}</p>
+            </div>
+          )}
+          
           {/* Información básica */}
           <Card>
             <CardHeader>
               <CardTitle>Información Básica</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="title">Título del anuncio *</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  placeholder="Ej: Busco compañero de depto en Posadas Centro"
+                  className={errors.title ? 'border-red-500' : ''}
+                />
+                {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+                <p className="text-gray-500 text-sm mt-1">{formData.title.length}/100 caracteres</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="role">¿Qué estás buscando? *</Label>
@@ -249,6 +392,24 @@ export default function PublicarPerfilPage() {
                   {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role}</p>}
                 </div>
 
+                <div>
+                  <Label htmlFor="roomType">Tipo de habitación *</Label>
+                  <Select value={formData.roomType} onValueChange={(value) => handleInputChange('roomType', value)}>
+                    <SelectTrigger className={errors.roomType ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Selecciona el tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INDIVIDUAL">Habitación individual</SelectItem>
+                      <SelectItem value="COMPARTIDA">Habitación compartida</SelectItem>
+                      <SelectItem value="ESTUDIO">Estudio/monoambiente</SelectItem>
+                      <SelectItem value="CASA_COMPLETA">Casa completa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.roomType && <p className="text-red-500 text-sm mt-1">{errors.roomType}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="city">Ciudad *</Label>
                   <Select value={formData.city} onValueChange={(value) => handleInputChange('city', value)}>
@@ -290,35 +451,53 @@ export default function PublicarPerfilPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {formData.role === 'OFREZCO' && (
                 <div>
-                  <Label htmlFor="budgetMin">Presupuesto mínimo (ARS) *</Label>
+                  <Label htmlFor="price">Precio mensual (ARS) *</Label>
                   <Input
-                    id="budgetMin"
+                    id="price"
                     type="number"
                     min="0"
-                    value={formData.budgetMin}
-                    onChange={(e) => handleInputChange('budgetMin', e.target.value ? parseInt(e.target.value) : '')}
-                    placeholder="50000"
-                    className={errors.budgetMin ? 'border-red-500' : ''}
+                    value={formData.price}
+                    onChange={(e) => handleInputChange('price', e.target.value ? parseInt(e.target.value) : '')}
+                    placeholder="80000"
+                    className={errors.price ? 'border-red-500' : ''}
                   />
-                  {errors.budgetMin && <p className="text-red-500 text-sm mt-1">{errors.budgetMin}</p>}
+                  {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                 </div>
+              )}
 
-                <div>
-                  <Label htmlFor="budgetMax">Presupuesto máximo (ARS) *</Label>
-                  <Input
-                    id="budgetMax"
-                    type="number"
-                    min="0"
-                    value={formData.budgetMax}
-                    onChange={(e) => handleInputChange('budgetMax', e.target.value ? parseInt(e.target.value) : '')}
-                    placeholder="150000"
-                    className={errors.budgetMax ? 'border-red-500' : ''}
-                  />
-                  {errors.budgetMax && <p className="text-red-500 text-sm mt-1">{errors.budgetMax}</p>}
+              {formData.role === 'BUSCO' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="budgetMin">Presupuesto mínimo (ARS) *</Label>
+                    <Input
+                      id="budgetMin"
+                      type="number"
+                      min="0"
+                      value={formData.budgetMin}
+                      onChange={(e) => handleInputChange('budgetMin', e.target.value ? parseInt(e.target.value) : '')}
+                      placeholder="50000"
+                      className={errors.budgetMin ? 'border-red-500' : ''}
+                    />
+                    {errors.budgetMin && <p className="text-red-500 text-sm mt-1">{errors.budgetMin}</p>}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="budgetMax">Presupuesto máximo (ARS) *</Label>
+                    <Input
+                      id="budgetMax"
+                      type="number"
+                      min="0"
+                      value={formData.budgetMax}
+                      onChange={(e) => handleInputChange('budgetMax', e.target.value ? parseInt(e.target.value) : '')}
+                      placeholder="150000"
+                      className={errors.budgetMax ? 'border-red-500' : ''}
+                    />
+                    {errors.budgetMax && <p className="text-red-500 text-sm mt-1">{errors.budgetMax}</p>}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -341,7 +520,7 @@ export default function PublicarPerfilPage() {
                 <div className="flex justify-between items-center mt-1">
                   {errors.bio && <p className="text-red-500 text-sm">{errors.bio}</p>}
                   <p className="text-gray-500 text-sm ml-auto">
-                    {formData.bio.length}/500 caracteres
+                    {formData.bio.length}/1000 caracteres
                   </p>
                 </div>
               </div>
@@ -493,35 +672,27 @@ export default function PublicarPerfilPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="photoUrl">Agregar foto (URL)</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    id="photoUrl"
-                    placeholder="https://ejemplo.com/mi-foto.jpg"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        const input = e.target as HTMLInputElement
-                        addPhoto(input.value)
-                        input.value = ''
-                      }
-                    }}
+                <Label htmlFor="photoUpload">Subir fotos</Label>
+                <div className="mt-1">
+                  <input
+                    id="photoUpload"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={uploadingImages || formData.photos.length >= 5}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-blue-50 file:text-blue-700
+                      hover:file:bg-blue-100
+                      disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={(e) => {
-                      const input = (e.target as HTMLElement).parentElement?.querySelector('input') as HTMLInputElement
-                      if (input?.value) {
-                        addPhoto(input.value)
-                        input.value = ''
-                      }
-                    }}
-                  >
-                    <Upload className="w-4 h-4" />
-                  </Button>
                 </div>
-                <p className="text-gray-500 text-sm mt-1">Máximo 5 fotos</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  {uploadingImages ? 'Subiendo imágenes...' : `Máximo 5 fotos (${formData.photos.length}/5)`}
+                </p>
               </div>
 
               {formData.photos.length > 0 && (
@@ -587,8 +758,8 @@ export default function PublicarPerfilPage() {
                 Cancelar
               </Button>
             </Link>
-            <Button type="submit" disabled={loading || !checkedTerms || !checkedPrivacy}>
-              {loading ? 'Creando perfil...' : 'Crear Perfil'}
+            <Button type="submit" disabled={loading || uploadingImages || !checkedTerms || !checkedPrivacy}>
+              {loading ? 'Creando...' : 'Crear Anuncio'}
             </Button>
           </div>
         </form>

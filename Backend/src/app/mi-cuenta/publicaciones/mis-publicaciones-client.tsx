@@ -183,8 +183,7 @@ export default function MisPublicacionesClient({ initialItems }: Props) {
         )}
 
         {filtered.map(p => {
-          const cover =
-            (Array.isArray(p.images) && p.images[0]) || '/placeholder-apartment-1.jpg'
+          const cover = (p as any)?.cover_url ?? (p as any)?.coverUrl ?? (p as any)?.image ?? (Array.isArray(p.images) && p.images[0]) ?? '/placeholder-apartment-1.jpg';
           const dleft = daysUntil(p.expires_at)
           const soon = typeof dleft === 'number' && dleft <= 5
 

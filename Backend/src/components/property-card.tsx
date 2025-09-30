@@ -19,6 +19,7 @@ interface PropertyCardProps {
   image: string
   imageUrls?: string[]
   coverUrl?: string
+  cover_url?: string  // Nueva prop del API
   userId?: string
   featured?: boolean
 }
@@ -35,11 +36,15 @@ export function PropertyCard({
   image,
   imageUrls,
   coverUrl,
+  cover_url,
   userId,
   featured = false
 }: PropertyCardProps) {
-  // Robustecer el src con OR-chain seguro, priorizando coverUrl
-  const src = coverUrl ?? image ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
+  // Paso 4: Usar cover_url en TODAS las cards, priorizando la nueva prop
+  const src = cover_url ?? coverUrl ?? image ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
+  
+  // Log de diagnóstico para auditoría
+  console.debug('[Card] src=', src, 'id=', id, 'cover_url=', cover_url);
   
   return (
     <Link href={`/properties/${id}`} className="block">
@@ -57,7 +62,7 @@ export function PropertyCard({
               Destacado
             </Badge>
           )}
-          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
             <FavoriteButton propertyId={id} />
           </div>
           

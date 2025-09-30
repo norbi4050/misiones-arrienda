@@ -99,6 +99,8 @@ export const propertyFormSchema = propertySchema.pick({
   province: true,
   country: true,
   postalCode: true,
+  latitude: true,
+  longitude: true,
   contact_phone: true,
   images: true,
   amenities: true,
