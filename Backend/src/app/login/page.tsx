@@ -15,7 +15,7 @@ export default function LoginPage() {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace("/properties");
+      router.replace("/");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -31,9 +31,9 @@ export default function LoginPage() {
         setMsg("¡Login exitoso! Redirigiendo...");
         // Refresh router to update server components after login
         router.refresh();
-        // Redirección explícita a propiedades después del login exitoso
+        // Redirección explícita a la home después del login exitoso
         setTimeout(() => {
-          router.replace("/properties");
+          router.replace("/");
         }, 1000);
       } else {
         setMsg(`Error: ${result.error}`);

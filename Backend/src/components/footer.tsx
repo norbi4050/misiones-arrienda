@@ -14,20 +14,20 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="mailto:contacto@misionesarrienda.com.ar"
+                  href="mailto:cgonzalezarchilla@gmail.com"
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <Mail className="w-4 h-4 mr-2" />
-                  <span className="text-sm">contacto@misionesarrienda.com.ar</span>
+                  <span className="text-sm">cgonzalezarchilla@gmail.com</span>
                 </a>
               </li>
               <li>
                 <a
-                  href="tel:+5493764000000"
+                  href="tel:+5491130875304"
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <Phone className="w-4 h-4 mr-2" />
-                  <span className="text-sm">+54 9 3764 000000</span>
+                  <span className="text-sm">+54 9 11 3087 5304</span>
                 </a>
               </li>
             </ul>
@@ -39,7 +39,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="/terms"
+                  href="/legal/terms"
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <FileText className="w-4 h-4 mr-2" />
@@ -48,7 +48,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/privacy"
+                  href="/legal/privacy"
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <Lock className="w-4 h-4 mr-2" />
@@ -58,26 +58,26 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Columna 3: Seguridad */}
+          {/* Columna 3: Seguridad y Calidad */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Seguridad</h3>
+            <h3 className="text-lg font-semibold mb-4">Seguridad y Calidad</h3>
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="/security"
+                  href="/legal/security"
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <Shield className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Políticas de Seguridad</span>
+                  <span className="text-sm">Política de Seguridad</span>
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/help"
+                  href="/legal/quality"
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
-                  <HelpCircle className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Centro de Ayuda</span>
+                  <FileText className="w-4 h-4 mr-2" />
+                  <span className="text-sm">Política de Calidad</span>
                 </Link>
               </li>
             </ul>

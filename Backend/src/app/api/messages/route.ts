@@ -42,11 +42,17 @@ export async function GET(req: NextRequest) {
     // PROMPT 6: Log RAW QUERY
     console.log('[RAW QUERY]', { threadId_param: searchParams.get('threadId'), conversationId_param: searchParams.get('conversationId') })
     
+    // PROMPT F: Validación silenciosa - devolver 200 con warning en lugar de 400
     if (!threadId) {
+      console.log('[MESSAGES/API] ⚠️ called without threadId')
       return NextResponse.json({ 
-        error: 'VALIDATION_ERROR',
-        issues: [{ path: 'threadId', message: 'threadId is required' }]
-      }, { status: 400 })
+        threadId: null,
+        messages: [],
+        _meta: {
+          warning: 'NO_THREAD_ID',
+          message: 'No se proporcionó threadId, devolviendo lista vacía'
+        }
+      }, { status: 200 })
     }
 
     const supabase = getSupabase(req)

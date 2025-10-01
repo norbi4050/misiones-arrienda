@@ -28,9 +28,12 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
 
     // Filtro de status
-    if (statusFilter !== 'all') {
-      query = query.eq('status', statusFilter.toUpperCase())
+    if (statusFilter === 'active') {
+      query = query.eq('is_active', true)
+    } else if (statusFilter === 'archived') {
+      query = query.eq('is_active', false)
     }
+    // Si es 'all', mostrar todos (activos e inactivos)
 
     // Ordenar y paginar
     const offset = (page - 1) * limit

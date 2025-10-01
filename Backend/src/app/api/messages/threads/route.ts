@@ -4,40 +4,101 @@ import { createClient } from '@/lib/supabase/server'
 /**
  * PROMPT 2: Detección automática de esquema y fallback
  * 
- * Rama A (Prisma-like): aId/bId, createdAt, lastMessageAt
+ * Rama A (Prisma-like): aId/bId o a_id/b_id, createdAt, lastMessageAt
  * Rama B (Supabase-like): sender_id/receiver_id, created_at, last_message_at
  */
 
-// Detectar esquema de la base de datos
-async function detectSchema(supabase: any): Promise<'PRISMA' | 'SUPABASE' | null> {
-  // Intentar Rama A (Prisma): Conversation con aId/bId
+// PROMPT C: Detectar esquema con prioridad por usuario
+async function detectSchema(supabase: any, userId: string): Promise<{
+  schema: 'PRISMA' | 'SUPABASE' | null,
+  reason: string
+}> {
+  // Verificar si el usuario tiene UserProfile
+  let hasUserProfile = false
+  try {
+    const { data: userProfile, error } = await supabase
+      .from('UserProfile')
+      .select('id')
+      .eq('userId', userId)
+      .single()
+    
+    hasUserProfile = !error && !!userProfile
+  } catch {}
+
+  // Verificar si existe tabla Conversation (Prisma - singular, PascalCase)
+  let hasConversationTable = false
+  let conversationHasPrismaColumns = false
   try {
     const { data, error } = await supabase
       .from('Conversation')
-      .select('id, aId, bId, createdAt')
+      .select('*')
       .limit(1)
+      .maybeSingle()
     
-    if (!error && data !== null) {
-      console.log('[SCHEMA DETECTION] ✅ Rama A (Prisma): Conversation con aId/bId')
-      return 'PRISMA'
+    hasConversationTable = !error
+    if (data) {
+      conversationHasPrismaColumns = 'aId' in data || 'bId' in data
     }
   } catch {}
 
-  // Intentar Rama B (Supabase): conversations con sender_id/receiver_id
+  // Verificar si existe tabla conversations (plural, snake_case)
+  let hasConversationsTable = false
+  let conversationsHasSupabaseColumns = false
+  let conversationsHasPrismaColumns = false
   try {
     const { data, error } = await supabase
       .from('conversations')
-      .select('id, sender_id, receiver_id, created_at')
+      .select('*')
       .limit(1)
+      .maybeSingle()
     
-    if (!error && data !== null) {
-      console.log('[SCHEMA DETECTION] ✅ Rama B (Supabase): conversations con sender_id/receiver_id')
-      return 'SUPABASE'
+    hasConversationsTable = !error
+    if (data) {
+      conversationsHasSupabaseColumns = 'sender_id' in data || 'receiver_id' in data
+      conversationsHasPrismaColumns = 'a_id' in data || 'b_id' in data
     }
   } catch {}
 
+  // PROMPT C: Decidir rama según usuario, tablas Y columnas
+  
+  // Prioridad 1: Si hay UserProfile y tabla Conversation con columnas Prisma
+  if (hasUserProfile && hasConversationTable && conversationHasPrismaColumns) {
+    console.log('[SCHEMA] decided=PRISMA reason=FOUND_PROFILE_AND_PRISMA_TABLE')
+    return { schema: 'PRISMA', reason: 'FOUND_PROFILE_AND_PRISMA_TABLE' }
+  }
+
+  // Prioridad 2: Si tabla Conversation existe con columnas Prisma
+  if (hasConversationTable && conversationHasPrismaColumns) {
+    console.log('[SCHEMA] decided=PRISMA reason=FOUND_PRISMA_TABLE')
+    return { schema: 'PRISMA', reason: 'FOUND_PRISMA_TABLE' }
+  }
+
+  // Prioridad 3: Si tabla conversations tiene columnas Supabase
+  if (hasConversationsTable && conversationsHasSupabaseColumns) {
+    console.log('[SCHEMA] decided=SUPABASE reason=FOUND_SUPABASE_COLUMNS')
+    return { schema: 'SUPABASE', reason: 'FOUND_SUPABASE_COLUMNS' }
+  }
+
+  // Prioridad 4: Si tabla conversations tiene columnas Prisma snake_case (a_id/b_id)
+  if (hasConversationsTable && conversationsHasPrismaColumns) {
+    console.log('[SCHEMA] decided=PRISMA reason=FOUND_PRISMA_COLUMNS_IN_LOWERCASE_TABLE')
+    return { schema: 'PRISMA', reason: 'FOUND_PRISMA_COLUMNS_IN_LOWERCASE_TABLE' }
+  }
+
+  // Fallback: Si solo existe tabla Conversation
+  if (hasConversationTable) {
+    console.log('[SCHEMA] decided=PRISMA reason=FOUND_CONVERSATION_TABLE_FALLBACK')
+    return { schema: 'PRISMA', reason: 'FOUND_CONVERSATION_TABLE_FALLBACK' }
+  }
+
+  // Fallback: Si solo existe tabla conversations
+  if (hasConversationsTable) {
+    console.log('[SCHEMA] decided=PRISMA reason=FOUND_CONVERSATIONS_TABLE_FALLBACK')
+    return { schema: 'PRISMA', reason: 'FOUND_CONVERSATIONS_TABLE_FALLBACK' }
+  }
+
   console.error('[SCHEMA DETECTION] ❌ No se pudo detectar esquema válido')
-  return null
+  return { schema: null, reason: 'NO_TABLES_FOUND' }
 }
 
 // GET /api/messages/threads → lista hilos del usuario autenticado
@@ -56,8 +117,8 @@ export async function GET(request: NextRequest) {
 
     console.log(`[AUTH] ✅ Usuario: ${user.id}`)
 
-    // PROMPT 2: Detectar esquema
-    const schema = await detectSchema(supabase)
+    // PROMPT C: Detectar esquema con prioridad por usuario
+    const { schema, reason: schemaReason } = await detectSchema(supabase, user.id)
     
     if (!schema) {
       console.error('[SCHEMA] ❌ No se pudo detectar esquema de DB')
@@ -67,14 +128,21 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    console.log(`[SCHEMA] ✅ Usando rama: ${schema}`)
+    console.log(`[SCHEMA] ✅ Usando rama: ${schema}, reason: ${schemaReason}`)
 
     let threads: any[] = []
 
     // ============================================
-    // RAMA A: PRISMA (Conversation con aId/bId)
+    // RAMA A: PRISMA (Conversation/conversations con aId/bId o a_id/b_id)
     // ============================================
     if (schema === 'PRISMA') {
+      // Determinar qué tabla usar basándose en el reason
+      const useConversationTable = schemaReason.includes('CONVERSATION_TABLE') || schemaReason.includes('PRISMA_TABLE')
+      const tableName = useConversationTable ? 'Conversation' : 'conversations'
+      const useSnakeCase = tableName === 'conversations'
+      
+      console.log(`[PRISMA BRANCH] Using table: ${tableName}, snake_case: ${useSnakeCase}`)
+
       // Obtener UserProfile del usuario actual
       const { data: userProfile, error: profileError } = await supabase
         .from('UserProfile')
@@ -83,31 +151,50 @@ export async function GET(request: NextRequest) {
         .single()
 
       if (profileError || !userProfile) {
-        console.error('[PROFILE] ❌ No se encontró UserProfile para usuario:', user.id)
-        return NextResponse.json({ 
-          error: 'PROFILE_NOT_FOUND',
-          details: 'Necesitas completar tu perfil de comunidad primero'
-        }, { status: 403 })
+        console.log('[PROFILE] ⚠️ No se encontró UserProfile para usuario:', user.id)
+        console.log('[SCHEMA] 🔄 Usuario sin perfil, devolviendo lista vacía')
+        
+        // PROMPT B: Devolver 200 con threads vacíos en lugar de 403
+        const duration = Date.now() - startTime
+        return NextResponse.json({
+          success: true,
+          threads: [],
+          _meta: {
+            schema: 'PRISMA',
+            schema_reason: schemaReason === 'FOUND_PROFILE' ? 'NO_PROFILE' : schemaReason,
+            count: 0,
+            duration_ms: duration,
+            message: 'Usuario no tiene perfil de comunidad'
+          }
+        })
       }
 
       const profileId = userProfile.id
       console.log(`[PROFILE] ✅ UserProfile: ${profileId}`)
 
+      // Construir query según el naming de la tabla
+      const aIdField = useSnakeCase ? 'a_id' : 'aId'
+      const bIdField = useSnakeCase ? 'b_id' : 'bId'
+      const isActiveField = useSnakeCase ? 'is_active' : 'isActive'
+      const lastMessageAtField = useSnakeCase ? 'last_message_at' : 'lastMessageAt'
+      const createdAtField = useSnakeCase ? 'created_at' : 'createdAt'
+      const updatedAtField = useSnakeCase ? 'updated_at' : 'updatedAt'
+
       // Obtener conversaciones donde el usuario es participante
       const { data: conversations, error: convError } = await supabase
-        .from('Conversation')
+        .from(tableName)
         .select(`
           id,
-          aId,
-          bId,
-          isActive,
-          lastMessageAt,
-          createdAt,
-          updatedAt
+          ${aIdField},
+          ${bIdField},
+          ${isActiveField},
+          ${lastMessageAtField},
+          ${createdAtField},
+          ${updatedAtField}
         `)
-        .or(`aId.eq.${profileId},bId.eq.${profileId}`)
-        .eq('isActive', true)
-        .order('updatedAt', { ascending: false })
+        .or(`${aIdField}.eq.${profileId},${bIdField}.eq.${profileId}`)
+        .eq(isActiveField, true)
+        .order(updatedAtField, { ascending: false })
 
       if (convError) {
         console.error('[DB] ❌ Error al obtener conversaciones:', convError)
@@ -119,7 +206,7 @@ export async function GET(request: NextRequest) {
 
       // Formatear cada conversación
       for (const conv of conversations || []) {
-        const otherUserId = conv.aId === profileId ? conv.bId : conv.aId
+        const otherUserId = (conv as any)[aIdField] === profileId ? (conv as any)[bIdField] : (conv as any)[aIdField]
 
         // Obtener datos del otro usuario
         const { data: otherProfile } = await supabase
@@ -170,7 +257,7 @@ export async function GET(request: NextRequest) {
             isMine: lastMsg.senderId === profileId
           } : null,
           unreadCount: unreadCount || 0,
-          updatedAt: conv.updatedAt
+          updatedAt: useSnakeCase ? (conv as any).updated_at : (conv as any).updatedAt
         })
       }
     }
@@ -251,12 +338,13 @@ export async function GET(request: NextRequest) {
     const duration = Date.now() - startTime
     console.log(`[THREADS GET] ✅ ${threads.length} hilos en ${duration}ms usando rama ${schema}`)
 
-    // PROMPT 2: Formato unificado para el cliente
+    // PROMPT 2 & C: Formato unificado para el cliente
     return NextResponse.json({
       success: true,
       threads,
       _meta: {
         schema,
+        schema_reason: schemaReason,
         count: threads.length,
         duration_ms: duration
       }
@@ -297,8 +385,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // PROMPT 2: Detectar esquema
-    const schema = await detectSchema(supabase)
+    // PROMPT C: Detectar esquema con prioridad por usuario
+    const { schema, reason: schemaReason } = await detectSchema(supabase, user.id)
     
     if (!schema) {
       console.error('[SCHEMA] ❌ No se pudo detectar esquema de DB')
@@ -308,7 +396,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    console.log(`[SCHEMA] ✅ Usando rama: ${schema}`)
+    console.log(`[SCHEMA] ✅ Usando rama: ${schema}, reason: ${schemaReason}`)
 
     let threadId: string | null = null
     let existing = false
@@ -352,7 +440,7 @@ export async function POST(request: NextRequest) {
 
       console.log(`[PROFILE] ✅ Current: ${currentProfileId}, Target: ${targetProfileId}`)
 
-      // Buscar conversación existente (idempotente)
+      // Buscar conversación existente (idempotente) - siempre usar tabla Conversation para POST
       const { data: existingConv } = await supabase
         .from('Conversation')
         .select('id')
@@ -478,13 +566,14 @@ export async function POST(request: NextRequest) {
     const duration = Date.now() - startTime
     console.log(`[THREADS POST] ✅ threadId: ${threadId}, existing: ${existing}, ${duration}ms, rama: ${schema}`)
 
-    // PROMPT 1 & 2: Respuesta unificada con threadId
+    // PROMPT 1, 2 & C: Respuesta unificada con threadId
     return NextResponse.json({
       success: true,
       threadId,
       existing,
       _meta: {
         schema,
+        schema_reason: schemaReason,
         duration_ms: duration
       }
     })

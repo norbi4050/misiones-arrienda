@@ -1,8 +1,16 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { LEGACY_ROUTES } from '@/lib/legal-constants';
 
 export async function middleware(req: NextRequest) {
+  // Redirects 301 para rutas legales legacy
+  const pathname = req.nextUrl.pathname;
+  if (pathname in LEGACY_ROUTES) {
+    const canonicalUrl = new URL(LEGACY_ROUTES[pathname as keyof typeof LEGACY_ROUTES], req.url);
+    return NextResponse.redirect(canonicalUrl, { status: 301 });
+  }
+
   let res = NextResponse.next({
     request: {
       headers: req.headers,

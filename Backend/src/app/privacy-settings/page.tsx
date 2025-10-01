@@ -102,12 +102,12 @@ export default function PrivacySettingsPage() {
                   </p>
                 </div>
                 <div className="space-x-2">
-                  <Link href="/privacy">
+                  <Link href="/legal/privacy">
                     <Button variant="outline" size="sm">
                       Política de Privacidad
                     </Button>
                   </Link>
-                  <Link href="/terms">
+                  <Link href="/legal/terms">
                     <Button variant="outline" size="sm">
                       Términos y Condiciones
                     </Button>

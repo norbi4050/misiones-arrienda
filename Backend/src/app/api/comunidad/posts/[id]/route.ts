@@ -110,9 +110,9 @@ export async function DELETE(
     const { error: deleteError } = await supabase
       .from('community_posts')
       .update({ 
-        is_active: false, 
+        is_active: false,
+        status: 'ARCHIVED',
         updated_at: new Date().toISOString()
-        // Si existe 'status', se puede agregar: status: 'ARCHIVED'
       })
       .eq('id', id)
 

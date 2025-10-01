@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import ChatInterface from '@/components/ui/ChatInterface'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { SafeAvatar } from '@/components/ui/SafeAvatar'
 import { subscribeToConversations, unsubscribeFromChannel, type ConversationRealtimePayload } from '@/lib/realtime-messages'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -192,9 +194,10 @@ export default function MessagesPage() {
                 }`}
               >
                 <div className="flex items-start space-x-3">
-                  <img
-                    src={conversation.property_image || '/placeholder-house-1.jpg'}
+                  <SafeImage
+                    src={conversation.property_image}
                     alt={conversation.property_title}
+                    fallback="/placeholder-house-1.jpg"
                     className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
@@ -337,9 +340,10 @@ export default function MessagesPage() {
                 <div className="flex items-start space-x-4">
                   {/* Property Image */}
                   <div className="flex-shrink-0">
-                    <img
-                      src={conversation.property_image || '/placeholder-house-1.jpg'}
+                    <SafeImage
+                      src={conversation.property_image}
                       alt={conversation.property_title}
+                      fallback="/placeholder-house-1.jpg"
                       className="w-16 h-16 rounded-lg object-cover"
                     />
                   </div>
@@ -358,19 +362,11 @@ export default function MessagesPage() {
                     </div>
 
                     <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                        {conversation.other_user_avatar ? (
-                          <img
-                            src={conversation.other_user_avatar}
-                            alt={conversation.other_user_name}
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-sm font-medium text-gray-600">
-                            {conversation.other_user_name?.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
+                      <SafeAvatar
+                        src={conversation.other_user_avatar}
+                        name={conversation.other_user_name}
+                        size="sm"
+                      />
                       <span className="text-sm font-medium text-gray-700">
                         {conversation.other_user_name}
                       </span>

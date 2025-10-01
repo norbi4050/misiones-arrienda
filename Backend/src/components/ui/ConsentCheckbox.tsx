@@ -35,7 +35,7 @@ export function ConsentCheckbox({
         >
           Acepto los{' '}
           <a 
-            href="/terms" 
+            href="/legal/terms" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-500 underline"
@@ -59,7 +59,7 @@ export function ConsentCheckbox({
         >
           Acepto la{' '}
           <a 
-            href="/privacy" 
+            href="/legal/privacy" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-500 underline"

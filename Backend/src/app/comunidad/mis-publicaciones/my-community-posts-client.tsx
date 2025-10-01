@@ -24,10 +24,13 @@ export function MyCommunityPostsClient() {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '20',
-        status: statusFilter
+        status: statusFilter,
+        _t: Date.now().toString() // Cache buster
       })
 
-      const response = await fetch(`/api/comunidad/my-posts?${params}`)
+      const response = await fetch(`/api/comunidad/my-posts?${params}`, {
+        cache: 'no-store' // Forzar no-cache
+      })
       
       if (response.ok) {
         const data = await response.json()
