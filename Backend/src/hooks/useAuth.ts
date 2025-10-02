@@ -11,6 +11,9 @@ export interface User {
   name?: string;
   phone?: string;
   bio?: string;
+  userType?: string;
+  companyName?: string;
+  licenseNumber?: string;
   created_at: string;
   updated_at: string;
 }

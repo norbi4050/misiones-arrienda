@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { getProperties } from '@/lib/api'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://misionesarrienda.com.ar'
@@ -99,6 +100,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error generating sitemap for properties:', error)
   }
 
+  // Obtener perfiles públicos de inmobiliarias verificadas
+  let inmobiliariaPages: MetadataRoute.Sitemap = []
+  
+  try {
+    const supabase = createClient()
+    
+    const { data: inmobiliarias, error } = await supabase
+      .from('users')
+      .select('id, company_name, updated_at, created_at')
+      .eq('role', 'inmobiliaria')
+      .eq('verified', true)
+      .not('company_name', 'is', null)
+      .limit(500) // Limitar a 500 inmobiliarias
+    
+    if (!error && inmobiliarias) {
+      inmobiliariaPages = inmobiliarias.map((inmo) => ({
+        url: `${baseUrl}/inmobiliaria/${inmo.id}`,
+        lastModified: new Date(inmo.updated_at || inmo.created_at || new Date()),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }))
+    }
+  } catch (error) {
+    console.error('Error generating sitemap for inmobiliarias:', error)
+  }
+
   // EXCLUIR rutas de desarrollo/debug (alineado con robots.ts)
   // NO incluir en sitemap:
   // - /api/* (todas las APIs)
@@ -109,5 +136,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // - /comunidad/page-simple*, /comunidad/page-new*, /comunidad/page-enterprise*
   // - /docs/evidencias/*, /__tests__/*, /scripts/*
 
-  return [...staticPages, ...propertyPages]
+  return [...staticPages, ...propertyPages, ...inmobiliariaPages]
 }

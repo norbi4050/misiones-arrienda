@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
 
 // POST /api/messages/threads/[id]/messages → enviar mensaje
 export async function POST(
@@ -79,13 +80,18 @@ export async function POST(
       .update({ updated_at: new Date().toISOString() })
       .eq('id', threadId)
 
+    // Obtener adjuntos del mensaje (si los hay)
+    const attachmentsMap = await getMessagesAttachments([newMessage.id])
+    const attachments = attachmentsMap.get(newMessage.id) || []
+
     // Formatear mensaje según contrato
     const formattedMessage = {
       id: newMessage.id,
       sender_id: newMessage.sender_id,
       content: newMessage.content,
       created_at: newMessage.created_at,
-      read_at: null // Nuevo mensaje, no leído aún
+      read_at: null, // Nuevo mensaje, no leído aún
+      attachments // B6: Incluir adjuntos
     }
 
     // Log para desarrollo
@@ -93,7 +99,8 @@ export async function POST(
       console.log(`📨 Mensaje enviado en hilo ${threadId}:`, {
         messageId: newMessage.id,
         senderId: userProfile.id,
-        content: content.substring(0, 50) + (content.length > 50 ? '...' : '')
+        content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
+        attachmentsCount: attachments.length
       })
     }
 

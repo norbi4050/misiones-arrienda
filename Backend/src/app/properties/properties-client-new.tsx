@@ -6,6 +6,24 @@ import { PropertyGrid } from '@/components/property-grid'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Property, PropertyFilters } from '@/types/property'
+import { useBboxSync, BboxCoords } from '@/hooks/useBboxSync'
+import dynamic from 'next/dynamic'
+
+// Importación dinámica del mapa para evitar problemas de SSR
+const PropertiesMap = dynamic(
+  () => import('@/components/ui/PropertiesMap'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando mapa...</p>
+        </div>
+      </div>
+    )
+  }
+)
 
 export function PropertiesPageClient() {
   const [properties, setProperties] = useState<Property[]>([])
@@ -14,25 +32,64 @@ export function PropertiesPageClient() {
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid')
   const [currentFilters, setCurrentFilters] = useState<PropertyFilters>({})
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  
+  // Hook para sincronizar bbox con URL
+  const { bbox, updateBbox, clearBbox } = useBboxSync()
 
-  // Load properties on component mount
+  // Load properties on component mount and when bbox changes
   useEffect(() => {
-    loadProperties()
-  }, [])
+    setCurrentPage(1)
+    loadProperties(1, false)
+  }, [bbox])
 
-  const loadProperties = async () => {
+  const loadProperties = async (page: number = 1, append: boolean = false) => {
     try {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/api/properties')
+      // Construir URL con filtros y bbox
+      const params = new URLSearchParams()
+      
+      // ✅ AGREGAR: Paginación
+      params.set('page', page.toString())
+      params.set('limit', '12')
+      
+      // Agregar bbox si existe
+      if (bbox) {
+        const bboxString = `${bbox.minLng},${bbox.minLat},${bbox.maxLng},${bbox.maxLat}`
+        params.set('bbox', bboxString)
+      }
+      
+      // Agregar otros filtros
+      if (currentFilters.city) params.set('city', currentFilters.city)
+      if (currentFilters.propertyType) params.set('type', currentFilters.propertyType)
+      if (currentFilters.minPrice) params.set('minPrice', currentFilters.minPrice.toString())
+      if (currentFilters.maxPrice) params.set('maxPrice', currentFilters.maxPrice.toString())
+      if (currentFilters.minBedrooms) params.set('bedrooms', currentFilters.minBedrooms.toString())
+      if (currentFilters.featured !== undefined) params.set('featured', currentFilters.featured.toString())
+      
+      const url = `/api/properties${params.toString() ? `?${params.toString()}` : ''}`
+      const response = await fetch(url)
+      
       if (!response.ok) {
         throw new Error('Error al cargar las propiedades')
       }
       
       const data = await response.json()
-      setProperties(data.properties || [])
-      setFilteredProperties(data.properties || [])
+      
+      // ✅ FIX: Append o replace según el caso
+      if (append) {
+        setProperties(prev => [...prev, ...(data.properties || [])])
+        setFilteredProperties(prev => [...prev, ...(data.properties || [])])
+      } else {
+        setProperties(data.properties || [])
+        setFilteredProperties(data.properties || [])
+      }
+      
+      setCurrentPage(page)
+      setHasMore(data.pagination && page < data.pagination.totalPages)
     } catch (err) {
       console.error('Error loading properties:', err)
       setError('Error al cargar las propiedades. Por favor, intenta nuevamente.')
@@ -127,40 +184,40 @@ export function PropertiesPageClient() {
 
   const handleFilterChange = (filters: PropertyFilters) => {
     setCurrentFilters(filters)
-
-    // Apply filters locally for immediate UI response
-    let filtered = [...properties]
-
-    if (filters.city) {
-      filtered = filtered.filter(p => 
-        p.city.toLowerCase().includes(filters.city!.toLowerCase())
-      )
-    }
-
-    if (filters.propertyType) {
-      filtered = filtered.filter(p => p.propertyType === filters.propertyType)
-    }
-
-    if (filters.minPrice !== undefined) {
-      filtered = filtered.filter(p => p.price >= filters.minPrice!)
-    }
-
-    if (filters.maxPrice !== undefined) {
-      filtered = filtered.filter(p => p.price <= filters.maxPrice!)
-    }
-
-    if (filters.minBedrooms !== undefined) {
-      filtered = filtered.filter(p => p.bedrooms >= filters.minBedrooms!)
-    }
-
-    if (filters.featured !== undefined) {
-      filtered = filtered.filter(p => p.featured === filters.featured)
-    }
-
-    setFilteredProperties(filtered)
+    setCurrentPage(1)
+    loadProperties(1, false)  // Nueva búsqueda, replace
   }
 
-  if (loading) {
+  // ✅ AGREGAR: Handler para "Cargar más"
+  const handleLoadMore = () => {
+    if (hasMore && !loading) {
+      loadProperties(currentPage + 1, true)
+    }
+  }
+
+  // Handler para cuando cambian los bounds del mapa
+  const handleBoundsChange = (newBbox: BboxCoords) => {
+    updateBbox(newBbox)
+    // loadProperties se ejecutará automáticamente por el useEffect
+  }
+
+  // Preparar propiedades para el mapa (solo las que tienen coordenadas)
+  const propertiesWithCoords = filteredProperties.filter(
+    p => p.latitude != null && p.longitude != null
+  ).map(p => ({
+    id: p.id,
+    title: p.title,
+    price: p.price,
+    currency: p.currency,
+    lat: p.latitude!,
+    lng: p.longitude!,
+    propertyType: p.propertyType,
+    bedrooms: p.bedrooms,
+    city: p.city,
+    featured: p.featured
+  }))
+
+  if (loading && properties.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -178,7 +235,7 @@ export function PropertiesPageClient() {
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Error al cargar</h2>
           <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => loadProperties()}>
+          <Button onClick={() => loadProperties(1, false)}>
             🔄 Intentar nuevamente
           </Button>
         </div>
@@ -265,18 +322,67 @@ export function PropertiesPageClient() {
 
             {/* Content based on view mode */}
             {viewMode === 'grid' ? (
-              <PropertyGrid initialProperties={filteredProperties} />
+              <>
+                <PropertyGrid initialProperties={filteredProperties} />
+                
+                {/* ✅ AGREGAR: Botón "Cargar más" */}
+                {hasMore && !loading && filteredProperties.length > 0 && (
+                  <div className="flex justify-center mt-8">
+                    <Button
+                      onClick={handleLoadMore}
+                      disabled={loading}
+                      variant="outline"
+                      size="lg"
+                      className="min-w-[200px]"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                          Cargando...
+                        </>
+                      ) : (
+                        <>
+                          📄 Cargar más propiedades
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="space-y-6">
-                {/* Simplified map view - avoid complex type issues */}
-                <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">🗺️</div>
-                    <p className="text-gray-600">Vista de mapa disponible próximamente</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      {filteredProperties.length} propiedades encontradas
-                    </p>
-                  </div>
+                {/* Mapa con sincronización de bbox */}
+                <div className="relative">
+                  <PropertiesMap
+                    items={propertiesWithCoords}
+                    bbox={bbox}
+                    onBoundsChange={handleBoundsChange}
+                    className="h-96"
+                  />
+                  
+                  {/* Botón para limpiar bbox */}
+                  {bbox && (
+                    <div className="absolute top-4 left-4 z-[1000]">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          clearBbox()
+                          loadProperties(1, false)
+                        }}
+                        className="bg-white shadow-lg hover:bg-gray-100"
+                      >
+                        🔄 Ver todas las propiedades
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {/* Indicador de propiedades sin coordenadas */}
+                  {filteredProperties.length > propertiesWithCoords.length && (
+                    <div className="mt-2 text-sm text-gray-600 text-center">
+                      ℹ️ {filteredProperties.length - propertiesWithCoords.length} propiedad(es) sin ubicación en el mapa
+                    </div>
+                  )}
                 </div>
 
                 {/* Properties list below map */}

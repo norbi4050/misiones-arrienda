@@ -31,9 +31,9 @@ export default function LoginPage() {
         setMsg("¡Login exitoso! Redirigiendo...");
         // Refresh router to update server components after login
         router.refresh();
-        // Redirección explícita a la home después del login exitoso
+        // Usar nextRoute del resultado para redirigir según userType
         setTimeout(() => {
-          router.replace("/");
+          router.replace(result.nextRoute || "/");
         }, 1000);
       } else {
         setMsg(`Error: ${result.error}`);

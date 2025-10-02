@@ -18,6 +18,8 @@ import { logConsentClient, ConsentLogPayload } from "@/lib/consent/logConsent.cl
 import { CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent"
 import { analytics } from "@/lib/analytics/track"
 import MapPicker from "@/components/property/MapPicker"
+import { UpsellModal } from "@/components/plan/UpsellModal"
+import type { PlanLimitError } from "@/types/plan-limits"
 
 export default function PublishWizardImproved() {
   console.debug('[Wizard NUEVO] montado')
@@ -48,6 +50,10 @@ export default function PublishWizardImproved() {
   const [checkedTerms, setCheckedTerms] = useState(false)
   const [checkedPrivacy, setCheckedPrivacy] = useState(false)
   const [consentError, setConsentError] = useState<string | null>(null)
+  
+  // ⭐ B4: Estado para modal de upsell
+  const [showUpsellModal, setShowUpsellModal] = useState(false)
+  const [planError, setPlanError] = useState<PlanLimitError | null>(null)
   
   const form = useForm({
     resolver: zodResolver(propertyFormSchema),
@@ -134,6 +140,16 @@ export default function PublishWizardImproved() {
           }),
         });
         
+        // ⭐ B4: Manejar error de límite de plan
+        if (res.status === 403) {
+          const body = await res.json();
+          if (body.error) {
+            setPlanError(body.error);
+            setShowUpsellModal(true);
+            return;
+          }
+        }
+        
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           console.error('[Wizard] draft failed', body);
@@ -218,6 +234,16 @@ export default function PublishWizardImproved() {
         const res = await fetch(`/api/properties/${propertyId}/publish`, { 
           method: "POST" 
         })
+        
+        // ⭐ B4: Manejar error de límite de plan al publicar
+        if (res.status === 403) {
+          const body = await res.json();
+          if (body.error) {
+            setPlanError(body.error);
+            setShowUpsellModal(true);
+            return;
+          }
+        }
         
         if (res.ok) {
           // Track complete_publish
@@ -728,6 +754,18 @@ export default function PublishWizardImproved() {
                 </Button>
               </div>
             </div>
+          )}
+
+          {/* ⭐ B4: Modal de Upsell */}
+          {planError && (
+            <UpsellModal
+              isOpen={showUpsellModal}
+              onClose={() => {
+                setShowUpsellModal(false);
+                setPlanError(null);
+              }}
+              error={planError}
+            />
           )}
         </div>
       </div>

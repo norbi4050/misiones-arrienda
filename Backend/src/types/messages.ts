@@ -1,5 +1,17 @@
 // Tipos para el sistema de mensajes
 
+// Tipo para adjuntos de mensajes
+export interface Attachment {
+  id: string;
+  url: string;
+  mime: string;
+  sizeBytes: number;
+  width?: number;
+  height?: number;
+  fileName: string;
+  createdAt: string;
+}
+
 export interface Message {
   id: string
   content: string
@@ -11,6 +23,7 @@ export interface Message {
   updated_at: string
   read: boolean
   type?: 'TEXT' | 'IMAGE' | 'SYSTEM'
+  attachments?: Attachment[]
 }
 
 export interface Conversation {

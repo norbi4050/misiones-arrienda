@@ -26,7 +26,14 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
       setLoading(true)
       setError(null)
       const response = await getProperties({ ...currentFilters, page, limit: pagination.limit })
-      setProperties(response.properties)
+      
+      // ✅ FIX: Append si page > 1, replace si page === 1
+      if (page === 1) {
+        setProperties(response.properties)
+      } else {
+        setProperties(prev => [...prev, ...response.properties])
+      }
+      
       setPagination(response.pagination)
     } catch (err) {
       setError('Error al cargar las propiedades')

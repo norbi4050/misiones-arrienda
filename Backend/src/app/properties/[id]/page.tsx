@@ -14,15 +14,17 @@ import {
   generateBreadcrumbJsonLd,
   createJsonLdScript
 } from '@/lib/structured-data';
+import { generatePropertyShareMetaTags } from '@/lib/share/metatags';
 import ImageCarousel from '@/components/ui/ImageCarousel';
 import PropertyLocationMap from '@/components/property/PropertyLocationMap';
 import PropertyContactForm from '@/components/ui/PropertyContactForm';
 import ContactPanel from '@/components/contact/ContactPanel';
 import ContactButton from '@/components/ui/ContactButton';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
-import { ShareButton } from '@/components/ui/ShareButton';
+import { PropertyShareBar } from '@/components/share';
 import OwnerActions from '@/components/ui/OwnerActions';
 import { FeaturePaymentButton } from '@/components/ui/feature-payment-button';
+import { PropertyViewTracker } from '@/components/property/PropertyViewTracker';
 import { 
   MapPin, 
   Bed, 
@@ -141,7 +143,7 @@ async function getSimilarProperties(property: any) {
   }
 }
 
-// Generate metadata for SEO
+// Generate metadata for SEO (B5 Enhanced)
 export async function generateMetadata({ params }: PropertyDetailPageProps): Promise<Metadata> {
   const result = await getPropertyFromAPI(params.id);
 
@@ -149,6 +151,10 @@ export async function generateMetadata({ params }: PropertyDetailPageProps): Pro
     return {
       title: 'Propiedad no encontrada - Misiones Arrienda',
       description: 'La propiedad que buscas no existe o ha sido removida.',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
@@ -157,11 +163,17 @@ export async function generateMetadata({ params }: PropertyDetailPageProps): Pro
   // Obtener imágenes finales usando bucket-first
   const realImages = await getImagesFinal(property);
 
-  // Usar el sistema completo de SEO con imágenes reales
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://misiones-arrienda.vercel.app';
-  const metaTags = generatePropertyMetaTags(property, baseUrl, realImages);
-
-  return metaTags;
+  // B5: Usar nuevo helper con canonical URLs y OG images
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  
+  try {
+    const metaTags = await generatePropertyShareMetaTags(property, baseUrl, realImages);
+    return metaTags;
+  } catch (error) {
+    console.error('[B5] Error generating share metatags, falling back to legacy:', error);
+    // Fallback al sistema anterior si falla B5
+    return generatePropertyMetaTags(property, baseUrl, realImages);
+  }
 }
 
 export default async function PropertyDetailPage({ params }: PropertyDetailPageProps) {
@@ -222,6 +234,9 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
 
   return (
     <>
+      {/* B7: Track property view */}
+      <PropertyViewTracker propertyId={property.id} propertyTitle={property.title} />
+      
       {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"
@@ -297,7 +312,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
             {/* Property Info */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
               <div className="flex justify-between items-start mb-4">
-                <div>
+                <div className="flex-1">
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">
                     {property.title}
                   </h1>
@@ -307,12 +322,40 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                   </div>
                 </div>
                 {!isOwner && (
-                  <div className="flex space-x-2">
+                  <div className="flex items-center space-x-2">
                     <FavoriteButton propertyId={property.id} />
-                    <ShareButton url={`${baseUrl}/properties/${property.id}`} />
                   </div>
                 )}
               </div>
+
+              {/* B5: ShareBar - Arriba del fold */}
+              {!isOwner && (
+                <div className="mb-6 pb-6 border-b">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-gray-700">
+                      Compartir esta propiedad
+                    </h3>
+                  </div>
+                  <PropertyShareBar
+                    propertyId={property.id}
+                    propertyData={{
+                      id: property.id,
+                      title: property.title,
+                      description: property.description,
+                      price: property.price,
+                      currency: property.currency || 'ARS',
+                      city: property.city,
+                      province: property.province,
+                      imageUrl: realImages[0] || '/placeholder-apartment-1.jpg',
+                      bedrooms: property.bedrooms,
+                      bathrooms: property.bathrooms,
+                      area: property.area,
+                    }}
+                    context="detail"
+                    className="justify-start"
+                  />
+                </div>
+              )}
 
               <div className="flex items-center space-x-4 mb-6">
                 <Badge variant="secondary">

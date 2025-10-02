@@ -11,18 +11,33 @@ import { ProfileDropdown } from "@/components/ui/profile-dropdown"
 import { useAuth } from "@/hooks/useAuth"
 import AvatarUniversal from "@/components/ui/avatar-universal"
 
-const navigation = [
-  { name: 'Inicio', href: '/' },
-  { name: 'Propiedades', href: '/properties' },
-  { name: 'Comunidad', href: '/comunidad' },
-  { name: 'Publicar', href: '/publicar' },
-]
-
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, loading, isAuthenticated, signOut } = useAuth()
+
+  // Navegación dinámica según userType
+  const navigation = React.useMemo(() => {
+    const baseNav = [
+      { name: 'Inicio', href: '/' },
+      { name: 'Propiedades', href: '/properties' },
+    ]
+    
+    // Solo mostrar Comunidad si NO es inmobiliaria
+    if (!user || user.userType !== 'inmobiliaria') {
+      baseNav.push({ name: 'Comunidad', href: '/comunidad' })
+    }
+    
+    baseNav.push({ name: 'Publicar', href: '/publicar' })
+    
+    // Agregar "Mi Empresa" si es inmobiliaria
+    if (user && user.userType === 'inmobiliaria') {
+      baseNav.push({ name: 'Mi Empresa', href: '/mi-empresa' })
+    }
+    
+    return baseNav
+  }, [user])
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">

@@ -14,6 +14,10 @@ interface TrackEventData {
   referrer?: string;
   utm?: UTMParams;
   payload?: Record<string, any>;
+  // B7: Nuevos campos
+  actorRole?: string;
+  targetType?: string;
+  targetId?: string;
 }
 
 // Cache para evitar múltiples requests del mismo evento
@@ -151,9 +155,34 @@ function isTrackingEnabled(): boolean {
 }
 
 /**
- * Función principal de tracking
+ * B7: Obtener rol del usuario actual
  */
-export async function track(eventName: string, payload?: Record<string, any>): Promise<void> {
+function getUserRole(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  
+  try {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return 'anonymous';
+    
+    const user = JSON.parse(userStr);
+    return user?.role || 'authenticated';
+  } catch {
+    return 'anonymous';
+  }
+}
+
+/**
+ * Función principal de tracking (B7: Mejorada con nuevos campos)
+ */
+export async function track(
+  eventName: string, 
+  payload?: Record<string, any>,
+  options?: {
+    targetType?: string;
+    targetId?: string;
+    actorRole?: string;
+  }
+): Promise<void> {
   if (typeof window === 'undefined') return;
   
   // Verificar consentimiento antes de trackear
@@ -175,12 +204,19 @@ export async function track(eventName: string, payload?: Record<string, any>): P
     storeUTM(currentUTM);
   }
   
+  // B7: Determinar actor_role
+  const actorRole = options?.actorRole || getUserRole();
+  
   const eventData: TrackEventData = {
     eventName,
     page: window.location.pathname + window.location.search,
     referrer: document.referrer || undefined,
     utm: currentUTM || storedUTM,
-    payload
+    payload,
+    // B7: Nuevos campos
+    actorRole,
+    targetType: options?.targetType,
+    targetId: options?.targetId
   };
   
   // Intentar envío inmediato
@@ -214,41 +250,175 @@ export const analytics = {
   visitHome: () => track('visit_home'),
   visitProperties: (filters?: Record<string, any>) => track('visit_properties', { filters }),
   viewProperty: (propertyId: string, city?: string, price?: number, featured?: boolean) => 
-    track('view_property', { propertyId, city, price, featured }),
+    track('view_property', { propertyId, city, price, featured }, { targetType: 'property', targetId: propertyId }),
+  
+  // B7: Vista de perfil inmobiliaria
+  profileView: (profileId: string, profileName?: string) =>
+    track('profile_view', { profileId, profileName }, { targetType: 'agency', targetId: profileId }),
   
   // Contacto
   contactClick: (propertyId: string, contactType: 'phone' | 'whatsapp' | 'message' = 'message') => 
-    track('contact_click', { propertyId, contactType }),
+    track('contact_click', { propertyId, contactType }, { targetType: 'property', targetId: propertyId }),
   contactSubmit: (propertyId: string, contactType: string) => 
-    track('contact_submit', { propertyId, contactType }),
+    track('contact_submit', { propertyId, contactType }, { targetType: 'property', targetId: propertyId }),
   
   // Mensajería
   messageSent: (conversationId?: string, propertyId?: string) => 
-    track('message_sent', { conversationId, propertyId }),
+    track('message_sent', { conversationId, propertyId }, { targetType: 'conversation', targetId: conversationId }),
   
   // Publicación
   startPublish: () => track('start_publish'),
   completePublish: (propertyId: string, plan: string) => 
-    track('complete_publish', { propertyId, plan }),
+    track('complete_publish', { propertyId, plan }, { targetType: 'property', targetId: propertyId }),
+  publishCompleted: (propertyId: string, plan: string) => 
+    track('publish_completed', { propertyId, plan }, { targetType: 'property', targetId: propertyId }),
+  
+  // B7: Auth events
+  signupCompleted: (role: 'inmobiliaria' | 'inquilino', plan: string = 'free') =>
+    track('signup_completed', { role, plan }, { actorRole: role }),
+  loginCompleted: (role: string, method: 'email' | 'google' = 'email') =>
+    track('login_completed', { role, method }, { actorRole: role }),
   
   // Monetización
-  featureClick: (propertyId: string) => track('feature_click', { propertyId }),
+  featureClick: (propertyId: string) => 
+    track('feature_click', { propertyId }, { targetType: 'property', targetId: propertyId }),
   featurePrefCreated: (propertyId: string, amount: number) => 
-    track('feature_pref_created', { propertyId, amount }),
+    track('feature_pref_created', { propertyId, amount }, { targetType: 'property', targetId: propertyId }),
   featurePaymentApproved: (propertyId: string, paymentId: string, amount: number) => 
-    track('feature_payment_approved', { propertyId, paymentId, amount }),
+    track('feature_payment_approved', { propertyId, paymentId, amount }, { targetType: 'property', targetId: propertyId }),
   subscriptionClick: (plan: string) => track('subscription_click', { plan }),
   subscriptionActivated: (plan: string, amount: number) => 
     track('subscription_activated', { plan, amount }),
   
+  // B7: Plan upgrade
+  planUpgrade: (fromPlan: string, toPlan: string, amount: number) =>
+    track('plan_upgrade', { from_plan: fromPlan, to_plan: toPlan, amount }),
+  
   // UX/Interacción
   carouselNext: (propertyId: string, imageIndex: number) => 
-    track('carousel_next', { propertyId, imageIndex }),
+    track('carousel_next', { propertyId, imageIndex }, { targetType: 'property', targetId: propertyId }),
   carouselZoom: (propertyId: string, imageIndex: number) => 
-    track('carousel_zoom', { propertyId, imageIndex }),
+    track('carousel_zoom', { propertyId, imageIndex }, { targetType: 'property', targetId: propertyId }),
   mapOpenGmaps: (propertyId: string, city: string) => 
-    track('map_open_gmaps', { propertyId, city })
+    track('map_open_gmaps', { propertyId, city }, { targetType: 'property', targetId: propertyId }),
+  
+  // B7: Favoritos
+  propertyFavorite: (propertyId: string) =>
+    track('property_favorite', { propertyId }, { targetType: 'property', targetId: propertyId }),
+  propertyUnfavorite: (propertyId: string) =>
+    track('property_unfavorite', { propertyId }, { targetType: 'property', targetId: propertyId }),
+  
+  // B7: Búsqueda
+  searchPerformed: (query: string, filters?: Record<string, any>) =>
+    track('search_performed', { query, filters }),
+  filterApplied: (filterType: string, filterValue: any) =>
+    track('filter_applied', { filter_type: filterType, filter_value: filterValue }),
+  
+  // B5: Compartir en redes sociales (Prompt 6)
+  shareClick: (channel: string, entity: string, entityId: string, context: string, planTier?: string, userId?: string) =>
+    track('share_click', { channel, entity, entity_id: entityId, context, plan_tier: planTier, user_id: userId }, 
+      { targetType: entity, targetId: entityId }),
+  
+  shortlinkResolve: (slug: string, entityId: string, referrer?: string) =>
+    track('shortlink_resolve', { slug, entity_id: entityId, referrer }),
+  
+  // B6: Adjuntos en mensajes (Prompt 8)
+  attachmentUpload: (data: {
+    threadId: string
+    messageId?: string
+    mime: string
+    sizeBytes: number
+    planTier: string
+    result: 'success' | 'error'
+    errorCode?: string
+  }) => track('attachment_uploaded', data, { targetType: 'thread', targetId: data.threadId }),
+  
+  attachmentPreview: (data: {
+    attachmentId: string
+    mime: string
+    source?: 'lightbox' | 'inline'
+  }) => track('attachment_preview', data, { targetType: 'attachment', targetId: data.attachmentId }),
+  
+  attachmentDownload: (data: {
+    attachmentId: string
+    mime: string
+    sizeBytes?: number
+  }) => track('attachment_download', data, { targetType: 'attachment', targetId: data.attachmentId }),
+  
+  attachmentDelete: (data: {
+    attachmentId: string
+    mime: string
+    sizeBytes?: number
+  }) => track('attachment_delete', data, { targetType: 'attachment', targetId: data.attachmentId }),
+  
+  attachmentRateLimited: (data: {
+    userId: string
+    planTier: string
+    limit: number
+    resetIn: number
+  }) => track('attachment_rate_limited', data),
+  
+  // B7: Comunidad
+  communityPostView: (postId: string) =>
+    track('community_post_view', { postId }, { targetType: 'post', targetId: postId }),
+  communityPostLike: (postId: string) =>
+    track('community_post_like', { postId }, { targetType: 'post', targetId: postId }),
+  communityProfileView: (profileId: string) =>
+    track('community_profile_view', { profileId }, { targetType: 'profile', targetId: profileId })
 };
+
+/**
+ * B5 PROMPT 6: Tracking específico de shares
+ * Función helper para trackear clicks de compartir
+ */
+export async function trackShareClick(payload: {
+  channel: string;
+  entity: 'property' | 'agency';
+  entity_id: string;
+  context: string;
+  plan_tier?: string;
+  user_id?: string;
+}): Promise<void> {
+  // 1. Log en consola (development)
+  if (process.env.NODE_ENV === 'development') {
+    console.info('[Analytics] share_click', payload);
+  }
+  
+  // 2. Enviar a dataLayer si existe (Google Analytics)
+  if (typeof window !== 'undefined' && (window as any).dataLayer) {
+    (window as any).dataLayer.push({
+      event: 'share_click',
+      ...payload,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  // 3. Usar función track existente
+  await track('share_click', payload);
+}
+
+/**
+ * B5 PROMPT 6: Tracking de resolución de short-links
+ */
+export async function trackShortLinkResolve(payload: {
+  slug: string;
+  entity_id: string;
+  referrer?: string;
+}): Promise<void> {
+  if (process.env.NODE_ENV === 'development') {
+    console.info('[Analytics] shortlink_resolve', payload);
+  }
+  
+  if (typeof window !== 'undefined' && (window as any).dataLayer) {
+    (window as any).dataLayer.push({
+      event: 'shortlink_resolve',
+      ...payload,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  await track('shortlink_resolve', payload);
+}
 
 // Auto-track page view en navegación del lado cliente
 if (typeof window !== 'undefined') {

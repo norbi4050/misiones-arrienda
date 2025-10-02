@@ -18,6 +18,10 @@ interface IngestRequest {
     content?: string;
   };
   payload?: Record<string, any>;
+  // B7: Nuevos campos
+  actorRole?: string;
+  targetType?: string;
+  targetId?: string;
 }
 
 function checkRateLimit(ip: string): boolean {
@@ -109,7 +113,11 @@ export async function POST(request: NextRequest) {
       utm: body.utm ? JSON.stringify(body.utm) : null,
       payload: body.payload ? JSON.stringify(body.payload) : null,
       ip: clientIP,
-      ua: request.headers.get('user-agent') || null
+      ua: request.headers.get('user-agent') || null,
+      // B7: Nuevos campos
+      actor_role: body.actorRole || null,
+      target_type: body.targetType || null,
+      target_id: body.targetId || null
     };
 
     // Insertar en base de datos

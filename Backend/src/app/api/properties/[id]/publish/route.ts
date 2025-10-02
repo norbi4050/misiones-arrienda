@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { enforcePlanLimit } from '@/lib/plan-guards';
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    // ⭐ B4: Verificar límite de plan antes de activar/publicar propiedad
+    const planCheck = await enforcePlanLimit(user.id, 'activate_property');
+    if (!planCheck.success) {
+      return NextResponse.json(
+        { error: planCheck.error },
+        { status: 403 }
+      );
+    }
 
     // 1) Obtener propiedad (ownership)
     const { data: prop, error: e1 } = await supabase

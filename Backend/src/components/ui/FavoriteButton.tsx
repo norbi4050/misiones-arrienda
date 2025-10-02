@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { analytics } from "@/lib/analytics/track";
 
 export function FavoriteButton({ propertyId }: { propertyId: string }) {
   const [fav, setFav] = useState<boolean>(false);
@@ -56,6 +57,17 @@ export function FavoriteButton({ propertyId }: { propertyId: string }) {
         } else {
           // Feedback positivo
           toast.success(fav ? "Eliminado de favoritos" : "Agregado a favoritos");
+          
+          // B7: Track favorite action
+          try {
+            if (fav) {
+              analytics.propertyUnfavorite(propertyId);
+            } else {
+              analytics.propertyFavorite(propertyId);
+            }
+          } catch (error) {
+            console.debug('Analytics tracking failed:', error);
+          }
         }
       } catch (error) {
         setFav(v => !v); // revertir en caso de error de red

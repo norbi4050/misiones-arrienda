@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Send } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
+import { analytics } from '@/lib/analytics/track'
 
 interface ContactButtonProps {
   propertyId: string
@@ -45,6 +46,13 @@ export default function ContactButton({
   const handleContact = async () => {
     setIsLoading(true)
     
+    // ⭐ ANALYTICS: Track contact click
+    try {
+      analytics.contactClick(propertyId, 'message');
+    } catch (e) {
+      console.warn('[Analytics] contactClick failed:', e);
+    }
+    
     try {
       // Crear/abrir hilo usando el nuevo contrato
       const response = await fetch('/api/messages/threads', {
@@ -70,6 +78,13 @@ export default function ContactButton({
 
       const data = await response.json()
       const threadId = data.threadId
+
+      // ⭐ ANALYTICS: Track message sent (conversation created)
+      try {
+        analytics.messageSent(threadId, propertyId);
+      } catch (e) {
+        console.warn('[Analytics] messageSent failed:', e);
+      }
 
       // Navegar al hilo de mensajes
       router.push(`/messages?thread=${threadId}`)

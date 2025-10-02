@@ -219,10 +219,23 @@ export function useSupabaseAuth() {
 
       if (error) throw error
 
+      // Obtener perfil del usuario para determinar nextRoute
+      let nextRoute = '/'
+      if (data.user) {
+        const userProfile = await fetchUserProfile(data.user.id)
+        if (userProfile?.userType === 'inmobiliaria') {
+          nextRoute = '/mi-empresa'
+        }
+      }
+
       // Refresh router to update server components after login
       router.refresh()
 
-      return { success: true, data }
+      return { 
+        success: true, 
+        data,
+        nextRoute 
+      }
     } catch (error: any) {
       console.error('Login error:', error)
       return { success: false, error: error.message }

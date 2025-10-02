@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { enforcePlanLimit } from '@/lib/plan-guards';
 
 export async function POST(req: Request) {
   try {
@@ -8,6 +9,15 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'No auth user' }, { status: 401 });
+    }
+
+    // ⭐ B4: Verificar límite de plan antes de crear propiedad
+    const planCheck = await enforcePlanLimit(user.id, 'create_property');
+    if (!planCheck.success) {
+      return NextResponse.json(
+        { error: planCheck.error },
+        { status: 403 }
+      );
     }
 
     const body = await req.json().catch(() => ({}));

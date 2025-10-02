@@ -48,6 +48,7 @@ interface RegisterRequestBody {
   companyName?: string;
   licenseNumber?: string;
   propertyCount?: number;
+  acceptTerms?: boolean;
 }
 
 // Interfaz para respuesta de error
@@ -119,7 +120,8 @@ export async function POST(request: NextRequest) {
       userType, 
       companyName, 
       licenseNumber, 
-      propertyCount 
+      propertyCount,
+      acceptTerms
     } = body;
     
     console.log(`📋 [REGISTRO] Datos recibidos: ${JSON.stringify({ 
@@ -189,13 +191,24 @@ export async function POST(request: NextRequest) {
     
     // Validaciones específicas por tipo de usuario
     if (userType === 'inmobiliaria') {
-      if (!companyName || !licenseNumber) {
-        console.warn('⚠️ [REGISTRO] Datos de inmobiliaria incompletos');
+      if (!companyName) {
+        console.warn('⚠️ [REGISTRO] Falta companyName para inmobiliaria');
         return NextResponse.json({
-          error: 'Datos de inmobiliaria incompletos',
-          details: 'Para inmobiliarias son requeridos: nombre de empresa y número de licencia',
+          error: 'VALIDATION_ERROR',
+          details: 'El nombre de la empresa es obligatorio para inmobiliarias',
+          issues: [{ path: 'companyName', message: 'Campo requerido' }],
           timestamp: new Date().toISOString(),
-          code: 'INCOMPLETE_INMOBILIARIA_DATA'
+          code: 'MISSING_COMPANY_NAME'
+        } as ErrorResponse, { status: 400 });
+      }
+      if (!acceptTerms) {
+        console.warn('⚠️ [REGISTRO] Falta aceptación de términos');
+        return NextResponse.json({
+          error: 'VALIDATION_ERROR',
+          details: 'Debe aceptar los términos y condiciones',
+          issues: [{ path: 'acceptTerms', message: 'Debe aceptar los términos' }],
+          timestamp: new Date().toISOString(),
+          code: 'TERMS_NOT_ACCEPTED'
         } as ErrorResponse, { status: 400 });
       }
     }
@@ -379,8 +392,10 @@ export async function POST(request: NextRequest) {
       phone: phone || '',   // ✅ Evita NULL en phone
       user_type: userType,
       company_name: userType === 'inmobiliaria' ? companyName : null,
-      license_number: userType === 'inmobiliaria' ? licenseNumber : null,
+      license_number: userType === 'inmobiliaria' ? (licenseNumber || null) : null,
       property_count: userType === 'dueno_directo' ? propertyCount : null,
+      is_company: userType === 'inmobiliaria',
+      is_verified: false,  // Se activará con CUIT más adelante
       email_verified: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -466,9 +481,18 @@ export async function POST(request: NextRequest) {
     };
     
     console.log(`🎉 [REGISTRO] Registro completado exitosamente en ${processingTime}ms`);
+    console.log(`[REGISTER] USER TYPE: ${userType}`);
+    
+    // Determinar ruta de redirección según userType
+    const nextRoute = userType === 'inmobiliaria' ? '/mi-empresa' : '/';
+    console.log(`[REGISTER] NEXT ROUTE: ${nextRoute}`);
     
     return NextResponse.json({
+      success: true,
       message: 'Usuario registrado exitosamente.',
+      userId: profileData.id,
+      userType: profileData.user_type,
+      nextRoute: nextRoute,
       user: responseUser,
       emailSent: true,
       emailConfigured: true,
