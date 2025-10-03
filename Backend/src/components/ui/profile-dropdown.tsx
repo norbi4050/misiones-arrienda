@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell } from 'lucide-react';
+import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell, Building2, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import AvatarUniversal from '@/components/ui/avatar-universal';
@@ -121,55 +121,102 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
           {/* Menu Items */}
           <div className="py-1">
-            {/* Mi Perfil */}
-            <Link
-              href="/profile/inquilino"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
-            >
-              <User className="w-4 h-4 mr-3 text-gray-400" />
-              Mi Perfil
-            </Link>
+            {/* [InmobiliariaFix] Menú condicional según userType */}
+            {(user as any).userType === 'inmobiliaria' ? (
+              <>
+                {/* Mi Empresa */}
+                <Link
+                  href="/mi-empresa"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <Building2 className="w-4 h-4 mr-3 text-gray-400" />
+                  Mi Empresa
+                </Link>
 
-            {/* Mis Publicaciones */}
-            <Link
-              href="/mi-cuenta/publicaciones"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
-            >
-              <Settings className="w-4 h-4 mr-3 text-gray-400" />
-              Mis publicaciones
-            </Link>
+                {/* Mis Publicaciones */}
+                <Link
+                  href="/mi-cuenta/publicaciones"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <FileText className="w-4 h-4 mr-3 text-gray-400" />
+                  Mis Publicaciones
+                </Link>
 
-            {/* Favoritos */}
-            <Link
-              href="/favorites"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
-            >
-              <Heart className="w-4 h-4 mr-3 text-gray-400" />
-              Mis Favoritos
-            </Link>
+                {/* Favoritos */}
+                <Link
+                  href="/favorites"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <Heart className="w-4 h-4 mr-3 text-gray-400" />
+                  Mis Favoritos
+                </Link>
 
-            {/* Mensajes */}
-            <Link
-              href="/messages"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
-            >
-              <MessageCircle className="w-4 h-4 mr-3 text-gray-400" />
-              Mensajes
-            </Link>
+                {/* Mensajes */}
+                <Link
+                  href="/messages"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <MessageCircle className="w-4 h-4 mr-3 text-gray-400" />
+                  Mensajes
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* Mi Perfil */}
+                <Link
+                  href="/profile/inquilino"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <User className="w-4 h-4 mr-3 text-gray-400" />
+                  Mi Perfil
+                </Link>
 
-            {/* Notificaciones */}
-            <Link
-              href="/dashboard?tab=notifications"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
-            >
-              <Bell className="w-4 h-4 mr-3 text-gray-400" />
-              Notificaciones
-            </Link>
+                {/* Mis Publicaciones */}
+                <Link
+                  href="/mi-cuenta/publicaciones"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <Settings className="w-4 h-4 mr-3 text-gray-400" />
+                  Mis publicaciones
+                </Link>
+
+                {/* Favoritos */}
+                <Link
+                  href="/favorites"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <Heart className="w-4 h-4 mr-3 text-gray-400" />
+                  Mis Favoritos
+                </Link>
+
+                {/* Mensajes */}
+                <Link
+                  href="/messages"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <MessageCircle className="w-4 h-4 mr-3 text-gray-400" />
+                  Mensajes
+                </Link>
+
+                {/* Notificaciones */}
+                <Link
+                  href="/dashboard?tab=notifications"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <Bell className="w-4 h-4 mr-3 text-gray-400" />
+                  Notificaciones
+                </Link>
+              </>
+            )}
 
             {/* Divider */}
             <div className="border-t border-gray-100 my-1"></div>

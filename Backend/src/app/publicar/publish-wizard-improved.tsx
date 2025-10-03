@@ -104,6 +104,39 @@ export default function PublishWizardImproved() {
     }
   }, [user])
 
+  // [InmobiliariaFix] Validar perfil completo de inmobiliaria al iniciar
+  useEffect(() => {
+    const checkInmobiliariaProfile = async () => {
+      if (!user || user.userType !== 'inmobiliaria') return;
+      
+      console.log('[InmobiliariaFix] Validando perfil de inmobiliaria...');
+      
+      try {
+        const res = await fetch('/api/inmobiliarias/profile');
+        if (!res.ok) {
+          console.error('[InmobiliariaFix] Error al obtener perfil');
+          return;
+        }
+        
+        const { profile } = await res.json();
+        
+        if (!profile.company_name || !profile.phone || !profile.address) {
+          console.log('[InmobiliariaFix] Perfil incompleto, redirigiendo...');
+          toast.error('Completá tu perfil de empresa antes de publicar');
+          router.push('/mi-empresa');
+        } else {
+          console.log('[InmobiliariaFix] Perfil completo ✓');
+        }
+      } catch (error) {
+        console.error('[InmobiliariaFix] Error validando perfil:', error);
+      }
+    };
+
+    if (user && user.userType === 'inmobiliaria') {
+      checkInmobiliariaProfile();
+    }
+  }, [user, router]);
+
   // Paso 1 → crear borrador y pasar a Paso 2
   async function handleContinueFromStep1() {
     if (!canContinueStep1) {
@@ -210,6 +243,25 @@ export default function PublishWizardImproved() {
     }
 
     startPublishing(async () => {
+      // [InmobiliariaFix] Validar perfil completo antes de publicar
+      if (user?.userType === 'inmobiliaria') {
+        console.log('[InmobiliariaFix] Validando perfil antes de publicar...');
+        try {
+          const res = await fetch('/api/inmobiliarias/profile');
+          if (res.ok) {
+            const { profile } = await res.json();
+            if (!profile.company_name || !profile.phone || !profile.address) {
+              console.log('[InmobiliariaFix] Perfil incompleto al publicar');
+              toast.error('Completá tu perfil de empresa antes de publicar');
+              router.push('/mi-empresa');
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('[InmobiliariaFix] Error validando perfil al publicar:', error);
+        }
+      }
+
       try {
         // Validar consentimiento
         if (!checkedTerms || !checkedPrivacy) {

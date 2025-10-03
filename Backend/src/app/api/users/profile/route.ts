@@ -53,67 +53,72 @@ export async function GET(_req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   try {
-    // Get profile from user_profiles table
-    const { data: profile, error } = await supabase
+    // STEP 1: Get user data from users table (contains is_company, user_type, etc.)
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id, name, email, phone, user_type, is_company, company_name, license_number, property_count, is_verified, email_verified, created_at, updated_at')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return NextResponse.json({ error: "Error fetching user data" }, { status: 500 });
+    }
+
+    // STEP 2: Get profile from user_profiles table (optional, contains preferences)
+    const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (error) {
-      console.error('Error fetching profile:', error);
-      return NextResponse.json({ error: "Error fetching profile" }, { status: 500 });
+    // Note: profileError is not critical, user_profiles is optional
+    if (profileError) {
+      console.warn('Warning fetching user_profiles (non-critical):', profileError);
     }
 
-    // If no profile found, return empty profile ready for editing
-    if (!profile) {
-      return NextResponse.json({ 
-        profile: {
-          role: 'BUSCO',
-          city: '',
-          neighborhood: null,
-          budgetMin: null,
-          budgetMax: null,
-          bio: null,
-          photos: null,
-          age: null,
-          petPref: null,
-          smokePref: null,
-          diet: null,
-          scheduleNotes: null,
-          tags: null,
-          acceptsMessages: true,
-          highlightedUntil: null,
-          isSuspended: false,
-          expiresAt: null,
-          isPaid: false,
-        }
-      });
-    }
-
-    // Convert snake_case to camelCase for frontend
-    const payload = {
-      role: profile.role,
-      city: profile.city,
-      neighborhood: profile.neighborhood,
-      budgetMin: profile.budget_min,
-      budgetMax: profile.budget_max,
-      bio: profile.bio,
-      photos: profile.photos,
-      age: profile.age,
-      petPref: profile.pet_pref,
-      smokePref: profile.smoke_pref,
-      diet: profile.diet,
-      scheduleNotes: profile.schedule_notes,
-      tags: profile.tags,
-      acceptsMessages: profile.accepts_messages,
-      highlightedUntil: profile.highlighted_until,
-      isSuspended: profile.is_suspended,
-      expiresAt: profile.expires_at,
-      isPaid: profile.is_paid,
+    // STEP 3: Merge data from both tables
+    // Priority: userData (required) + profileData (optional)
+    const mergedProfile = {
+      // Core user data from users table
+      id: userData?.id || user.id,
+      name: userData?.name,
+      email: userData?.email,
+      phone: userData?.phone,
+      userType: userData?.user_type,
+      isCompany: userData?.is_company || false,
+      companyName: userData?.company_name,
+      licenseNumber: userData?.license_number,
+      propertyCount: userData?.property_count,
+      isVerified: userData?.is_verified || false,
+      emailVerified: userData?.email_verified || false,
+      
+      // Optional profile data from user_profiles table
+      role: profileData?.role || 'BUSCO',
+      city: profileData?.city || '',
+      neighborhood: profileData?.neighborhood || null,
+      budgetMin: profileData?.budget_min || null,
+      budgetMax: profileData?.budget_max || null,
+      bio: profileData?.bio || null,
+      photos: profileData?.photos || null,
+      age: profileData?.age || null,
+      petPref: profileData?.pet_pref || null,
+      smokePref: profileData?.smoke_pref || null,
+      diet: profileData?.diet || null,
+      scheduleNotes: profileData?.schedule_notes || null,
+      tags: profileData?.tags || null,
+      acceptsMessages: profileData?.accepts_messages !== undefined ? profileData.accepts_messages : true,
+      highlightedUntil: profileData?.highlighted_until || null,
+      isSuspended: profileData?.is_suspended || false,
+      expiresAt: profileData?.expires_at || null,
+      isPaid: profileData?.is_paid || false,
+      
+      // Timestamps
+      created_at: userData?.created_at,
+      updated_at: userData?.updated_at,
     };
 
-    return NextResponse.json({ profile: payload });
+    return NextResponse.json({ profile: mergedProfile });
   } catch (error) {
     console.error('Profile fetch error:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createSupabaseBrowser } from 'lib/supabase/browser'
 import { useRouter } from 'next/navigation'
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
+import { ensureProfile } from 'src/lib/auth/ensureProfile'
 
 const supabase = createSupabaseBrowser()
 
@@ -219,6 +220,15 @@ export function useSupabaseAuth() {
 
       if (error) throw error
 
+      // Asegurar que existe el perfil en user_profiles (idempotente)
+      if (data.user) {
+        try {
+          await ensureProfile()
+        } catch (profileError) {
+          console.warn('[ensureProfile] signIn:', profileError)
+        }
+      }
+
       // Obtener perfil del usuario para determinar nextRoute
       let nextRoute = '/'
       if (data.user) {
@@ -294,6 +304,17 @@ export function useSupabaseAuth() {
         }
         
         throw error
+      }
+
+      // Asegurar que existe el perfil en user_profiles (idempotente)
+      // Si el flujo requiere confirmación de email, esto también se ejecutará
+      // en el callback de auth cuando el usuario confirme su email
+      if (data.user) {
+        try {
+          await ensureProfile()
+        } catch (profileError) {
+          console.warn('[ensureProfile] signUp:', profileError)
+        }
       }
 
       // Verificar si el usuario fue creado pero necesita confirmación

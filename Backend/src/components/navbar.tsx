@@ -210,12 +210,13 @@ export function Navbar() {
                         </p>
                       </div>
                     </div>
+                    {/* [InmobiliariaFix] href y label dinámicos según userType */}
                     <Link
-                      href="/profile/inquilino"
+                      href={user?.userType === 'inmobiliaria' ? '/mi-empresa' : '/profile/inquilino'}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
-                      Mi Perfil
+                      {user?.userType === 'inmobiliaria' ? 'Mi Empresa' : 'Mi Perfil'}
                     </Link>
                     <Link
                       href="/favorites"

@@ -10,10 +10,25 @@ export interface User {
   email: string;
   name?: string;
   phone?: string;
-  bio?: string;
+  
+  // User type and company fields (from users table)
   userType?: string;
+  isCompany?: boolean;
   companyName?: string;
   licenseNumber?: string;
+  propertyCount?: number;
+  isVerified?: boolean;
+  emailVerified?: boolean;
+  
+  // Profile fields (from user_profiles table)
+  bio?: string;
+  role?: string;
+  city?: string;
+  neighborhood?: string;
+  budgetMin?: number;
+  budgetMax?: number;
+  
+  // Timestamps
   created_at: string;
   updated_at: string;
 }

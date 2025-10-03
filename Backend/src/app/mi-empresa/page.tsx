@@ -233,22 +233,23 @@ export default function MiEmpresaPage() {
               </div>
             </div>
             
-            {!isEditing && (
-              <div className="flex gap-2">
-                {user && isProfileComplete && (
-                  <Link href={`/inmobiliaria/${user.id}`} target="_blank">
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <Eye className="h-4 w-4" />
-                      Ver perfil público
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                  </Link>
-                )}
+            {/* [InmobiliariaFix] Botones siempre visibles, "Ver perfil público" siempre disponible si perfil completo */}
+            <div className="flex gap-2">
+              {user && isProfileComplete && (
+                <Link href={`/inmobiliaria/${user.id}`} target="_blank">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    Ver perfil público
+                    <ExternalLink className="h-3 w-3" />
+                  </Button>
+                </Link>
+              )}
+              {!isEditing && (
                 <Button onClick={() => setIsEditing(true)}>
                   Editar Perfil
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           
           {!isProfileComplete && (
@@ -499,6 +500,7 @@ export default function MiEmpresaPage() {
               Logo de la Empresa
               <span className="ml-2 text-sm text-gray-500">Opcional</span>
             </h3>
+            {/* [InmobiliariaFix] LogoUploader habilitado solo en modo edición */}
             <LogoUploader
               currentLogoUrl={profile.logoUrl}
               onUploadSuccess={(logoUrl) => {
@@ -507,7 +509,7 @@ export default function MiEmpresaPage() {
               onDeleteSuccess={() => {
                 setProfile({ ...profile, logoUrl: '' })
               }}
-              disabled={isEditing}
+              disabled={!isEditing}
             />
           </div>
           
