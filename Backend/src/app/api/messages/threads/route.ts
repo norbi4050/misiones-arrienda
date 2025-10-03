@@ -454,9 +454,11 @@ export async function POST(request: NextRequest) {
         console.log(`[CONVERSATION] ✅ Existente: ${threadId}`)
       } else {
         // Crear nueva conversación
+        const newId = crypto.randomUUID()
         const { data: newConv, error: createError } = await supabase
           .from('Conversation')
           .insert({
+            id: newId,
             aId: currentProfileId,
             bId: targetProfileId,
             isActive: true,

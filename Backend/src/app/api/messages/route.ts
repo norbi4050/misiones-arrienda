@@ -230,6 +230,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insErr.message, code: insErr.code ?? null }, { status: 500 })
     }
 
+    // PROMPT A: Write-through de metadatos de conversación (best-effort)
+    try {
+      const now = new Date().toISOString()
+      const { error: updateErr } = await supabase
+        .from('conversations')
+        .update({
+          last_message_text: String(text),
+          last_message_at: inserted.created_at || now,
+          updated_at: now
+        })
+        .eq('id', String(threadId))
+
+      if (updateErr) {
+        console.error('[Messages] ⚠️ Failed to update conversation metadata:', updateErr.message)
+        // No romper la respuesta, solo log
+      } else {
+        console.log('[Messages] ✅ Conversation metadata updated:', threadId)
+      }
+    } catch (metaErr: any) {
+      console.error('[Messages] ⚠️ Exception updating conversation metadata:', metaErr.message)
+      // No romper la respuesta, solo log
+    }
+
     // PROMPT 1: Responder siempre con threadId (nombre oficial)
     return NextResponse.json({ 
       ok: true, 

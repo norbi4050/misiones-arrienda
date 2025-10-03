@@ -8,14 +8,28 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ProfileDropdown } from "@/components/ui/profile-dropdown"
-import { useAuth } from "@/hooks/useAuth"
+import { useCurrentUser } from "@/lib/auth/useCurrentUser"
 import AvatarUniversal from "@/components/ui/avatar-universal"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
-  const { user, loading, isAuthenticated, signOut } = useAuth()
+  const { user, isAuthenticated, isAgency, loading, signOut } = useCurrentUser()
+
+  // [DEBUG] Log temporal para investigar
+  React.useEffect(() => {
+    if (user) {
+      console.log('[Navbar DEBUG] User data:', {
+        id: user.id,
+        email: user.email,
+        userType: user.userType,
+        isCompany: user.isCompany,
+        isAgency: isAgency,
+        should_hide_comunidad: isAgency
+      })
+    }
+  }, [user, isAgency])
 
   // Navegación dinámica según userType
   const navigation = React.useMemo(() => {
@@ -25,19 +39,19 @@ export function Navbar() {
     ]
     
     // Solo mostrar Comunidad si NO es inmobiliaria
-    if (!user || user.userType !== 'inmobiliaria') {
+    if (!isAgency) {
       baseNav.push({ name: 'Comunidad', href: '/comunidad' })
     }
     
     baseNav.push({ name: 'Publicar', href: '/publicar' })
     
     // Agregar "Mi Empresa" si es inmobiliaria
-    if (user && user.userType === 'inmobiliaria') {
+    if (isAgency) {
       baseNav.push({ name: 'Mi Empresa', href: '/mi-empresa' })
     }
     
     return baseNav
-  }, [user])
+  }, [isAgency])
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -199,7 +213,7 @@ export function Navbar() {
                       <AvatarUniversal
                         userId={user.id}
                         size="sm"
-                        fallbackText={user.name || user.email}
+                        fallbackText={user.name || user.email || 'Usuario'}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
@@ -210,13 +224,13 @@ export function Navbar() {
                         </p>
                       </div>
                     </div>
-                    {/* [InmobiliariaFix] href y label dinámicos según userType */}
+                    {/* [AuthBridge] href y label dinámicos según isAgency */}
                     <Link
-                      href={user?.userType === 'inmobiliaria' ? '/mi-empresa' : '/profile/inquilino'}
+                      href={isAgency ? '/mi-empresa' : '/profile/inquilino'}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
-                      {user?.userType === 'inmobiliaria' ? 'Mi Empresa' : 'Mi Perfil'}
+                      {isAgency ? 'Mi Empresa' : 'Mi Perfil'}
                     </Link>
                     <Link
                       href="/favorites"

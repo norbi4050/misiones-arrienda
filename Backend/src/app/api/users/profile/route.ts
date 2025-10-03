@@ -3,6 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { z } from "zod";
+import { mapUserProfile } from "@/lib/auth/mapUserProfile";
 
 // Zod schema for user_profiles validation
 const UserProfileSchema = z.object({
@@ -56,7 +57,7 @@ export async function GET(_req: NextRequest) {
     // STEP 1: Get user data from users table (contains is_company, user_type, etc.)
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, name, email, phone, user_type, is_company, company_name, license_number, property_count, is_verified, email_verified, created_at, updated_at')
+      .select('id, name, email, phone, user_type, is_company, company_name, license_number, property_count, verified, email_verified, created_at, updated_at')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -64,6 +65,15 @@ export async function GET(_req: NextRequest) {
       console.error('Error fetching user data:', userError);
       return NextResponse.json({ error: "Error fetching user data" }, { status: 500 });
     }
+
+    // [DEBUG] Log datos crudos de la BD
+    console.log('[Profile API] Raw userData from DB:', {
+      id: userData?.id,
+      email: userData?.email,
+      user_type: userData?.user_type,
+      is_company: userData?.is_company,
+      company_name: userData?.company_name
+    });
 
     // STEP 2: Get profile from user_profiles table (optional, contains preferences)
     const { data: profileData, error: profileError } = await supabase
@@ -77,31 +87,35 @@ export async function GET(_req: NextRequest) {
       console.warn('Warning fetching user_profiles (non-critical):', profileError);
     }
 
-    // STEP 3: Merge data from both tables
-    // Priority: userData (required) + profileData (optional)
-    const mergedProfile = {
-      // Core user data from users table
-      id: userData?.id || user.id,
-      name: userData?.name,
-      email: userData?.email,
-      phone: userData?.phone,
-      userType: userData?.user_type,
-      isCompany: userData?.is_company || false,
-      companyName: userData?.company_name,
-      licenseNumber: userData?.license_number,
-      propertyCount: userData?.property_count,
-      isVerified: userData?.is_verified || false,
-      emailVerified: userData?.email_verified || false,
-      
-      // Optional profile data from user_profiles table
+    // STEP 3: Merge data from both tables and normalize using mapUserProfile
+    // IMPORTANTE: Priorizar user_type de users sobre role de user_profiles
+    const mergedData = {
+      ...profileData,  // Primero profileData
+      ...userData,     // Luego userData (sobrescribe)
+      // Forzar que user_type y is_company de users table tengan prioridad absoluta
+      user_type: userData?.user_type,
+      is_company: userData?.is_company,
+      // NO usar role de profileData, solo user_type de users
+      role: undefined,  // Eliminar role de profileData para evitar conflictos
+    };
+
+    // Normalizar usando mapUserProfile para consistencia
+    const normalizedProfile = mapUserProfile(mergedData);
+
+    if (!normalizedProfile) {
+      return NextResponse.json({ error: "Failed to normalize profile" }, { status: 500 });
+    }
+
+    // Agregar campos adicionales que no están en mapUserProfile
+    const completeProfile = {
+      ...normalizedProfile,
+      // Campos adicionales de user_profiles
       role: profileData?.role || 'BUSCO',
       city: profileData?.city || '',
       neighborhood: profileData?.neighborhood || null,
       budgetMin: profileData?.budget_min || null,
       budgetMax: profileData?.budget_max || null,
-      bio: profileData?.bio || null,
       photos: profileData?.photos || null,
-      age: profileData?.age || null,
       petPref: profileData?.pet_pref || null,
       smokePref: profileData?.smoke_pref || null,
       diet: profileData?.diet || null,
@@ -112,13 +126,14 @@ export async function GET(_req: NextRequest) {
       isSuspended: profileData?.is_suspended || false,
       expiresAt: profileData?.expires_at || null,
       isPaid: profileData?.is_paid || false,
-      
-      // Timestamps
+      propertyCount: userData?.property_count,
+      isVerified: userData?.verified || false,
+      emailVerified: userData?.email_verified || false,
       created_at: userData?.created_at,
       updated_at: userData?.updated_at,
     };
 
-    return NextResponse.json({ profile: mergedProfile });
+    return NextResponse.json({ profile: completeProfile });
   } catch (error) {
     console.error('Profile fetch error:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

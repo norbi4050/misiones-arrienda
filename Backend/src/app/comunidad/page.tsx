@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { communityPostFiltersSchema } from '@/lib/validations/community'
 import type { CommunityPost, CommunityPostsResponse } from '@/types/community'
@@ -84,6 +85,30 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
   // Detectar sesión
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  // [AuthBridge] Guard: Verificar si es inmobiliaria y redirigir
+  if (user) {
+    try {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('user_type, is_company')
+        .eq('id', user.id)
+        .single()
+
+      // Si es inmobiliaria (verificar ambos campos para mayor robustez)
+      const isAgency = userData?.is_company === true || 
+                      userData?.user_type?.toUpperCase() === 'INMOBILIARIA' ||
+                      userData?.user_type?.toUpperCase() === 'AGENCY'
+
+      if (isAgency) {
+        console.log('[AuthBridge] Agency user detected, redirecting to /mi-empresa')
+        redirect('/mi-empresa')
+      }
+    } catch (error) {
+      console.error('[AuthBridge] Error checking user type:', error)
+      // En caso de error, permitir acceso (fail-open para mejor UX)
+    }
+  }
 
   // Landing pública (sin sesión)
   if (!user) {

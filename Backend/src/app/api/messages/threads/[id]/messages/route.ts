@@ -25,71 +25,152 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Verificar que el usuario tiene acceso a este hilo
-    const { data: thread, error: threadError } = await supabase
-      .from('conversations')
-      .select('id, sender_id, receiver_id, property_id')
+    // Intentar primero con tabla Conversation (PRISMA schema)
+    let thread: any = null
+    let isPrismaSchema = false
+    
+    const { data: prismaThread, error: prismaError } = await supabase
+      .from('Conversation')
+      .select('id, aId, bId, isActive')
       .eq('id', threadId)
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .eq('isActive', true)
       .single()
 
-    if (threadError || !thread) {
+    if (!prismaError && prismaThread) {
+      // Obtener UserProfile del usuario actual
+      const { data: userProfile } = await supabase
+        .from('UserProfile')
+        .select('id')
+        .eq('userId', user.id)
+        .single()
+
+      if (userProfile) {
+        // Verificar que el usuario es participante
+        if (prismaThread.aId === userProfile.id || prismaThread.bId === userProfile.id) {
+          thread = prismaThread
+          isPrismaSchema = true
+        }
+      }
+    }
+
+    // Si no se encontró en Conversation, intentar con conversations (SUPABASE schema)
+    if (!thread) {
+      const { data: supabaseThread, error: supabaseError } = await supabase
+        .from('conversations')
+        .select('id, sender_id, receiver_id, property_id')
+        .eq('id', threadId)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .single()
+
+      if (!supabaseError && supabaseThread) {
+        thread = supabaseThread
+        isPrismaSchema = false
+      }
+    }
+
+    if (!thread) {
+      console.error('[Messages] ❌ Hilo no encontrado:', threadId)
       return NextResponse.json({ error: 'Hilo no encontrado' }, { status: 404 })
     }
 
+    console.log(`[Messages] ✅ Hilo encontrado usando schema: ${isPrismaSchema ? 'PRISMA' : 'SUPABASE'}`)
+
     // Obtener el perfil del usuario para el sender_id
+    const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
+    const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
+    
     const { data: userProfile, error: profileError } = await supabase
-      .from('user_profiles')
+      .from(profileTable)
       .select('id')
-      .eq('user_id', user.id)
+      .eq(profileIdField, user.id)
       .single()
 
     if (profileError || !userProfile) {
+      console.error('[Messages] ❌ Perfil no encontrado para usuario:', user.id)
       return NextResponse.json({ 
         error: 'Perfil de usuario no encontrado' 
       }, { status: 403 })
     }
 
     // Crear nuevo mensaje
+    const messageTable = isPrismaSchema ? 'Message' : 'messages'
+    const conversationIdField = isPrismaSchema ? 'conversationId' : 'conversation_id'
+    const senderIdField = isPrismaSchema ? 'senderId' : 'sender_id'
+    const isReadField = isPrismaSchema ? 'isRead' : 'is_read'
+    const createdAtField = isPrismaSchema ? 'createdAt' : 'created_at'
+    const bodyField = isPrismaSchema ? 'body' : 'content'
+
+    const messageData: any = {
+      [conversationIdField]: threadId,
+      [senderIdField]: userProfile.id,
+      [bodyField]: content.trim(),
+      [isReadField]: false,
+      [createdAtField]: new Date().toISOString()
+    }
+
+    // Para PRISMA schema, necesitamos generar el ID manualmente
+    if (isPrismaSchema) {
+      messageData.id = crypto.randomUUID()
+    }
+
     const { data: newMessage, error: messageError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: threadId,
-        sender_id: userProfile.id,
-        content: content.trim(),
-        is_read: false,
-        created_at: new Date().toISOString()
-      })
+      .from(messageTable)
+      .insert(messageData)
       .select(`
         id,
-        sender_id,
-        content,
-        created_at,
-        is_read
+        ${senderIdField},
+        ${bodyField},
+        ${createdAtField},
+        ${isReadField}
       `)
       .single()
 
     if (messageError) {
-      console.error('Error creating message:', messageError)
+      console.error('[Messages] ❌ Error creating message:', messageError)
       return NextResponse.json({ error: 'Error al enviar mensaje' }, { status: 500 })
     }
 
-    // Actualizar timestamp de conversación
-    await supabase
-      .from('conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', threadId)
+    // PROMPT A: Write-through de metadatos de conversación (best-effort)
+    try {
+      const now = new Date().toISOString()
+      const conversationTable = isPrismaSchema ? 'Conversation' : 'conversations'
+      const lastMessageAtField = isPrismaSchema ? 'lastMessageAt' : 'last_message_at'
+      const updatedAtField = isPrismaSchema ? 'updatedAt' : 'updated_at'
+      
+      const messageCreatedAt = (newMessage as any)[createdAtField] || now
+      const updateData: any = {
+        [lastMessageAtField]: messageCreatedAt,
+        [updatedAtField]: now
+      }
+
+      const { error: updateErr } = await supabase
+        .from(conversationTable)
+        .update(updateData)
+        .eq('id', threadId)
+
+      if (updateErr) {
+        console.error('[Messages] ⚠️ Failed to update conversation metadata:', updateErr.message)
+      } else {
+        console.log('[Messages] ✅ Conversation metadata updated:', threadId)
+      }
+    } catch (metaErr: any) {
+      console.error('[Messages] ⚠️ Exception updating conversation metadata:', metaErr.message)
+    }
 
     // Obtener adjuntos del mensaje (si los hay)
     const attachmentsMap = await getMessagesAttachments([newMessage.id])
     const attachments = attachmentsMap.get(newMessage.id) || []
 
     // Formatear mensaje según contrato
+    const messageSenderId = (newMessage as any)[senderIdField]
+    const messageBody = (newMessage as any)[bodyField]
+    const messageCreatedAt = (newMessage as any)[createdAtField]
+    
     const formattedMessage = {
       id: newMessage.id,
-      sender_id: newMessage.sender_id,
-      content: newMessage.content,
-      created_at: newMessage.created_at,
+      sender_id: messageSenderId,
+      content: messageBody,
+      created_at: messageCreatedAt,
       read_at: null, // Nuevo mensaje, no leído aún
       attachments // B6: Incluir adjuntos
     }
@@ -100,7 +181,8 @@ export async function POST(
         messageId: newMessage.id,
         senderId: userProfile.id,
         content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
-        attachmentsCount: attachments.length
+        attachmentsCount: attachments.length,
+        schema: isPrismaSchema ? 'PRISMA' : 'SUPABASE'
       })
     }
 
@@ -111,7 +193,7 @@ export async function POST(
     })
 
   } catch (error) {
-    console.error('Error in thread messages POST:', error)
+    console.error('[Messages] ❌ Error in thread messages POST:', error)
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

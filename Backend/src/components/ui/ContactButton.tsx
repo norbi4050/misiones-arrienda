@@ -54,6 +54,8 @@ export default function ContactButton({
     }
     
     try {
+      console.log('[Messages] 📤 Contactando propietario:', { ownerId, propertyId })
+      
       // Crear/abrir hilo usando el nuevo contrato
       const response = await fetch('/api/messages/threads', {
         method: 'POST',
@@ -66,18 +68,23 @@ export default function ContactButton({
       })
 
       if (response.status === 401) {
+        console.log('[Messages] ⚠️ Usuario no autenticado, redirigiendo a login')
         toast.error('Iniciá sesión para enviar mensajes')
         router.push('/login')
         return
       }
 
       if (!response.ok) {
-        toast.error('Error al crear conversación')
+        const error = await response.json()
+        console.error('[Messages] ❌ Error al crear conversación:', error)
+        toast.error(error.details || 'Error al crear conversación')
         return
       }
 
       const data = await response.json()
       const threadId = data.threadId
+
+      console.log('[Messages] ✅ Conversación creada/abierta:', threadId)
 
       // ⭐ ANALYTICS: Track message sent (conversation created)
       try {
@@ -89,8 +96,8 @@ export default function ContactButton({
       // Navegar al hilo de mensajes
       router.push(`/messages?thread=${threadId}`)
 
-    } catch (error) {
-      console.error('Error creating thread:', error)
+    } catch (error: any) {
+      console.error('[Messages] ❌ Exception creating thread:', error)
       toast.error('Error de conexión')
     } finally {
       setIsLoading(false)

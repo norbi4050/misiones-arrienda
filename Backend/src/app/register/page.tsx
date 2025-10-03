@@ -120,17 +120,17 @@ export default function RegisterPage() {
         };
       case 'dueno_directo':
         return { 
-          icon: User, 
-          title: "Dueño Directo", 
-          description: "Alquila tu propia propiedad",
+          icon: Building2, 
+          title: "Empresa", 
+          description: "Gestiona propiedades corporativas",
           color: "border-green-500 bg-green-50"
         };
       case 'inquilino':
       default:
         return { 
-          icon: Search, 
-          title: "Inquilino", 
-          description: "Busca tu hogar ideal",
+          icon: User, 
+          title: "Inquilino / Dueño Directo", 
+          description: "Busca o alquila tu propiedad",
           color: "border-blue-500 bg-blue-50"
         };
     }
@@ -168,7 +168,7 @@ export default function RegisterPage() {
               ¿Qué tipo de usuario eres?
             </label>
             <div className="grid grid-cols-1 gap-3">
-              {(['inquilino', 'dueno_directo', 'inmobiliaria'] as const).map((type) => {
+              {(['inquilino', 'inmobiliaria', 'dueno_directo'] as const).map((type) => {
                 const info = getUserTypeInfo(type);
                 const Icon = info.icon;
                 return (

@@ -28,6 +28,7 @@ export default function MessagesPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
+  const [creatingThread, setCreatingThread] = useState(false)
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -42,9 +43,16 @@ export default function MessagesPage() {
     if (user) {
       fetchConversations()
       
-      // Cargar threadId de la query si existe
+      // Detectar parámetros de la URL
+      const userId = searchParams.get('userId')
       const threadId = searchParams.get('thread')
-      if (threadId) {
+      
+      // Prioridad 1: Si hay userId (nuevo flujo desde comunidad)
+      if (userId && !threadId) {
+        handleCreateThread(userId)
+      } 
+      // Prioridad 2: Si hay threadId (flujo existente)
+      else if (threadId) {
         setSelectedThreadId(threadId)
       }
       
@@ -60,6 +68,47 @@ export default function MessagesPage() {
       }
     }
   }, [user, searchParams])
+
+  const handleCreateThread = async (toUserId: string) => {
+    try {
+      setCreatingThread(true)
+      setError(null)
+      
+      console.log('[CREATE THREAD] Iniciando conversación con usuario:', toUserId)
+      
+      const response = await fetch('/api/messages/threads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ toUserId })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.details || errorData.error || 'Error al crear conversación')
+      }
+      
+      const data = await response.json()
+      
+      if (data.success && data.threadId) {
+        console.log('[CREATE THREAD] Thread creado/encontrado:', data.threadId, 'existing:', data.existing)
+        
+        // Actualizar URL y abrir thread
+        router.push(`/messages?thread=${data.threadId}`)
+        setSelectedThreadId(data.threadId)
+        
+        // Refrescar lista de conversaciones
+        await fetchConversations()
+      } else {
+        throw new Error('Respuesta inválida del servidor')
+      }
+    } catch (err: any) {
+      console.error('[CREATE THREAD] Error:', err)
+      setError(err.message || 'Error al iniciar conversación')
+    } finally {
+      setCreatingThread(false)
+    }
+  }
 
   const setupConversationsRealtime = () => {
     if (!user) return
@@ -141,6 +190,27 @@ export default function MessagesPage() {
     conversation.property_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     conversation.other_user_name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Loading modal durante creación de thread
+  if (creatingThread) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                Iniciando conversación
+              </h3>
+              <p className="text-sm text-gray-600">
+                Por favor espera un momento...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Si hay un thread seleccionado, mostrar el panel de chat
   if (selectedThreadId) {

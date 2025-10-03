@@ -73,39 +73,54 @@ export default function ProfileCard({
       return
     }
 
+    // PROMPT B: Validar que user_id existe
+    const userId = profile.user_id || profile.user.id
+    if (!userId) {
+      console.error('[Messages] ❌ ProfileCard: user_id is undefined', profile)
+      toast.error('Perfil incompleto. No se puede iniciar conversación.')
+      return
+    }
+
     // Implementar conexión directa al sistema de mensajes
     setLoading(true)
     try {
+      console.log('[Messages] 📤 Iniciando conversación con:', userId)
+      
       const response = await fetch('/api/messages/threads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ 
-          toUserId: profile.user_id || profile.user.id || profile.id, // Usar el ID del usuario del perfil
+          toUserId: userId,
           propertyId: null // Sin propiedad para mensajes de comunidad
         })
       })
 
       if (response.status === 401) {
+        console.log('[Messages] ⚠️ Usuario no autenticado, redirigiendo a login')
         toast.error('Iniciá sesión para enviar mensajes')
         router.push('/login')
         return
       }
 
       if (!response.ok) {
-        toast.error('Error al crear conversación')
+        const error = await response.json()
+        console.error('[Messages] ❌ Error al crear conversación:', error)
+        toast.error(error.details || 'Error al crear conversación')
         return
       }
 
       const data = await response.json()
       const threadId = data.threadId
 
+      console.log('[Messages] ✅ Conversación creada/abierta:', threadId)
+
       // Navegar al hilo de mensajes
       router.push(`/messages?thread=${threadId}`)
       toast.success('Conversación iniciada')
 
-    } catch (error) {
-      console.error('Error creating thread:', error)
+    } catch (error: any) {
+      console.error('[Messages] ❌ Exception creating thread:', error)
       toast.error('Error de conexión')
     } finally {
       setLoading(false)

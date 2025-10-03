@@ -86,6 +86,34 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  // [AuthBridge] Guard: Bloquear /comunidad para inmobiliarias
+  if (req.nextUrl.pathname.startsWith('/comunidad')) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Verificar si es inmobiliaria
+        const { data: userData } = await supabase
+          .from('users')
+          .select('user_type, is_company')
+          .eq('id', user.id)
+          .single();
+
+        const isAgency = userData?.is_company === true || 
+                        userData?.user_type?.toUpperCase() === 'INMOBILIARIA' ||
+                        userData?.user_type?.toUpperCase() === 'AGENCY';
+
+        if (isAgency) {
+          console.log('[Middleware] Agency user blocked from /comunidad, redirecting to /mi-empresa');
+          return NextResponse.redirect(new URL('/mi-empresa', req.url));
+        }
+      }
+    } catch (error) {
+      console.error('[Middleware] Error checking agency status:', error);
+      // En caso de error, permitir acceso (fail-open)
+    }
+  }
+
   return res;
 }
 

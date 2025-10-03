@@ -36,6 +36,11 @@ export default function ContactPanel({
     setIsSubmitting(true);
     
     try {
+      console.log('[Messages] 📤 Contactando propietario desde ContactPanel:', { 
+        ownerId, 
+        propertyId 
+      })
+      
       // Crear/abrir hilo usando el nuevo contrato
       const threadRes = await fetch('/api/messages/threads', {
         method: 'POST',
@@ -48,17 +53,22 @@ export default function ContactPanel({
       });
 
       if (threadRes.status === 401) {
+        console.log('[Messages] ⚠️ Usuario no autenticado')
         toast.error('Iniciá sesión para enviar mensajes');
         return;
       }
 
       if (!threadRes.ok) {
-        toast.error('Error al crear conversación');
+        const error = await threadRes.json()
+        console.error('[Messages] ❌ Error al crear thread:', error)
+        toast.error(error.details || 'Error al crear conversación');
         return;
       }
 
       const threadData = await threadRes.json();
       const threadId = threadData.threadId;
+
+      console.log('[Messages] ✅ Thread creado/abierto:', threadId)
 
       // Enviar mensaje al hilo
       const msgRes = await fetch(`/api/messages/threads/${threadId}/messages`, {
@@ -71,18 +81,22 @@ export default function ContactPanel({
       });
 
       if (msgRes.ok) {
+        console.log('[Messages] ✅ Mensaje inicial enviado, navegando a thread')
         toast.success('Mensaje enviado correctamente');
         setMsg(`Hola, me interesa esta propiedad en ${propertyCity}. ¿Podríamos coordinar una visita?`);
         
         // Navegar al hilo de mensajes
         window.location.href = `/messages?thread=${threadId}`;
       } else if (msgRes.status === 401) {
+        console.log('[Messages] ⚠️ Usuario no autenticado al enviar mensaje')
         toast.error('Iniciá sesión para enviar mensajes');
       } else {
+        const error = await msgRes.json()
+        console.error('[Messages] ❌ Error al enviar mensaje:', error)
         toast.error('Error al enviar mensaje');
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
+    } catch (error: any) {
+      console.error('[Messages] ❌ Exception en ContactPanel:', error);
       toast.error('Error de conexión');
     } finally {
       setIsSubmitting(false);

@@ -394,7 +394,8 @@ export async function POST(request: NextRequest) {
       company_name: userType === 'inmobiliaria' ? companyName : null,
       license_number: userType === 'inmobiliaria' ? (licenseNumber || null) : null,
       property_count: userType === 'dueno_directo' ? propertyCount : null,
-      is_company: userType === 'inmobiliaria',
+      // is_company es true para inmobiliaria Y dueno_directo (ahora llamado "Empresa")
+      is_company: userType === 'inmobiliaria' || userType === 'dueno_directo',
       is_verified: false,  // Se activará con CUIT más adelante
       email_verified: true,
       created_at: new Date().toISOString(),

@@ -6,19 +6,10 @@ import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell, Buildi
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import AvatarUniversal from '@/components/ui/avatar-universal';
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  phone?: string;
-  bio?: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { CurrentUser } from '@/lib/auth/mapUserProfile';
 
 interface ProfileDropdownProps {
-  user: User | null;
+  user: CurrentUser | null;
   onSignOut: () => void;
   className?: string;
 }
@@ -53,7 +44,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   }
 
   // Obtener las iniciales del usuario
-  const getInitials = (name?: string, email?: string) => {
+  const getInitials = (name?: string | null, email?: string | null) => {
     if (name) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
@@ -121,10 +112,10 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
           {/* Menu Items */}
           <div className="py-1">
-            {/* [InmobiliariaFix] Menú condicional según userType */}
-            {(user as any).userType === 'inmobiliaria' ? (
+            {/* [AuthBridge] Menú condicional según userType e isCompany */}
+            {user.userType === 'inmobiliaria' || user.isCompany ? (
               <>
-                {/* Mi Empresa */}
+                {/* Mi Empresa - Solo para Inmobiliaria y Empresa (dueno_directo) */}
                 <Link
                   href="/mi-empresa"
                   onClick={() => setIsOpen(false)}

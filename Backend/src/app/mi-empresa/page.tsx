@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { LogoUploader } from "@/components/inmobiliarias/LogoUploader"
 import { PlanCard } from "@/components/plan/PlanCard"
-import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye } from "lucide-react"
+import AvatarUniversal from "@/components/ui/avatar-universal"
+import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye, User } from "lucide-react"
 import { toast } from "sonner"
 import { validateCUIT, autoFormatCUIT } from "@/lib/validations/cuit"
 
@@ -494,23 +495,64 @@ export default function MiEmpresaPage() {
             </div>
           </div>
           
-          {/* Logo */}
+          {/* Avatar Personal */}
           <div className="space-y-4 mb-8 pb-8 border-b">
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-lg font-medium text-gray-900 flex items-center">
+              <User className="h-5 w-5 mr-2" />
+              Avatar Personal
+              <span className="ml-2 text-sm text-gray-500">Opcional</span>
+            </h3>
+            <div className="flex items-start space-x-4">
+              <AvatarUniversal
+                userId={user?.id}
+                size="xl"
+                showUpload={isEditing}
+                fallbackText={profile.companyName || user?.email || 'Empresa'}
+                onAvatarChange={(newUrl) => {
+                  toast.success('Avatar actualizado correctamente')
+                  // Recargar perfil para reflejar cambios
+                  loadProfile()
+                }}
+              />
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-2">
+                  Este avatar se mostrará en el navbar, mensajes y comunidad.
+                </p>
+                <p className="text-xs text-gray-500">
+                  Recomendado: Foto del representante de la inmobiliaria o logo cuadrado (formato circular).
+                </p>
+                {isEditing && (
+                  <p className="text-xs text-blue-600 mt-2">
+                    💡 Haz clic en el avatar para cambiar la imagen
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Logo de Empresa */}
+          <div className="space-y-4 mb-8 pb-8 border-b">
+            <h3 className="text-lg font-medium text-gray-900 flex items-center">
+              <Building2 className="h-5 w-5 mr-2" />
               Logo de la Empresa
               <span className="ml-2 text-sm text-gray-500">Opcional</span>
             </h3>
-            {/* [InmobiliariaFix] LogoUploader habilitado solo en modo edición */}
-            <LogoUploader
-              currentLogoUrl={profile.logoUrl}
-              onUploadSuccess={(logoUrl) => {
-                setProfile({ ...profile, logoUrl })
-              }}
-              onDeleteSuccess={() => {
-                setProfile({ ...profile, logoUrl: '' })
-              }}
-              disabled={!isEditing}
-            />
+            <div>
+              <p className="text-sm text-gray-600 mb-4">
+                Este logo se mostrará en tu perfil público de inmobiliaria.
+              </p>
+              {/* [InmobiliariaFix] LogoUploader habilitado solo en modo edición */}
+              <LogoUploader
+                currentLogoUrl={profile.logoUrl}
+                onUploadSuccess={(logoUrl) => {
+                  setProfile({ ...profile, logoUrl })
+                }}
+                onDeleteSuccess={() => {
+                  setProfile({ ...profile, logoUrl: '' })
+                }}
+                disabled={!isEditing}
+              />
+            </div>
           </div>
           
           {/* Botones de Acción */}

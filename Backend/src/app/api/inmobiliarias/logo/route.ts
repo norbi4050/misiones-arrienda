@@ -1,52 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
+import { createServerSupabase } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
-
-function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  })
-}
-
-async function getAuthenticatedUser() {
-  const supabase = getSupabaseClient()
-  
-  // Obtener token de las cookies
-  const cookieStore = cookies()
-  const accessToken = cookieStore.get('sb-access-token')?.value
-  
-  if (!accessToken) {
-    return null
-  }
-  
-  const { data: { user }, error } = await supabase.auth.getUser(accessToken)
-  
-  if (error || !user) {
-    return null
-  }
-  
-  return user
-}
 
 // POST - Upload logo
 export async function POST(request: NextRequest) {
   console.log('[LOGO] Iniciando upload de logo...')
   
   try {
-    // 1. Autenticación
-    const user = await getAuthenticatedUser()
+    // 1. Autenticación usando el cliente SSR estándar
+    const supabase = createServerSupabase()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (!user) {
-      console.error('[LOGO] Usuario no autenticado')
+    if (authError || !user) {
+      console.error('[LOGO] Usuario no autenticado:', authError?.message)
       return NextResponse.json(
         { error: 'No autenticado' },
         { status: 401 }
@@ -55,8 +24,7 @@ export async function POST(request: NextRequest) {
     
     console.log('[LOGO] Usuario autenticado:', user.id)
     
-    // 2. Verificar que es inmobiliaria
-    const supabase = getSupabaseClient()
+    // 2. Verificar que es inmobiliaria (usando admin client para queries)
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('user_type, email')
@@ -118,16 +86,16 @@ export async function POST(request: NextRequest) {
     
     console.log('[LOGO] Ruta del archivo:', filePath)
     
-    // 7. Eliminar logo anterior si existe
+    // 7. Eliminar logo anterior si existe (usando admin client para storage)
     try {
-      const { data: existingFiles } = await supabase.storage
+      const { data: existingFiles } = await supabaseAdmin.storage
         .from('company-logos')
         .list(user.id)
       
       if (existingFiles && existingFiles.length > 0) {
         console.log('[LOGO] Eliminando logos anteriores...')
         const filesToDelete = existingFiles.map(f => `${user.id}/${f.name}`)
-        await supabase.storage
+        await supabaseAdmin.storage
           .from('company-logos')
           .remove(filesToDelete)
         console.log('[LOGO] Logos anteriores eliminados')
@@ -137,9 +105,9 @@ export async function POST(request: NextRequest) {
       // Continuar de todos modos
     }
     
-    // 8. Subir archivo a Storage
+    // 8. Subir archivo a Storage (usando admin client)
     const fileBuffer = await file.arrayBuffer()
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from('company-logos')
       .upload(filePath, fileBuffer, {
         contentType: file.type,
@@ -160,15 +128,15 @@ export async function POST(request: NextRequest) {
     console.log('[LOGO] Archivo subido exitosamente:', uploadData.path)
     
     // 9. Obtener URL pública
-    const { data: publicUrlData } = supabase.storage
+    const { data: publicUrlData } = supabaseAdmin.storage
       .from('company-logos')
       .getPublicUrl(filePath)
     
     const logoUrl = publicUrlData.publicUrl
     console.log('[LOGO] URL pública:', logoUrl)
     
-    // 10. Actualizar tabla users con logo_url
-    const { error: updateError } = await supabase
+    // 10. Actualizar tabla users con logo_url (usando admin client)
+    const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({ 
         logo_url: logoUrl,
@@ -207,11 +175,12 @@ export async function DELETE(request: NextRequest) {
   console.log('[LOGO] Iniciando eliminación de logo...')
   
   try {
-    // 1. Autenticación
-    const user = await getAuthenticatedUser()
+    // 1. Autenticación usando el cliente SSR estándar
+    const supabase = createServerSupabase()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (!user) {
-      console.error('[LOGO] Usuario no autenticado')
+    if (authError || !user) {
+      console.error('[LOGO] Usuario no autenticado:', authError?.message)
       return NextResponse.json(
         { error: 'No autenticado' },
         { status: 401 }
@@ -220,8 +189,7 @@ export async function DELETE(request: NextRequest) {
     
     console.log('[LOGO] Usuario autenticado:', user.id)
     
-    // 2. Verificar que es inmobiliaria
-    const supabase = getSupabaseClient()
+    // 2. Verificar que es inmobiliaria (usando admin client)
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('user_type')
@@ -236,8 +204,8 @@ export async function DELETE(request: NextRequest) {
       )
     }
     
-    // 3. Listar archivos del usuario
-    const { data: files, error: listError } = await supabase.storage
+    // 3. Listar archivos del usuario (usando admin client)
+    const { data: files, error: listError } = await supabaseAdmin.storage
       .from('company-logos')
       .list(user.id)
     
@@ -254,7 +222,7 @@ export async function DELETE(request: NextRequest) {
       const filesToDelete = files.map(f => `${user.id}/${f.name}`)
       console.log('[LOGO] Eliminando archivos:', filesToDelete)
       
-      const { error: deleteError } = await supabase.storage
+      const { error: deleteError } = await supabaseAdmin.storage
         .from('company-logos')
         .remove(filesToDelete)
       
@@ -271,8 +239,8 @@ export async function DELETE(request: NextRequest) {
       console.log('[LOGO] No hay archivos para eliminar')
     }
     
-    // 5. Actualizar tabla users (quitar logo_url)
-    const { error: updateError } = await supabase
+    // 5. Actualizar tabla users (quitar logo_url) (usando admin client)
+    const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({ 
         logo_url: null,
