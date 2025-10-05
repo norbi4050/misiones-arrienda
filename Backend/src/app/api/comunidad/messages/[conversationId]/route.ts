@@ -57,6 +57,7 @@ export async function GET(
     const offset = (queryParams.page! - 1) * queryParams.limit!
 
     // Obtener mensajes de la conversación
+    // ENRIQUECIDO: Incluye datos de community_profiles para displayName y avatarUrl del sender
     const { data: messages, error: messagesError } = await supabase
       .from('community_messages')
       .select(`
@@ -68,7 +69,12 @@ export async function GET(
         sender:sender_id (
           id,
           name,
-          avatar
+          avatar,
+          community_profiles (
+            display_name,
+            avatar_url,
+            updated_at
+          )
         )
       `)
       .eq('conversation_id', conversationId)
@@ -83,11 +89,30 @@ export async function GET(
       )
     }
 
-    // Marcar mensajes como leídos si es necesario
-    const unreadMessages = messages?.filter(msg => {
+    // Procesar mensajes para enriquecer con datos de community_profiles
+    const processedMessages = messages?.map(msg => {
       const sender = Array.isArray(msg.sender) ? msg.sender[0] : msg.sender
-      return sender?.id !== user.id && !msg.read_at
+      const senderProfile = sender?.community_profiles
+        ? (Array.isArray(sender.community_profiles) ? sender.community_profiles[0] : sender.community_profiles)
+        : null
+
+      return {
+        ...msg,
+        sender: {
+          id: sender?.id,
+          name: sender?.name,
+          avatar: sender?.avatar,
+          displayName: senderProfile?.display_name || sender?.name || 'Usuario',
+          avatarUrl: senderProfile?.avatar_url || sender?.avatar,
+          profileUpdatedAt: senderProfile?.updated_at
+        }
+      }
     }) || []
+
+    // Marcar mensajes como leídos si es necesario
+    const unreadMessages = processedMessages.filter(msg => {
+      return msg.sender?.id !== user.id && !msg.read_at
+    })
 
     if (unreadMessages.length > 0) {
       const messageIds = unreadMessages.map(msg => msg.id)
@@ -115,7 +140,7 @@ export async function GET(
     const total = count || 0
     const totalPages = Math.ceil(total / queryParams.limit!)
 
-    // Obtener información del match para contexto
+    // Obtener información del match para contexto con datos enriquecidos
     const { data: match } = await supabase
       .from('community_matches')
       .select(`
@@ -127,6 +152,9 @@ export async function GET(
           name,
           avatar,
           community_profiles (
+            display_name,
+            avatar_url,
+            updated_at,
             role,
             city,
             neighborhood
@@ -137,6 +165,9 @@ export async function GET(
           name,
           avatar,
           community_profiles (
+            display_name,
+            avatar_url,
+            updated_at,
             role,
             city,
             neighborhood
@@ -146,11 +177,53 @@ export async function GET(
       .eq('id', conversation.match_id)
       .single()
 
+    // Procesar datos del match para incluir participants y otherParticipant
+    const isUser1 = conversation.user1_id === user.id
+    const matchUser1 = match?.user1 ? (Array.isArray(match.user1) ? match.user1[0] : match.user1) : null
+    const matchUser2 = match?.user2 ? (Array.isArray(match.user2) ? match.user2[0] : match.user2) : null
+    const otherMatchUser = isUser1 ? matchUser2 : matchUser1
+
+    const getProfile = (userObj: any) => {
+      if (!userObj) return null
+      const profiles = userObj.community_profiles
+      return Array.isArray(profiles) ? profiles[0] : profiles
+    }
+
+    const user1Profile = getProfile(matchUser1)
+    const user2Profile = getProfile(matchUser2)
+    const otherProfile = getProfile(otherMatchUser)
+
     return NextResponse.json({
-      messages: messages?.reverse() || [], // Mostrar mensajes en orden cronológico
+      messages: processedMessages.reverse(), // Mostrar mensajes en orden cronológico
       conversation: {
         id: conversation.id,
-        match: match || null
+        user1_id: conversation.user1_id,
+        user2_id: conversation.user2_id,
+        match: match || null,
+        
+        // NUEVO: Array de participantes con datos enriquecidos
+        participants: [
+          {
+            userId: conversation.user1_id,
+            displayName: user1Profile?.display_name || matchUser1?.name || 'Usuario',
+            avatarUrl: user1Profile?.avatar_url || matchUser1?.avatar,
+            profileUpdatedAt: user1Profile?.updated_at
+          },
+          {
+            userId: conversation.user2_id,
+            displayName: user2Profile?.display_name || matchUser2?.name || 'Usuario',
+            avatarUrl: user2Profile?.avatar_url || matchUser2?.avatar,
+            profileUpdatedAt: user2Profile?.updated_at
+          }
+        ],
+        
+        // NUEVO: Datos del otro participante
+        otherParticipant: {
+          userId: otherMatchUser?.id,
+          displayName: otherProfile?.display_name || otherMatchUser?.name || 'Usuario',
+          avatarUrl: otherProfile?.avatar_url || otherMatchUser?.avatar,
+          profileUpdatedAt: otherProfile?.updated_at
+        }
       },
       pagination: {
         page: queryParams.page,

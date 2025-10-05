@@ -29,6 +29,8 @@ interface ChatMessageProps {
   }
   isFromCurrentUser: boolean
   senderName?: string
+  senderDisplayName?: string
+  senderAvatarUrl?: string
   showAvatar?: boolean
 }
 
@@ -36,6 +38,8 @@ export default function ChatMessage({
   message, 
   isFromCurrentUser, 
   senderName,
+  senderDisplayName,
+  senderAvatarUrl,
   showAvatar = true 
 }: ChatMessageProps) {
   
@@ -49,6 +53,10 @@ export default function ChatMessage({
     )
   }
 
+  // Priorizar displayName sobre name, evitar "U" como último recurso
+  const displayName = senderDisplayName || senderName || 'Usuario'
+  const initial = displayName.charAt(0).toUpperCase()
+
   return (
     <div className={cn(
       "flex gap-3 mb-4",
@@ -56,8 +64,21 @@ export default function ChatMessage({
     )}>
       {/* Avatar (solo para mensajes de otros usuarios) */}
       {!isFromCurrentUser && showAvatar && (
-        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-          {senderName?.charAt(0).toUpperCase() || 'U'}
+        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 overflow-hidden">
+          {senderAvatarUrl ? (
+            <img 
+              src={senderAvatarUrl} 
+              alt={displayName}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback a inicial si la imagen falla
+                e.currentTarget.style.display = 'none'
+                e.currentTarget.parentElement!.textContent = initial
+              }}
+            />
+          ) : (
+            initial
+          )}
         </div>
       )}
 
@@ -67,9 +88,9 @@ export default function ChatMessage({
         isFromCurrentUser ? "order-1" : "order-2"
       )}>
         {/* Nombre del remitente (solo para mensajes de otros usuarios) */}
-        {!isFromCurrentUser && senderName && (
+        {!isFromCurrentUser && displayName && (
           <p className="text-xs text-gray-500 mb-1 px-1">
-            {senderName}
+            {displayName}
           </p>
         )}
 

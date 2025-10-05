@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     const offset = (params.page! - 1) * params.limit!
 
     // Obtener conversaciones donde el usuario participa
+    // ENRIQUECIDO: Incluye datos de community_profiles para displayName y avatarUrl
     const { data: conversations, error: conversationsError } = await supabase
       .from('community_conversations')
       .select(`
@@ -58,12 +59,22 @@ export async function GET(request: NextRequest) {
         user1:user1_id (
           id,
           name,
-          avatar
+          avatar,
+          community_profiles (
+            display_name,
+            avatar_url,
+            updated_at
+          )
         ),
         user2:user2_id (
           id,
           name,
-          avatar
+          avatar,
+          community_profiles (
+            display_name,
+            avatar_url,
+            updated_at
+          )
         )
       `)
       .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
@@ -79,21 +90,68 @@ export async function GET(request: NextRequest) {
     }
 
     // Procesar conversaciones para mostrar el otro usuario
+    // ENRIQUECIDO: Incluye participants[] y otherParticipant con datos de community_profiles
     const processedConversations = conversations?.map(conversation => {
-      const otherUser = conversation.user1_id === user.id ? conversation.user2 : conversation.user1
-      const unreadCount = conversation.user1_id === user.id 
+      const isUser1 = conversation.user1_id === user.id
+      
+      // Normalizar usuarios (pueden venir como array o objeto)
+      const user1 = Array.isArray(conversation.user1) ? conversation.user1[0] : conversation.user1
+      const user2 = Array.isArray(conversation.user2) ? conversation.user2[0] : conversation.user2
+      
+      const otherUser = isUser1 ? user2 : user1
+      const currentUser = isUser1 ? user1 : user2
+      const unreadCount = isUser1 
         ? conversation.unread_count_user1 
         : conversation.unread_count_user2
+
+      // Extraer datos de community_profiles (puede venir como array o objeto)
+      const getProfile = (userObj: any) => {
+        if (!userObj) return null
+        const profiles = userObj.community_profiles
+        return Array.isArray(profiles) ? profiles[0] : profiles
+      }
+
+      const user1Profile = getProfile(user1)
+      const user2Profile = getProfile(user2)
+      const otherProfile = getProfile(otherUser)
 
       return {
         id: conversation.id,
         created_at: conversation.created_at,
         updated_at: conversation.updated_at,
+        user1_id: conversation.user1_id,
+        user2_id: conversation.user2_id,
         last_message_content: conversation.last_message_content,
         last_message_at: conversation.last_message_at,
         unread_count: unreadCount || 0,
         match: conversation.match,
-        other_user: otherUser
+        
+        // LEGACY: Mantener para compatibilidad
+        other_user: otherUser,
+        
+        // NUEVO: Array de participantes con datos enriquecidos
+        participants: [
+          {
+            userId: conversation.user1_id,
+            displayName: user1Profile?.display_name || user1?.name || 'Usuario',
+            avatarUrl: user1Profile?.avatar_url || user1?.avatar,
+            profileUpdatedAt: user1Profile?.updated_at
+          },
+          {
+            userId: conversation.user2_id,
+            displayName: user2Profile?.display_name || user2?.name || 'Usuario',
+            avatarUrl: user2Profile?.avatar_url || user2?.avatar,
+            profileUpdatedAt: user2Profile?.updated_at
+          }
+        ],
+        
+        // NUEVO: Datos del otro participante (el que NO es el usuario actual)
+        otherParticipant: {
+          userId: otherUser?.id,
+          displayName: otherProfile?.display_name || otherUser?.name || 'Usuario',
+          avatarUrl: otherProfile?.avatar_url || otherUser?.avatar,
+          profileUpdatedAt: otherProfile?.updated_at
+        }
       }
     }) || []
 

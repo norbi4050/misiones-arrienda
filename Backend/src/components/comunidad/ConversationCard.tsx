@@ -26,6 +26,7 @@ interface ConversationCardProps {
       otherUser: {
         id: string
         name: string
+        displayName?: string
         profile: {
           role: 'BUSCO' | 'OFREZCO'
           city: string
@@ -73,7 +74,7 @@ export default function ConversationCard({
             {/* Header */}
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-semibold text-gray-900 truncate">
-                {otherUser.name}
+                {otherUser.displayName || otherUser.name || 'Usuario'}
               </h3>
               <Badge 
                 variant={otherUser.profile.role === 'BUSCO' ? 'default' : 'secondary'}
@@ -94,7 +95,7 @@ export default function ConversationCard({
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   <p className="text-xs font-medium text-gray-600">
-                    {isFromCurrentUser ? 'Tú' : otherUser.name}:
+                    {isFromCurrentUser ? 'Tú' : (otherUser.displayName || otherUser.name || 'Usuario')}:
                   </p>
                   <div className="flex items-center text-xs text-gray-500">
                     <Clock className="w-3 h-3 mr-1" />
