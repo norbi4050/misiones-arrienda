@@ -5,27 +5,29 @@ import { useRouter } from 'next/navigation'
 import { Send, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { SafeAvatar } from '@/components/ui/SafeAvatar'
 import { subscribeToMessages, unsubscribeFromChannel, type MessageRealtimePayload } from '@/lib/realtime-messages'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
+// PROMPT 2: Interfaces actualizadas con isMine y otherUser
 interface Message {
   id: string
   content: string
-  sender_id: string
-  sender_name: string
-  sender_avatar?: string
-  created_at: string
-  is_read: boolean
+  createdAt: string
+  senderId: string
+  isMine: boolean  // ← PROMPT 1: calculado en backend
+  attachments?: any[]
+}
+
+interface OtherUser {
+  id: string
+  displayName: string  // ← PROMPT 1: nunca "Usuario"
+  avatarUrl: string | null
 }
 
 interface ThreadInfo {
-  id: string
-  property_id: string
-  property_title: string
-  property_image?: string
-  other_user_id: string
-  other_user_name: string
-  other_user_avatar?: string
+  threadId: string
+  otherUser: OtherUser  // ← PROMPT 2: info completa del otro usuario
 }
 
 interface ChatInterfaceProps {
@@ -34,6 +36,8 @@ interface ChatInterfaceProps {
 }
 
 export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfaceProps) {
+  console.log('[MessagesUI] ChatInterface montado con threadId:', threadId)
+  
   const { user } = useSupabaseAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [threadInfo, setThreadInfo] = useState<ThreadInfo | null>(null)
@@ -51,12 +55,12 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
 
   useEffect(() => {
     if (threadId && user) {
+      console.log('[MessagesUI] Cargando thread:', threadId)
       loadThread()
       markAsRead()
       setupRealtimeSubscription()
     }
 
-    // Cleanup al cambiar de thread o desmontar
     return () => {
       if (realtimeChannelRef.current) {
         unsubscribeFromChannel(realtimeChannelRef.current)
@@ -65,7 +69,6 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
     }
   }, [threadId, user])
 
-  // Solo hacer scroll al final en carga inicial o nuevos mensajes enviados
   useEffect(() => {
     if (!loading && !loadingMore) {
       scrollToBottom()
@@ -104,16 +107,32 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
       }
 
       const data = await response.json()
-      const newMessages = data.messages || []
+      
+      // PROMPT 4: Normalización defensiva
+      const normalizedMessages = (data.messages || []).map((msg: any) => ({
+        id: msg.id || `temp-${Date.now()}`,
+        content: msg.content || '',
+        createdAt: msg.createdAt || new Date().toISOString(),
+        senderId: msg.senderId || '',
+        isMine: Boolean(msg.isMine),  // ← Asegurar boolean
+        attachments: msg.attachments || []
+      }))
+
+      const normalizedThread = data.thread ? {
+        threadId: data.thread.threadId || threadId,
+        otherUser: {
+          id: data.thread.otherUser?.id || '',
+          displayName: data.thread.otherUser?.displayName || 'Usuario',
+          avatarUrl: data.thread.otherUser?.avatarUrl || null
+        }
+      } : null
       
       if (loadMore) {
-        // Prepender mensajes más antiguos manteniendo posición de scroll
         const container = messagesContainerRef.current
         const scrollHeightBefore = container?.scrollHeight || 0
         
-        setMessages(prev => [...newMessages, ...prev])
+        setMessages(prev => [...normalizedMessages, ...prev])
         
-        // Mantener posición de scroll después de prepender
         setTimeout(() => {
           if (container) {
             const scrollHeightAfter = container.scrollHeight
@@ -121,18 +140,17 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
           }
         }, 0)
       } else {
-        // Carga inicial - establecer mensajes y scroll al final
-        setMessages(newMessages)
-        setThreadInfo(data.thread)
+        setMessages(normalizedMessages)
+        setThreadInfo(normalizedThread)
+        console.log('[MessagesUI] Thread cargado:', normalizedThread)
         setTimeout(() => scrollToBottom(), 100)
       }
 
-      // Actualizar cursor y hasMore
       setCursor(data.pagination?.cursor || null)
       setHasMore(data.pagination?.hasMore || false)
 
     } catch (error) {
-      console.error('Error loading thread:', error)
+      console.error('[MessagesUI] Error loading thread:', error)
       toast.error('Error al cargar mensajes')
     } finally {
       setLoading(false)
@@ -154,16 +172,16 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
         credentials: 'include',
         body: JSON.stringify({ action: 'mark_read' })
       })
-      // Actualizar lista de threads sin recargar
       onThreadUpdate()
     } catch (error) {
-      console.error('Error marking as read:', error)
+      console.error('[MessagesUI] Error marking as read:', error)
     }
   }
 
   const sendMessage = async () => {
     if (!newMessage.trim() || sending) return
 
+    console.log('[MessagesUI] Enviando mensaje')
     const messageContent = newMessage.trim()
     setNewMessage('')
     setSending(true)
@@ -172,10 +190,10 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`,
       content: messageContent,
-      sender_id: 'current-user',
-      sender_name: 'Tú',
-      created_at: new Date().toISOString(),
-      is_read: true
+      createdAt: new Date().toISOString(),
+      senderId: user?.id || '',
+      isMine: true,
+      attachments: []
     }
     setMessages(prev => [...prev, optimisticMessage])
 
@@ -197,13 +215,11 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
         throw new Error('Error al enviar mensaje')
       }
 
-      // Recargar solo los mensajes más recientes para obtener el mensaje confirmado
       await loadThread(false)
-      onThreadUpdate() // Actualizar lista de threads
+      onThreadUpdate()
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('[MessagesUI] Error sending message:', error)
       toast.error('Error al enviar mensaje')
-      // Remover mensaje optimista en caso de error
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
     } finally {
       setSending(false)
@@ -220,39 +236,28 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
   const setupRealtimeSubscription = () => {
     if (!user || !threadId) return
 
-    // Limpiar suscripción anterior
     if (realtimeChannelRef.current) {
       unsubscribeFromChannel(realtimeChannelRef.current)
     }
 
-    // Suscribirse a mensajes nuevos en este thread
     const channel = subscribeToMessages(
       threadId,
       user.id,
       (newMessage: MessageRealtimePayload) => {
-        console.log('🔴 Received real-time message:', newMessage)
+        console.log('[MessagesUI] Mensaje real-time recibido:', newMessage.id)
         
-        // Formatear mensaje para el estado local
         const formattedMessage: Message = {
           id: newMessage.id,
           content: newMessage.content,
-          sender_id: newMessage.sender_id,
-          sender_name: newMessage.sender?.full_name || 'Usuario',
-          sender_avatar: newMessage.sender?.photos?.[0] || undefined,
-          created_at: newMessage.created_at,
-          is_read: newMessage.is_read
+          createdAt: newMessage.created_at,
+          senderId: newMessage.sender_id,
+          isMine: newMessage.sender_id === user.id,
+          attachments: []
         }
 
-        // Insertar al final de la lista
         setMessages(prev => [...prev, formattedMessage])
-        
-        // Auto-scroll al final para mensajes nuevos
         setTimeout(() => scrollToBottom(), 100)
-        
-        // Auto-marcar como leído si el thread está activo
         markAsRead()
-        
-        // Actualizar lista de threads
         onThreadUpdate()
       }
     )
@@ -262,6 +267,62 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // PROMPT 2 & 6: Helper para agrupar mensajes consecutivos del mismo autor
+  const groupMessages = (messages: Message[]) => {
+    const groups: Message[][] = []
+    let currentGroup: Message[] = []
+    let lastSenderId: string | null = null
+
+    messages.forEach((msg) => {
+      if (msg.senderId !== lastSenderId) {
+        if (currentGroup.length > 0) {
+          groups.push(currentGroup)
+        }
+        currentGroup = [msg]
+        lastSenderId = msg.senderId
+      } else {
+        currentGroup.push(msg)
+      }
+    })
+
+    if (currentGroup.length > 0) {
+      groups.push(currentGroup)
+    }
+
+    return groups
+  }
+
+  // PROMPT 6: Helper para separadores de fecha
+  const getDateSeparator = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Hoy'
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Ayer'
+    } else {
+      return date.toLocaleDateString('es-ES', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      })
+    }
+  }
+
+  // PROMPT 6: Helper para detectar cambio de día
+  const shouldShowDateSeparator = (currentMsg: Message, prevMsg: Message | null) => {
+    if (!prevMsg) return true
+    
+    const currentDate = new Date(currentMsg.createdAt).toDateString()
+    const prevDate = new Date(prevMsg.createdAt).toDateString()
+    
+    return currentDate !== prevDate
   }
 
   if (loading) {
@@ -288,97 +349,143 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
     )
   }
 
+  const messageGroups = groupMessages(messages)
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Header del chat */}
-      <div className="p-4 border-b border-gray-200 bg-white">
+    <div className="flex flex-col h-full bg-gray-50">
+      {/* PROMPT 2: Header con otherUser.displayName y avatarUrl */}
+      <div className="p-4 border-b border-gray-200 bg-white shadow-sm">
         <div className="flex items-center space-x-3">
           <button
             onClick={() => router.push('/messages')}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Volver a mensajes"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
           </button>
           
-          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-            {threadInfo.other_user_avatar ? (
-              <img
-                src={threadInfo.other_user_avatar}
-                alt={threadInfo.other_user_name}
-                className="w-full h-full rounded-full object-cover"
-              />
-            ) : (
-              <span className="text-sm font-medium text-gray-600">
-                {threadInfo.other_user_name?.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
+          {/* PROMPT 2: Avatar del otro usuario */}
+          <SafeAvatar
+            src={threadInfo.otherUser.avatarUrl}
+            name={threadInfo.otherUser.displayName}
+            size="md"
+          />
           
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {threadInfo.other_user_name}
+            {/* PROMPT 2: displayName del otro usuario (nunca "Usuario") */}
+            <h3 className="text-lg font-semibold text-gray-900 truncate">
+              {threadInfo.otherUser.displayName}
             </h3>
-            <a
-              href={`/properties/${threadInfo.property_id}`}
-              className="text-sm text-blue-600 hover:text-blue-700 truncate block"
-            >
-              {threadInfo.property_title}
-            </a>
+            <p className="text-sm text-gray-500">
+              Conversación
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Mensajes */}
+      {/* PROMPT 2 & 6: Mensajes con burbujas claras y agrupación */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className="flex-1 overflow-y-auto p-4 space-y-1"
         onScroll={(e) => {
           const container = e.currentTarget
-          // Detectar scroll al tope para cargar más mensajes
           if (container.scrollTop === 0 && hasMore && !loadingMore) {
             loadMoreMessages()
           }
         }}
       >
-        {/* Botón "Ver mensajes anteriores" */}
         {hasMore && (
           <div className="text-center py-2">
             <button
               onClick={loadMoreMessages}
               disabled={loadingMore}
-              className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
+              className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50 font-medium"
             >
-              {loadingMore ? 'Cargando...' : 'Ver mensajes anteriores'}
+              {loadingMore ? 'Cargando...' : '↑ Ver mensajes anteriores'}
             </button>
           </div>
         )}
 
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender_id === 'current-user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.sender_id === 'current-user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-900'
-              }`}
-            >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              <p
-                className={`text-xs mt-1 ${
-                  message.sender_id === 'current-user' ? 'text-blue-100' : 'text-gray-500'
-                }`}
-              >
-                {new Date(message.created_at).toLocaleTimeString('es-ES', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
+        {messageGroups.map((group, groupIndex) => {
+          const firstMessage = group[0]
+          const isMine = firstMessage.isMine
+          const prevMessage = groupIndex > 0 ? messageGroups[groupIndex - 1][0] : null
+          const showDateSeparator = shouldShowDateSeparator(firstMessage, prevMessage)
+
+          return (
+            <div key={`group-${groupIndex}`}>
+              {/* PROMPT 6: Separador de fecha */}
+              {showDateSeparator && (
+                <div className="flex items-center justify-center my-4">
+                  <div className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full font-medium">
+                    {getDateSeparator(firstMessage.createdAt)}
+                  </div>
+                </div>
+              )}
+
+              {/* PROMPT 2: Grupo de mensajes del mismo autor */}
+              <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} mb-4`}>
+                {/* PROMPT 2: Etiqueta con nombre (solo para mensajes del otro, solo en primer mensaje del grupo) */}
+                {!isMine && (
+                  <div className="flex items-center space-x-2 mb-1 ml-12">
+                    <span className="text-xs font-medium text-gray-600">
+                      {threadInfo.otherUser.displayName}
+                    </span>
+                  </div>
+                )}
+
+                {/* Mensajes del grupo */}
+                <div className="space-y-1">
+                  {group.map((message, msgIndex) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end space-x-2`}
+                    >
+                      {/* PROMPT 2: Avatar solo para mensajes del otro, solo en último mensaje del grupo */}
+                      {!isMine && msgIndex === group.length - 1 && (
+                        <SafeAvatar
+                          src={threadInfo.otherUser.avatarUrl}
+                          name={threadInfo.otherUser.displayName}
+                          size="sm"
+                          className="flex-shrink-0"
+                        />
+                      )}
+                      {!isMine && msgIndex !== group.length - 1 && (
+                        <div className="w-8 flex-shrink-0" />
+                      )}
+
+                      {/* PROMPT 2 & 6: Burbuja con esquinas redondeadas y colores distintos */}
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 ${
+                          isMine
+                            ? 'bg-blue-500 text-white rounded-2xl rounded-br-md'  // ← PROMPT 6: más redondeo en extremo externo
+                            : 'bg-white text-gray-900 border border-gray-200 rounded-2xl rounded-bl-md shadow-sm'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap break-words">
+                          {message.content}
+                        </p>
+                        
+                        {/* PROMPT 2: Hora legible (HH:mm) */}
+                        <p
+                          className={`text-xs mt-1 ${
+                            isMine ? 'text-blue-100' : 'text-gray-500'
+                          }`}
+                        >
+                          {new Date(message.createdAt).toLocaleTimeString('es-ES', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
+        
         <div ref={messagesEndRef} />
       </div>
 
@@ -390,15 +497,16 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Escribe tu mensaje... (Enter = enviar, Shift+Enter = nueva línea)"
-            className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Escribe tu mensaje..."
+            className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             rows={2}
             disabled={sending}
           />
           <button
             onClick={sendMessage}
             disabled={!newMessage.trim() || sending}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
+            aria-label="Enviar mensaje"
           >
             <Send className="h-4 w-4" />
           </button>

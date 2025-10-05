@@ -1,4 +1,7 @@
 
+// PROMPT D1: Importar guardas de displayName
+import { applyDisplayNameGuards, logGuardApplication } from '@/lib/displayname-guards';
+
 // Manejo mejorado de errores
 const handleApiError = (error: any, context: string) => {
   console.error(`Error en ${context}:`, error);
@@ -381,13 +384,29 @@ export async function POST(request: NextRequest) {
     }
     
     // ========================================
-    // 8. CREACIÓN DE PERFIL EN TABLA USERS
+    // 8. APLICAR GUARDAS DE DISPLAYNAME (PROMPT D1)
+    // ========================================
+    console.log('🛡️ [REGISTRO] Aplicando guardas de displayName...');
+    
+    const guardResult = applyDisplayNameGuards(name, email);
+    
+    // Log de auditoría con información completa
+    logGuardApplication('registration', {
+      email,
+      name: guardResult.name,
+      source: guardResult.source,
+      wasModified: guardResult.wasModified,
+      reason: guardResult.reason
+    });
+    
+    // ========================================
+    // 9. CREACIÓN DE PERFIL EN TABLA USERS
     // ========================================
     console.log('👤 [REGISTRO] Creando perfil de usuario en tabla users...');
     
     const userData = {
       id: authData.user.id,
-      name: name,           // ✅ Usa 'name' que es NOT NULL en Supabase
+      name: guardResult.name,  // ✅ PROMPT D1: Garantizado válido (no UUID, no vacío)
       email,
       phone: phone || '',   // ✅ Evita NULL en phone
       user_type: userType,
@@ -463,7 +482,7 @@ export async function POST(request: NextRequest) {
     }
     
     // ========================================
-    // 9. PREPARACIÓN DE RESPUESTA EXITOSA
+    // 10. PREPARACIÓN DE RESPUESTA EXITOSA
     // ========================================
     const endTime = Date.now();
     const processingTime = endTime - startTime;

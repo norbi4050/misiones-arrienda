@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getDisplayName, getDisplayNameWithSource, isUUID } from '@/lib/messages/display-name-helper'
+import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
 
 // GET /api/messages/threads/[id] → mensajes paginados del hilo con cursor
 export async function GET(
@@ -65,6 +67,95 @@ export async function GET(
 
     console.log(`[GET Thread] ✅ Schema: ${isPrismaSchema ? 'PRISMA' : 'SUPABASE'}`)
 
+    // Obtener perfil del usuario actual
+    const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
+    const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
+    
+    const { data: userProfile } = await supabase
+      .from(profileTable)
+      .select('id')
+      .eq(profileIdField, user.id)
+      .single()
+
+    if (!userProfile) {
+      return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
+    }
+
+    // PROMPT 1: Determinar el otro usuario
+    const otherUserId = isPrismaSchema 
+      ? (thread.aId === userProfile.id ? thread.bId : thread.aId)
+      : (thread.sender_id === user.id ? thread.receiver_id : thread.sender_id)
+
+    // PROMPT 1: Obtener datos completos del otro usuario
+    let otherProfile: any = null
+    let otherUserData: any = null
+
+    if (isPrismaSchema) {
+      const { data: profile } = await supabase
+        .from('UserProfile')
+        .select('id, userId, full_name, companyName')
+        .eq('id', otherUserId)
+        .single()
+      otherProfile = profile
+
+      if (profile?.userId) {
+        const { data: userData } = await supabase
+          .from('User')
+          .select('id, name, email, avatar')
+          .eq('id', profile.userId)
+          .single()
+        otherUserData = userData
+      }
+    } else {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('id, user_id, full_name, company_name, photos')
+        .eq('user_id', otherUserId)
+        .single()
+      otherProfile = profile
+
+      try {
+        const { data: userData } = await supabase
+          .from('User')
+          .select('id, name, email, avatar')
+          .eq('id', otherUserId)
+          .single()
+        otherUserData = userData
+      } catch {
+        // Si no existe tabla User, usar solo user_profiles
+      }
+    }
+
+    // PROMPT D1 & D2: Calcular displayName con source tracking
+    const { displayName, source } = getDisplayNameWithSource(
+      otherUserData || { email: otherUserId },
+      otherProfile ? {
+        full_name: otherProfile.full_name,
+        companyName: otherProfile.companyName,
+        company_name: otherProfile.company_name
+      } : null
+    )
+
+    // PROMPT D1: Log detallado de displayName resolution
+    console.log(`[DISPLAYNAME] threadId=${threadId}, me.id=${user.id}, otherUser.id=${otherUserData?.id || otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
+    
+    // PROMPT D1: Warning si displayName está vacío o es UUID
+    if (!displayName || displayName.trim() === '' || isUUID(displayName)) {
+      console.warn(`[DisplayName] MISSING → payload would fallback to threadId for thread=${threadId}`)
+    }
+
+    // PROMPT D6: Check preventivo antes de responder
+    let finalDisplayName = displayName
+    if (!finalDisplayName || finalDisplayName.trim() === '' || isUUID(finalDisplayName)) {
+      console.warn(`[DisplayName] FALLBACK APPLIED for userId=${otherUserData?.id || otherUserId}`)
+      finalDisplayName = 'Usuario'
+    }
+
+    // PROMPT D6: Log de DATA GAP si faltan datos en DB
+    if (!otherUserData?.name && !otherProfile?.companyName && !otherProfile?.company_name && !otherProfile?.full_name) {
+      console.warn(`[DisplayName] DATA GAP userId=${otherUserData?.id || otherUserId} - no name/companyName/full_name in DB`)
+    }
+
     // Obtener mensajes según esquema
     const messageTable = isPrismaSchema ? 'Message' : 'messages'
     const conversationIdField = isPrismaSchema ? 'conversationId' : 'conversation_id'
@@ -73,6 +164,7 @@ export async function GET(
     const isReadField = isPrismaSchema ? 'isRead' : 'is_read'
     const bodyField = isPrismaSchema ? 'body' : 'content'
 
+    // PROMPT 1: Orden ascendente (más antiguos primero)
     let messagesQuery = supabase
       .from(messageTable)
       .select(`
@@ -87,11 +179,11 @@ export async function GET(
     if (cursor) {
       messagesQuery = messagesQuery
         .lt(createdAtField, cursor)
-        .order(createdAtField, { ascending: false })
+        .order(createdAtField, { ascending: true })  // ← PROMPT 1: Ascendente
         .limit(limit)
     } else {
       messagesQuery = messagesQuery
-        .order(createdAtField, { ascending: false })
+        .order(createdAtField, { ascending: true })  // ← PROMPT 1: Ascendente
         .limit(limit)
     }
 
@@ -103,15 +195,6 @@ export async function GET(
     }
 
     // Marcar como leídos
-    const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
-    const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
-    
-    const { data: userProfile } = await supabase
-      .from(profileTable)
-      .select('id')
-      .eq(profileIdField, user.id)
-      .single()
-
     if (userProfile) {
       const messagesToMarkRead = (messages || [])
         .filter((msg: any) => (msg as any)[senderIdField] !== userProfile.id && !(msg as any)[isReadField])
@@ -126,35 +209,49 @@ export async function GET(
       }
     }
 
-    // Revertir orden
-    const sortedMessages = (messages || []).reverse()
+    // PROMPT 1: Formatear mensajes con isMine calculado server-side y fechas ISO 8601 estrictas
+    const formattedMessages = (messages || []).map((message: any) => {
+      const createdAtRaw = (message as any)[createdAtField]
+      const createdAtISO = createdAtRaw ? new Date(createdAtRaw).toISOString() : new Date().toISOString()
+      
+      return {
+        id: message.id,
+        content: (message as any)[bodyField],
+        createdAt: createdAtISO,  // ← PROMPT 1: ISO 8601 estricta
+        senderId: (message as any)[senderIdField],
+        isMine: (message as any)[senderIdField] === userProfile.id  // ← PROMPT 1: calculado server-side
+      }
+    })
 
-    // Formatear mensajes
-    const formattedMessages = sortedMessages.map((message: any) => ({
-      id: message.id,
-      sender_id: (message as any)[senderIdField],
-      content: (message as any)[bodyField],
-      created_at: (message as any)[createdAtField],
-      is_read: (message as any)[isReadField]
+    // Obtener adjuntos si existen
+    const messageIds = formattedMessages.map(m => m.id)
+    const attachmentsMap = await getMessagesAttachments(messageIds)
+    
+    // Agregar attachments a cada mensaje
+    const messagesWithAttachments = formattedMessages.map(msg => ({
+      ...msg,
+      attachments: attachmentsMap.get(msg.id) || []
     }))
 
-    // Información del thread para el header
+    // PROMPT D1 & D2: Información enriquecida del thread para el header
     const threadInfo = {
-      id: threadId,
-      property_id: null,
-      property_title: 'Conversación',
-      property_image: null,
-      other_user_id: 'unknown',
-      other_user_name: 'Usuario',
-      other_user_avatar: null
+      threadId,
+      otherUser: {
+        id: otherUserData?.id || otherUserId,
+        displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
+        avatarUrl: isPrismaSchema 
+          ? (otherUserData?.avatar || null)
+          : (otherProfile?.photos?.[0] || otherUserData?.avatar || null),
+        __displayNameSource: source  // PROMPT D1: campo debug para ver fuente
+      }
     }
 
     return NextResponse.json({
       success: true,
-      messages: formattedMessages,
+      messages: messagesWithAttachments,
       thread: threadInfo,
       pagination: {
-        cursor: sortedMessages.length > 0 ? (sortedMessages[0] as any)[createdAtField] : null,
+        cursor: formattedMessages.length > 0 ? formattedMessages[formattedMessages.length - 1].createdAt : null,
         limit,
         hasMore: formattedMessages.length === limit
       }

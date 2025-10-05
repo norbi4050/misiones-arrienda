@@ -7,7 +7,10 @@ import ChatInterface from '@/components/ui/ChatInterface'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SafeAvatar } from '@/components/ui/SafeAvatar'
 import { subscribeToConversations, unsubscribeFromChannel, type ConversationRealtimePayload } from '@/lib/realtime-messages'
+import { sanitizeDisplayName } from '@/lib/utils/validation'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+// PROMPT 1 (D3): Importar AvatarNudgeBanner
+import { AvatarNudgeBanner } from '@/components/ui/AvatarNudgeBanner'
 
 interface Conversation {
   id: string
@@ -32,6 +35,9 @@ export default function MessagesPage() {
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
+  
+  // PROMPT 1 (D3): Estado para modal de avatar
+  const [isAvatarUploadModalOpen, setIsAvatarUploadModalOpen] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -39,6 +45,7 @@ export default function MessagesPage() {
     }
   }, [user, authLoading, router])
 
+  // PROMPT D4: Invalidar caché al cambiar de usuario
   useEffect(() => {
     if (user) {
       fetchConversations()
@@ -67,7 +74,7 @@ export default function MessagesPage() {
         realtimeChannelRef.current = null
       }
     }
-  }, [user, searchParams])
+  }, [user?.id, searchParams])  // PROMPT D4: Dependencia en user.id para invalidar al cambiar cuenta
 
   const handleCreateThread = async (toUserId: string) => {
     try {
@@ -149,6 +156,15 @@ export default function MessagesPage() {
     realtimeChannelRef.current = channel
   }
 
+  // PROMPT 1 (D3): Handler para abrir modal de avatar
+  const handleAvatarUploadClick = () => {
+    console.log('[AvatarNudge] shown - User clicked "Subir avatar"')
+    // Opción 1: Abrir modal (si existe)
+    setIsAvatarUploadModalOpen(true)
+    // Opción 2: Redirigir a perfil
+    // router.push('/mi-cuenta/perfil#avatar')
+  }
+
   const fetchConversations = async () => {
     try {
       setLoading(true)
@@ -166,8 +182,55 @@ export default function MessagesPage() {
       }
       
       const data = await response.json()
-      setConversations(data.threads || [])
+      
+      // PROMPT 4: Normalización defensiva con logs
+      console.log('[MessagesUI] Cargando threads, raw count:', (data.threads || []).length)
+      
+      const normalizedThreads = (data.threads || []).map((thread: any) => {
+        // PROMPT 4: Garantizar threadId siempre presente
+        const threadId = thread.threadId || thread.id || `unknown-${Date.now()}`
+        
+        // PROMPT D3: Sanitizar displayName para garantizar que nunca sea UUID
+        const rawDisplayName = thread.otherUser?.displayName || 
+                              thread.otherUser?.name || 
+                              thread.otherUser?.email?.split('@')[0] ||
+                              'Contacto'
+        const otherUserDisplayName = sanitizeDisplayName(rawDisplayName)
+        
+        // PROMPT 3: Snippet con prefijo dinámico "Vos:" o "{displayName}:"
+        let lastMessageSnippet = ''
+        if (thread.lastMessage?.content) {
+          const isMine = Boolean(thread.lastMessage.isMine)  // PROMPT 4: asegurar boolean
+          if (isMine) {
+            lastMessageSnippet = `Vos: ${thread.lastMessage.content}`
+          } else {
+            lastMessageSnippet = `${otherUserDisplayName}: ${thread.lastMessage.content}`
+          }
+        } else {
+          lastMessageSnippet = 'Sin mensajes'
+        }
+        
+        // PROMPT 4: Validar fechas como Date o ISO strings
+        const updatedAtRaw = thread.updatedAt || thread.lastMessage?.createdAt || new Date().toISOString()
+        const updatedAtISO = updatedAtRaw ? new Date(updatedAtRaw).toISOString() : new Date().toISOString()
+        
+        return {
+          id: threadId,
+          property_id: thread.property?.id || thread.propertyId || '',
+          property_title: thread.property?.title || 'Conversación',
+          property_image: thread.property?.coverUrl || thread.propertyImage || null,
+          other_user_name: otherUserDisplayName,  // PROMPT 3: displayName del otro
+          other_user_avatar: thread.otherUser?.avatarUrl || thread.otherUser?.avatar || null,
+          last_message: lastMessageSnippet,  // PROMPT 3: con prefijo "Vos:" o nombre
+          last_message_time: updatedAtISO,  // PROMPT 4: ISO 8601 validada
+          unread_count: thread.unreadCount || 0
+        }
+      })
+      
+      console.log('[MessagesUI] Threads normalizados:', normalizedThreads.length)
+      setConversations(normalizedThreads)
     } catch (err: any) {
+      console.error('[MESSAGES] Error fetching conversations:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -186,10 +249,15 @@ export default function MessagesPage() {
     return null
   }
 
-  const filteredConversations = conversations.filter((conversation: Conversation) =>
-    conversation.property_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conversation.other_user_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredConversations = conversations.filter((conversation: Conversation) => {
+    if (!searchTerm) return true
+    
+    const search = searchTerm.toLowerCase()
+    const title = (conversation.property_title || '').toLowerCase()
+    const userName = (conversation.other_user_name || '').toLowerCase()
+    
+    return title.includes(search) || userName.includes(search)
+  })
 
   // Loading modal durante creación de thread
   if (creatingThread) {
@@ -222,7 +290,15 @@ export default function MessagesPage() {
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Mensajes</h2>
             <p className="text-sm text-gray-600">
-              {conversations.length} {conversations.length === 1 ? 'conversación' : 'conversaciones'}
+              {searchTerm ? (
+                <>
+                  {filteredConversations.length} {filteredConversations.length === 1 ? 'resultado' : 'resultados'}
+                </>
+              ) : (
+                <>
+                  {conversations.length} {conversations.length === 1 ? 'conversación' : 'conversaciones'}
+                </>
+              )}
             </p>
           </div>
 
@@ -256,33 +332,47 @@ export default function MessagesPage() {
               <div
                 key={conversation.id}
                 onClick={() => {
+                  console.log('[MessagesUI] Thread seleccionado:', conversation.id)
                   setSelectedThreadId(conversation.id)
                   router.push(`/messages?thread=${conversation.id}`)
                 }}
-                className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                  selectedThreadId === conversation.id ? 'bg-blue-50 border-blue-200' : ''
+                className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                  selectedThreadId === conversation.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                 }`}
               >
                 <div className="flex items-start space-x-3">
-                  <SafeImage
-                    src={conversation.property_image}
-                    alt={conversation.property_title}
-                    fallback="/placeholder-house-1.jpg"
-                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                  {/* PROMPT 3: Avatar del otro usuario */}
+                  <SafeAvatar
+                    src={conversation.other_user_avatar}
+                    name={conversation.other_user_name}
+                    size="md"
+                    className="flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
-                        {conversation.property_title}
+                      {/* PROMPT 3: Título = otherUser.displayName */}
+                      <h4 className="text-sm font-semibold text-gray-900 truncate">
+                        {conversation.other_user_name}
                       </h4>
                       {conversation.unread_count > 0 && (
-                        <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        <span className="bg-blue-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
                           {conversation.unread_count}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600 mb-1">{conversation.other_user_name}</p>
-                    <p className="text-xs text-gray-500 truncate">{conversation.last_message}</p>
+                    {/* PROMPT 3: Snippet con prefijo "Vos:" o "{nombre}:" */}
+                    <p className="text-xs text-gray-600 truncate font-medium">
+                      {conversation.last_message}
+                    </p>
+                    {/* PROMPT 3: Hora legible */}
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {new Date(conversation.last_message_time).toLocaleString('es-ES', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -302,13 +392,29 @@ export default function MessagesPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* PROMPT 1 (D3): Avatar Nudge Banner - Arriba de todo */}
+        <AvatarNudgeBanner
+          hasAvatar={!!user?.avatar}
+          onUploadClick={handleAvatarUploadClick}
+          className="mb-6"
+        />
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Mis Mensajes
           </h1>
           <p className="text-gray-600">
-            {conversations.length} {conversations.length === 1 ? 'conversación' : 'conversaciones'}
+            {searchTerm ? (
+              <>
+                {filteredConversations.length} {filteredConversations.length === 1 ? 'resultado' : 'resultados'}
+                {conversations.length > 0 && ` de ${conversations.length} ${conversations.length === 1 ? 'conversación' : 'conversaciones'}`}
+              </>
+            ) : (
+              <>
+                {conversations.length} {conversations.length === 1 ? 'conversación' : 'conversaciones'}
+              </>
+            )}
           </p>
         </div>
 
@@ -400,55 +506,46 @@ export default function MessagesPage() {
               <div
                 key={conversation.id}
                 onClick={() => {
+                  console.log('[MessagesUI] Thread seleccionado:', conversation.id)
                   setSelectedThreadId(conversation.id)
                   router.push(`/messages?thread=${conversation.id}`)
                 }}
-                className={`bg-white rounded-lg border p-6 hover:shadow-md transition-shadow cursor-pointer ${
-                  selectedThreadId === conversation.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                className={`bg-white rounded-lg border p-6 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer ${
+                  selectedThreadId === conversation.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'
                 }`}
               >
                 <div className="flex items-start space-x-4">
-                  {/* Property Image */}
+                  {/* PROMPT 3 & 6: Avatar del otro usuario */}
                   <div className="flex-shrink-0">
-                    <SafeImage
-                      src={conversation.property_image}
-                      alt={conversation.property_title}
-                      fallback="/placeholder-house-1.jpg"
-                      className="w-16 h-16 rounded-lg object-cover"
+                    <SafeAvatar
+                      src={conversation.other_user_avatar}
+                      name={conversation.other_user_name}
+                      size="lg"
                     />
                   </div>
 
                   {/* Conversation Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2">
+                      {/* PROMPT 3: Título = otherUser.displayName */}
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
-                        {conversation.property_title}
+                        {conversation.other_user_name}
                       </h3>
                       {conversation.unread_count > 0 && (
-                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                        <span className="bg-blue-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
                           {conversation.unread_count}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center space-x-2 mb-2">
-                      <SafeAvatar
-                        src={conversation.other_user_avatar}
-                        name={conversation.other_user_name}
-                        size="sm"
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        {conversation.other_user_name}
-                      </span>
-                    </div>
-
-                    <p className="text-gray-600 text-sm truncate mb-2">
+                    {/* PROMPT 3: Snippet con prefijo "Vos:" o "{nombre}:" */}
+                    <p className="text-gray-700 text-sm truncate mb-2 font-medium">
                       {conversation.last_message}
                     </p>
 
-                    <p className="text-xs text-gray-400">
-                      {new Date(conversation.last_message_time).toLocaleDateString('es-ES', {
-                        year: 'numeric',
+                    {/* PROMPT 3: Fecha legible */}
+                    <p className="text-xs text-gray-500">
+                      {new Date(conversation.last_message_time).toLocaleString('es-ES', {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
@@ -458,8 +555,8 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Arrow */}
-                  <div className="flex-shrink-0">
-                    <span className="text-gray-400">→</span>
+                  <div className="flex-shrink-0 self-center">
+                    <span className="text-gray-400 text-xl">→</span>
                   </div>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getDisplayName, getDisplayNameWithSource, isUUID } from '@/lib/messages/display-name-helper'
 
 /**
  * PROMPT 2: Detección automática de esquema y fallback
@@ -208,10 +209,10 @@ export async function GET(request: NextRequest) {
       for (const conv of conversations || []) {
         const otherUserId = (conv as any)[aIdField] === profileId ? (conv as any)[bIdField] : (conv as any)[aIdField]
 
-        // Obtener datos del otro usuario
+        // PROMPT 1: Obtener datos completos del otro usuario
         const { data: otherProfile } = await supabase
           .from('UserProfile')
-          .select('id, userId')
+          .select('id, userId, full_name, companyName')
           .eq('id', otherUserId)
           .single()
 
@@ -220,10 +221,39 @@ export async function GET(request: NextRequest) {
         if (otherProfile?.userId) {
           const { data: userData } = await supabase
             .from('User')
-            .select('name, email, avatar')
+            .select('id, name, email, avatar')
             .eq('id', otherProfile.userId)
             .single()
           otherUserData = userData
+        }
+
+        // PROMPT D1 & D2: Calcular displayName con source tracking
+        const { displayName, source } = getDisplayNameWithSource(
+          otherUserData,
+          otherProfile ? {
+            full_name: otherProfile.full_name,
+            companyName: otherProfile.companyName
+          } : null
+        )
+
+        // PROMPT D1: Log detallado de displayName resolution
+        console.log(`[DISPLAYNAME] threadId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserData?.id || otherProfile?.userId || otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
+        
+        // PROMPT D1: Warning si displayName está vacío o es UUID
+        if (!displayName || displayName.trim() === '' || isUUID(displayName)) {
+          console.warn(`[DisplayName] MISSING → payload would fallback to threadId for thread=${conv.id}`)
+        }
+
+        // PROMPT D6: Check preventivo antes de responder
+        let finalDisplayName = displayName
+        if (!finalDisplayName || finalDisplayName.trim() === '' || isUUID(finalDisplayName)) {
+          console.warn(`[DisplayName] FALLBACK APPLIED for userId=${otherUserData?.id || otherProfile?.userId || otherUserId}`)
+          finalDisplayName = 'Usuario'
+        }
+
+        // PROMPT D6: Log de DATA GAP si faltan datos en DB
+        if (!otherUserData?.name && !otherProfile?.companyName && !otherProfile?.full_name) {
+          console.warn(`[DisplayName] DATA GAP userId=${otherUserData?.id || otherProfile?.userId || otherUserId} - no name/companyName/full_name in DB`)
         }
 
         // Obtener último mensaje
@@ -243,21 +273,57 @@ export async function GET(request: NextRequest) {
           .neq('senderId', profileId)
           .eq('isRead', false)
 
+        // PROMPT 1: Obtener info de propiedad si existe (best-effort)
+        let propertyInfo = null
+        const propertyIdField = useSnakeCase ? 'property_id' : 'propertyId'
+        const convPropertyId = (conv as any)[propertyIdField]
+        
+        if (convPropertyId) {
+          try {
+            const { data: property } = await supabase
+              .from('Property')
+              .select('id, title, images')
+              .eq('id', convPropertyId)
+              .single()
+            
+            if (property) {
+              const coverUrl = property.images?.[0] || null
+              propertyInfo = {
+                id: property.id,
+                title: property.title,
+                coverUrl
+              }
+            }
+          } catch (propErr) {
+            console.log('[PROPERTY] ⚠️ No se pudo obtener info de propiedad:', convPropertyId)
+          }
+        }
+
+        // PROMPT 1: Asegurar fechas ISO 8601 estrictas
+        const updatedAtRaw = useSnakeCase ? (conv as any).updated_at : (conv as any).updatedAt
+        const updatedAtISO = updatedAtRaw ? new Date(updatedAtRaw).toISOString() : new Date().toISOString()
+        
+        const lastMessageCreatedAtRaw = lastMsg?.createdAt
+        const lastMessageCreatedAtISO = lastMessageCreatedAtRaw ? new Date(lastMessageCreatedAtRaw).toISOString() : null
+
         threads.push({
           threadId: conv.id,
           otherUser: {
-            id: otherProfile?.userId || otherUserId,
-            name: otherUserData?.name || 'Usuario',
-            avatar: otherUserData?.avatar || null
+            id: otherUserData?.id || otherProfile?.userId || otherUserId,
+            displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
+            avatarUrl: otherUserData?.avatar || null,
+            __displayNameSource: source     // PROMPT D1: campo debug para ver fuente
           },
           lastMessage: lastMsg ? {
             id: lastMsg.id,
             content: lastMsg.body,
-            createdAt: lastMsg.createdAt,
+            createdAt: lastMessageCreatedAtISO,  // PROMPT 1: ISO 8601 estricta
+            senderId: lastMsg.senderId,     // PROMPT 1: explícito
             isMine: lastMsg.senderId === profileId
           } : null,
           unreadCount: unreadCount || 0,
-          updatedAt: useSnakeCase ? (conv as any).updated_at : (conv as any).updatedAt
+          updatedAt: updatedAtISO,          // PROMPT 1: ISO 8601 estricta
+          property: propertyInfo              // PROMPT 1: info de propiedad
         })
       }
     }
@@ -292,12 +358,54 @@ export async function GET(request: NextRequest) {
       for (const conv of conversations || []) {
         const otherUserId = conv.sender_id === user.id ? conv.receiver_id : conv.sender_id
 
-        // Obtener datos del otro usuario desde user_profiles
-        const { data: otherUser } = await supabase
+        // PROMPT 1: Obtener datos completos del otro usuario desde user_profiles
+        const { data: otherProfile } = await supabase
           .from('user_profiles')
-          .select('id, user_id, full_name, photos')
+          .select('id, user_id, full_name, company_name, photos')
           .eq('user_id', otherUserId)
           .single()
+
+        // Obtener datos del User relacionado (auth.users)
+        let otherUserData: any = null
+        try {
+          const { data: userData } = await supabase
+            .from('User')
+            .select('id, name, email, avatar')
+            .eq('id', otherUserId)
+            .single()
+          otherUserData = userData
+        } catch {
+          // Si no existe tabla User, usar solo user_profiles
+        }
+
+        // PROMPT D1 & D2: Calcular displayName con source tracking
+        const { displayName, source } = getDisplayNameWithSource(
+          otherUserData || { email: otherUserId },
+          otherProfile ? {
+            full_name: otherProfile.full_name,
+            company_name: otherProfile.company_name
+          } : null
+        )
+
+        // PROMPT D1: Log detallado de displayName resolution
+        console.log(`[DISPLAYNAME] threadId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
+        
+        // PROMPT D1: Warning si displayName está vacío o es UUID
+        if (!displayName || displayName.trim() === '' || isUUID(displayName)) {
+          console.warn(`[DisplayName] MISSING → payload would fallback to threadId for thread=${conv.id}`)
+        }
+
+        // PROMPT D6: Check preventivo antes de responder
+        let finalDisplayName = displayName
+        if (!finalDisplayName || finalDisplayName.trim() === '' || isUUID(finalDisplayName)) {
+          console.warn(`[DisplayName] FALLBACK APPLIED for userId=${otherUserId}`)
+          finalDisplayName = 'Usuario'
+        }
+
+        // PROMPT D6: Log de DATA GAP si faltan datos en DB
+        if (!otherUserData?.name && !otherProfile?.company_name && !otherProfile?.full_name) {
+          console.warn(`[DisplayName] DATA GAP userId=${otherUserId} - no name/companyName/full_name in DB`)
+        }
 
         // Obtener último mensaje
         const { data: lastMsg } = await supabase
@@ -316,21 +424,51 @@ export async function GET(request: NextRequest) {
           .neq('sender_id', user.id)
           .eq('is_read', false)
 
+        // PROMPT 1: Obtener info de propiedad si existe (best-effort)
+        let propertyInfo = null
+        if (conv.property_id) {
+          try {
+            const { data: property } = await supabase
+              .from('properties')
+              .select('id, title, images')
+              .eq('id', conv.property_id)
+              .single()
+            
+            if (property) {
+              const coverUrl = property.images?.[0] || null
+              propertyInfo = {
+                id: property.id,
+                title: property.title,
+                coverUrl
+              }
+            }
+          } catch (propErr) {
+            console.log('[PROPERTY] ⚠️ No se pudo obtener info de propiedad:', conv.property_id)
+          }
+        }
+
+        // PROMPT 1: Asegurar fechas ISO 8601 estrictas
+        const updatedAtISO = conv.updated_at ? new Date(conv.updated_at).toISOString() : new Date().toISOString()
+        const lastMessageCreatedAtISO = lastMsg?.created_at ? new Date(lastMsg.created_at).toISOString() : null
+
         threads.push({
           threadId: conv.id,
           otherUser: {
             id: otherUserId,
-            name: otherUser?.full_name || 'Usuario',
-            avatar: otherUser?.photos?.[0] || null
+            displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
+            avatarUrl: otherProfile?.photos?.[0] || otherUserData?.avatar || null,
+            __displayNameSource: source     // PROMPT D1: campo debug para ver fuente
           },
           lastMessage: lastMsg ? {
             id: lastMsg.id,
             content: lastMsg.body,
-            createdAt: lastMsg.created_at,
+            createdAt: lastMessageCreatedAtISO,  // PROMPT 1: ISO 8601 estricta
+            senderId: lastMsg.sender_id,    // PROMPT 1: explícito
             isMine: lastMsg.sender_id === user.id
           } : null,
           unreadCount: unreadCount || 0,
-          updatedAt: conv.updated_at
+          updatedAt: updatedAtISO,          // PROMPT 1: ISO 8601 estricta
+          property: propertyInfo              // PROMPT 1: info de propiedad
         })
       }
     }
@@ -338,7 +476,7 @@ export async function GET(request: NextRequest) {
     const duration = Date.now() - startTime
     console.log(`[THREADS GET] ✅ ${threads.length} hilos en ${duration}ms usando rama ${schema}`)
 
-    // PROMPT 2 & C: Formato unificado para el cliente
+    // PROMPT 2 & C & D4: Formato unificado para el cliente
     return NextResponse.json({
       success: true,
       threads,
@@ -346,7 +484,8 @@ export async function GET(request: NextRequest) {
         schema,
         schema_reason: schemaReason,
         count: threads.length,
-        duration_ms: duration
+        duration_ms: duration,
+        version: 'v2_displayName'  // PROMPT D4: versionKey para forzar rehidratación
       }
     })
 
@@ -568,7 +707,7 @@ export async function POST(request: NextRequest) {
     const duration = Date.now() - startTime
     console.log(`[THREADS POST] ✅ threadId: ${threadId}, existing: ${existing}, ${duration}ms, rama: ${schema}`)
 
-    // PROMPT 1, 2 & C: Respuesta unificada con threadId
+    // PROMPT 1, 2 & C & D4: Respuesta unificada con threadId
     return NextResponse.json({
       success: true,
       threadId,
@@ -576,7 +715,8 @@ export async function POST(request: NextRequest) {
       _meta: {
         schema,
         schema_reason: schemaReason,
-        duration_ms: duration
+        duration_ms: duration,
+        version: 'v2_displayName'  // PROMPT D4: versionKey para forzar rehidratación
       }
     })
 

@@ -26,6 +26,79 @@ export interface Message {
   attachments?: Attachment[]
 }
 
+// ============================================
+// PROMPT 1: Tipos enriquecidos para API responses
+// ============================================
+
+/**
+ * Información del otro usuario en un thread
+ * PROMPT 1: displayName calculado server-side con lógica de prioridad
+ */
+export interface EnrichedOtherUser {
+  id: string
+  displayName: string      // Calculado: User.name → UserProfile.full_name/companyName → email local → "Usuario"
+  avatarUrl: string | null
+}
+
+/**
+ * Último mensaje de un thread enriquecido
+ * PROMPT 1: Incluye senderId e isMine calculado server-side
+ */
+export interface EnrichedLastMessage {
+  id: string
+  content: string
+  createdAt: string
+  senderId: string         // ID del perfil que envió el mensaje
+  isMine: boolean          // Calculado server-side comparando senderId con usuario actual
+}
+
+/**
+ * Información de propiedad asociada a un thread
+ * PROMPT 1: Datos básicos de la propiedad si aplica
+ */
+export interface ThreadProperty {
+  id: string
+  title: string
+  coverUrl: string | null
+}
+
+/**
+ * Thread enriquecido según PROMPT 1
+ * Formato de respuesta de GET /api/messages/threads
+ */
+export interface EnrichedThread {
+  threadId: string
+  otherUser: EnrichedOtherUser
+  lastMessage: EnrichedLastMessage | null
+  unreadCount: number
+  updatedAt: string
+  property?: ThreadProperty | null
+}
+
+/**
+ * Mensaje enriquecido según PROMPT 1
+ * Formato de respuesta de GET /api/messages/threads/[id]
+ */
+export interface EnrichedMessage {
+  id: string
+  content: string
+  createdAt: string
+  senderId: string
+  isMine: boolean          // Calculado server-side
+  attachments?: Attachment[]
+}
+
+/**
+ * Detalle completo de un thread
+ * Formato de respuesta de GET /api/messages/threads/[id]
+ */
+export interface EnrichedThreadDetail {
+  threadId: string
+  otherUser: EnrichedOtherUser
+  messages: EnrichedMessage[]
+  property?: ThreadProperty | null
+}
+
 export interface Conversation {
   id: string
   property_id: string

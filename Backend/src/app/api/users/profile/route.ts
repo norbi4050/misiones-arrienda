@@ -4,6 +4,8 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { mapUserProfile } from "@/lib/auth/mapUserProfile";
+// PROMPT D1: Importar guardas de displayName
+import { applyDisplayNameGuards, logGuardApplication } from '@/lib/displayname-guards';
 
 // Zod schema for user_profiles validation
 const UserProfileSchema = z.object({
@@ -25,6 +27,8 @@ const UserProfileSchema = z.object({
   isSuspended: z.boolean().nullable().optional(),
   expiresAt: z.string().nullable().optional(),
   isPaid: z.boolean().nullable().optional(),
+  // PROMPT D1: Agregar soporte para actualizar name en users table
+  name: z.string().min(1).max(80).optional(),
 });
 
 function getServerSupabase() {
@@ -172,6 +176,62 @@ async function handleProfileUpdate(req: NextRequest) {
 
     const validatedData = validation.data;
 
+    // ========================================
+    // PROMPT D1: Si se está actualizando el name, aplicar guardas
+    // ========================================
+    if (validatedData.name !== undefined) {
+      console.log('🛡️ [PROFILE_UPDATE] Aplicando guardas de displayName...');
+      
+      // Obtener datos actuales del usuario
+      const { data: currentUser, error: userError } = await supabase
+        .from('users')
+        .select('name, email')
+        .eq('id', user.id)
+        .single();
+
+      if (userError) {
+        console.error('Error fetching current user:', userError);
+        return NextResponse.json({ error: "Error fetching user data" }, { status: 500 });
+      }
+
+      if (currentUser) {
+        // Aplicar guardas con el name existente para no sobrescribirlo si es válido
+        const guardResult = applyDisplayNameGuards(
+          validatedData.name,
+          currentUser.email,
+          currentUser.name // existing name - no sobrescribir si es válido
+        );
+
+        // Log de auditoría
+        logGuardApplication('profile_edit', {
+          email: currentUser.email,
+          name: guardResult.name,
+          source: guardResult.source,
+          wasModified: guardResult.wasModified,
+          reason: guardResult.reason
+        });
+
+        // Actualizar en la tabla users
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ 
+            name: guardResult.name,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+
+        if (updateError) {
+          console.error('Error updating user name:', updateError);
+          return NextResponse.json({ error: "Error updating name" }, { status: 500 });
+        }
+
+        console.log(`✅ [PROFILE_UPDATE] Name updated successfully: "${guardResult.name}"`);
+      }
+    }
+
+    // ========================================
+    // Actualizar user_profiles (preferencias)
+    // ========================================
     // Convert camelCase to snake_case for database
     const dbPayload: any = {
       user_id: user.id, // Always include user_id for upsert
@@ -228,6 +288,8 @@ async function handleProfileUpdate(req: NextRequest) {
       isSuspended: data.is_suspended,
       expiresAt: data.expires_at,
       isPaid: data.is_paid,
+      // PROMPT D1: Incluir name actualizado si fue modificado
+      ...(validatedData.name !== undefined && { name: validatedData.name })
     };
 
     return NextResponse.json({ profile: responsePayload }, { status: 200 });
