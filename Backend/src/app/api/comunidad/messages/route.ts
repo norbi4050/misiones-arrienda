@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     // Obtener conversaciones donde el usuario participa
     // ENRIQUECIDO: Incluye datos de community_profiles para displayName y avatarUrl
     const { data: conversations, error: conversationsError } = await supabase
-      .from('community_conversations')
+      .from('community_conversations_view')
       .select(`
         id,
         created_at,
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener total para paginación
     const { count, error: countError } = await supabase
-      .from('community_conversations')
+      .from('community_conversations_view')
       .select('*', { count: 'exact', head: true })
       .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
 

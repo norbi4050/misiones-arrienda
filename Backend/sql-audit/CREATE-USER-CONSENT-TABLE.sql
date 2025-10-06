@@ -23,11 +23,11 @@ ALTER TABLE public.user_consent ENABLE ROW LEVEL SECURITY;
 
 -- Política RLS: Los usuarios solo pueden ver sus propios registros de consentimiento
 CREATE POLICY "Users can view own consent records" ON public.user_consent
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (auth.uid()::uuid = user_id);
 
 -- Política RLS: Los usuarios pueden insertar sus propios registros de consentimiento
 CREATE POLICY "Users can insert own consent records" ON public.user_consent
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid()::uuid = user_id);
 
 -- Política RLS: Solo admins pueden ver todos los registros (opcional)
 -- CREATE POLICY "Admins can view all consent records" ON public.user_consent

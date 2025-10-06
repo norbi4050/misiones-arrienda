@@ -18,7 +18,7 @@ export function useMessagesUnread(options: UseMessagesUnreadOptions = {}) {
     if (!enabled) return
 
     try {
-      const response = await fetch('/api/comunidad/messages/unread-count', {
+      const response = await fetch('/api/messages/unread-count', {
         cache: 'no-store'
       })
       

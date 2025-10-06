@@ -20,11 +20,11 @@ export async function GET(request: NextRequest) {
     // ============================================
     try {
       console.log('[UNREAD-COUNT] Trying strategy 1: RPC')
-      const { data, error } = await supabase.rpc('get_unread_messages_count', {
+      const { data, error } = await supabase.rpc('public.get_unread_messages_count', {
         p_uid: user.id
       })
 
-      if (!error && typeof data === 'number') {
+      if (typeof data === 'number') {
         count = data
         console.log(`[UNREAD-COUNT] ✅ Strategy 1 success: ${count} unread messages`)
         return NextResponse.json({ count: Number(count) || 0 }, { status: 200 })
@@ -41,12 +41,12 @@ export async function GET(request: NextRequest) {
     try {
       console.log('[UNREAD-COUNT] Trying strategy 2: messages table')
       const { count: unreadCount, error } = await supabase
-        .from('messages')
+        .from('public.messages')
         .select('*', { count: 'exact', head: true })
         .eq('recipient_id', user.id)
         .is('read_at', null)
 
-      if (!error && typeof unreadCount === 'number') {
+      if (typeof unreadCount === 'number') {
         count = unreadCount
         console.log(`[UNREAD-COUNT] ✅ Strategy 2 success: ${count} unread messages`)
         return NextResponse.json({ count: Number(count) || 0 }, { status: 200 })
@@ -58,25 +58,26 @@ export async function GET(request: NextRequest) {
     }
 
     // ============================================
-    // ESTRATEGIA 3: Tabla conversations con contadores
+    // ESTRATEGIA 3: Tabla conversations con contadores por usuario
     // ============================================
     try {
       console.log('[UNREAD-COUNT] Trying strategy 3: conversations table with counters')
       const { data, error } = await supabase
         .rpc('sql', {
           query: `
-            SELECT coalesce(sum(
-              case when user1_id = $1 then unread_count_user1
-                   when user2_id = $1 then unread_count_user2
-                   else 0 end
-            ),0) AS count
+            SELECT
+              coalesce(sum(
+                case when user1_id = $1 then unread_count_user1
+                     when user2_id = $1 then unread_count_user2
+                     else 0 end
+              ),0) AS count
             FROM public.conversations
             WHERE $1 IN (user1_id, user2_id)
           `,
           params: [user.id]
         })
 
-      if (!error && data && data.length > 0 && typeof data[0].count === 'number') {
+      if (data && data.length > 0 && typeof data[0].count === 'number') {
         count = data[0].count
         console.log(`[UNREAD-COUNT] ✅ Strategy 3 success: ${count} unread messages`)
         return NextResponse.json({ count: Number(count) || 0 }, { status: 200 })

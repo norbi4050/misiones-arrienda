@@ -193,31 +193,31 @@ CREATE POLICY "Users can view all post likes" ON public.community_post_likes
   FOR SELECT USING (true);
 
 CREATE POLICY "Users can create their own post likes" ON public.community_post_likes
-  FOR INSERT WITH CHECK (auth.uid() = liker_id);
+  FOR INSERT WITH CHECK (auth.uid()::uuid = liker_id);
 
 CREATE POLICY "Users can delete their own post likes" ON public.community_post_likes
-  FOR DELETE USING (auth.uid() = liker_id);
+  FOR DELETE USING (auth.uid()::uuid = liker_id);
 
 -- RLS para community_reports
 ALTER TABLE public.community_reports ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own reports" ON public.community_reports
-  FOR SELECT USING (auth.uid() = reporter_id OR auth.uid() = reported_user_id);
+  FOR SELECT USING (auth.uid()::uuid = reporter_id OR auth.uid()::uuid = reported_user_id);
 
 CREATE POLICY "Users can create reports" ON public.community_reports
-  FOR INSERT WITH CHECK (auth.uid() = reporter_id);
+  FOR INSERT WITH CHECK (auth.uid()::uuid = reporter_id);
 
 -- RLS para community_blocks
 ALTER TABLE public.community_blocks ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own blocks" ON public.community_blocks
-  FOR SELECT USING (auth.uid() = blocker_id);
+  FOR SELECT USING (auth.uid()::uuid = blocker_id);
 
 CREATE POLICY "Users can create their own blocks" ON public.community_blocks
-  FOR INSERT WITH CHECK (auth.uid() = blocker_id);
+  FOR INSERT WITH CHECK (auth.uid()::uuid = blocker_id);
 
 CREATE POLICY "Users can delete their own blocks" ON public.community_blocks
-  FOR DELETE USING (auth.uid() = blocker_id);
+  FOR DELETE USING (auth.uid()::uuid = blocker_id);
 
 -- =====================================================
 -- 6. ACTUALIZAR VIEW COMMUNITY_POSTS_PUBLIC
