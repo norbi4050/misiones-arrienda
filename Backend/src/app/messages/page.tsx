@@ -331,24 +331,34 @@ export default function MessagesPage() {
             {!loading && filteredConversations.map((conversation: Conversation) => (
               <div
                 key={conversation.id}
-                onClick={() => {
-                  console.log('[MessagesUI] Thread seleccionado:', conversation.id)
-                  setSelectedThreadId(conversation.id)
-                  router.push(`/messages?thread=${conversation.id}`)
-                }}
-                className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors group ${
                   selectedThreadId === conversation.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                 }`}
               >
                 <div className="flex items-start space-x-3">
                   {/* PROMPT 3: Avatar del otro usuario */}
-                  <SafeAvatar
-                    src={conversation.other_user_avatar}
-                    name={conversation.other_user_name}
-                    size="md"
-                    className="flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
+                  <div 
+                    className="flex-shrink-0 cursor-pointer"
+                    onClick={() => {
+                      console.log('[MessagesUI] Thread seleccionado:', conversation.id)
+                      setSelectedThreadId(conversation.id)
+                      router.push(`/messages?thread=${conversation.id}`)
+                    }}
+                  >
+                    <SafeAvatar
+                      src={conversation.other_user_avatar}
+                      name={conversation.other_user_name}
+                      size="md"
+                    />
+                  </div>
+                  <div 
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => {
+                      console.log('[MessagesUI] Thread seleccionado:', conversation.id)
+                      setSelectedThreadId(conversation.id)
+                      router.push(`/messages?thread=${conversation.id}`)
+                    }}
+                  >
                     <div className="flex items-center justify-between mb-1">
                       {/* PROMPT 3: Título = otherUser.displayName */}
                       <h4 className="text-sm font-semibold text-gray-900 truncate">
@@ -374,6 +384,54 @@ export default function MessagesPage() {
                       })}
                     </p>
                   </div>
+                  {/* Botón eliminar - visible al hover */}
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation()
+                      if (!confirm('¿Estás seguro de que deseas eliminar esta conversación? Esta acción no se puede deshacer.')) {
+                        return
+                      }
+                      
+                      try {
+                        const response = await fetch(`/api/messages/threads/${conversation.id}/delete`, {
+                          method: 'DELETE',
+                          credentials: 'include'
+                        })
+                        
+                        const data = await response.json()
+                        
+                        // Manejar respuesta con formato { ok: boolean, error?: string }
+                        if (!data.ok) {
+                          console.error('[DELETE] Error en respuesta:', data.error)
+                          const errorMessages: Record<string, string> = {
+                            'unauthorized': 'No estás autorizado para eliminar esta conversación',
+                            'not-found': 'Conversación no encontrada',
+                            'invalid-id': 'ID de conversación inválido',
+                            'unexpected': 'Error inesperado al eliminar la conversación'
+                          }
+                          throw new Error(errorMessages[data.error] || 'Error al eliminar conversación')
+                        }
+                        
+                        // Actualizar lista
+                        await fetchConversations()
+                        
+                        // Si era la conversación seleccionada, deseleccionar
+                        if (selectedThreadId === conversation.id) {
+                          setSelectedThreadId(null)
+                          router.push('/messages')
+                        }
+                      } catch (err: any) {
+                        console.error('[DELETE] Error:', err)
+                        alert(err.message || 'Error al eliminar conversación')
+                      }
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                    title="Eliminar conversación"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))}
