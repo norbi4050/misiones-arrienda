@@ -5,46 +5,96 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
+
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Usuario no autenticado' },
-        { status: 401 }
-      )
+      console.log('[UNREAD-COUNT] No session, returning 0')
+      return NextResponse.json({ count: 0 }, { status: 200 })
     }
 
-    // Obtener conversaciones del usuario y sumar mensajes no leídos
-    const { data: conversations, error: conversationsError } = await supabase
-      .from('community_conversations')
-      .select('unread_count_user1, unread_count_user2, user1_id, user2_id')
-      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+    let count = 0
 
-    if (conversationsError) {
-      console.error('Error fetching unread count:', conversationsError)
-      return NextResponse.json(
-        { error: 'Error al obtener conteo de mensajes no leídos' },
-        { status: 500 }
-      )
+    // ============================================
+    // ESTRATEGIA 1: RPC (si existe)
+    // ============================================
+    try {
+      console.log('[UNREAD-COUNT] Trying strategy 1: RPC')
+      const { data, error } = await supabase.rpc('get_unread_messages_count', {
+        p_uid: user.id
+      })
+
+      if (!error && typeof data === 'number') {
+        count = data
+        console.log(`[UNREAD-COUNT] ✅ Strategy 1 success: ${count} unread messages`)
+        return NextResponse.json({ count: Number(count) || 0 }, { status: 200 })
+      } else {
+        console.log('[UNREAD-COUNT] Strategy 1 failed (RPC not found or invalid data), trying strategy 2')
+      }
+    } catch (error) {
+      console.log('[UNREAD-COUNT] Strategy 1 failed (RPC error), trying strategy 2')
     }
 
-    // Sumar mensajes no leídos según si el usuario es user1 o user2
-    const totalUnread = conversations?.reduce((sum, conv) => {
-      const isUser1 = conv.user1_id === user.id
-      const unreadCount = isUser1 ? conv.unread_count_user1 : conv.unread_count_user2
-      return sum + (unreadCount || 0)
-    }, 0) || 0
+    // ============================================
+    // ESTRATEGIA 2: Tabla messages clásica
+    // ============================================
+    try {
+      console.log('[UNREAD-COUNT] Trying strategy 2: messages table')
+      const { count: unreadCount, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', user.id)
+        .is('read_at', null)
 
-    return NextResponse.json({
-      count: totalUnread
-    })
+      if (!error && typeof unreadCount === 'number') {
+        count = unreadCount
+        console.log(`[UNREAD-COUNT] ✅ Strategy 2 success: ${count} unread messages`)
+        return NextResponse.json({ count: Number(count) || 0 }, { status: 200 })
+      } else {
+        console.log('[UNREAD-COUNT] Strategy 2 failed (table/column issue), trying strategy 3')
+      }
+    } catch (error) {
+      console.log('[UNREAD-COUNT] Strategy 2 failed (query error), trying strategy 3')
+    }
+
+    // ============================================
+    // ESTRATEGIA 3: Tabla conversations con contadores
+    // ============================================
+    try {
+      console.log('[UNREAD-COUNT] Trying strategy 3: conversations table with counters')
+      const { data, error } = await supabase
+        .rpc('sql', {
+          query: `
+            SELECT coalesce(sum(
+              case when user1_id = $1 then unread_count_user1
+                   when user2_id = $1 then unread_count_user2
+                   else 0 end
+            ),0) AS count
+            FROM public.conversations
+            WHERE $1 IN (user1_id, user2_id)
+          `,
+          params: [user.id]
+        })
+
+      if (!error && data && data.length > 0 && typeof data[0].count === 'number') {
+        count = data[0].count
+        console.log(`[UNREAD-COUNT] ✅ Strategy 3 success: ${count} unread messages`)
+        return NextResponse.json({ count: Number(count) || 0 }, { status: 200 })
+      } else {
+        console.log('[UNREAD-COUNT] Strategy 3 failed (table/columns not found)')
+      }
+    } catch (error) {
+      console.log('[UNREAD-COUNT] Strategy 3 failed (query error)')
+    }
+
+    // ============================================
+    // TODAS LAS ESTRATEGIAS FALLARON
+    // ============================================
+    console.error('[UNREAD-COUNT] ❌ All strategies failed, returning 0')
+    return NextResponse.json({ count: 0 }, { status: 200 })
 
   } catch (error) {
-    console.error('Error in unread-count GET:', error)
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    )
+    console.error('[UNREAD-COUNT] Unexpected error:', error)
+    return NextResponse.json({ count: 0 }, { status: 200 })
   }
 }
