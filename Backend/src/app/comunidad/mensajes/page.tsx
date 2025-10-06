@@ -89,51 +89,17 @@ export default async function MensajesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {conversations.map((conv: any) => {
-            // Usar los nuevos datos enriquecidos de otherParticipant
-            const cacheBuster = conv.otherParticipant?.profileUpdatedAt 
-              ? `?v=${new Date(conv.otherParticipant.profileUpdatedAt).getTime()}`
-              : ''
-            
-            // Adaptar al formato que espera ConversationCard
-            const adaptedConversation = {
-              id: conv.id,
-              match: {
-                id: conv.match?.id || '',
-                otherUser: {
-                  id: conv.otherParticipant?.userId || '',
-                  name: conv.otherParticipant?.displayName || 'Usuario',
-                  displayName: conv.otherParticipant?.displayName,
-                  profile: {
-                    role: 'BUSCO' as const, // Placeholder - se puede mejorar
-                    city: '',
-                    neighborhood: ''
-                  }
-                }
-              },
-              last_message: conv.last_message_content ? {
-                id: '',
-                content: conv.last_message_content,
-                created_at: conv.last_message_at || conv.updated_at,
-                sender_id: '' // No sabemos quién envió sin más datos
-              } : undefined,
-              unread_count: conv.unread_count || 0,
-              updated_at: conv.updated_at
-            }
-
-            return (
-              <ConversationCard
-                key={conv.id}
-                conversation={adaptedConversation}
-                currentUserId={user.id}
-                lastMessage={conv.last_message_content || ''}
-                onClick={(conversationId) => {
-                  // Navegación se maneja en el componente
-                  window.location.href = `/comunidad/mensajes/${conversationId}`
-                }}
-              />
-            )
-          })}
+          {conversations.map((conv: any) => (
+            <ConversationCard
+              key={conv.id}
+              conversation={conv}
+              otherParticipant={conv.otherParticipant}
+              currentUserId={user.id}
+              onClick={(conversationId) => {
+                window.location.href = `/comunidad/mensajes/${conversationId}`
+              }}
+            />
+          ))}
         </div>
       )}
     </div>

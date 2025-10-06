@@ -18,30 +18,18 @@ const formatTimeAgo = (date: string) => {
 }
 
 interface ConversationCardProps {
-  lastMessage: string
   conversation: {
     id: string
-    match: {
-      id: string
-      otherUser: {
-        id: string
-        name: string
-        displayName?: string
-        profile: {
-          role: 'BUSCO' | 'OFREZCO'
-          city: string
-          neighborhood: string
-        }
-      }
-    }
-    last_message?: {
-      id: string
-      content: string
-      created_at: string
-      sender_id: string
-    }
+    last_message_content?: string
+    last_message_at?: string
     unread_count: number
     updated_at: string
+  }
+  otherParticipant: {
+    userId: string
+    displayName: string
+    avatarUrl?: string
+    profileUpdatedAt?: string | number
   }
   currentUserId: string
   onClick?: (conversationId: string) => void
@@ -49,19 +37,25 @@ interface ConversationCardProps {
 
 export default function ConversationCard({ 
   conversation, 
+  otherParticipant,
   currentUserId,
   onClick 
 }: ConversationCardProps) {
-  const { match, last_message, unread_count } = conversation
-  const { otherUser } = match
-
   const handleClick = () => {
     if (onClick) {
       onClick(conversation.id)
     }
   }
 
-  const isFromCurrentUser = last_message?.sender_id === currentUserId
+  // Cache-busting para avatar
+  const avatarUrl = otherParticipant.avatarUrl
+    ? `${otherParticipant.avatarUrl}${otherParticipant.profileUpdatedAt ? `?v=${new Date(otherParticipant.profileUpdatedAt).getTime()}` : ''}`
+    : null
+
+  // Log de diagnóstico (solo dev)
+  if (process.env.NODE_ENV === 'development') {
+    console.info('🔍 ConversationCard otherParticipant ->', otherParticipant)
+  }
 
   return (
     <Card 
@@ -71,39 +65,45 @@ export default function ConversationCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-gray-900 truncate">
-                {otherUser.displayName || otherUser.name || 'Usuario'}
-              </h3>
-              <Badge 
-                variant={otherUser.profile.role === 'BUSCO' ? 'default' : 'secondary'}
-                className="text-xs flex-shrink-0"
-              >
-                {otherUser.profile.role === 'BUSCO' ? 'Busca' : 'Ofrece'}
-              </Badge>
+            {/* Header con avatar */}
+            <div className="flex items-center gap-3 mb-2">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {avatarUrl ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt={otherParticipant.displayName}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span className="text-blue-600 font-semibold text-sm">
+                      {otherParticipant.displayName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Nombre */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 truncate">
+                  {otherParticipant.displayName || 'Usuario'}
+                </h3>
+              </div>
             </div>
 
-            {/* Location */}
-            <p className="text-sm text-gray-600 mb-2 truncate">
-              {otherUser.profile.neighborhood}, {otherUser.profile.city}
-            </p>
-
             {/* Last message */}
-            {last_message ? (
+            {conversation.last_message_content ? (
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <p className="text-xs font-medium text-gray-600">
-                    {isFromCurrentUser ? 'Tú' : (otherUser.displayName || otherUser.name || 'Usuario')}:
-                  </p>
                   <div className="flex items-center text-xs text-gray-500">
                     <Clock className="w-3 h-3 mr-1" />
-                    {formatTimeAgo(last_message.created_at)}
+                    {formatTimeAgo(conversation.last_message_at || conversation.updated_at)}
                   </div>
                 </div>
                 <p className="text-sm text-gray-700 line-clamp-2 pl-6">
-                  {last_message.content}
+                  {conversation.last_message_content}
                 </p>
               </div>
             ) : (
@@ -117,10 +117,10 @@ export default function ConversationCard({
           </div>
 
           {/* Unread indicator */}
-          {unread_count > 0 && (
+          {conversation.unread_count > 0 && (
             <div className="flex flex-col items-end gap-2 ml-3">
               <Badge variant="destructive" className="text-xs">
-                {unread_count}
+                {conversation.unread_count}
               </Badge>
             </div>
           )}

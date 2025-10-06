@@ -28,6 +28,11 @@ export default function ThreadHeader({ participant, matchStatus }: ThreadHeaderP
   // Inicial del nombre (fallback si no hay avatar)
   const initial = participant.displayName?.charAt(0).toUpperCase() || '?'
 
+  // Log de diagnóstico (solo dev)
+  if (process.env.NODE_ENV === 'development') {
+    console.info('🔍 ThreadHeader participant ->', participant)
+  }
+
   return (
     <div className="border-b bg-white p-4 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
       {/* Botón volver */}

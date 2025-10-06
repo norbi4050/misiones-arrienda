@@ -10,12 +10,16 @@ import { Input } from "@/components/ui/input"
 import { ProfileDropdown } from "@/components/ui/profile-dropdown"
 import { useCurrentUser } from "@/lib/auth/useCurrentUser"
 import AvatarUniversal from "@/components/ui/avatar-universal"
+import { useMessagesUnread } from "@/hooks/useMessagesUnread"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
   const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, isAuthenticated, isAgency, loading, signOut } = useCurrentUser()
+  const { count: unreadCount } = useMessagesUnread({ 
+    enabled: isAuthenticated && !isAgency // Solo para usuarios no-inmobiliarias
+  })
 
   // [DEBUG] Log temporal para investigar
   React.useEffect(() => {
@@ -126,9 +130,20 @@ export function Navbar() {
                         <Heart className="h-4 w-4" />
                       </Button>
                     </Link>
-                    <Link href="/messages">
-                      <Button variant="ghost" size="sm" title="Mensajes">
+                    <Link href="/comunidad/mensajes">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Mensajes"
+                        className="relative"
+                        aria-label={unreadCount > 0 ? `Tienes ${unreadCount} mensajes sin leer` : 'Mensajes'}
+                      >
                         <MessageCircle className="h-4 w-4" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
                       </Button>
                     </Link>
                     
@@ -240,11 +255,18 @@ export function Navbar() {
                       Mis Favoritos
                     </Link>
                     <Link
-                      href="/messages"
-                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                      href="/comunidad/mensajes"
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md relative"
                       onClick={() => setIsOpen(false)}
                     >
-                      Mensajes
+                      <span className="flex items-center justify-between">
+                        Mensajes
+                        {unreadCount > 0 && (
+                          <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
+                      </span>
                     </Link>
                     <button
                       onClick={() => {

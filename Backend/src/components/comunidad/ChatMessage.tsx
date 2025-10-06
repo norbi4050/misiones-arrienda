@@ -57,6 +57,21 @@ export default function ChatMessage({
   const displayName = senderDisplayName || senderName || 'Usuario'
   const initial = displayName.charAt(0).toUpperCase()
 
+  // Cache-busting para avatar
+  const avatarSrc = senderAvatarUrl 
+    ? `${senderAvatarUrl}${senderAvatarUrl.includes('?') ? '&' : '?'}v=${Date.now()}`
+    : null
+
+  // Log de diagnóstico (solo dev)
+  if (process.env.NODE_ENV === 'development') {
+    console.info('🔍 ChatMessage props ->', {
+      senderDisplayName,
+      senderAvatarUrl,
+      senderName,
+      messageId: message.id
+    })
+  }
+
   return (
     <div className={cn(
       "flex gap-3 mb-4",
@@ -65,9 +80,9 @@ export default function ChatMessage({
       {/* Avatar (solo para mensajes de otros usuarios) */}
       {!isFromCurrentUser && showAvatar && (
         <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 overflow-hidden">
-          {senderAvatarUrl ? (
+          {avatarSrc ? (
             <img 
-              src={senderAvatarUrl} 
+              src={avatarSrc} 
               alt={displayName}
               className="w-full h-full object-cover"
               onError={(e) => {

@@ -120,6 +120,11 @@ export default function ThreadView({
           messages.map(msg => {
             const isFromCurrentUser = msg.sender_id === currentUserId || msg.sender?.id === currentUserId
             
+            // Log de diagnóstico (solo dev)
+            if (process.env.NODE_ENV === 'development') {
+              console.info('🔍 ThreadView message.sender ->', msg.sender)
+            }
+            
             return (
               <ChatMessage
                 key={msg.id}
