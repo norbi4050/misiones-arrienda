@@ -212,16 +212,16 @@ export async function GET(request: NextRequest) {
         // PROMPT 1: Obtener datos completos del otro usuario
         const { data: otherProfile } = await supabase
           .from('UserProfile')
-          .select('id, userId, full_name, companyName')
+          .select('id, userId, full_name')
           .eq('id', otherUserId)
           .single()
 
-        // Obtener datos del User relacionado
+        // Obtener datos del User relacionado (CORRECCIÓN: companyName está en User)
         let otherUserData: any = null
         if (otherProfile?.userId) {
           const { data: userData } = await supabase
             .from('User')
-            .select('id, name, email, avatar')
+            .select('id, name, email, avatar, companyName')  // ✅ AGREGADO companyName
             .eq('id', otherProfile.userId)
             .single()
           otherUserData = userData
@@ -229,10 +229,9 @@ export async function GET(request: NextRequest) {
 
         // PROMPT D1 & D2: Calcular displayName con source tracking
         const { displayName, source } = getDisplayNameWithSource(
-          otherUserData,
+          otherUserData,  // Ahora incluye companyName
           otherProfile ? {
-            full_name: otherProfile.full_name,
-            companyName: otherProfile.companyName
+            full_name: otherProfile.full_name
           } : null
         )
 
@@ -252,7 +251,7 @@ export async function GET(request: NextRequest) {
         }
 
         // PROMPT D6: Log de DATA GAP si faltan datos en DB
-        if (!otherUserData?.name && !otherProfile?.companyName && !otherProfile?.full_name) {
+        if (!otherUserData?.name && !otherUserData?.companyName && !otherProfile?.full_name) {
           console.warn(`[DisplayName] DATA GAP userId=${otherUserData?.id || otherProfile?.userId || otherUserId} - no name/companyName/full_name in DB`)
         }
 
@@ -365,12 +364,12 @@ export async function GET(request: NextRequest) {
           .eq('user_id', otherUserId)
           .single()
 
-        // Obtener datos del User relacionado (auth.users)
+        // Obtener datos del User relacionado (CORRECCIÓN: companyName está en User)
         let otherUserData: any = null
         try {
           const { data: userData } = await supabase
             .from('User')
-            .select('id, name, email, avatar')
+            .select('id, name, email, avatar, companyName')  // ✅ AGREGADO companyName
             .eq('id', otherUserId)
             .single()
           otherUserData = userData
@@ -380,7 +379,7 @@ export async function GET(request: NextRequest) {
 
         // PROMPT D1 & D2: Calcular displayName con source tracking
         const { displayName, source } = getDisplayNameWithSource(
-          otherUserData || { email: otherUserId },
+          otherUserData || { email: otherUserId },  // Ahora incluye companyName
           otherProfile ? {
             full_name: otherProfile.full_name,
             company_name: otherProfile.company_name

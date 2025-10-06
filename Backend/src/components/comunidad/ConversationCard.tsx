@@ -1,8 +1,10 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MessageCircle, Clock } from 'lucide-react'
+import { useProfile } from '@/hooks/useProfile'
 
 // Función simple para formatear tiempo relativo
 const formatTimeAgo = (date: string) => {
@@ -17,45 +19,36 @@ const formatTimeAgo = (date: string) => {
   return `hace ${Math.floor(diffInSeconds / 2592000)} meses`
 }
 
+type ConversationLite = {
+  id: string
+  participants: string[]
+  otherParticipant: string // UUID
+  created_at?: string | null
+  last_message_at?: string | null
+  last_message_content?: string
+  unread_count?: number
+  updated_at?: string
+}
+
 interface ConversationCardProps {
-  conversation: {
-    id: string
-    last_message_content?: string
-    last_message_at?: string
-    unread_count: number
-    updated_at: string
-  }
-  otherParticipant: {
-    userId: string
-    displayName: string
-    avatarUrl?: string
-    profileUpdatedAt?: string | number
-  }
+  conversation: ConversationLite
   currentUserId: string
-  onClick?: (conversationId: string) => void
 }
 
 export default function ConversationCard({ 
   conversation, 
-  otherParticipant,
-  currentUserId,
-  onClick 
+  currentUserId
 }: ConversationCardProps) {
+  const router = useRouter()
+  const { profile } = useProfile(conversation.otherParticipant)
+
   const handleClick = () => {
-    if (onClick) {
-      onClick(conversation.id)
-    }
+    router.push(`/comunidad/mensajes/${conversation.id}`)
   }
 
-  // Cache-busting para avatar
-  const avatarUrl = otherParticipant.avatarUrl
-    ? `${otherParticipant.avatarUrl}${otherParticipant.profileUpdatedAt ? `?v=${new Date(otherParticipant.profileUpdatedAt).getTime()}` : ''}`
-    : null
-
-  // Log de diagnóstico (solo dev)
-  if (process.env.NODE_ENV === 'development') {
-    console.info('🔍 ConversationCard otherParticipant ->', otherParticipant)
-  }
+  const name = profile?.display_name ?? 'Usuario'
+  const initial = (name[0] ?? 'U').toUpperCase()
+  const avatarUrl = profile?.avatar_url
 
   return (
     <Card 
@@ -72,13 +65,13 @@ export default function ConversationCard({
                 {avatarUrl ? (
                   <img 
                     src={avatarUrl} 
-                    alt={otherParticipant.displayName}
+                    alt={name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                     <span className="text-blue-600 font-semibold text-sm">
-                      {otherParticipant.displayName.charAt(0).toUpperCase()}
+                      {initial}
                     </span>
                   </div>
                 )}
@@ -87,7 +80,7 @@ export default function ConversationCard({
               {/* Nombre */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-900 truncate">
-                  {otherParticipant.displayName || 'Usuario'}
+                  {name}
                 </h3>
               </div>
             </div>
@@ -99,7 +92,7 @@ export default function ConversationCard({
                   <MessageCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   <div className="flex items-center text-xs text-gray-500">
                     <Clock className="w-3 h-3 mr-1" />
-                    {formatTimeAgo(conversation.last_message_at || conversation.updated_at)}
+                    {formatTimeAgo(conversation.last_message_at || conversation.updated_at || conversation.created_at || new Date().toISOString())}
                   </div>
                 </div>
                 <p className="text-sm text-gray-700 line-clamp-2 pl-6">
@@ -117,7 +110,7 @@ export default function ConversationCard({
           </div>
 
           {/* Unread indicator */}
-          {conversation.unread_count > 0 && (
+          {(conversation.unread_count ?? 0) > 0 && (
             <div className="flex flex-col items-end gap-2 ml-3">
               <Badge variant="destructive" className="text-xs">
                 {conversation.unread_count}
@@ -134,7 +127,7 @@ export default function ConversationCard({
               Match activo
             </div>
             <div className="text-xs text-gray-400">
-              {formatTimeAgo(conversation.updated_at)}
+              {formatTimeAgo(conversation.updated_at || conversation.created_at || new Date().toISOString())}
             </div>
           </div>
         </div>

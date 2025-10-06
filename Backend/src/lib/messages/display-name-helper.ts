@@ -14,12 +14,12 @@
 interface UserData {
   name?: string | null
   email?: string | null
+  companyName?: string | null  // CORRECCIÓN: companyName está en User
 }
 
 interface UserProfileData {
   full_name?: string | null
-  companyName?: string | null
-  company_name?: string | null // snake_case variant
+  company_name?: string | null // snake_case variant (si existe en UserProfile)
 }
 
 export type DisplayNameSource = 
@@ -45,6 +45,8 @@ export function isUUID(str: string | null | undefined): boolean {
 
 /**
  * PROMPT D1 & D2: Versión extendida que retorna { displayName, source }
+ * 
+ * CORRECCIÓN CRÍTICA: companyName está en User, NO en UserProfile
  */
 export function getDisplayNameWithSource(
   userData: UserData | null,
@@ -58,24 +60,20 @@ export function getDisplayNameWithSource(
     }
   }
 
-  // Prioridad 2: UserProfile.companyName (para empresas/inmobiliarias)
-  // PROMPT D2: companyName GANA a full_name cuando ambos existen
-  if (userProfileData) {
-    const companyName = userProfileData.companyName || userProfileData.company_name
-    if (companyName && companyName.trim() && !isUUID(companyName)) {
-      return {
-        displayName: companyName.trim(),
-        source: 'UserProfile.companyName'
-      }
+  // Prioridad 2: User.companyName (para empresas/inmobiliarias)
+  // CORRECCIÓN: companyName está en User, no en UserProfile
+  if (userData?.companyName && userData.companyName.trim() && !isUUID(userData.companyName)) {
+    return {
+      displayName: userData.companyName.trim(),
+      source: 'UserProfile.companyName'  // Mantener nombre de source para compatibilidad
     }
-    
-    // Prioridad 3: UserProfile.full_name (para individuos)
-    const fullName = userProfileData.full_name
-    if (fullName && fullName.trim() && !isUUID(fullName)) {
-      return {
-        displayName: fullName.trim(),
-        source: 'UserProfile.full_name'
-      }
+  }
+  
+  // Prioridad 3: UserProfile.full_name (para individuos) - si existe
+  if (userProfileData?.full_name && userProfileData.full_name.trim() && !isUUID(userProfileData.full_name)) {
+    return {
+      displayName: userProfileData.full_name.trim(),
+      source: 'UserProfile.full_name'
     }
   }
 

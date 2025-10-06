@@ -95,9 +95,6 @@ export default async function MensajesPage() {
               conversation={conv}
               otherParticipant={conv.otherParticipant}
               currentUserId={user.id}
-              onClick={(conversationId) => {
-                window.location.href = `/comunidad/mensajes/${conversationId}`
-              }}
             />
           ))}
         </div>
