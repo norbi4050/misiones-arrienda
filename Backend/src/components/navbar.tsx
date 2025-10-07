@@ -130,7 +130,7 @@ export function Navbar() {
                         <Heart className="h-4 w-4" />
                       </Button>
                     </Link>
-                    <Link href="/comunidad/mensajes">
+                    <Link href={isAgency ? "/messages" : "/comunidad/mensajes"}>
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -255,7 +255,7 @@ export function Navbar() {
                       Mis Favoritos
                     </Link>
                     <Link
-                      href="/comunidad/mensajes"
+                      href={isAgency ? "/messages" : "/comunidad/mensajes"}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md relative"
                       onClick={() => setIsOpen(false)}
                     >

@@ -43,16 +43,16 @@ export async function GET(request: NextRequest) {
 
     // Obtener datos de user_profiles y users para construir avatar_url único
     const [{ data: userData }, { data: profile }] = await Promise.all([
-      supabase.from('users').select('id,name,profile_image').eq('id', userId).maybeSingle(),
-      supabase.from('user_profiles').select('photos,updated_at').eq('user_id', userId).maybeSingle(),
+      supabase.from('users').select('id,name,profile_image,avatar,logo_url').eq('id', userId).maybeSingle(),
+      supabase.from('user_profiles').select('avatar_url,updated_at').eq('id', userId).maybeSingle(),
     ])
 
     if (!userData) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const primaryUrl = profile?.photos?.[0] ?? null;
-    const deprecatedUrl = userData?.profile_image ?? null; // fallback temporal
+    const primaryUrl = profile?.avatar_url ?? null;
+    const deprecatedUrl = userData?.profile_image ?? userData?.avatar ?? userData?.logo_url ?? null; // fallback temporal
     const displayName = userData?.name ?? 'User';
 
     const url =
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       url: url,  // URL cruda sin ?v=
       v: v,
-      source: primaryUrl ? 'photos' : (deprecatedUrl ? 'profile_image_deprecated' : 'fallback'),
+      source: primaryUrl ? 'user_profiles.avatar_url' : (deprecatedUrl ? 'users_deprecated' : 'fallback'),
       user_id: userId,
       full_name: displayName
     }, {
@@ -115,17 +115,17 @@ export async function POST(req: NextRequest) {
     const url = pub.publicUrl
     const v = Math.floor(Date.now() / 1000)
 
-    // 5) Guardar en user_profiles (¡usar user_id!)
+    // 5) Guardar en user_profiles (usar id como PK)
     const { error: updErr } = await supabase
       .from('user_profiles')
-      .update({ photos: [url], updated_at: new Date().toISOString() })
-      .eq('user_id', user.id)
+      .update({ avatar_url: url, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
 
     // Si no existe la fila aún, upsert rápido
     if (updErr?.code === 'PGRST116' /* 0 rows */ || updErr == null) {
       await supabase
         .from('user_profiles')
-        .upsert({ user_id: user.id, photos: [url], updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+        .upsert({ id: user.id, avatar_url: url, updated_at: new Date().toISOString() }, { onConflict: 'id' })
     }
 
     return NextResponse.json({ url: `${url}?v=${v}`, v, success: true })
@@ -152,7 +152,7 @@ export async function DELETE(request: NextRequest) {
     const { data: removeResult, error: removeError } = await supabase
       .from('user_profiles')
       .update({ 
-        photos: [],  // Array vacío para remover avatar
+        avatar_url: null,  // NULL para remover avatar
         updated_at: now.toISOString()
       })
       .eq('id', userId)

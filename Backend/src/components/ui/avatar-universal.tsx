@@ -60,7 +60,7 @@ export default function AvatarUniversal({
       if (response.ok) {
         const data = await response.json()
         
-        // FUENTE ÚNICA: Solo user_profiles.photos[0] (sin fallback a profile_image)
+        // FUENTE ÚNICA: user_profiles.avatar_url (con fallback a users.profile_image/avatar/logo_url)
         const baseUrl = data?.url || '';
         const v = data?.v || 0;
         const src = withVersion(baseUrl, v);

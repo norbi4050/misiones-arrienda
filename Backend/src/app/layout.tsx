@@ -10,6 +10,7 @@ import BuildBadge from '@/components/BuildBadge'
 import { AuthProvider } from '@/components/auth-provider'
 import { MessagesProvider } from '@/contexts/MessagesContext'
 import ToasterProvider from '@/components/toaster-provider'
+import { PresenceTracker } from '@/components/presence/PresenceTracker'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -80,6 +81,9 @@ export default function RootLayout({
 
               {/* Toast Notifications Sonner */}
               <ToasterProvider />
+
+              {/* Presence Tracker - Sistema de tracking de estado online/offline */}
+              <PresenceTracker />
             </ThemeProvider>
           </MessagesProvider>
         </AuthProvider>

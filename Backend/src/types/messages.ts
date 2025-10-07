@@ -30,14 +30,30 @@ export interface Message {
 // PROMPT 1: Tipos enriquecidos para API responses
 // ============================================
 
+// ============================================
+// SISTEMA DE PRESENCIA - Tipos (NUEVO 2025)
+// ============================================
+
+/**
+ * Información de presencia del usuario
+ * Indica si está online y cuándo fue su última actividad
+ */
+export interface UserPresence {
+  isOnline: boolean        // true si el usuario está actualmente online
+  lastSeen: string | null  // ISO timestamp de última vez visto (null si nunca)
+  lastActivity: string     // ISO timestamp de última actividad registrada
+}
+
 /**
  * Información del otro usuario en un thread
  * PROMPT 1: displayName calculado server-side con lógica de prioridad
+ * ACTUALIZADO: Incluye información de presencia opcional
  */
 export interface EnrichedOtherUser {
   id: string
   displayName: string      // Calculado: User.name → UserProfile.full_name/companyName → email local → "Usuario"
   avatarUrl: string | null
+  presence?: UserPresence  // Información de presencia (opcional para compatibilidad)
 }
 
 /**
@@ -212,3 +228,58 @@ export interface UseMessagesReturn {
   markAsRead: (conversationId: string) => Promise<void>
   refreshConversations: () => Promise<void>
 }
+
+// ============================================
+// UNIFICACIÓN DE MENSAJERÍA - Tipos
+// ============================================
+
+/**
+ * Tipo de mensaje: propiedad o comunidad
+ */
+export type MessageType = 'property' | 'community'
+
+/**
+ * Conversación unificada que puede ser de propiedades o comunidad
+ */
+export interface UnifiedConversation {
+  id: string
+  type: MessageType
+  otherUser: {
+    id: string
+    displayName: string
+    avatarUrl: string | null
+  }
+  lastMessage: {
+    content: string
+    createdAt: string
+    isMine: boolean
+  } | null
+  unreadCount: number
+  updatedAt: string
+  property?: {
+    id: string
+    title: string
+    coverUrl: string | null
+  }
+}
+
+/**
+ * Respuesta del endpoint unificado
+ */
+export interface UnifiedMessagesResponse {
+  success: boolean
+  conversations: UnifiedConversation[]
+  counts: {
+    all: number
+    properties: number
+    community: number
+  }
+  _meta: {
+    duration_ms: number
+  }
+}
+
+/**
+ * Parámetros de filtro para mensajes unificados
+ */
+export type UnifiedMessageFilter = 'all' | 'properties' | 'community'

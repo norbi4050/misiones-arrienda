@@ -185,8 +185,10 @@ export default function MessagesPage() {
       
       // PROMPT 4: Normalización defensiva con logs
       console.log('[MessagesUI] Cargando threads, raw count:', (data.threads || []).length)
+      console.log('[MessagesUI] Raw threads data:', JSON.stringify(data.threads, null, 2))
       
       const normalizedThreads = (data.threads || []).map((thread: any) => {
+        console.log('[MessagesUI] Processing thread:', thread.threadId, 'otherUser.avatarUrl:', thread.otherUser?.avatarUrl)
         // PROMPT 4: Garantizar threadId siempre presente
         const threadId = thread.threadId || thread.id || `unknown-${Date.now()}`
         

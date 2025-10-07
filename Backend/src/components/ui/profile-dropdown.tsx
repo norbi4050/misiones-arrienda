@@ -189,7 +189,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
                 {/* Mensajes */}
                 <Link
-                  href="/messages"
+                  href="/comunidad/mensajes"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >

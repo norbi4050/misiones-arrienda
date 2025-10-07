@@ -1,8 +1,11 @@
-// B6 - Message Attachments Components
-// Exportaciones centralizadas
+// Exportaciones centralizadas de componentes de mensajería
 
-export { default as AttachmentButton, useUserPlan } from './AttachmentButton'
-export { default as UploadQueue, useUploadQueue } from './UploadQueue'
-export type { QueuedFile, UploadStatus } from './UploadQueue'
-export { default as AttachmentPreview, AttachmentList } from './AttachmentPreview'
+// Componentes de unificación
+export { MessageTabs } from './MessageTabs'
+export { ConversationBadge } from './ConversationBadge'
+
+// Componentes de adjuntos (existentes)
+export { default as AttachmentButton } from './AttachmentButton'
+export { default as AttachmentPreview } from './AttachmentPreview'
 export { default as AttachmentLightbox } from './AttachmentLightbox'
+export { useUploadQueue } from './UploadQueue'

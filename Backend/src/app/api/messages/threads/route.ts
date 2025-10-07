@@ -212,7 +212,7 @@ export async function GET(request: NextRequest) {
         // PROMPT 1: Obtener datos completos del otro usuario
         const { data: otherProfile } = await supabase
           .from('UserProfile')
-          .select('id, userId, full_name')
+          .select('id, userId')  // ✅ FIX: Eliminado full_name (columna no existe)
           .eq('id', otherUserId)
           .single()
 
@@ -227,12 +227,32 @@ export async function GET(request: NextRequest) {
           otherUserData = userData
         }
 
+        // TAMBIÉN obtener de user_profiles por si el avatar está ahí
+        // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
+        let userProfilesData: any = null
+        if (otherProfile?.userId) {
+          console.log(`[AVATAR DEBUG] Buscando avatar en user_profiles para id: ${otherProfile.userId}`)
+          const { data: upData, error: upError } = await supabase
+            .from('user_profiles')
+            .select('id, avatar_url, display_name')
+            .eq('id', otherProfile.userId)
+            .single()
+          
+          if (upError) {
+            console.log(`[AVATAR DEBUG] Error al buscar en user_profiles:`, upError.message)
+          } else {
+            console.log(`[AVATAR DEBUG] Datos de user_profiles:`, upData)
+          }
+          userProfilesData = upData
+        } else {
+          console.log(`[AVATAR DEBUG] No hay otherProfile.userId, saltando búsqueda en user_profiles`)
+        }
+
         // PROMPT D1 & D2: Calcular displayName con source tracking
+        // ✅ FIX: No pasar UserProfile data porque full_name no existe
         const { displayName, source } = getDisplayNameWithSource(
           otherUserData,  // Ahora incluye companyName
-          otherProfile ? {
-            full_name: otherProfile.full_name
-          } : null
+          null  // ✅ FIX: UserProfile no tiene full_name, usar solo User data
         )
 
         // PROMPT D1: Log detallado de displayName resolution
@@ -250,9 +270,9 @@ export async function GET(request: NextRequest) {
           finalDisplayName = 'Usuario'
         }
 
-        // PROMPT D6: Log de DATA GAP si faltan datos en DB
-        if (!otherUserData?.name && !otherUserData?.companyName && !otherProfile?.full_name) {
-          console.warn(`[DisplayName] DATA GAP userId=${otherUserData?.id || otherProfile?.userId || otherUserId} - no name/companyName/full_name in DB`)
+        // PROMPT D6: Log de DATA GAP si faltan datos en DB (actualizado sin full_name)
+        if (!otherUserData?.name && !otherUserData?.companyName) {
+          console.warn(`[DisplayName] DATA GAP userId=${otherUserData?.id || otherProfile?.userId || otherUserId} - no name/companyName in DB`)
         }
 
         // Obtener último mensaje
@@ -305,12 +325,15 @@ export async function GET(request: NextRequest) {
         const lastMessageCreatedAtRaw = lastMsg?.createdAt
         const lastMessageCreatedAtISO = lastMessageCreatedAtRaw ? new Date(lastMessageCreatedAtRaw).toISOString() : null
 
+        const finalAvatarUrl = userProfilesData?.avatar_url || otherUserData?.avatar || null
+        console.log(`[AVATAR DEBUG] Final avatarUrl: ${finalAvatarUrl}, from userProfilesData: ${userProfilesData?.avatar_url}, from User: ${otherUserData?.avatar}`)
+        
         threads.push({
           threadId: conv.id,
           otherUser: {
             id: otherUserData?.id || otherProfile?.userId || otherUserId,
             displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
-            avatarUrl: otherUserData?.avatar || null,
+            avatarUrl: finalAvatarUrl,
             __displayNameSource: source     // PROMPT D1: campo debug para ver fuente
           },
           lastMessage: lastMsg ? {
@@ -358,10 +381,11 @@ export async function GET(request: NextRequest) {
         const otherUserId = conv.sender_id === user.id ? conv.receiver_id : conv.sender_id
 
         // PROMPT 1: Obtener datos completos del otro usuario desde user_profiles
+        // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
         const { data: otherProfile } = await supabase
           .from('user_profiles')
-          .select('id, user_id, full_name, company_name, photos')
-          .eq('user_id', otherUserId)
+          .select('id, display_name, avatar_url')
+          .eq('id', otherUserId)
           .single()
 
         // Obtener datos del User relacionado (CORRECCIÓN: companyName está en User)
@@ -377,14 +401,17 @@ export async function GET(request: NextRequest) {
           // Si no existe tabla User, usar solo user_profiles
         }
 
-        // PROMPT D1 & D2: Calcular displayName con source tracking
-        const { displayName, source } = getDisplayNameWithSource(
-          otherUserData || { email: otherUserId },  // Ahora incluye companyName
-          otherProfile ? {
-            full_name: otherProfile.full_name,
-            company_name: otherProfile.company_name
-          } : null
-        )
+        // PROMPT D1 & D2: Calcular displayName
+        // Para Supabase, user_profiles.display_name ya es el nombre correcto
+        const displayName = otherProfile?.display_name || 
+                           otherUserData?.name || 
+                           otherUserData?.companyName ||
+                           (otherUserData?.email ? otherUserData.email.split('@')[0] : null) ||
+                           'Usuario'
+        const source = otherProfile?.display_name ? 'user_profiles.display_name' : 
+                      otherUserData?.name ? 'User.name' :
+                      otherUserData?.companyName ? 'User.companyName' :
+                      'fallback'
 
         // PROMPT D1: Log detallado de displayName resolution
         console.log(`[DISPLAYNAME] threadId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
@@ -401,9 +428,9 @@ export async function GET(request: NextRequest) {
           finalDisplayName = 'Usuario'
         }
 
-        // PROMPT D6: Log de DATA GAP si faltan datos en DB
-        if (!otherUserData?.name && !otherProfile?.company_name && !otherProfile?.full_name) {
-          console.warn(`[DisplayName] DATA GAP userId=${otherUserId} - no name/companyName/full_name in DB`)
+        // PROMPT D6: Log de DATA GAP si faltan datos en DB (actualizado)
+        if (!otherUserData?.name && !otherProfile?.display_name) {
+          console.warn(`[DisplayName] DATA GAP userId=${otherUserId} - no name/display_name in DB`)
         }
 
         // Obtener último mensaje
@@ -455,7 +482,7 @@ export async function GET(request: NextRequest) {
           otherUser: {
             id: otherUserId,
             displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
-            avatarUrl: otherProfile?.photos?.[0] || otherUserData?.avatar || null,
+            avatarUrl: otherProfile?.avatar_url || otherUserData?.avatar || null,
             __displayNameSource: source     // PROMPT D1: campo debug para ver fuente
           },
           lastMessage: lastMsg ? {
@@ -641,10 +668,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Verificar que el usuario destino existe
+      // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
       const { data: targetUser, error: userError } = await supabase
         .from('user_profiles')
-        .select('id, user_id')
-        .eq('user_id', toUserId)
+        .select('id, display_name')
+        .eq('id', toUserId)
         .single()
 
       if (userError || !targetUser) {

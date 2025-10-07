@@ -57,13 +57,13 @@ export async function POST(request: NextRequest) {
     const avatarUrl = publicUrlData.publicUrl
     console.log(`✅ DEV: Imagen subida exitosamente: ${avatarUrl}`)
 
-    // Actualizar user_profiles.photos[1] usando admin client (bypass RLS)
+    // Actualizar user_profiles.avatar_url usando admin client (bypass RLS)
     const now = new Date()
     
     const { data: updateResult, error: updateError } = await supabaseAdmin
       .from('user_profiles')
       .update({ 
-        photos: [avatarUrl],  // Actualizar photos[1] con nueva URL
+        avatar_url: avatarUrl,  // Actualizar avatar_url con nueva URL
         updated_at: now.toISOString()
       })
       .eq('id', userId)
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
     // Obtener estado actual usando admin client
     const { data: profile, error } = await supabaseAdmin
       .from('user_profiles')
-      .select('photos, updated_at, full_name')
+      .select('avatar_url, updated_at, display_name')
       .eq('id', userId)
       .single()
 
@@ -136,10 +136,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       user_id: userId,
-      full_name: profile.full_name,
-      photos: profile.photos,
-      photos_count: profile.photos?.length || 0,
-      avatar_url: profile.photos?.[0] || null,
+      display_name: profile.display_name,
+      avatar_url: profile.avatar_url || null,
       v: v,
       updated_at: profile.updated_at,
       dev_note: 'Estado actual del avatar usando admin client'

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getDisplayName, getDisplayNameWithSource, isUUID } from '@/lib/messages/display-name-helper'
 import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
+import { getUserPresence } from '@/lib/presence/activity-tracker'
 
 // GET /api/messages/threads/[id] → mensajes paginados del hilo con cursor
 export async function GET(
@@ -81,9 +82,13 @@ export async function GET(
       return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
     }
 
-    // PROMPT 1: Determinar el otro usuario
-    const otherUserId = isPrismaSchema 
+    // PROMPT 1: Determinar el otro usuario (PROFILE ID, no USER ID)
+    const otherProfileId = isPrismaSchema 
       ? (thread.aId === userProfile.id ? thread.bId : thread.aId)
+      : null  // Para Supabase, otherUserId es directamente el user_id
+
+    const otherUserId = isPrismaSchema 
+      ? null  // Lo obtendremos del UserProfile
       : (thread.sender_id === user.id ? thread.receiver_id : thread.sender_id)
 
     // PROMPT 1: Obtener datos completos del otro usuario
@@ -91,33 +96,35 @@ export async function GET(
     let otherUserData: any = null
 
     if (isPrismaSchema) {
+      // ✅ FIX: Buscar UserProfile por ID (no por userId)
       const { data: profile } = await supabase
         .from('UserProfile')
-        .select('id, userId, full_name, companyName')
-        .eq('id', otherUserId)
+        .select('id, userId')
+        .eq('id', otherProfileId)
         .single()
       otherProfile = profile
 
       if (profile?.userId) {
         const { data: userData } = await supabase
           .from('User')
-          .select('id, name, email, avatar')
+          .select('id, name, email, avatar, companyName')
           .eq('id', profile.userId)
           .single()
         otherUserData = userData
       }
     } else {
+      // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('id, user_id, full_name, company_name, photos')
-        .eq('user_id', otherUserId)
+        .select('id, display_name, avatar_url, profile_updated_at')
+        .eq('id', otherUserId)
         .single()
       otherProfile = profile
 
       try {
         const { data: userData } = await supabase
           .from('User')
-          .select('id, name, email, avatar')
+          .select('id, name, email, avatar, companyName')
           .eq('id', otherUserId)
           .single()
         otherUserData = userData
@@ -128,16 +135,13 @@ export async function GET(
 
     // PROMPT D1 & D2: Calcular displayName con source tracking
     const { displayName, source } = getDisplayNameWithSource(
-      otherUserData || { email: otherUserId },
-      otherProfile ? {
-        full_name: otherProfile.full_name,
-        companyName: otherProfile.companyName,
-        company_name: otherProfile.company_name
-      } : null
+      otherUserData || { email: otherProfile?.userId || otherUserId || 'unknown' },
+      null  // ✅ FIX: UserProfile no tiene full_name, usar solo User data
     )
 
     // PROMPT D1: Log detallado de displayName resolution
-    console.log(`[DISPLAYNAME] threadId=${threadId}, me.id=${user.id}, otherUser.id=${otherUserData?.id || otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
+    const finalOtherUserId = otherUserData?.id || otherProfile?.userId || otherUserId
+    console.log(`[DISPLAYNAME] threadId=${threadId}, me.id=${user.id}, otherUser.id=${finalOtherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
     
     // PROMPT D1: Warning si displayName está vacío o es UUID
     if (!displayName || displayName.trim() === '' || isUUID(displayName)) {
@@ -152,8 +156,8 @@ export async function GET(
     }
 
     // PROMPT D6: Log de DATA GAP si faltan datos en DB
-    if (!otherUserData?.name && !otherProfile?.companyName && !otherProfile?.company_name && !otherProfile?.full_name) {
-      console.warn(`[DisplayName] DATA GAP userId=${otherUserData?.id || otherUserId} - no name/companyName/full_name in DB`)
+    if (!otherUserData?.name && !otherUserData?.companyName) {
+      console.warn(`[DisplayName] DATA GAP userId=${finalOtherUserId} - no name/companyName in DB`)
     }
 
     // Obtener mensajes según esquema
@@ -234,14 +238,44 @@ export async function GET(
     }))
 
     // PROMPT D1 & D2: Información enriquecida del thread para el header
+    // NOTA: Priorizar user_profiles.avatar_url sobre User.avatar porque user_profiles es la fuente correcta
+    
+    // ✅ FIX CRÍTICO: Buscar avatar en user_profiles primero, independientemente del esquema
+    let finalAvatarUrl: string | null = null
+    
+    if (isPrismaSchema && otherProfile?.userId) {
+      // Para PRISMA: buscar en user_profiles usando el userId del UserProfile
+      const { data: userProfilesData } = await supabase
+        .from('user_profiles')
+        .select('avatar_url')
+        .eq('id', otherProfile.userId)
+        .single()
+      
+      console.log(`[AVATAR DEBUG] Buscando avatar en user_profiles para id: ${otherProfile.userId}`)
+      console.log(`[AVATAR DEBUG] Datos de user_profiles:`, userProfilesData)
+      
+      finalAvatarUrl = userProfilesData?.avatar_url || otherUserData?.avatar || null
+      
+      console.log(`[AVATAR DEBUG] Final avatarUrl: ${finalAvatarUrl}, from userProfilesData: ${userProfilesData?.avatar_url}, from User: ${otherUserData?.avatar}`)
+    } else {
+      // Para SUPABASE: usar directamente user_profiles
+      finalAvatarUrl = otherProfile?.avatar_url || null
+    }
+    
+    // ONLINE STATUS: Obtener información de presencia del otro usuario
+    const presence = await getUserPresence(finalOtherUserId)
+    
     const threadInfo = {
       threadId,
       otherUser: {
-        id: otherUserData?.id || otherUserId,
+        id: finalOtherUserId,
         displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
-        avatarUrl: isPrismaSchema 
-          ? (otherUserData?.avatar || null)
-          : (otherProfile?.photos?.[0] || otherUserData?.avatar || null),
+        avatarUrl: finalAvatarUrl,
+        presence: presence ? {
+          isOnline: presence.isOnline,
+          lastSeen: presence.lastSeen,
+          lastActivity: presence.lastActivity
+        } : undefined,  // Opcional para compatibilidad
         __displayNameSource: source  // PROMPT D1: campo debug para ver fuente
       }
     }

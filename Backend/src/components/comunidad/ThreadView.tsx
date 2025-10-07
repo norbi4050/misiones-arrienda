@@ -35,6 +35,11 @@ interface ThreadViewProps {
       displayName: string
       avatarUrl?: string | null
       profileUpdatedAt?: string | number | null
+      presence?: {
+        isOnline: boolean
+        lastSeen: string | null
+        lastActivity: string
+      }
     }
     participants?: Array<{
       userId: string

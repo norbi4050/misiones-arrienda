@@ -4,16 +4,20 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import Thread from '@/components/ui/thread'
-import { ArrowLeft, User } from 'lucide-react'
+import UnifiedThreadHeader from '@/components/messages/UnifiedThreadHeader'
 
-interface ConversationDetails {
-  id: string
-  property_id: string
-  property_title: string
-  property_image?: string
-  other_user_id: string
-  other_user_name: string
-  other_user_avatar?: string
+interface ThreadInfo {
+  threadId: string
+  otherUser: {
+    id: string
+    displayName: string
+    avatarUrl: string | null
+    presence?: {
+      isOnline: boolean
+      lastSeen: string | null
+      lastActivity: string
+    }
+  }
 }
 
 export default function ConversationPage({ 
@@ -22,7 +26,7 @@ export default function ConversationPage({
   params: { conversationId: string } 
 }) {
   const { user, isLoading: authLoading } = useSupabaseAuth()
-  const [conversation, setConversation] = useState<ConversationDetails | null>(null)
+  const [threadInfo, setThreadInfo] = useState<ThreadInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -35,17 +39,18 @@ export default function ConversationPage({
 
   useEffect(() => {
     if (user && params.conversationId) {
-      loadConversationDetails()
+      loadThreadInfo()
     }
   }, [user, params.conversationId])
 
-  const loadConversationDetails = async () => {
+  const loadThreadInfo = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      // Obtener detalles de la conversación desde la lista de hilos
-      const response = await fetch('/api/messages/threads', {
+      // Obtener información del thread desde el endpoint individual
+      // Este endpoint ya tiene la lógica correcta de displayName
+      const response = await fetch(`/api/messages/threads/${params.conversationId}`, {
         credentials: 'include'
       })
       
@@ -59,26 +64,15 @@ export default function ConversationPage({
       }
 
       const data = await response.json()
-      const foundConversation = data.threads?.find(
-        (thread: any) => thread.id === params.conversationId
-      )
-
-      if (!foundConversation) {
+      
+      if (!data.success || !data.thread) {
         throw new Error('Conversación no encontrada')
       }
 
-      setConversation({
-        id: foundConversation.id,
-        property_id: foundConversation.property_id,
-        property_title: foundConversation.property_title,
-        property_image: foundConversation.property_image,
-        other_user_id: foundConversation.other_user_id || 'unknown',
-        other_user_name: foundConversation.other_user_name,
-        other_user_avatar: foundConversation.other_user_avatar
-      })
+      setThreadInfo(data.thread)
 
     } catch (err: any) {
-      console.error('Error loading conversation:', err)
+      console.error('Error loading thread info:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -126,7 +120,7 @@ export default function ConversationPage({
     )
   }
 
-  if (!conversation) {
+  if (!threadInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -139,54 +133,22 @@ export default function ConversationPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="max-w-4xl mx-auto flex items-center space-x-4">
-          {/* Botón volver */}
-          <button
-            onClick={() => router.push('/messages')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
-          </button>
-
-          {/* Información de la conversación */}
-          <div className="flex items-center space-x-3 flex-1">
-            {/* Imagen de la propiedad */}
-            <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-              {conversation.property_image ? (
-                <img
-                  src={conversation.property_image}
-                  alt={conversation.property_title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <User className="h-6 w-6 text-gray-400" />
-                </div>
-              )}
-            </div>
-
-            {/* Detalles */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-semibold text-gray-900 truncate">
-                {conversation.property_title}
-              </h1>
-              <p className="text-sm text-gray-600">
-                Conversación con {conversation.other_user_name}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Header Unificado con estado online/offline */}
+      <UnifiedThreadHeader
+        participant={{
+          displayName: threadInfo.otherUser.displayName,
+          avatarUrl: threadInfo.otherUser.avatarUrl,
+          presence: threadInfo.otherUser.presence
+        }}
+        onBack={() => router.push('/messages')}
+      />
 
       {/* Thread Container */}
       <div className="max-w-4xl mx-auto h-[calc(100vh-80px)]">
         <Thread
           conversationId={params.conversationId}
-          propertyTitle={conversation.property_title}
-          otherUserId={conversation.other_user_id}
-          otherUserName={conversation.other_user_name}
+          otherUserId={threadInfo.otherUser.id}
+          otherUserName={threadInfo.otherUser.displayName}
           className="h-full"
         />
       </div>

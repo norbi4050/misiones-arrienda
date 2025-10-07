@@ -20,7 +20,7 @@ import { fetchUserProfile } from "@/lib/apiClient"
  *             pet_pref, smoke_pref, diet, schedule_notes, tags[], accepts_messages,
  *             highlighted_until, is_suspended, expires_at, is_paid
  * 
- * ❌ DEPRECATED: users.profile_image (usar photos[0]), users.name/email/phone (no en user_profiles)
+ * ❌ DEPRECATED: users.profile_image/avatar/logo_url (usar user_profiles.avatar_url)
  * 
  * 🔄 MAPEO: camelCase (frontend) ↔ snake_case (database)
  */

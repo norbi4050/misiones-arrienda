@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getUserPresence } from '@/lib/presence/activity-tracker';
 
 // GET /api/comunidad/messages/[conversationId] - Obtener mensajes de una conversación
 export async function GET(
@@ -30,6 +31,20 @@ export async function GET(
       return NextResponse.json({ conversation: null, messages: [] });
     }
 
+    // Determinar el ID del otro participante
+    const otherParticipantId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+
+    // Obtener el perfil del otro participante
+    const { data: profileData, error: profileErr } = await supabase
+      .from('user_profiles')
+      .select('display_name, avatar_url, profile_updated_at')
+      .eq('user_id', otherParticipantId)
+      .single();
+
+    if (profileErr) {
+      console.error('[community/messages/:id] profile error', profileErr);
+    }
+
     // Traer mensajes desde la vista (sin joins)
     const { data: msgs, error: msgErr } = await supabase
       .from('community_messages_view')
@@ -43,7 +58,23 @@ export async function GET(
     }
 
     const participants = [conv.user1_id, conv.user2_id];
-    const otherParticipant = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+    
+    // ONLINE STATUS: Obtener información de presencia del otro participante
+    const presence = await getUserPresence(otherParticipantId);
+    
+    // Construir el objeto otherParticipant con los datos del perfil
+    const otherParticipant = {
+      userId: otherParticipantId,
+      displayName: profileData?.display_name || 'Usuario',
+      avatarUrl: profileData?.avatar_url || null,
+      profileUpdatedAt: profileData?.profile_updated_at || null,
+      presence: presence ? {
+        isOnline: presence.isOnline,
+        lastSeen: presence.lastSeen,
+        lastActivity: presence.lastActivity
+      } : undefined  // Opcional para compatibilidad
+    };
+
     const conversation = {
       id: conv.id,
       participants,
