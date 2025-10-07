@@ -86,7 +86,7 @@ export default function ContactPanel({
         setMsg(`Hola, me interesa esta propiedad en ${propertyCity}. ¿Podríamos coordinar una visita?`);
         
         // Navegar al hilo de mensajes
-        window.location.href = `/messages?thread=${threadId}`;
+        window.location.href = `/messages/${threadId}`;
       } else if (msgRes.status === 401) {
         console.log('[Messages] ⚠️ Usuario no autenticado al enviar mensaje')
         toast.error('Iniciá sesión para enviar mensajes');

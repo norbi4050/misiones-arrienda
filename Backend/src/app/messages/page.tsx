@@ -101,7 +101,7 @@ export default function MessagesPage() {
         console.log('[CREATE THREAD] Thread creado/encontrado:', data.threadId, 'existing:', data.existing)
         
         // Actualizar URL y abrir thread
-        router.push(`/messages?thread=${data.threadId}`)
+        router.push(`/messages/${data.threadId}`)
         setSelectedThreadId(data.threadId)
         
         // Refrescar lista de conversaciones
@@ -344,7 +344,7 @@ export default function MessagesPage() {
                     onClick={() => {
                       console.log('[MessagesUI] Thread seleccionado:', conversation.id)
                       setSelectedThreadId(conversation.id)
-                      router.push(`/messages?thread=${conversation.id}`)
+                      router.push(`/messages/${conversation.id}`)
                     }}
                   >
                     <SafeAvatar
@@ -358,7 +358,7 @@ export default function MessagesPage() {
                     onClick={() => {
                       console.log('[MessagesUI] Thread seleccionado:', conversation.id)
                       setSelectedThreadId(conversation.id)
-                      router.push(`/messages?thread=${conversation.id}`)
+                      router.push(`/messages/${conversation.id}`)
                     }}
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -568,7 +568,7 @@ export default function MessagesPage() {
                 onClick={() => {
                   console.log('[MessagesUI] Thread seleccionado:', conversation.id)
                   setSelectedThreadId(conversation.id)
-                  router.push(`/messages?thread=${conversation.id}`)
+                  router.push(`/messages/${conversation.id}`)
                 }}
                 className={`bg-white rounded-lg border p-6 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer ${
                   selectedThreadId === conversation.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'

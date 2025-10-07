@@ -93,8 +93,8 @@ export default function ContactButton({
         console.warn('[Analytics] messageSent failed:', e);
       }
 
-      // Navegar al hilo de mensajes
-      router.push(`/messages?thread=${threadId}`)
+        // Navegar al hilo de mensajes
+      router.push(`/messages/${threadId}`)
 
     } catch (error: any) {
       console.error('[Messages] ❌ Exception creating thread:', error)

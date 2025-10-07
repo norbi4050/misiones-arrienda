@@ -116,7 +116,7 @@ export default function ProfileCard({
       console.log('[Messages] ✅ Conversación creada/abierta:', threadId)
 
       // Navegar al hilo de mensajes
-      router.push(`/messages?thread=${threadId}`)
+      router.push(`/messages/${threadId}`)
       toast.success('Conversación iniciada')
 
     } catch (error: any) {
