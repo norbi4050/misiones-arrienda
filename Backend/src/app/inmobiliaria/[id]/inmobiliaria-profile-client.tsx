@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { AgencyShareBar } from '@/components/share';
 import { analytics } from '@/lib/analytics/track';
 import AgencyStats from '@/components/inmobiliarias/AgencyStats';
+import SendMessageButton from '@/components/inmobiliarias/SendMessageButton';
 import BusinessHours from '@/components/inmobiliarias/BusinessHours';
 import TeamMemberCard from '@/components/inmobiliarias/TeamMemberCard';
 import AgencyLocationMap from '@/components/inmobiliarias/AgencyLocationMap';
@@ -212,8 +213,16 @@ export default function InmobiliariaProfileClient({
                 )}
               </div>
 
-              {/* B5: ShareBar para inmobiliaria */}
+              {/* Botón de contacto */}
               <div className="mt-4 mb-4">
+                <SendMessageButton
+                  agencyId={profile.id}
+                  agencyName={profile.company_name}
+                />
+              </div>
+
+              {/* B5: ShareBar para inmobiliaria */}
+              <div className="mt-4">
                 <AgencyShareBar
                   agencyId={profile.id}
                   agencyData={{

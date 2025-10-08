@@ -105,18 +105,6 @@ export default function ContactPanel({
 
   return (
     <div className={className}>
-      {/* Botones de contacto rápido */}
-      <div className="space-y-3 mb-6">
-        <Button className="w-full" size="lg">
-          <Phone className="h-4 w-4 mr-2" />
-          Contactar
-        </Button>
-        <Button variant="outline" className="w-full" size="lg">
-          <Mail className="h-4 w-4 mr-2" />
-          Enviar consulta
-        </Button>
-      </div>
-
       {/* Formulario de mensaje */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Tipo para el perfil público de inmobiliaria
 interface InmobiliariaPublicProfile {
@@ -48,26 +49,31 @@ export async function GET(
       );
     }
 
-    // Crear cliente de Supabase
-    const supabase = createClient();
-
-    // Obtener perfil público de la inmobiliaria
-    // Solo seleccionamos campos públicos
-    const { data: inmobiliaria, error } = await supabase
+    // ✅ FIX: Obtener datos completos desde la tabla users
+    const { data: inmobiliariaData, error: profileError } = await supabaseAdmin
       .from('users')
       .select(`
         id,
-        company_name,
-        logo_url,
-        verified,
-        phone,
+        company_name, 
+        phone, 
+        address, 
+        website, 
+        facebook, 
+        instagram, 
+        tiktok, 
+        description, 
+        logo_url, 
+        verified, 
+        user_type,
         commercial_phone,
-        address,
-        website,
-        facebook,
-        instagram,
-        tiktok,
-        description,
+        business_hours,
+        timezone,
+        latitude,
+        longitude,
+        show_team_public,
+        show_hours_public,
+        show_map_public,
+        show_stats_public,
         show_phone_public,
         show_address_public,
         created_at
@@ -75,8 +81,9 @@ export async function GET(
       .eq('id', id)
       .eq('user_type', 'inmobiliaria')
       .single();
-
-    if (error || !inmobiliaria) {
+    
+    if (profileError || !inmobiliariaData) {
+      console.error('[API] Error fetching inmobiliaria profile:', profileError);
       return NextResponse.json(
         { error: 'Inmobiliaria no encontrada' },
         { status: 404 }
@@ -85,23 +92,24 @@ export async function GET(
 
     // Construir perfil público respetando configuración de privacidad
     const publicProfile: InmobiliariaPublicProfile = {
-      id: inmobiliaria.id,
-      company_name: inmobiliaria.company_name,
-      logo_url: inmobiliaria.logo_url,
-      verified: inmobiliaria.verified || false,
+      id: inmobiliariaData.id,
+      company_name: inmobiliariaData.company_name || 'Inmobiliaria',
+      logo_url: inmobiliariaData.logo_url,
+      verified: inmobiliariaData.verified || false,
       // Solo mostrar teléfonos si show_phone_public es true
-      phone: inmobiliaria.show_phone_public ? inmobiliaria.phone : null,
-      commercial_phone: inmobiliaria.show_phone_public ? inmobiliaria.commercial_phone : null,
+      phone: inmobiliariaData.show_phone_public ? inmobiliariaData.phone : null,
+      commercial_phone: inmobiliariaData.show_phone_public ? inmobiliariaData.commercial_phone : null,
       // Solo mostrar dirección si show_address_public es true
-      address: inmobiliaria.show_address_public ? inmobiliaria.address : null,
-      website: inmobiliaria.website,
-      facebook: inmobiliaria.facebook,
-      instagram: inmobiliaria.instagram,
-      tiktok: inmobiliaria.tiktok,
-      description: inmobiliaria.description,
-      show_phone_public: inmobiliaria.show_phone_public || false,
-      show_address_public: inmobiliaria.show_address_public || false,
-      created_at: inmobiliaria.created_at,
+      address: inmobiliariaData.show_address_public ? inmobiliariaData.address : null,
+      // Redes sociales y website siempre públicos
+      website: inmobiliariaData.website,
+      facebook: inmobiliariaData.facebook,
+      instagram: inmobiliariaData.instagram,
+      tiktok: inmobiliariaData.tiktok,
+      description: inmobiliariaData.description,
+      show_phone_public: inmobiliariaData.show_phone_public || false,
+      show_address_public: inmobiliariaData.show_address_public || false,
+      created_at: inmobiliariaData.created_at,
     };
 
     return NextResponse.json(publicProfile, {

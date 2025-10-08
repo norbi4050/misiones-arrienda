@@ -150,21 +150,95 @@ export default function CommunityListClient({ initialData }: CommunityListClient
         <div className="flex gap-2 mb-4">
           <Button
             variant={state.role === '' ? 'default' : 'outline'}
-            onClick={() => set('role', '')}
+            onClick={async () => {
+              set('role', '')
+              // Ejecutar búsqueda automáticamente después de cambiar el rol
+              setTimeout(async () => {
+                setLoading(true)
+                try {
+                  const params = new URLSearchParams()
+                  if (state.city) params.append('city', String(state.city))
+                  if (state.q) params.append('q', String(state.q))
+                  if (state.min) params.append('min', String(state.min))
+                  if (state.max) params.append('max', String(state.max))
+                  params.append('sort', String(state.sort || 'recent'))
+                  
+                  const response = await fetch(`/api/comunidad/posts?${params}`)
+                  if (response.ok) {
+                    const data: CommunityPostsResponse = await response.json()
+                    setPosts(data.posts)
+                  }
+                } catch (error) {
+                  console.error('Error searching posts:', error)
+                } finally {
+                  setLoading(false)
+                }
+              }, 100)
+            }}
             size="sm"
           >
             Todos
           </Button>
           <Button
             variant={state.role === 'BUSCO' ? 'default' : 'outline'}
-            onClick={() => set('role', 'BUSCO')}
+            onClick={async () => {
+              set('role', 'BUSCO')
+              // Ejecutar búsqueda automáticamente después de cambiar el rol
+              setTimeout(async () => {
+                setLoading(true)
+                try {
+                  const params = new URLSearchParams()
+                  if (state.city) params.append('city', String(state.city))
+                  params.append('role', 'BUSCO')
+                  if (state.q) params.append('q', String(state.q))
+                  if (state.min) params.append('min', String(state.min))
+                  if (state.max) params.append('max', String(state.max))
+                  params.append('sort', String(state.sort || 'recent'))
+                  
+                  const response = await fetch(`/api/comunidad/posts?${params}`)
+                  if (response.ok) {
+                    const data: CommunityPostsResponse = await response.json()
+                    setPosts(data.posts)
+                  }
+                } catch (error) {
+                  console.error('Error searching posts:', error)
+                } finally {
+                  setLoading(false)
+                }
+              }, 100)
+            }}
             size="sm"
           >
             Busco habitación
           </Button>
           <Button
             variant={state.role === 'OFREZCO' ? 'default' : 'outline'}
-            onClick={() => set('role', 'OFREZCO')}
+            onClick={async () => {
+              set('role', 'OFREZCO')
+              // Ejecutar búsqueda automáticamente después de cambiar el rol
+              setTimeout(async () => {
+                setLoading(true)
+                try {
+                  const params = new URLSearchParams()
+                  if (state.city) params.append('city', String(state.city))
+                  params.append('role', 'OFREZCO')
+                  if (state.q) params.append('q', String(state.q))
+                  if (state.min) params.append('min', String(state.min))
+                  if (state.max) params.append('max', String(state.max))
+                  params.append('sort', String(state.sort || 'recent'))
+                  
+                  const response = await fetch(`/api/comunidad/posts?${params}`)
+                  if (response.ok) {
+                    const data: CommunityPostsResponse = await response.json()
+                    setPosts(data.posts)
+                  }
+                } catch (error) {
+                  console.error('Error searching posts:', error)
+                } finally {
+                  setLoading(false)
+                }
+              }, 100)
+            }}
             size="sm"
           >
             Ofrezco habitación
@@ -173,12 +247,12 @@ export default function CommunityListClient({ initialData }: CommunityListClient
 
         {showFilters && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t">
-            <Select value={String(state.city)} onValueChange={(value) => set('city', value)}>
+            <Select value={String(state.city)} onValueChange={(value) => set('city', value === 'all' ? '' : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Ciudad" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las ciudades</SelectItem>
+                <SelectItem value="all">Todas las ciudades</SelectItem>
                 {cities.map(cityName => (
                   <SelectItem key={cityName} value={cityName}>{cityName}</SelectItem>
                 ))}
@@ -199,7 +273,7 @@ export default function CommunityListClient({ initialData }: CommunityListClient
               onChange={(e) => set('max', e.target.value)}
             />
 
-            <Select value={String(state.sort)} onValueChange={(value: 'recent' | 'highlight') => set('sort', value)}>
+            <Select value={String(state.sort) || 'recent'} onValueChange={(value: 'recent' | 'highlight') => set('sort', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Ordenar por" />
               </SelectTrigger>

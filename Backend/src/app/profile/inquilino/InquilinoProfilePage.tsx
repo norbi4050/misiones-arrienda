@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import AvatarUniversal from "@/components/ui/avatar-universal"
 import ErrorBoundary from "@/components/ui/error-boundary"
-import { Search, User, MapPin, Heart, History, Settings, Save, Edit, Loader2 } from "lucide-react"
+import { Search, User, MapPin, Heart, History, Save, Edit, Loader2 } from "lucide-react"
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
@@ -226,7 +226,7 @@ function InquilinoProfilePageContent({ userId }: InquilinoProfilePageProps) {
                 <div className="flex items-center space-x-2 mt-1">
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                     <Search className="h-3 w-3 mr-1" />
-                    {profileData.role === "BUSCO" ? "Busco alojamiento" : "Ofrezco alojamiento"}
+                    {profileData.role === "BUSCO" ? "Inquilino" : "Dueño directo"}
                   </Badge>
                   {profileData.city && (
                     <div className="flex items-center text-gray-600 text-sm">
@@ -292,12 +292,12 @@ function InquilinoProfilePageContent({ userId }: InquilinoProfilePageProps) {
                         <SelectValue placeholder="Selecciona tu rol" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="BUSCO">🔍 Busco alojamiento</SelectItem>
-                        <SelectItem value="OFREZCO">🏠 Ofrezco alojamiento</SelectItem>
+                        <SelectItem value="BUSCO">🏠 Inquilino</SelectItem>
+                        <SelectItem value="OFREZCO">🏢 Dueño directo</SelectItem>
                       </SelectContent>
                     </Select>
                     <div id="role-help" className="mt-1 text-xs text-gray-500">
-                      Define si buscas o ofreces alojamiento
+                      Define si eres inquilino o dueño directo
                     </div>
                   </div>
 
@@ -353,249 +353,6 @@ function InquilinoProfilePageContent({ userId }: InquilinoProfilePageProps) {
                   <div id="bio-help" className="mt-1 text-xs text-gray-500">
                     Describe tu personalidad y lo que buscas
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Presupuesto */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <span>💰</span>
-                  <span>Presupuesto</span>
-                </CardTitle>
-                <CardDescription>
-                  Rango de precios que manejas
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="budgetMin" className="block text-sm font-medium text-gray-700 mb-1">
-                      Mínimo (ARS)
-                    </label>
-                    <Input
-                      id="budgetMin"
-                      type="number"
-                      value={profileData.budgetMin || ""}
-                      onChange={(e) => setProfileData({...profileData, budgetMin: e.target.value ? parseInt(e.target.value) : null})}
-                      onBlur={(e) => {
-                        // Formateo visual al perder foco
-                        const value = parseInt(e.target.value)
-                        if (value && !isNaN(value)) {
-                          e.target.value = value.toLocaleString('es-AR')
-                        }
-                      }}
-                      disabled={!isEditing}
-                      placeholder="50.000"
-                      min="0"
-                      aria-describedby="budgetMin-help"
-                    />
-                    <div id="budgetMin-help" className="mt-1 text-xs text-gray-500">
-                      Presupuesto mínimo mensual
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="budgetMax" className="block text-sm font-medium text-gray-700 mb-1">
-                      Máximo (ARS)
-                    </label>
-                    <Input
-                      id="budgetMax"
-                      type="number"
-                      value={profileData.budgetMax || ""}
-                      onChange={(e) => setProfileData({...profileData, budgetMax: e.target.value ? parseInt(e.target.value) : null})}
-                      onBlur={(e) => {
-                        // Formateo visual al perder foco
-                        const value = parseInt(e.target.value)
-                        if (value && !isNaN(value)) {
-                          e.target.value = value.toLocaleString('es-AR')
-                        }
-                      }}
-                      disabled={!isEditing}
-                      placeholder="150.000"
-                      min="0"
-                      aria-describedby="budgetMax-help"
-                    />
-                    <div id="budgetMax-help" className="mt-1 text-xs text-gray-500">
-                      Presupuesto máximo mensual
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Preferencias de Convivencia */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <span>🏡</span>
-                  <span>Preferencias de Convivencia</span>
-                </CardTitle>
-                <CardDescription>
-                  Tus preferencias para compartir espacio
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label htmlFor="petPref" className="block text-sm font-medium text-gray-700 mb-1">
-                      🐕 Mascotas
-                    </label>
-                    <Select
-                      value={profileData.petPref || ""}
-                      onValueChange={(value) => setProfileData({...profileData, petPref: (value || null) as "SI_PET" | "NO_PET" | "INDIFERENTE" | null})}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger id="petPref" aria-describedby="petPref-help">
-                        <SelectValue placeholder="¿Mascotas?" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SI_PET">✅ Acepto mascotas</SelectItem>
-                        <SelectItem value="NO_PET">❌ No acepto mascotas</SelectItem>
-                        <SelectItem value="INDIFERENTE">🤷 Me da igual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div id="petPref-help" className="mt-1 text-xs text-gray-500">
-                      Tu posición sobre mascotas
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="smokePref" className="block text-sm font-medium text-gray-700 mb-1">
-                      🚬 Fumar
-                    </label>
-                    <Select
-                      value={profileData.smokePref || ""}
-                      onValueChange={(value) => setProfileData({...profileData, smokePref: (value || null) as "FUMADOR" | "NO_FUMADOR" | "INDIFERENTE" | null})}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger id="smokePref" aria-describedby="smokePref-help">
-                        <SelectValue placeholder="¿Fumar?" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="FUMADOR">🚬 Soy fumador</SelectItem>
-                        <SelectItem value="NO_FUMADOR">🚭 No fumo</SelectItem>
-                        <SelectItem value="INDIFERENTE">🤷 Me da igual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div id="smokePref-help" className="mt-1 text-xs text-gray-500">
-                      Tu relación con el tabaco
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="diet" className="block text-sm font-medium text-gray-700 mb-1">
-                      🥗 Dieta
-                    </label>
-                    <Select
-                      value={profileData.diet || ""}
-                      onValueChange={(value) => setProfileData({...profileData, diet: (value || null) as "NINGUNA" | "VEGETARIANO" | "VEGANO" | "CELIACO" | "OTRO" | null})}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger id="diet" aria-describedby="diet-help">
-                        <SelectValue placeholder="Tipo de dieta" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="NINGUNA">🍽️ Sin restricciones</SelectItem>
-                        <SelectItem value="VEGETARIANO">🥬 Vegetariano</SelectItem>
-                        <SelectItem value="VEGANO">🌱 Vegano</SelectItem>
-                        <SelectItem value="CELIACO">🌾 Celíaco</SelectItem>
-                        <SelectItem value="OTRO">🔄 Otra dieta</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div id="diet-help" className="mt-1 text-xs text-gray-500">
-                      Restricciones alimentarias
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Detalles Adicionales */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <span>📋</span>
-                  <span>Detalles Adicionales</span>
-                </CardTitle>
-                <CardDescription>
-                  Información complementaria
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
-                      Edad
-                    </label>
-                    <Input
-                      id="age"
-                      type="number"
-                      value={profileData.age || ""}
-                      onChange={(e) => setProfileData({...profileData, age: e.target.value ? parseInt(e.target.value) : null})}
-                      disabled={!isEditing}
-                      placeholder="25"
-                      min="18"
-                      max="100"
-                      aria-describedby="age-help"
-                    />
-                    <div id="age-help" className="mt-1 text-xs text-gray-500">
-                      Tu edad (opcional)
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="scheduleNotes" className="block text-sm font-medium text-gray-700 mb-1">
-                      Horarios y rutina
-                    </label>
-                    <Input
-                      id="scheduleNotes"
-                      value={profileData.scheduleNotes}
-                      onChange={(e) => setProfileData({...profileData, scheduleNotes: e.target.value})}
-                      disabled={!isEditing}
-                      placeholder="Ej: Trabajo de 9 a 17, estudiante nocturno"
-                      aria-describedby="scheduleNotes-help"
-                    />
-                    <div id="scheduleNotes-help" className="mt-1 text-xs text-gray-500">
-                      Describe tus horarios habituales
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-1">
-                    Etiquetas
-                  </label>
-                  <Input
-                    id="tags"
-                    value={profileData.tags?.join(', ') || ""}
-                    onChange={(e) => {
-                      const tagsArray = e.target.value
-                        .split(',')
-                        .map(tag => tag.trim())
-                        .filter(tag => tag.length > 0)
-                      setProfileData({...profileData, tags: tagsArray.length > 0 ? tagsArray : null})
-                    }}
-                    disabled={!isEditing}
-                    placeholder="estudiante, pareja sin hijos, limpio, sociable"
-                    aria-describedby="tags-help"
-                  />
-                  <div id="tags-help" className="mt-1 text-xs text-gray-500">
-                    Palabras clave separadas por comas
-                  </div>
-                  {profileData.tags && profileData.tags.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {profileData.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -685,31 +442,6 @@ function InquilinoProfilePageContent({ userId }: InquilinoProfilePageProps) {
                     </p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Acciones Rápidas */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
-                  <Heart className="h-4 w-4 mr-2" />
-                  Ver Favoritos
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <History className="h-4 w-4 mr-2" />
-                  Historial de Búsquedas
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Crear Alerta de Búsqueda
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configuración
-                </Button>
               </CardContent>
             </Card>
           </div>

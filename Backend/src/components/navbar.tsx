@@ -3,10 +3,9 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Search, Heart, MessageCircle } from "lucide-react"
+import { Menu, X, Heart, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { ProfileDropdown } from "@/components/ui/profile-dropdown"
 import { useCurrentUser } from "@/lib/auth/useCurrentUser"
 import AvatarUniversal from "@/components/ui/avatar-universal"
@@ -14,7 +13,6 @@ import { useMessagesUnread } from "@/hooks/useMessagesUnread"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
-  const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, isAuthenticated, isAgency, loading, signOut } = useCurrentUser()
   const { count: unreadCount } = useMessagesUnread({ 
@@ -88,37 +86,8 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Search and Actions */}
+          {/* Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Search */}
-            <div className="relative">
-              {searchOpen ? (
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="text"
-                    placeholder="Buscar propiedades..."
-                    className="w-64"
-                    icon={<Search className="h-4 w-4" />}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSearchOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSearchOpen(true)}
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
             {/* Authentication Section */}
             {!loading && (
               <>
@@ -209,15 +178,6 @@ export function Navbar() {
                 {item.name}
               </Link>
             ))}
-            
-            {/* Mobile Search */}
-            <div className="px-3 py-2">
-              <Input
-                type="text"
-                placeholder="Buscar propiedades..."
-                icon={<Search className="h-4 w-4" />}
-              />
-            </div>
 
             {/* Mobile Authentication Section */}
             {!loading && (

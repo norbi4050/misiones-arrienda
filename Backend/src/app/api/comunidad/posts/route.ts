@@ -193,8 +193,8 @@ export async function POST(request: NextRequest) {
       amenities: d.amenities ?? [],
       tags: d.tags ?? [],
       images: d.images ?? [],
-      is_active: true
-      // status: 'ACTIVE' - Comentado: columna no existe en Supabase aún
+      is_active: true,
+      status: 'active'  // Lowercase para coincidir con la vista y el CHECK constraint
     }
 
     // Insert con select

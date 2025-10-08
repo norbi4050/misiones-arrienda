@@ -342,13 +342,13 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
             {/* Property Info */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
               <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2 break-words overflow-wrap-anywhere">
                     {property.title}
                   </h1>
                   <div className="flex items-center text-gray-600 mb-4">
-                    <MapPin className="h-5 w-5 mr-2" />
-                    <span>{property.address}, {property.city}, {property.province}</span>
+                    <MapPin className="h-5 w-5 mr-2 flex-shrink-0" />
+                    <span className="break-words">{property.address}, {property.city}, {property.province}</span>
                   </div>
                 </div>
                 {!isOwner && (
@@ -434,7 +434,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                 <h2 className="text-xl font-semibold text-gray-900 mb-3">
                   Descripción
                 </h2>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                   {property.description}
                 </p>
               </div>

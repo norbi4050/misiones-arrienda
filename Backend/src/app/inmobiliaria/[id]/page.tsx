@@ -1,7 +1,9 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateAgencyShareMetaTags } from '@/lib/share/metatags';
+import { getPropertyCoverImage } from '@/lib/property-images.server';
 import InmobiliariaProfileClient from './inmobiliaria-profile-client';
 
 // Tipos
@@ -56,17 +58,10 @@ export async function generateMetadata({
   params: { id: string };
 }): Promise<Metadata> {
   try {
-    const supabase = createClient();
+    // Obtener datos desde auth.users
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(params.id);
     
-    // Obtener datos de la inmobiliaria
-    const { data: inmobiliaria } = await supabase
-      .from('users')
-      .select('company_name, description, logo_url, verified, city, province')
-      .eq('id', params.id)
-      .eq('user_type', 'inmobiliaria')
-      .single();
-
-    if (!inmobiliaria) {
+    if (!authUser?.user) {
       return {
         title: 'Inmobiliaria no encontrada | Misiones Arrienda',
         description: 'La inmobiliaria que buscas no existe o ha sido removida.',
@@ -77,7 +72,32 @@ export async function generateMetadata({
       };
     }
 
+    const metadata = authUser.user.user_metadata || {};
+    
+    // Verificar que sea inmobiliaria
+    if (metadata.userType !== 'inmobiliaria') {
+      return {
+        title: 'Inmobiliaria no encontrada | Misiones Arrienda',
+        description: 'La inmobiliaria que buscas no existe o ha sido removida.',
+        robots: {
+          index: false,
+          follow: false,
+        },
+      };
+    }
+
+    // Construir objeto inmobiliaria desde metadata
+    const inmobiliaria = {
+      company_name: metadata.companyName || 'Inmobiliaria',
+      description: null,
+      logo_url: metadata.profileImage || null,
+      verified: false,
+      city: 'Misiones',
+      province: 'Misiones',
+    };
+
     // Contar propiedades activas
+    const supabase = createClient();
     const { count: propertiesCount } = await supabase
       .from('properties')
       .select('*', { count: 'exact', head: true })
@@ -106,11 +126,9 @@ export async function generateMetadata({
       
       // Fallback al sistema anterior
       const title = `${inmobiliaria.company_name} | Inmobiliaria en Misiones — Misiones Arrienda`;
-      const description = inmobiliaria.description
-        ? `${inmobiliaria.description.substring(0, 155)}...`
-        : `Propiedades de ${inmobiliaria.company_name} en Misiones. ${
-            inmobiliaria.verified ? 'Verificada, ' : ''
-          }con precios visibles y contacto directo.`;
+      const description = `Propiedades de ${inmobiliaria.company_name} en Misiones. ${
+        inmobiliaria.verified ? 'Verificada, ' : ''
+      }con precios visibles y contacto directo.`;
 
       return {
         title,
@@ -158,53 +176,97 @@ export default async function InmobiliariaPublicPage({
 }) {
   const { id } = params;
 
-  // Fetch del perfil de la inmobiliaria
-  const supabase = createClient();
-  
-  const { data: inmobiliaria, error } = await supabase
+  // ✅ FIX: Obtener datos completos desde la tabla users
+  const { data: inmobiliariaData, error: profileError } = await supabaseAdmin
     .from('users')
     .select(`
       id,
-      company_name,
-      logo_url,
-      verified,
-      phone,
+      company_name, 
+      phone, 
+      address, 
+      website, 
+      facebook, 
+      instagram, 
+      tiktok, 
+      description, 
+      logo_url, 
+      verified, 
+      user_type,
       commercial_phone,
-      address,
-      website,
-      facebook,
-      instagram,
-      tiktok,
-      description,
       business_hours,
       timezone,
       latitude,
       longitude,
-      show_phone_public,
-      show_address_public,
       show_team_public,
       show_hours_public,
       show_map_public,
       show_stats_public,
+      show_phone_public,
+      show_address_public,
       created_at
     `)
     .eq('id', id)
     .eq('user_type', 'inmobiliaria')
     .single();
-
-  // Si no existe o hay error, mostrar 404
-  if (error || !inmobiliaria) {
+  
+  if (profileError || !inmobiliariaData) {
+    console.error('[Page] Error fetching inmobiliaria profile:', profileError);
     notFound();
   }
 
+  // Usar datos reales de la tabla users
+  const inmobiliaria = {
+    id: inmobiliariaData.id,
+    company_name: inmobiliariaData.company_name || 'Inmobiliaria',
+    logo_url: inmobiliariaData.logo_url,
+    verified: inmobiliariaData.verified || false,
+    phone: inmobiliariaData.phone,
+    commercial_phone: inmobiliariaData.commercial_phone,
+    address: inmobiliariaData.address,
+    website: inmobiliariaData.website,
+    facebook: inmobiliariaData.facebook,
+    instagram: inmobiliariaData.instagram,
+    tiktok: inmobiliariaData.tiktok,
+    description: inmobiliariaData.description,
+    business_hours: inmobiliariaData.business_hours,
+    timezone: inmobiliariaData.timezone || 'America/Argentina/Buenos_Aires',
+    latitude: inmobiliariaData.latitude,
+    longitude: inmobiliariaData.longitude,
+    show_phone_public: inmobiliariaData.show_phone_public || false,
+    show_address_public: inmobiliariaData.show_address_public || false,
+    show_team_public: inmobiliariaData.show_team_public || false,
+    show_hours_public: inmobiliariaData.show_hours_public || false,
+    show_map_public: inmobiliariaData.show_map_public || false,
+    show_stats_public: inmobiliariaData.show_stats_public || false,
+    created_at: inmobiliariaData.created_at,
+  };
+
+  const supabase = createClient();
+
   // Fetch inicial de propiedades (primera página)
-  const { data: properties, count } = await supabase
+  const { data: rawProperties, count } = await supabase
     .from('properties')
     .select('*', { count: 'exact' })
     .eq('user_id', id)
     .eq('is_active', true)
     .order('created_at', { ascending: false })
     .range(0, 11); // Primera página de 12 items
+
+  // Generar signed URLs para las propiedades iniciales
+  const properties = await Promise.all(
+    (rawProperties || []).map(async (prop) => {
+      const coverUrl = await getPropertyCoverImage(
+        prop.id,
+        id,
+        prop.cover_url || undefined
+      );
+      
+      return {
+        ...prop,
+        cover_url: coverUrl
+      };
+    })
+  );
 
   // FASE 5: Fetch team members
   const { data: teamMembers } = await supabase

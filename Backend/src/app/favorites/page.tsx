@@ -39,7 +39,7 @@ async function getFavoriteProperties(): Promise<Property[]> {
       .from("favorites")
       .select(`
         property_id,
-        properties!inner (
+        properties!favorites_property_id_fkey (
           id,
           title,
           price,
@@ -53,7 +53,7 @@ async function getFavoriteProperties(): Promise<Property[]> {
           latitude,
           longitude,
           images,
-          cover_url,
+          cover_path,
           featured,
           status,
           created_at,
@@ -86,7 +86,10 @@ async function getFavoriteProperties(): Promise<Property[]> {
         imageUrls = []
       }
 
-      const cover_url = property.cover_url ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg'
+      // Construir cover_url desde cover_path o usar primera imagen
+      const cover_url = property.cover_path 
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${property.cover_path}`
+        : imageUrls?.[0] ?? '/placeholder-apartment-1.jpg'
 
       return {
         id: property.id,

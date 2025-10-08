@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // Evitar caching agresivo durante desarrollo
 export const dynamic = 'force-dynamic'
@@ -8,17 +9,10 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient()
     
-    // Query 1: Obtener propiedad por ID con JOIN a users para info del dueño (FASE 6)
+    // Query 1: Obtener propiedad por ID SIN JOIN (más robusto)
     const { data: property, error } = await supabase
       .from('properties')
-      .select(`
-        *,
-        owner:users!user_id (
-          id,
-          user_type,
-          company_name
-        )
-      `)
+      .select('*')
       .eq('id', params.id)
       .single()
 
@@ -40,19 +34,45 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
       return NextResponse.json({ error: 'not_found' }, { status: 404 })
     }
 
-    // Query 2: Resolver agent en segundo query opcional
-    const uid = property.user_id ?? property.user_id_uuid ?? property.user_id_text
-    let agent = null
-    
-    if (uid) {
+    // Query 2: Obtener info del dueño desde auth.users (raw_user_meta_data)
+    let ownerData = null;
+    if (property.user_id) {
+      try {
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(property.user_id);
+        
+        if (authUser?.user) {
+          const metadata = authUser.user.user_metadata || {};
+          ownerData = {
+            id: authUser.user.id,
+            user_type: metadata.userType || null,
+            company_name: metadata.companyName || null,
+          };
+        }
+      } catch (ownerError) {
+        console.warn('Error fetching owner from auth:', ownerError);
+        // Continuar sin owner - no es crítico
+      }
+    }
+
+    // Query 3: Resolver agent desde user_profiles (usando id en lugar de user_id)
+    let agent = null;
+    if (property.user_id) {
       try {
         const { data: profile } = await supabase
           .from('user_profiles')
-          .select('id, user_id, full_name, email, phone, photos')
-          .or(`user_id.eq.${uid},id.eq.${uid}`)  // tolerante a text/uuid
+          .select('*')
+          .eq('id', property.user_id)
           .maybeSingle()
         
-        agent = profile ?? null
+        if (profile) {
+          agent = {
+            id: profile.id,
+            full_name: profile.display_name || ownerData?.company_name || 'Propietario',
+            email: null, // No disponible en user_profiles
+            phone: null, // No disponible en user_profiles
+            photos: null
+          }
+        }
       } catch (profileError) {
         console.warn('Error fetching agent profile:', profileError)
         // Continuar sin agente - no es crítico
@@ -61,13 +81,11 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     }
 
     // FASE 6: Aplanar owner info antes de responder
-    const ownerData = property.owner || {};
     const enrichedProperty = {
       ...property,
-      owner_id: ownerData.id || null,
-      owner_type: ownerData.user_type || null,
-      owner_company_name: ownerData.company_name || null,
-      owner: undefined // Remover objeto anidado
+      owner_id: ownerData?.id || null,
+      owner_type: ownerData?.user_type || null,
+      owner_company_name: ownerData?.company_name || null,
     };
 
     // Responder SIEMPRE objeto

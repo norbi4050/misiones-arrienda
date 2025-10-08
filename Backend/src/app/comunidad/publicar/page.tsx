@@ -294,7 +294,9 @@ export default function PublicarPerfilPage() {
           // Continuar aunque falle el logging
         }
         
-        router.push(`/comunidad/${result.id}`)
+        // Redirigir a mis publicaciones en lugar del detalle
+        // porque el post recién creado puede no estar disponible inmediatamente en la view pública
+        router.push('/comunidad/mis-publicaciones')
       } else {
         const errorData = await response.json()
         

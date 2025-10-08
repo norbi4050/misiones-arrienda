@@ -11,12 +11,12 @@ export async function GET() {
     }
 
     // Obtener favoritos con datos completos de propiedades
-    // Usar nombre explícito del FK para desambiguar (Prisma genera Favorite_propertyId_fkey)
+    // Usar nombre explícito del FK (favorites_property_id_fkey)
     const { data, error } = await supabase
       .from("favorites")
       .select(`
         property_id,
-        properties!Favorite_propertyId_fkey!inner (
+        properties!favorites_property_id_fkey (
           id,
           title,
           price,
@@ -30,7 +30,7 @@ export async function GET() {
           latitude,
           longitude,
           images,
-          cover_url,
+          cover_path,
           featured,
           status,
           created_at,
@@ -63,7 +63,10 @@ export async function GET() {
         imageUrls = [];
       }
 
-      const cover_url = property.cover_url ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
+      // Construir cover_url desde cover_path o usar primera imagen
+      const cover_url = property.cover_path 
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${property.cover_path}`
+        : imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
 
       return {
         id: property.id,

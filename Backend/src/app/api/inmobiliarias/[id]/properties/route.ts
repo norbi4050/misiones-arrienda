@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getPropertyCoverImage } from '@/lib/property-images.server';
 
 // Tipos para la respuesta
 interface PropertyListItem {
@@ -59,13 +60,15 @@ export async function GET(
     const supabase = createClient();
 
     // Verificar que la inmobiliaria existe
+    // Nota: La tabla users usa 'user_type' en lugar de 'role'
     const { data: inmobiliaria, error: inmoError } = await supabase
       .from('users')
-      .select('id, company_name, role')
+      .select('id, company_name, user_type')
       .eq('id', id)
       .single();
 
     if (inmoError || !inmobiliaria) {
+      console.error('Error verificando inmobiliaria:', inmoError);
       return NextResponse.json(
         { error: 'Inmobiliaria no encontrada' },
         { status: 404 }
@@ -73,7 +76,7 @@ export async function GET(
     }
 
     // Verificar que es una inmobiliaria
-    if (inmobiliaria.role !== 'inmobiliaria') {
+    if (inmobiliaria.user_type !== 'inmobiliaria') {
       return NextResponse.json(
         { error: 'El usuario no es una inmobiliaria' },
         { status: 400 }
@@ -117,20 +120,31 @@ export async function GET(
       );
     }
 
-    // Mapear propiedades al formato de respuesta
-    const items: PropertyListItem[] = (properties || []).map((prop) => ({
-      id: prop.id,
-      title: prop.title,
-      price: prop.price,
-      location: prop.location || prop.city || 'Sin ubicación',
-      property_type: prop.property_type,
-      operation_type: prop.operation_type || 'alquiler',
-      cover_url: prop.cover_url,
-      created_at: prop.created_at,
-      bedrooms: prop.bedrooms,
-      bathrooms: prop.bathrooms,
-      area: prop.area,
-    }));
+    // Mapear propiedades al formato de respuesta con URLs firmadas
+    const items: PropertyListItem[] = await Promise.all(
+      (properties || []).map(async (prop) => {
+        // Generar URL firmada para la imagen de portada
+        const coverUrl = await getPropertyCoverImage(
+          prop.id,
+          id, // userId (inmobiliaria ID)
+          prop.cover_url || undefined
+        );
+
+        return {
+          id: prop.id,
+          title: prop.title,
+          price: prop.price,
+          location: prop.location || prop.city || 'Sin ubicación',
+          property_type: prop.property_type,
+          operation_type: prop.operation_type || 'alquiler',
+          cover_url: coverUrl,
+          created_at: prop.created_at,
+          bedrooms: prop.bedrooms,
+          bathrooms: prop.bathrooms,
+          area: prop.area,
+        };
+      })
+    );
 
     // Calcular total de páginas
     const total = count || 0;
