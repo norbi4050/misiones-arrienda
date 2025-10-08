@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,7 @@ import { toPublicUrl, normalizeImages } from '@/lib/images'
 import { CitySelect } from '@/components/forms/city-select'
 import PropertyImageUpload from '@/components/ui/property-image-upload'
 import MapPicker from '@/components/property/MapPicker'
+import { createBrowserSupabase } from '@/lib/supabase/browser'
 
 type Property = {
   id: string
@@ -33,7 +34,24 @@ type Property = {
 export default function EditPropertyClient({ initialProperty }: { initialProperty: Property }) {
   const [form, setForm] = useState<Property>(initialProperty)
   const [pending, startTransition] = useTransition()
+  const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
+
+  // Obtener userId al montar el componente
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const supabase = createBrowserSupabase()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          setUserId(user.id)
+        }
+      } catch (error) {
+        console.error('Error getting user:', error)
+      }
+    }
+    getUserId()
+  }, [])
 
   const update = (k: keyof Property, v: any) => setForm(prev => ({ ...prev, [k]: v }))
 
@@ -188,11 +206,16 @@ export default function EditPropertyClient({ initialProperty }: { initialPropert
         {/* Editor de Imágenes Mejorado */}
         <fieldset className="space-y-2">
           <label className="block text-sm font-medium">Imágenes de la Propiedad</label>
-          <PropertyImageUploadWrapper
-            propertyId={form.id}
-            value={form.images ?? []}
-            onChange={(imgs) => setForm((f) => ({ ...f, images: imgs }))}
-          />
+          {userId ? (
+            <PropertyImageUploadWrapper
+              propertyId={form.id}
+              userId={userId}
+              value={form.images ?? []}
+              onChange={(imgs) => setForm((f) => ({ ...f, images: imgs }))}
+            />
+          ) : (
+            <div className="text-sm text-gray-500">Cargando editor de imágenes...</div>
+          )}
         </fieldset>
 
         <div className="flex gap-3">
@@ -290,121 +313,52 @@ function GeocodeButton({
 // Wrapper para integrar PropertyImageUpload con el estado del formulario
 function PropertyImageUploadWrapper({
   propertyId,
+  userId,
   value,
   onChange,
 }: {
   propertyId: string
+  userId: string
   value: string[]
   onChange: (imgs: string[]) => void
 }) {
   const [bucketImages, setBucketImages] = useState<string[]>([])
 
   // Cargar imágenes del bucket al montar
-  useState(() => {
+  useEffect(() => {
     const loadBucketImages = async () => {
       try {
-        const response = await fetch(`/api/properties/${propertyId}/images`)
+        const response = await fetch(`/api/properties/${propertyId}/images/list?ownerId=${userId}`)
         if (response.ok) {
           const data = await response.json()
-          setBucketImages(data.images || [])
+          const urls = data.items?.map((item: any) => item.url) || []
+          setBucketImages(urls)
         }
       } catch (error) {
         console.error('Error loading bucket images:', error)
       }
     }
-    loadBucketImages()
-  })
+    if (propertyId && userId) {
+      loadBucketImages()
+    }
+  }, [propertyId, userId])
 
   return (
-    <div className="space-y-4">
-      {/* Nuevo sistema de upload */}
-      <div className="border rounded-lg p-4 bg-blue-50">
-        <h4 className="text-sm font-medium text-blue-900 mb-2">
-          📸 Gestor de Imágenes Mejorado
-        </h4>
-        <PropertyImageUpload
-          propertyId={propertyId}
-          value={bucketImages}
-          onChange={setBucketImages}
-          maxImages={8}
-        />
-      </div>
-
-      {/* Sistema legacy (mantener por compatibilidad) */}
-      <div className="border rounded-lg p-4 bg-gray-50">
-        <h4 className="text-sm font-medium text-gray-700 mb-2">
-          📁 Editor Legacy (URLs manuales)
-        </h4>
-        <ImagesEditor
-          value={value}
-          onChange={onChange}
-        />
-      </div>
-    </div>
-  )
-}
-
-function ImagesEditor({
-  value,
-  onChange,
-}: { value: string[]; onChange: (imgs: string[]) => void }) {
-  const [input, setInput] = useState('')
-
-  const add = () => {
-    const url = input.trim()
-    if (!url) return
-    const next = [...value, toPublicUrl(url)]
-    onChange(next)
-    setInput('')
-  }
-
-  const remove = (idx: number) => {
-    const next = value.filter((_, i) => i !== idx)
-    onChange(next)
-  }
-
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {value.length === 0 && (
-          <div className="text-sm text-gray-500 col-span-2 sm:col-span-3">
-            No hay imágenes aún.
-          </div>
-        )}
-        {value.map((src, i) => (
-          <div key={i} className="relative group border rounded-lg overflow-hidden">
-            {/* thumb */}
-            <div className="relative aspect-[4/3] bg-gray-100">
-              {/* en edición no optimizamos para evitar 404 por URLs externas */}
-              <Image src={src} alt={`img-${i}`} fill className="object-cover" unoptimized />
-            </div>
-            <button
-              type="button"
-              onClick={() => remove(i)}
-              className="absolute top-2 right-2 rounded-md px-2 py-1 text-xs bg-white/90 hover:bg-white shadow"
-            >
-              Quitar
-            </button>
-            <div className="px-2 py-1 text-[11px] truncate text-gray-500">{src}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Pegá una URL (o una ruta de Storage)"
-          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-        <button type="button" onClick={add}
-          className="rounded-md bg-gray-900 text-white px-3 py-2 text-sm">
-          Agregar
-        </button>
-      </div>
-      <p className="text-xs text-gray-500">
-        Tip: si usás Supabase Storage, pegá rutas o URLs públicas del bucket <code>property-images</code>.
+    <div className="border rounded-lg p-4 bg-blue-50">
+      <h4 className="text-sm font-medium text-blue-900 mb-3">
+        📸 Imágenes de la Propiedad
+      </h4>
+      <p className="text-xs text-blue-700 mb-3">
+        Plan Básico: Máximo 3 imágenes. Hacé hover sobre una imagen para eliminarla.
       </p>
+      {/* TODO: En el futuro, adaptar maxImages según el plan del usuario */}
+      <PropertyImageUpload
+        propertyId={propertyId}
+        userId={userId}
+        value={bucketImages}
+        onChange={setBucketImages}
+        maxImages={3}
+      />
     </div>
   )
 }

@@ -9,25 +9,35 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { LogoUploader } from "@/components/inmobiliarias/LogoUploader"
 import { PlanCard } from "@/components/plan/PlanCard"
+import BusinessHoursEditor from "@/components/inmobiliarias/BusinessHoursEditor"
+import TeamEditor from "@/components/inmobiliarias/TeamEditor"
 import AvatarUniversal from "@/components/ui/avatar-universal"
-import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye, User } from "lucide-react"
+import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye, User, Clock, Users, Shield } from "lucide-react"
 import { toast } from "sonner"
 import { validateCUIT, autoFormatCUIT } from "@/lib/validations/cuit"
+import { BusinessHours, TeamMember, DEFAULT_BUSINESS_HOURS } from "@/types/inmobiliaria"
 
 interface CompanyProfile {
   companyName: string
   phone: string
+  commercialPhone: string
   address: string
-  cuit?: string
-  website?: string
-  facebook?: string
-  instagram?: string
-  tiktok?: string
-  description?: string
-  licenseNumber?: string
-  logoUrl?: string
+  cuit: string
+  website: string
+  facebook: string
+  instagram: string
+  tiktok: string
+  description: string
+  licenseNumber: string
+  logoUrl: string
   isVerified: boolean
-  verifiedAt?: string | null
+  verifiedAt: string | null
+  businessHours: BusinessHours
+  team: TeamMember[]
+  showTeamPublic: boolean
+  showHoursPublic: boolean
+  showMapPublic: boolean
+  showStatsPublic: boolean
 }
 
 export default function MiEmpresaPage() {
@@ -64,11 +74,24 @@ export default function MiEmpresaPage() {
         throw new Error('Error al cargar el perfil')
       }
       
-      const { profile: data } = await response.json()
+      const { profile: data, team } = await response.json()
+      
+      // Parsear business_hours desde JSONB
+      let businessHours: BusinessHours = DEFAULT_BUSINESS_HOURS
+      if (data.business_hours) {
+        try {
+          businessHours = typeof data.business_hours === 'string' 
+            ? JSON.parse(data.business_hours) 
+            : data.business_hours
+        } catch (e) {
+          console.error('Error parseando business_hours:', e)
+        }
+      }
       
       setProfile({
         companyName: data.company_name || '',
         phone: data.phone || '',
+        commercialPhone: data.commercial_phone || '',
         address: data.address || '',
         cuit: data.cuit || '',
         website: data.website || '',
@@ -79,7 +102,13 @@ export default function MiEmpresaPage() {
         licenseNumber: data.license_number || '',
         logoUrl: data.logo_url || '',
         isVerified: data.verified || false,
-        verifiedAt: data.verified_at || null
+        verifiedAt: data.verified_at || null,
+        businessHours,
+        team: team || [],
+        showTeamPublic: data.show_team_public ?? true,
+        showHoursPublic: data.show_hours_public ?? true,
+        showMapPublic: data.show_map_public ?? true,
+        showStatsPublic: data.show_stats_public ?? true
       })
       
       // Si faltan datos obligatorios, activar modo edición
@@ -91,6 +120,52 @@ export default function MiEmpresaPage() {
       toast.error('Error al cargar el perfil')
     } finally {
       setLoadingProfile(false)
+    }
+  }
+
+  const handleSaveBusinessHours = async (hours: BusinessHours) => {
+    if (!profile) return
+    
+    try {
+      const response = await fetch('/api/inmobiliarias/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ business_hours: hours })
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Error al guardar horarios')
+      }
+      
+      setProfile({ ...profile, businessHours: hours })
+      toast.success('Horarios actualizados correctamente')
+    } catch (error) {
+      console.error('Error guardando horarios:', error)
+      throw error
+    }
+  }
+
+  const handleSaveTeam = async (team: TeamMember[]) => {
+    try {
+      const response = await fetch('/api/inmobiliarias/team', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team })
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Error al guardar equipo')
+      }
+      
+      if (profile) {
+        setProfile({ ...profile, team })
+      }
+      toast.success('Equipo actualizado correctamente')
+    } catch (error) {
+      console.error('Error guardando equipo:', error)
+      throw error
     }
   }
 
@@ -142,6 +217,7 @@ export default function MiEmpresaPage() {
         body: JSON.stringify({
           company_name: profile.companyName,
           phone: profile.phone,
+          commercial_phone: profile.commercialPhone?.trim() || null,
           address: profile.address,
           cuit: profile.cuit?.trim() || null,
           website: profile.website?.trim() || null,
@@ -149,7 +225,11 @@ export default function MiEmpresaPage() {
           instagram: profile.instagram?.trim() || null,
           tiktok: profile.tiktok?.trim() || null,
           description: profile.description?.trim() || null,
-          license_number: profile.licenseNumber?.trim() || null
+          license_number: profile.licenseNumber?.trim() || null,
+          show_team_public: profile.showTeamPublic,
+          show_hours_public: profile.showHoursPublic,
+          show_map_public: profile.showMapPublic,
+          show_stats_public: profile.showStatsPublic
         })
       })
       
@@ -320,27 +400,50 @@ export default function MiEmpresaPage() {
                 {errors.phone && (
                   <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
                 )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Teléfono principal de contacto
+                </p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dirección *
+                  Teléfono Comercial
+                  <span className="ml-2 text-xs text-gray-500">Opcional</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <Input
-                    value={profile.address}
-                    onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                    value={profile.commercialPhone}
+                    onChange={(e) => setProfile({ ...profile, commercialPhone: e.target.value })}
                     disabled={!isEditing}
-                    className={`pl-10 ${errors.address ? 'border-red-500' : ''}`}
-                    data-error={!!errors.address}
-                    placeholder="Av. Corrientes 1234, Posadas"
+                    className="pl-10"
+                    placeholder="+54 376 987-6543"
                   />
                 </div>
-                {errors.address && (
-                  <p className="text-sm text-red-600 mt-1">{errors.address}</p>
-                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Se mostrará en el perfil público
+                </p>
               </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dirección *
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  value={profile.address}
+                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                  disabled={!isEditing}
+                  className={`pl-10 ${errors.address ? 'border-red-500' : ''}`}
+                  data-error={!!errors.address}
+                  placeholder="Av. Corrientes 1234, Posadas"
+                />
+              </div>
+              {errors.address && (
+                <p className="text-sm text-red-600 mt-1">{errors.address}</p>
+              )}
             </div>
           </div>
           
@@ -555,6 +658,71 @@ export default function MiEmpresaPage() {
             </div>
           </div>
           
+          {/* Configuración de Privacidad */}
+          <div className="space-y-4 mb-8">
+            <h3 className="text-lg font-medium text-gray-900 flex items-center">
+              <Shield className="h-5 w-5 mr-2" />
+              Configuración de Privacidad
+            </h3>
+            <p className="text-sm text-gray-600">
+              Controlá qué información se muestra en tu perfil público
+            </p>
+            
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={profile.showStatsPublic}
+                  onChange={(e) => setProfile({ ...profile, showStatsPublic: e.target.checked })}
+                  disabled={!isEditing}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5"
+                />
+                <span className="text-sm text-gray-700">
+                  Mostrar estadísticas (propiedades activas, precio promedio, etc.)
+                </span>
+              </label>
+              
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={profile.showHoursPublic}
+                  onChange={(e) => setProfile({ ...profile, showHoursPublic: e.target.checked })}
+                  disabled={!isEditing}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5"
+                />
+                <span className="text-sm text-gray-700">
+                  Mostrar horarios de atención
+                </span>
+              </label>
+              
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={profile.showMapPublic}
+                  onChange={(e) => setProfile({ ...profile, showMapPublic: e.target.checked })}
+                  disabled={!isEditing}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5"
+                />
+                <span className="text-sm text-gray-700">
+                  Mostrar mapa de ubicación
+                </span>
+              </label>
+              
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={profile.showTeamPublic}
+                  onChange={(e) => setProfile({ ...profile, showTeamPublic: e.target.checked })}
+                  disabled={!isEditing}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5"
+                />
+                <span className="text-sm text-gray-700">
+                  Mostrar equipo de trabajo
+                </span>
+              </label>
+            </div>
+          </div>
+          
           {/* Botones de Acción */}
           {isEditing && (
             <div className="flex space-x-4">
@@ -589,6 +757,26 @@ export default function MiEmpresaPage() {
             </div>
           )}
         </div>
+
+        {/* Horarios de Atención */}
+        {!isEditing && profile.businessHours && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <BusinessHoursEditor
+              initialHours={profile.businessHours}
+              onSave={handleSaveBusinessHours}
+            />
+          </div>
+        )}
+
+        {/* Nuestro Equipo */}
+        {!isEditing && profile.team && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <TeamEditor
+              initialTeam={profile.team}
+              onSave={handleSaveTeam}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

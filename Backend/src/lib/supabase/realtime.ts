@@ -1,7 +1,7 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/server'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { getBrowserSupabase } from '@/lib/supabase/browser'
 
 export interface MessageRealtimePayload {
   id: string
@@ -33,7 +33,7 @@ export const subscribeToMessages = (
   conversationId: string,
   onNewMessage: (message: MessageRealtimePayload) => void
 ): RealtimeChannel => {
-  const supabase = createClient()
+  const supabase = getBrowserSupabase()
   
   const channel = supabase
     .channel(`messages:${conversationId}`)
@@ -64,7 +64,7 @@ export const subscribeToConversations = (
   userId: string,
   onConversationUpdate: (conversation: ConversationRealtimePayload) => void
 ): RealtimeChannel => {
-  const supabase = createClient()
+  const supabase = getBrowserSupabase()
   
   const channel = supabase
     .channel(`conversations:${userId}`)
@@ -96,7 +96,7 @@ export const subscribeToUserPresence = (
   userId: string,
   onPresenceChange: (presences: Record<string, any>) => void
 ): RealtimeChannel => {
-  const supabase = createClient()
+  const supabase = getBrowserSupabase()
   
   const channel = supabase
     .channel(`presence:${conversationId}`)

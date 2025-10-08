@@ -22,8 +22,29 @@ import { updateUserActivity } from '@/lib/presence/activity-tracker'
  */
 export async function POST(request: NextRequest) {
   try {
-    // Parsear body
-    const body = await request.json()
+    // Intentar parsear body con manejo robusto de errores
+    let body
+    try {
+      const text = await request.text()
+      
+      // Validar que el body no esté vacío
+      if (!text || text.trim() === '') {
+        console.warn('[API] /api/presence/update - Empty request body')
+        return NextResponse.json(
+          { success: false, error: 'Empty request body' },
+          { status: 400 }
+        )
+      }
+      
+      body = JSON.parse(text)
+    } catch (parseError) {
+      console.error('[API] /api/presence/update - JSON parse error:', parseError)
+      return NextResponse.json(
+        { success: false, error: 'Invalid JSON in request body' },
+        { status: 400 }
+      )
+    }
+
     const { userId } = body
 
     // Validar userId

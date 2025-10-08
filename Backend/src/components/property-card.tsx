@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, Bed, Bath, Square } from "lucide-react"
+import { MapPin, Bed, Bath, Square, Building2, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/ui/FavoriteButton"
@@ -22,6 +22,10 @@ interface PropertyCardProps {
   cover_url?: string  // Nueva prop del API
   userId?: string
   featured?: boolean
+  // FASE 6: Owner info para link a perfil de inmobiliaria
+  owner_id?: string
+  owner_type?: string
+  owner_company_name?: string
 }
 
 export function PropertyCard({
@@ -38,10 +42,16 @@ export function PropertyCard({
   coverUrl,
   cover_url,
   userId,
-  featured = false
+  featured = false,
+  owner_id,
+  owner_type,
+  owner_company_name
 }: PropertyCardProps) {
   // Paso 4: Usar cover_url en TODAS las cards, priorizando la nueva prop
   const src = cover_url ?? coverUrl ?? image ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
+  
+  // FASE 6: Determinar si mostrar link a perfil de inmobiliaria
+  const showAgencyLink = owner_type === 'inmobiliaria' && owner_id;
   
   // Log de diagnóstico para auditoría
   console.debug('[Card] src=', src, 'id=', id, 'cover_url=', cover_url);
@@ -103,6 +113,19 @@ export function PropertyCard({
               {area} m²
             </div>
           </div>
+          
+          {/* FASE 6: Link a perfil de inmobiliaria */}
+          {showAgencyLink && (
+            <Link
+              href={`/inmobiliaria/${owner_id}`}
+              className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors mb-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Building2 className="w-3 h-3" />
+              <span>Ver perfil de {owner_company_name || 'la inmobiliaria'}</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          )}
           
           <Button 
             className="w-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0" 

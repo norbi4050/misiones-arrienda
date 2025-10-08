@@ -146,6 +146,10 @@ export async function markUserOffline(userId: string): Promise<void> {
  * Consulta la tabla User para obtener la información de presencia.
  * Retorna null si el usuario no existe o si hay un error.
  * 
+ * **VALIDACIÓN IMPORTANTE**: Si `last_activity` es mayor a 5 minutos,
+ * el usuario se considera offline automáticamente, incluso si `is_online = true`.
+ * Esto protege contra datos obsoletos en la base de datos.
+ * 
  * @param userId - ID del usuario
  * @returns Promise<UserPresence | null>
  * 
@@ -182,10 +186,34 @@ export async function getUserPresence(userId: string): Promise<UserPresence | nu
       return null
     }
 
+    // ✅ VALIDACIÓN: Verificar antigüedad de last_activity
+    const STALE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutos
+    const lastActivityDate = data.last_activity ? new Date(data.last_activity) : null
+    const now = new Date()
+    
+    let isActuallyOnline = data.is_online ?? false
+    
+    // Si el usuario está marcado como online, verificar que su actividad sea reciente
+    if (isActuallyOnline && lastActivityDate) {
+      const timeSinceActivity = now.getTime() - lastActivityDate.getTime()
+      
+      if (timeSinceActivity > STALE_THRESHOLD_MS) {
+        // ⚠️ Datos obsoletos detectados - forzar offline
+        isActuallyOnline = false
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(
+            `[activity-tracker] ⚠️ User ${userId} marked as offline due to stale activity ` +
+            `(${Math.round(timeSinceActivity / 1000 / 60)} minutes ago)`
+          )
+        }
+      }
+    }
+
     return {
-      isOnline: data.is_online ?? false,
+      isOnline: isActuallyOnline,
       lastSeen: data.last_seen,
-      lastActivity: data.last_activity ?? new Date().toISOString()
+      lastActivity: data.last_activity ?? now.toISOString()
     }
   } catch (error) {
     console.error('[activity-tracker] Unexpected error in getUserPresence:', error)

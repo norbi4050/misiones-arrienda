@@ -8,10 +8,17 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient()
     
-    // Query 1: Obtener propiedad por ID (sin join relacional)
+    // Query 1: Obtener propiedad por ID con JOIN a users para info del dueño (FASE 6)
     const { data: property, error } = await supabase
       .from('properties')
-      .select('*')
+      .select(`
+        *,
+        owner:users!user_id (
+          id,
+          user_type,
+          company_name
+        )
+      `)
       .eq('id', params.id)
       .single()
 
@@ -53,10 +60,20 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
       }
     }
 
+    // FASE 6: Aplanar owner info antes de responder
+    const ownerData = property.owner || {};
+    const enrichedProperty = {
+      ...property,
+      owner_id: ownerData.id || null,
+      owner_type: ownerData.user_type || null,
+      owner_company_name: ownerData.company_name || null,
+      owner: undefined // Remover objeto anidado
+    };
+
     // Responder SIEMPRE objeto
     return NextResponse.json({ 
       ok: true, 
-      property, 
+      property: enrichedProperty, 
       agent 
     })
 

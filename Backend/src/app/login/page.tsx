@@ -108,6 +108,17 @@ export default function LoginPage() {
             </div>
           )}
 
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm">
+              <a 
+                href="/forgot-password" 
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+          </div>
+
           <div className="text-center">
             <a href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
               ¿No tienes cuenta? Regístrate

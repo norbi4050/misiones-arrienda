@@ -71,15 +71,19 @@ export default function AvatarUniversal({
           // Sin avatar válido → usar fallback ui-avatars
           setAvatarUrl(null)
         }
+      } else if (response.status === 404) {
+        // ✅ FIX: 404 es normal cuando el usuario no tiene avatar - no es un error
+        setAvatarUrl(null)
+        setError(null)  // No mostrar error al usuario
       } else {
-        // Solo loggear errores HTTP reales
+        // Solo loggear errores HTTP reales (500, 403, etc.)
         console.error('Error loading avatar:', response.status)
-        setError('Error al cargar avatar')
+        setError(null)  // ✅ FIX: No mostrar error visual al usuario
         setAvatarUrl(null)
       }
     } catch (err) {
       console.error('Error loading avatar:', err)
-      setError('Error de conexión')
+      setError(null)  // ✅ FIX: No mostrar error visual
       setAvatarUrl(null)
     } finally {
       setLoading(false)
@@ -158,8 +162,8 @@ export default function AvatarUniversal({
             unoptimized
             priority
             onError={() => {
+              // ✅ FIX: No mostrar error visual, solo usar fallback
               setAvatarUrl(null)
-              setError('Error al cargar imagen')
             }}
           />
         ) : (
@@ -187,12 +191,7 @@ export default function AvatarUniversal({
         </div>
       )}
 
-      {/* Mostrar error si existe */}
-      {error && (
-        <div className="absolute top-full left-0 mt-1 text-xs text-red-500 whitespace-nowrap">
-          {error}
-        </div>
-      )}
+      {/* ✅ FIX: No mostrar errores de avatar - usar fallback silenciosamente */}
     </div>
   )
 }
@@ -225,8 +224,11 @@ export function useAvatar(userId?: string) {
           // Sin avatar, pero no es error
           setAvatarUrl(null)
         }
+      } else if (response.status === 404) {
+        // ✅ FIX: 404 es normal cuando el usuario no tiene avatar
+        setAvatarUrl(null)
       } else {
-        // Solo loggear errores HTTP reales
+        // Solo loggear errores HTTP reales (500, 403, etc.)
         console.error('Error loading avatar:', response.status)
         setAvatarUrl(null)
       }

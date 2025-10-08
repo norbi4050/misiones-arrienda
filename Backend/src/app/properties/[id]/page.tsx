@@ -40,7 +40,9 @@ import {
   Send,
   User,
   AlertTriangle,
-  Star
+  Star,
+  Building2,
+  ExternalLink
 } from 'lucide-react';
 
 interface PropertyDetailPageProps {
@@ -308,6 +310,34 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                 </>
               )}
             </div>
+
+            {/* FASE 6: Banner de Inmobiliaria */}
+            {property.owner_type === 'inmobiliaria' && property.owner_id && !isOwner && (
+              <Link
+                href={`/inmobiliaria/${property.owner_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Publicado por</p>
+                      <p className="font-semibold text-gray-900">
+                        {property.owner_company_name || 'Inmobiliaria'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <span className="text-sm font-medium hidden sm:inline">Ver perfil completo</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </div>
+                </div>
+              </Link>
+            )}
 
             {/* Property Info */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8">

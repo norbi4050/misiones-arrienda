@@ -20,6 +20,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AgencyShareBar } from '@/components/share';
 import { analytics } from '@/lib/analytics/track';
+import AgencyStats from '@/components/inmobiliarias/AgencyStats';
+import BusinessHours from '@/components/inmobiliarias/BusinessHours';
+import TeamMemberCard from '@/components/inmobiliarias/TeamMemberCard';
+import AgencyLocationMap from '@/components/inmobiliarias/AgencyLocationMap';
+import { parseBusinessHours } from '@/types/inmobiliaria';
 
 // Tipos
 interface InmobiliariaProfile {
@@ -28,14 +33,23 @@ interface InmobiliariaProfile {
   logo_url: string | null;
   verified: boolean;
   phone: string | null;
+  commercial_phone: string | null;
   address: string | null;
   website: string | null;
   facebook: string | null;
   instagram: string | null;
   tiktok: string | null;
   description: string | null;
+  business_hours: any | null;
+  timezone: string;
+  latitude: number | null;
+  longitude: number | null;
   show_phone_public: boolean;
   show_address_public: boolean;
+  show_team_public: boolean;
+  show_hours_public: boolean;
+  show_map_public: boolean;
+  show_stats_public: boolean;
   created_at: string;
 }
 
@@ -52,18 +66,63 @@ interface Property {
   area?: number;
 }
 
+interface TeamMember {
+  id: string;
+  agency_id: string;
+  name: string;
+  photo_url: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AgencyStats {
+  total_properties: number;
+  active_properties: number;
+  average_price: number;
+  properties_this_month: number;
+}
+
 interface Props {
   profile: InmobiliariaProfile;
   initialProperties: Property[];
   totalProperties: number;
+  teamMembers?: TeamMember[];
+  stats?: AgencyStats | null;
 }
 
 export default function InmobiliariaProfileClient({
   profile,
   initialProperties,
   totalProperties,
+  teamMembers = [],
+  stats = null,
 }: Props) {
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  // ✅ VALIDACIÓN: Prevenir errores de hooks si profile es inválido
+  if (!profile || !profile.id || !profile.company_name) {
+    console.error('[InmobiliariaProfile] Invalid profile data received:', profile);
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Perfil no disponible
+          </h2>
+          <p className="text-gray-600 mb-4">
+            No se pudo cargar el perfil de la inmobiliaria.
+          </p>
+          <a
+            href="/properties"
+            className="text-blue-600 hover:text-blue-700 underline"
+          >
+            Ver todas las propiedades
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const [properties, setProperties] = useState<Property[]>(initialProperties || []);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -127,6 +186,8 @@ export default function InmobiliariaProfileClient({
                     src={profile.logo_url}
                     alt={`Logo de ${profile.company_name}`}
                     fill
+                    sizes="(max-width: 768px) 96px, 128px"
+                    priority
                     className="object-cover"
                   />
                 </div>
@@ -175,6 +236,18 @@ export default function InmobiliariaProfileClient({
                   >
                     <Phone className="w-4 h-4" />
                     <span>{profile.phone}</span>
+                  </a>
+                )}
+
+                {/* FASE 5: Teléfono comercial - Solo mostrar si es diferente del teléfono principal */}
+                {profile.commercial_phone && profile.commercial_phone !== profile.phone && (
+                  <a
+                    href={`tel:${profile.commercial_phone}`}
+                    className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>{profile.commercial_phone}</span>
+                    <span className="text-xs text-gray-500">(Comercial)</span>
                   </a>
                 )}
                 
@@ -233,13 +306,14 @@ export default function InmobiliariaProfileClient({
       {/* Contenido principal */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Columna izquierda - Sobre nosotros */}
-          <div className="lg:col-span-1">
+          {/* Columna izquierda - Información de la inmobiliaria */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Sobre nosotros */}
             {profile.description && (
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-xl font-semibold mb-4">Sobre nosotros</h2>
-                  <div className="text-gray-600 whitespace-pre-wrap">
+                  <div className="text-gray-600 whitespace-pre-wrap break-words overflow-wrap-anywhere">
                     {showFullDescription || !shouldShowExpandButton
                       ? profile.description
                       : truncatedDescription}
@@ -264,6 +338,48 @@ export default function InmobiliariaProfileClient({
                   )}
                 </CardContent>
               </Card>
+            )}
+
+            {/* FASE 5: Estadísticas */}
+            {profile.show_stats_public && stats && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Estadísticas</h3>
+                <AgencyStats stats={stats} />
+              </div>
+            )}
+
+            {/* FASE 5: Horarios de Atención */}
+            {profile.show_hours_public && profile.business_hours && parseBusinessHours(profile.business_hours) && (
+              <BusinessHours
+                hours={parseBusinessHours(profile.business_hours)!}
+                timezone={profile.timezone}
+              />
+            )}
+
+            {/* FASE 5: Equipo */}
+            {profile.show_team_public && teamMembers.length > 0 && (
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Nuestro Equipo</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {teamMembers.map((member) => (
+                      <TeamMemberCard key={member.id} member={member} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* FASE 5: Mapa de Ubicación */}
+            {profile.show_map_public && profile.latitude && profile.longitude && (
+              <AgencyLocationMap
+                location={{
+                  latitude: profile.latitude,
+                  longitude: profile.longitude,
+                  address: profile.address || '',
+                }}
+                agencyName={profile.company_name}
+              />
             )}
           </div>
 
@@ -311,6 +427,7 @@ export default function InmobiliariaProfileClient({
                               src={property.cover_url}
                               alt={property.title}
                               fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                               className="object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                           ) : (

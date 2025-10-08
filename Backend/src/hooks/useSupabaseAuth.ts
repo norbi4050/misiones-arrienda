@@ -347,6 +347,48 @@ export function useSupabaseAuth() {
     }
   }
 
+  const requestPasswordReset = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`
+      })
+
+      if (error) throw error
+
+      return { 
+        success: true, 
+        message: 'Te enviamos un email con instrucciones para recuperar tu contraseña.' 
+      }
+    } catch (error: any) {
+      console.error('Password reset request error:', error)
+      return { 
+        success: false, 
+        error: error.message || 'Error al solicitar recuperación de contraseña' 
+      }
+    }
+  }
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (error) throw error
+
+      return { 
+        success: true, 
+        message: 'Contraseña actualizada exitosamente' 
+      }
+    } catch (error: any) {
+      console.error('Password update error:', error)
+      return { 
+        success: false, 
+        error: error.message || 'Error al actualizar contraseña' 
+      }
+    }
+  }
+
   return {
     user,
     session,
@@ -355,6 +397,8 @@ export function useSupabaseAuth() {
     login,
     logout,
     register,
-    refreshUserProfile // Nueva función para refrescar datos
+    refreshUserProfile, // Nueva función para refrescar datos
+    requestPasswordReset, // Nueva función para recuperación de contraseña
+    updatePassword // Nueva función para actualizar contraseña
   }
 }

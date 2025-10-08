@@ -3,18 +3,15 @@
 // Helper functions para obtener adjuntos de mensajes
 // =====================================================
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import type { Attachment } from '@/types/messages';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 /**
  * Obtiene los adjuntos de un mensaje con URLs firmadas
  */
 export async function getMessageAttachments(messageId: string): Promise<Attachment[]> {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient();
     
     // Obtener adjuntos del mensaje
     const { data: attachments, error } = await supabase
@@ -72,7 +69,7 @@ export async function getMessagesAttachments(
       return new Map();
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient();
     
     // Obtener todos los adjuntos de una vez
     const { data: attachments, error } = await supabase

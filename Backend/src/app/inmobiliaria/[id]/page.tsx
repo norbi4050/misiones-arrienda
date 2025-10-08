@@ -11,15 +11,42 @@ interface InmobiliariaProfile {
   logo_url: string | null;
   verified: boolean;
   phone: string | null;
+  commercial_phone: string | null;
   address: string | null;
   website: string | null;
   facebook: string | null;
   instagram: string | null;
   tiktok: string | null;
   description: string | null;
+  business_hours: any | null;
+  timezone: string;
+  latitude: number | null;
+  longitude: number | null;
   show_phone_public: boolean;
   show_address_public: boolean;
+  show_team_public: boolean;
+  show_hours_public: boolean;
+  show_map_public: boolean;
+  show_stats_public: boolean;
   created_at: string;
+}
+
+interface TeamMember {
+  id: string;
+  agency_id: string;
+  name: string;
+  photo_url: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AgencyStats {
+  total_properties: number;
+  active_properties: number;
+  average_price: number;
+  properties_this_month: number;
 }
 
 // Generar metadata dinámica para SEO (B5 Enhanced)
@@ -36,7 +63,7 @@ export async function generateMetadata({
       .from('users')
       .select('company_name, description, logo_url, verified, city, province')
       .eq('id', params.id)
-      .eq('role', 'inmobiliaria')
+      .eq('user_type', 'inmobiliaria')
       .single();
 
     if (!inmobiliaria) {
@@ -142,18 +169,27 @@ export default async function InmobiliariaPublicPage({
       logo_url,
       verified,
       phone,
+      commercial_phone,
       address,
       website,
       facebook,
       instagram,
       tiktok,
       description,
+      business_hours,
+      timezone,
+      latitude,
+      longitude,
       show_phone_public,
       show_address_public,
+      show_team_public,
+      show_hours_public,
+      show_map_public,
+      show_stats_public,
       created_at
     `)
     .eq('id', id)
-    .eq('role', 'inmobiliaria')
+    .eq('user_type', 'inmobiliaria')
     .single();
 
   // Si no existe o hay error, mostrar 404
@@ -170,6 +206,39 @@ export default async function InmobiliariaPublicPage({
     .order('created_at', { ascending: false })
     .range(0, 11); // Primera página de 12 items
 
+  // FASE 5: Fetch team members
+  const { data: teamMembers } = await supabase
+    .from('agency_team_members')
+    .select('*')
+    .eq('agency_id', id)
+    .eq('is_active', true)
+    .order('display_order', { ascending: true })
+    .limit(2);
+
+  // FASE 5: Fetch stats (con error handling mejorado)
+  let stats: AgencyStats | null = null;
+  try {
+    const statsResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/inmobiliarias/${id}/stats`,
+      { 
+        next: { revalidate: 300 }
+        // Removido cache: 'no-store' para evitar warning de Next.js
+      }
+    );
+    
+    if (statsResponse.ok) {
+      const statsData = await statsResponse.json();
+      stats = statsData.stats || null;
+      console.log('[Stats] Loaded successfully for agency:', id);
+    } else {
+      console.warn(`[Stats] Failed with status ${statsResponse.status} for agency:`, id);
+      // Continuar sin stats - no bloquear la página
+    }
+  } catch (error) {
+    console.error('[Stats] Error fetching for agency:', id, error);
+    // Continuar sin stats - degradación elegante
+  }
+
   // Preparar datos para el componente cliente
   const profileData: InmobiliariaProfile = {
     id: inmobiliaria.id,
@@ -177,14 +246,23 @@ export default async function InmobiliariaPublicPage({
     logo_url: inmobiliaria.logo_url,
     verified: inmobiliaria.verified || false,
     phone: inmobiliaria.show_phone_public ? inmobiliaria.phone : null,
+    commercial_phone: inmobiliaria.show_phone_public ? inmobiliaria.commercial_phone : null,
     address: inmobiliaria.show_address_public ? inmobiliaria.address : null,
     website: inmobiliaria.website,
     facebook: inmobiliaria.facebook,
     instagram: inmobiliaria.instagram,
     tiktok: inmobiliaria.tiktok,
     description: inmobiliaria.description,
+    business_hours: inmobiliaria.business_hours,
+    timezone: inmobiliaria.timezone || 'America/Argentina/Buenos_Aires',
+    latitude: inmobiliaria.show_map_public ? inmobiliaria.latitude : null,
+    longitude: inmobiliaria.show_map_public ? inmobiliaria.longitude : null,
     show_phone_public: inmobiliaria.show_phone_public || false,
     show_address_public: inmobiliaria.show_address_public || false,
+    show_team_public: inmobiliaria.show_team_public || false,
+    show_hours_public: inmobiliaria.show_hours_public || false,
+    show_map_public: inmobiliaria.show_map_public || false,
+    show_stats_public: inmobiliaria.show_stats_public || false,
     created_at: inmobiliaria.created_at,
   };
 
@@ -222,6 +300,8 @@ export default async function InmobiliariaPublicPage({
         profile={profileData}
         initialProperties={properties || []}
         totalProperties={count || 0}
+        teamMembers={teamMembers || []}
+        stats={stats}
       />
     </>
   );

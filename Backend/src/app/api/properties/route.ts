@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
     let totalCount = 0;
 
     try {
-      // Construir query de Supabase
+      // Construir query de Supabase SIN JOIN para evitar errores
       const nowIso = new Date().toISOString();
       let query = supabase
         .from('properties')
@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
           return data.publicUrl || PLACEHOLDER;
         };
 
-        // Agregar cover_url e imagesCount a cada propiedad
+        // Agregar cover_url e imagesCount
         properties = properties.map((property: any) => {
           // Parsear images si viene como string JSON
           let imgs: string[] = [];
@@ -234,7 +234,11 @@ export async function GET(request: NextRequest) {
           return {
             ...property,
             cover_url: toCoverUrl(property.cover_path),
-            imagesCount: imgs.length
+            imagesCount: imgs.length,
+            // Owner info básico desde la propiedad misma
+            owner_id: property.user_id || null,
+            owner_type: null, // Se puede agregar después si es necesario
+            owner_company_name: null
           };
         });
       }

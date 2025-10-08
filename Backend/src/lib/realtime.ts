@@ -1,17 +1,10 @@
 'use client'
 
-import { createClient } from '@supabase/supabase-js'
-
-// Cliente browser para realtime
-function getBrowserClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
-  return createClient(supabaseUrl, supabaseAnonKey)
-}
+import { getBrowserClient } from '@/lib/supabase/client-singleton'
 
 /**
  * Sistema realtime simplificado para mensajería
+ * CORREGIDO: Usa tabla 'community_messages' que existe en el schema
  */
 export function subscribeToMessages(conversationId: string, onNewMessage: (message: any) => void) {
   const supabase = getBrowserClient()
@@ -23,7 +16,7 @@ export function subscribeToMessages(conversationId: string, onNewMessage: (messa
       {
         event: 'INSERT',
         schema: 'public',
-        table: 'messages',
+        table: 'community_messages', // CORREGIDO: era 'messages', ahora 'community_messages'
         filter: `conversation_id=eq.${conversationId}`
       },
       (payload) => {
@@ -33,6 +26,9 @@ export function subscribeToMessages(conversationId: string, onNewMessage: (messa
     )
     .subscribe((status) => {
       console.log(`📡 Estado suscripción mensajes: ${status}`)
+      if (status === 'CHANNEL_ERROR') {
+        console.error('❌ Error en suscripción realtime. Verifica políticas RLS en community_messages')
+      }
     })
 
   return channel
@@ -40,6 +36,7 @@ export function subscribeToMessages(conversationId: string, onNewMessage: (messa
 
 /**
  * Suscribirse a cambios en conversaciones (para actualizar lista)
+ * CORREGIDO: Usa tabla 'community_conversations' y columnas correctas
  */
 export function subscribeToConversations(userId: string, onConversationUpdate: (conversation: any) => void) {
   const supabase = getBrowserClient()
@@ -51,8 +48,8 @@ export function subscribeToConversations(userId: string, onConversationUpdate: (
       {
         event: '*',
         schema: 'public',
-        table: 'conversations',
-        filter: `or(sender_id.eq.${userId},receiver_id.eq.${userId})`
+        table: 'community_conversations', // CORREGIDO: era 'conversations', ahora 'community_conversations'
+        filter: `or(user1_id.eq.${userId},user2_id.eq.${userId})` // CORREGIDO: columnas correctas
       },
       (payload) => {
         console.log('🔴 Conversación actualizada via realtime:', payload)
@@ -61,6 +58,9 @@ export function subscribeToConversations(userId: string, onConversationUpdate: (
     )
     .subscribe((status) => {
       console.log(`📡 Estado suscripción conversaciones: ${status}`)
+      if (status === 'CHANNEL_ERROR') {
+        console.error('❌ Error en suscripción realtime. Verifica políticas RLS en community_conversations')
+      }
     })
 
   return channel

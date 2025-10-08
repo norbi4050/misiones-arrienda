@@ -5,17 +5,15 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import PropertyImageUpload from "@/components/ui/property-image-upload"
 import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox"
-import { MapPin, Upload, DollarSign, Home, Check, Loader2, CreditCard, Shield, Clock, Lock, AlertCircle } from "lucide-react"
+import { MapPin, Check, Loader2, Lock, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import { propertyFormSchema } from "@/lib/validations/property"
-import { logConsentClient, ConsentLogPayload } from "@/lib/consent/logConsent.client"
-import { CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent"
+import { logConsentClient } from "@/lib/consent/logConsent.client"
 import { analytics } from "@/lib/analytics/track"
 import MapPicker from "@/components/property/MapPicker"
 import { UpsellModal } from "@/components/plan/UpsellModal"
@@ -27,13 +25,13 @@ export default function PublishWizardImproved() {
   const { user, isLoading } = useSupabaseAuth()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
-  const [selectedPlan, setSelectedPlan] = useState<'basico' | 'destacado' | 'full'>('basico')
+  const selectedPlan = 'basico' // Solo plan básico disponible
   
   // Estados para el flujo de borrador
   const [propertyId, setPropertyId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [imagesCount, setImagesCount] = useState(0)
-  const [images, setImages] = useState<string[]>([]) // CONTROLLED COMPONENT: estado local para preview
+  const [images, setImages] = useState<string[]>([])
   
   // Paso 2 -> gating real por imágenes
   const canContinueStep2 = imagesCount >= 1;
@@ -86,7 +84,7 @@ export default function PublishWizardImproved() {
     }
   })
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = form
+  const { register, formState: { errors }, setValue, watch } = form
   const watchedValues = watch()
 
   // Validación mínima del Paso 1 (incluye coordenadas obligatorias)
@@ -192,10 +190,10 @@ export default function PublishWizardImproved() {
         
         const { property } = await res.json();
         console.debug('[Wizard] draft OK', property);
-        setPropertyId(property.id);        // viene del draft
-        setUserId(property.user_id);       // IMPORTANTE: usar el owner real
+        setPropertyId(property.id);
+        setUserId(property.user_id);
         console.debug('[Wizard] IDs seteados - propertyId:', property.id, 'ownerId:', property.user_id);
-        setImagesCount(0); // resetea el contador al entrar al paso de imágenes
+        setImagesCount(0);
         setCurrentStep(2);
         toast.success("Borrador creado. Ahora agregá las imágenes.");
       } catch (e) {
@@ -203,33 +201,6 @@ export default function PublishWizardImproved() {
         toast.error("Error de red creando borrador");
       }
     });
-  }
-
-  // Validar Step 1
-  function validateStep1() {
-    // Tomo el objeto completo actual del form
-    const values = form.getValues();
-    // Valido solo los campos del paso 1
-    const step1Schema = propertyFormSchema.pick({
-      title: true,
-      propertyType: true,
-      price: true,
-      bedrooms: true,
-      bathrooms: true,
-      garages: true,
-      area: true,
-      address: true,
-      city: true,
-      postalCode: true,
-      contact_phone: true,
-      description: true,
-    });
-    const parse = step1Schema.safeParse(values);
-    if (!parse.success) {
-      console.debug("[Wizard] step1 errors", parse.error.flatten().fieldErrors);
-      toast.error("Revisá los campos marcados.");
-    }
-    return parse.success;
   }
 
   // Paso 3: Publicar
@@ -302,13 +273,16 @@ export default function PublishWizardImproved() {
           analytics.completePublish(propertyId, selectedPlan)
           
           toast.success("¡Propiedad publicada exitosamente!")
-          // Redirigir al detalle
-          window.location.href = `/properties/${propertyId}`
+          
+          // Redirigir a Mis Publicaciones donde el usuario puede ver su propiedad
+          // Usamos window.location para forzar recarga completa del servidor
+          setTimeout(() => {
+            window.location.href = '/mi-cuenta/publicaciones'
+          }, 1000)
           return
         }
         
         const { error } = await res.json().catch(() => ({ error: "Error publicando" }))
-        // Si es 400 del validador de imágenes, el mensaje ya será "Necesitás al menos 1 imagen…"
         toast.error(error || "Error publicando propiedad")
       } catch (error) {
         console.error('Error publishing:', error)
@@ -317,52 +291,18 @@ export default function PublishWizardImproved() {
     })
   }
 
-  const plans = {
-    basico: {
-      name: "Plan Básico",
-      price: 0,
-      duration: "Gratis",
-      features: [
-        "Publicación básica",
-        "Hasta 3 fotos",
-        "Descripción estándar",
-        "Contacto directo",
-        "Vigencia 30 días"
-      ],
-      color: "bg-gray-100 border-gray-300",
-      badge: "",
-      popular: false
-    },
-    destacado: {
-      name: "Plan Destacado", 
-      price: 5000,
-      duration: "por mes",
-      features: [
-        "Todo lo del Plan Básico",
-        "Badge 'Destacado'",
-        "Hasta 8 fotos",
-        "Aparece primero en búsquedas",
-        "Estadísticas avanzadas"
-      ],
-      color: "bg-blue-50 border-blue-300",
-      badge: "Más Popular",
-      popular: true
-    },
-    full: {
-      name: "Plan Full",
-      price: 10000,
-      duration: "por mes", 
-      features: [
-        "Todo lo del Plan Destacado",
-        "Fotos ilimitadas",
-        "Video promocional",
-        "Tour virtual 360°",
-        "Agente asignado"
-      ],
-      color: "bg-yellow-50 border-yellow-300",
-      badge: "Premium",
-      popular: false
-    }
+  // Plan básico - único disponible
+  const plan = {
+    name: "Plan Básico",
+    price: 0,
+    duration: "Gratis",
+    features: [
+      "Publicación básica",
+      "Hasta 3 fotos",
+      "Descripción estándar",
+      "Contacto directo",
+      "Vigencia 30 días"
+    ]
   }
 
   if (isLoading) {
@@ -670,7 +610,7 @@ export default function PublishWizardImproved() {
                 value={images}
                 onChange={setImages}
                 onChangeCount={handleImageCount}
-                maxImages={selectedPlan === 'basico' ? 3 : selectedPlan === 'destacado' ? 8 : 20}
+                maxImages={3}
               />
 
               {imagesCount < 1 && (
@@ -709,57 +649,37 @@ export default function PublishWizardImproved() {
             </div>
           )}
 
-          {/* Step 3: Selección de Plan y Publicación */}
+          {/* Step 3: Plan y Publicación */}
           {currentStep === 3 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-6">Selecciona tu Plan</h2>
+              <h2 className="text-xl font-semibold mb-6">Tu Plan de Publicación</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                {Object.entries(plans).map(([key, plan]) => (
-                  <div
-                    key={key}
-                    className={`relative border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                      selectedPlan === key 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : plan.color
-                    }`}
-                    onClick={() => setSelectedPlan(key as any)}
-                  >
-                    {plan.badge && (
-                      <Badge className="absolute -top-2 left-4 bg-red-500 text-white">
-                        {plan.badge}
-                      </Badge>
-                    )}
-                    
-                    <div className="text-center mb-4">
-                      <h3 className="text-lg font-semibold">{plan.name}</h3>
-                      <div className="text-2xl font-bold text-blue-600 mt-2">
-                        ${plan.price.toLocaleString()}
-                        {plan.price > 0 && <span className="text-sm text-gray-600"> {plan.duration}</span>}
-                      </div>
-                      {plan.price === 0 && <span className="text-sm text-gray-600">{plan.duration}</span>}
-                    </div>
-
-                    <ul className="space-y-2">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-center text-sm">
-                          <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-
-                    {selectedPlan === key && (
-                      <div className="absolute inset-0 border-2 border-blue-500 rounded-lg pointer-events-none">
-                        <div className="absolute top-2 right-2">
-                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                            <Check className="h-4 w-4 text-white" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
+              {/* Plan Básico - Solo informativo */}
+              <div className="mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">Publicá tu propiedad sin costo</p>
                   </div>
-                ))}
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-blue-600">
+                      ${plan.price.toLocaleString()}
+                    </div>
+                    <span className="text-sm text-gray-600">{plan.duration}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-blue-200 pt-4 mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-3">Incluye:</p>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center text-sm text-gray-700">
+                        <Check className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
               {/* Resumen de la propiedad */}

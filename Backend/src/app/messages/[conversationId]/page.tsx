@@ -149,6 +149,7 @@ export default function ConversationPage({
           conversationId={params.conversationId}
           otherUserId={threadInfo.otherUser.id}
           otherUserName={threadInfo.otherUser.displayName}
+          otherUserAvatar={threadInfo.otherUser.avatarUrl}
           className="h-full"
         />
       </div>

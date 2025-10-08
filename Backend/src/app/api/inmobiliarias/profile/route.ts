@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 import { z } from "zod"
 import { validateCUIT } from "@/lib/validations/cuit"
 
-// Schema para perfil de inmobiliaria
+// Schema para perfil de inmobiliaria (actualizado con campos nuevos)
 const InmobiliariaProfileSchema = z.object({
   company_name: z.string().min(1, "Nombre de empresa requerido"),
   phone: z.string().min(1, "Teléfono requerido"),
@@ -16,6 +16,18 @@ const InmobiliariaProfileSchema = z.object({
   tiktok: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   license_number: z.string().optional().nullable(),
+  // Campos nuevos FASE 1
+  commercial_phone: z.string().optional().nullable(),
+  business_hours: z.any().optional().nullable(), // JSONB
+  timezone: z.string().optional().nullable(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+  show_team_public: z.boolean().optional(),
+  show_hours_public: z.boolean().optional(),
+  show_map_public: z.boolean().optional(),
+  show_stats_public: z.boolean().optional(),
+  show_phone_public: z.boolean().optional(),
+  show_address_public: z.boolean().optional(),
 })
 
 function getServerSupabase() {
@@ -48,10 +60,36 @@ export async function GET(_req: NextRequest) {
   }
 
   try {
-    // Obtener datos de la tabla users
+    // Obtener datos de la tabla users (incluye campos nuevos)
     const { data: profile, error } = await supabase
       .from('users')
-      .select('company_name, phone, address, cuit, website, facebook, instagram, tiktok, description, license_number, logo_url, verified, verified_at, user_type')
+      .select(`
+        company_name, 
+        phone, 
+        address, 
+        cuit, 
+        website, 
+        facebook, 
+        instagram, 
+        tiktok, 
+        description, 
+        license_number, 
+        logo_url, 
+        verified, 
+        verified_at, 
+        user_type,
+        commercial_phone,
+        business_hours,
+        timezone,
+        latitude,
+        longitude,
+        show_team_public,
+        show_hours_public,
+        show_map_public,
+        show_stats_public,
+        show_phone_public,
+        show_address_public
+      `)
       .eq('id', user.id)
       .single()
 
@@ -65,7 +103,18 @@ export async function GET(_req: NextRequest) {
       return NextResponse.json({ error: "User is not an inmobiliaria" }, { status: 403 })
     }
 
-    return NextResponse.json({ profile })
+    // Obtener equipo de la inmobiliaria
+    const { data: teamMembers } = await supabase
+      .from('agency_team_members')
+      .select('*')
+      .eq('agency_id', user.id)
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+
+    return NextResponse.json({ 
+      profile,
+      team: teamMembers || []
+    })
   } catch (error) {
     console.error('Profile fetch error:', error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
@@ -99,7 +148,7 @@ export async function PUT(req: NextRequest) {
 
     const validatedData = validation.data
 
-    // Preparar payload para DB
+    // Preparar payload para DB (incluye campos nuevos)
     const dbPayload: any = {
       company_name: validatedData.company_name,
       phone: validatedData.phone,
@@ -111,6 +160,41 @@ export async function PUT(req: NextRequest) {
       tiktok: validatedData.tiktok || null,
       description: validatedData.description || null,
       updated_at: new Date().toISOString()
+    }
+
+    // Agregar campos nuevos si están presentes
+    if (validatedData.commercial_phone !== undefined) {
+      dbPayload.commercial_phone = validatedData.commercial_phone
+    }
+    if (validatedData.business_hours !== undefined) {
+      dbPayload.business_hours = validatedData.business_hours
+    }
+    if (validatedData.timezone !== undefined) {
+      dbPayload.timezone = validatedData.timezone
+    }
+    if (validatedData.latitude !== undefined) {
+      dbPayload.latitude = validatedData.latitude
+    }
+    if (validatedData.longitude !== undefined) {
+      dbPayload.longitude = validatedData.longitude
+    }
+    if (validatedData.show_team_public !== undefined) {
+      dbPayload.show_team_public = validatedData.show_team_public
+    }
+    if (validatedData.show_hours_public !== undefined) {
+      dbPayload.show_hours_public = validatedData.show_hours_public
+    }
+    if (validatedData.show_map_public !== undefined) {
+      dbPayload.show_map_public = validatedData.show_map_public
+    }
+    if (validatedData.show_stats_public !== undefined) {
+      dbPayload.show_stats_public = validatedData.show_stats_public
+    }
+    if (validatedData.show_phone_public !== undefined) {
+      dbPayload.show_phone_public = validatedData.show_phone_public
+    }
+    if (validatedData.show_address_public !== undefined) {
+      dbPayload.show_address_public = validatedData.show_address_public
     }
 
     // Validar CUIT si se proporciona

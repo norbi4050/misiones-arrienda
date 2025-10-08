@@ -218,12 +218,21 @@ export async function GET(
       const createdAtRaw = (message as any)[createdAtField]
       const createdAtISO = createdAtRaw ? new Date(createdAtRaw).toISOString() : new Date().toISOString()
       
+      const messageSenderId = (message as any)[senderIdField]
+      
+      // ✅ FIX CRÍTICO: Comparar correctamente según el esquema
+      // PRISMA: senderId es PROFILE ID → comparar con userProfile.id
+      // SUPABASE: sender_id es USER ID → comparar con user.id
+      const isMine = isPrismaSchema 
+        ? messageSenderId === userProfile.id  // PRISMA: PROFILE ID
+        : messageSenderId === user.id         // SUPABASE: USER ID
+      
       return {
         id: message.id,
         content: (message as any)[bodyField],
         createdAt: createdAtISO,  // ← PROMPT 1: ISO 8601 estricta
-        senderId: (message as any)[senderIdField],
-        isMine: (message as any)[senderIdField] === userProfile.id  // ← PROMPT 1: calculado server-side
+        senderId: messageSenderId,
+        isMine  // ← FIX: Ahora compara correctamente según esquema
       }
     })
 

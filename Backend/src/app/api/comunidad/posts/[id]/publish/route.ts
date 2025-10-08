@@ -45,6 +45,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       )
     }
 
+    // Establecer fecha de expiración (30 días)
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 30)
+
     // Llamar RPC para publicar
     const { data, error: rpcError } = await supabase
       .rpc('community_post_publish', { post_id: postId })
@@ -57,6 +61,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         .from('community_posts')
         .update({ 
           status: 'active',
+          expires_at: expiresAt.toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', postId)
@@ -69,6 +74,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           { status: 500 }
         )
       }
+    } else {
+      // Si RPC funcionó, actualizar expires_at por separado
+      await supabase
+        .from('community_posts')
+        .update({ expires_at: expiresAt.toISOString() })
+        .eq('id', postId)
     }
 
     return NextResponse.json({

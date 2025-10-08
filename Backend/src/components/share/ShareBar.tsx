@@ -4,6 +4,7 @@
 
 "use client";
 
+import { useState, useEffect } from 'react';
 import type { ShareEntityType, ShareEntityData, ShareContext, ShareChannel } from '@/lib/share/types';
 import { isShareFeatureEnabled } from '@/lib/share/index';
 import { ShareButton } from './ShareButton.new';
@@ -49,8 +50,20 @@ export function ShareBar({
   channels = DEFAULT_CHANNELS,
   onShare,
 }: ShareBarProps) {
+  // ✅ FIX HYDRATION: Solo renderizar en cliente
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Check feature flag
   if (!isShareFeatureEnabled()) {
+    return null;
+  }
+
+  // No renderizar en servidor - previene hydration error
+  if (!mounted) {
     return null;
   }
 

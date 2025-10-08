@@ -8,6 +8,7 @@ interface InmobiliariaPublicProfile {
   logo_url: string | null;
   verified: boolean;
   phone: string | null;
+  commercial_phone: string | null;
   address: string | null;
   website: string | null;
   facebook: string | null;
@@ -60,6 +61,7 @@ export async function GET(
         logo_url,
         verified,
         phone,
+        commercial_phone,
         address,
         website,
         facebook,
@@ -71,7 +73,7 @@ export async function GET(
         created_at
       `)
       .eq('id', id)
-      .eq('role', 'inmobiliaria')
+      .eq('user_type', 'inmobiliaria')
       .single();
 
     if (error || !inmobiliaria) {
@@ -87,8 +89,9 @@ export async function GET(
       company_name: inmobiliaria.company_name,
       logo_url: inmobiliaria.logo_url,
       verified: inmobiliaria.verified || false,
-      // Solo mostrar teléfono si show_phone_public es true
+      // Solo mostrar teléfonos si show_phone_public es true
       phone: inmobiliaria.show_phone_public ? inmobiliaria.phone : null,
+      commercial_phone: inmobiliaria.show_phone_public ? inmobiliaria.commercial_phone : null,
       // Solo mostrar dirección si show_address_public es true
       address: inmobiliaria.show_address_public ? inmobiliaria.address : null,
       website: inmobiliaria.website,

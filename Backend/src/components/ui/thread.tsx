@@ -1,16 +1,18 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
-import { realtimeManager, type MessageRealtimePayload } from '@/lib/supabase/realtime'
+import { subscribeToMessages, unsubscribeFromChannel, type MessageRealtimePayload } from '@/lib/supabase/realtime'
 import MessageComposer from '@/components/ui/message-composer'
+import { SafeAvatar } from './SafeAvatar'
 import AvatarUniversal from './avatar-universal'
 
 interface Message {
   id: string
   content: string
-  sender_id: string
-  created_at: string
+  senderId: string  // ✅ FIX: Usar camelCase como envía el API
+  createdAt: string  // ✅ FIX: Usar camelCase como envía el API
+  isMine?: boolean
   sender?: {
     id: string
     full_name: string
@@ -23,6 +25,7 @@ interface ThreadProps {
   propertyTitle?: string
   otherUserId?: string
   otherUserName?: string
+  otherUserAvatar?: string | null  // ✅ FIX: Agregar avatarUrl del otro usuario
   className?: string
   onNewMessage?: (message: Message) => void
 }
@@ -32,6 +35,7 @@ export default function Thread({
   propertyTitle,
   otherUserId,
   otherUserName,
+  otherUserAvatar,  // ✅ FIX: Recibir avatarUrl del otro usuario
   className = '',
   onNewMessage
 }: ThreadProps) {
@@ -40,14 +44,15 @@ export default function Thread({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const seenMessageIds = useRef<Set<string>>(new Set())  // ✅ FIX: Trackear mensajes ya vistos
 
   // Scroll al final cuando hay nuevos mensajes
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  // Cargar mensajes de la conversación
-  const loadMessages = async () => {
+  // ✅ FIX: Usar useCallback para evitar recrear la función
+  const loadMessages = useCallback(async () => {
     if (!conversationId) return
 
     try {
@@ -65,6 +70,10 @@ export default function Thread({
       const data = await response.json()
       
       if (data.messages) {
+        // ✅ FIX: Limpiar y registrar IDs de mensajes cargados
+        seenMessageIds.current.clear()
+        data.messages.forEach((msg: Message) => seenMessageIds.current.add(msg.id))
+        
         setMessages(data.messages || [])
         setTimeout(scrollToBottom, 100)
       } else {
@@ -77,39 +86,55 @@ export default function Thread({
     } finally {
       setLoading(false)
     }
-  }
+  }, [conversationId])
 
-  // Agregar nuevo mensaje a la lista
-  const addMessage = (newMessage: Message) => {
+  // ✅ FIX: Agregar deduplicación al agregar mensajes
+  const addMessage = useCallback((newMessage: Message) => {
+    // Evitar duplicados
+    if (seenMessageIds.current.has(newMessage.id)) {
+      console.log('[Thread] 🚫 Mensaje duplicado ignorado:', newMessage.id)
+      return
+    }
+    
+    seenMessageIds.current.add(newMessage.id)
     setMessages(prev => [...prev, newMessage])
     onNewMessage?.(newMessage)
     setTimeout(scrollToBottom, 100)
-  }
+  }, [onNewMessage])
 
   // Formatear fecha del mensaje
   const formatMessageTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    if (!dateString) return 'Ahora'
+    
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return 'Ahora'
+      
+      const now = new Date()
+      const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
 
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
-    } else if (diffInHours < 24 * 7) {
-      return date.toLocaleDateString('es-ES', { 
-        weekday: 'short',
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
-    } else {
-      return date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
+      if (diffInHours < 24) {
+        return date.toLocaleTimeString('es-ES', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })
+      } else if (diffInHours < 24 * 7) {
+        return date.toLocaleDateString('es-ES', { 
+          weekday: 'short',
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })
+      } else {
+        return date.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })
+      }
+    } catch (error) {
+      console.error('[Thread] Error formatting date:', dateString, error)
+      return 'Ahora'
     }
   }
 
@@ -140,43 +165,43 @@ export default function Thread({
     }
   }
 
-  // Manejar nuevo mensaje desde realtime
-  const handleRealtimeMessage = (newMessage: any) => {
+  // ✅ FIX: Manejar nuevo mensaje desde realtime con deduplicación
+  const handleRealtimeMessage = useCallback((newMessage: any) => {
     console.log('🔴 Nuevo mensaje via realtime:', newMessage)
     
-    // Evitar duplicados
-    setMessages(prev => {
-      if (prev.some(msg => msg.id === newMessage.id)) {
-        return prev
-      }
-      
-      const message: Message = {
-        id: newMessage.id,
-        content: newMessage.content,
-        sender_id: newMessage.sender_id,
-        created_at: newMessage.created_at,
-        sender: newMessage.sender
-      }
-      
-      return [...prev, message]
-    })
+    // Evitar duplicados usando el Set
+    if (seenMessageIds.current.has(newMessage.id)) {
+      console.log('[Thread] 🚫 Mensaje realtime duplicado ignorado:', newMessage.id)
+      return
+    }
     
+    seenMessageIds.current.add(newMessage.id)
+    
+    const message: Message = {
+      id: newMessage.id,
+      content: newMessage.content,
+      senderId: newMessage.senderId || newMessage.sender_id,  // ✅ Soportar ambos formatos
+      createdAt: newMessage.createdAt || newMessage.created_at,
+      isMine: newMessage.isMine,
+      sender: newMessage.sender
+    }
+    
+    setMessages(prev => [...prev, message])
     setTimeout(scrollToBottom, 100)
-  }
+  }, [])
 
-  // Setup realtime subscription
+  // ✅ FIX: Setup realtime subscription con dependencias correctas
   useEffect(() => {
     if (!conversationId) return
 
-    // Importar dinámicamente para evitar SSR issues
-    import('@/lib/realtime').then(({ subscribeToMessages, unsubscribeFromMessages }) => {
-      const channel = subscribeToMessages(conversationId, handleRealtimeMessage)
-      
-      return () => {
-        unsubscribeFromMessages(channel)
-      }
-    })
-  }, [conversationId])
+    console.log('[Thread] Setting up realtime subscription for:', conversationId)
+    const channel = subscribeToMessages(conversationId, handleRealtimeMessage)
+    
+    return () => {
+      console.log('[Thread] Cleaning up realtime subscription for:', conversationId)
+      unsubscribeFromChannel(channel)
+    }
+  }, [conversationId, handleRealtimeMessage])
 
   // Cargar mensajes al montar componente
   useEffect(() => {
@@ -231,8 +256,9 @@ export default function Thread({
             <p className="text-sm">Envía el primer mensaje para comenzar la conversación</p>
           </div>
         ) : (
-          messages.map((message) => {
-            const isOwnMessage = message.sender_id === user?.id
+          messages.map((message: Message) => {
+            // ✅ FIX: Usar senderId directamente (camelCase como envía el API)
+            const isOwnMessage = message.isMine ?? (message.senderId === user?.id)
             
             return (
               <div
@@ -240,29 +266,37 @@ export default function Thread({
                 className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`flex max-w-xs lg:max-w-md ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
-                  {/* Avatar */}
+                  {/* Avatar - ✅ FIX: AvatarUniversal para usuario actual, SafeAvatar para otro usuario */}
                   <div className={`flex-shrink-0 ${isOwnMessage ? 'ml-2' : 'mr-2'}`}>
-                    <AvatarUniversal
-                      userId={message.sender_id}
-                      size="sm"
-                      fallbackText={isOwnMessage ? 'Tú' : otherUserName}
-                    />
+                    {isOwnMessage ? (
+                      <AvatarUniversal
+                        userId={user?.id}
+                        size="sm"
+                        fallbackText="Tú"
+                      />
+                    ) : (
+                      <SafeAvatar
+                        src={otherUserAvatar || undefined}
+                        name={otherUserName || 'Usuario'}
+                        size="sm"
+                      />
+                    )}
                   </div>
 
-                  {/* Mensaje */}
+                  {/* Mensaje - BURBUJAS DIFERENCIADAS */}
                   <div className={`
-                    px-4 py-2 rounded-lg
+                    px-4 py-2 rounded-2xl shadow-sm
                     ${isOwnMessage 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-200 text-gray-900'
+                      ? 'bg-blue-500 text-white rounded-br-md' 
+                      : 'bg-white text-gray-900 border border-gray-200 rounded-bl-md'
                     }
                   `}>
-                    <p className="text-sm">{message.content}</p>
+                    <p className="text-sm leading-relaxed">{message.content}</p>
                     <p className={`
                       text-xs mt-1
                       ${isOwnMessage ? 'text-blue-100' : 'text-gray-500'}
                     `}>
-                      {formatMessageTime(message.created_at)}
+                      {formatMessageTime(message.createdAt)}
                     </p>
                   </div>
                 </div>

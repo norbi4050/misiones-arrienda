@@ -54,6 +54,11 @@ export interface Property {
     phone?: string
     rating?: number
   }
+  
+  // FASE 6: Owner info (para links a perfil de inmobiliarias)
+  owner_id?: string
+  owner_type?: string
+  owner_company_name?: string
 }
 
 // Tipos exportados individuales

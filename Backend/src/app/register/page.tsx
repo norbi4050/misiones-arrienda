@@ -149,17 +149,16 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-6">
-          {/* Foto de perfil */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Foto de perfil (opcional)
-            </label>
-            <ProfileImageUpload
-              value={formData.profileImage}
-              onChange={(url) => setFormData(prev => ({ ...prev, profileImage: url }))}
-              disabled={loading}
-              className="mb-4"
-            />
+          {/* Banner publicitario - Próximamente */}
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-center space-x-2">
+              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <p className="text-sm font-semibold text-indigo-900">
+                🚀 Próximamente: <span className="text-purple-700">Perfil Empresa</span> - Unidades en Pozo
+              </p>
+            </div>
           </div>
 
           {/* Selector de tipo de usuario */}
@@ -168,7 +167,7 @@ export default function RegisterPage() {
               ¿Qué tipo de usuario eres?
             </label>
             <div className="grid grid-cols-1 gap-3">
-              {(['inquilino', 'inmobiliaria', 'dueno_directo'] as const).map((type) => {
+              {(['inquilino', 'inmobiliaria'] as const).map((type) => {
                 const info = getUserTypeInfo(type);
                 const Icon = info.icon;
                 return (
@@ -191,8 +190,7 @@ export default function RegisterPage() {
                     <div className="flex items-center">
                       <Icon className={`h-5 w-5 mr-3 ${
                         formData.userType === type 
-                          ? type === 'inmobiliaria' ? 'text-purple-600' : 
-                            type === 'dueno_directo' ? 'text-green-600' : 'text-blue-600'
+                          ? type === 'inmobiliaria' ? 'text-purple-600' : 'text-blue-600'
                           : 'text-gray-400'
                       }`} />
                       <div>
