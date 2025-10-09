@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Send, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SafeAvatar } from '@/components/ui/SafeAvatar'
 import { subscribeToMessages, unsubscribeFromChannel, type MessageRealtimePayload } from '@/lib/realtime-messages'
+import MessageComposerWithAttachments from '@/components/ui/message-composer-with-attachments'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 // PROMPT 2: Interfaces actualizadas con isMine y otherUser
@@ -43,13 +44,10 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
   const [threadInfo, setThreadInfo] = useState<ThreadInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [newMessage, setNewMessage] = useState('')
   const [hasMore, setHasMore] = useState(true)
   const [cursor, setCursor] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null)
   const router = useRouter()
 
@@ -178,18 +176,15 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
     }
   }
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || sending) return
+  const handleSendMessage = async (content: string, type?: 'text' | 'image', attachmentIds?: string[]) => {
+    if (!content.trim()) return
 
-    console.log('[MessagesUI] Enviando mensaje')
-    const messageContent = newMessage.trim()
-    setNewMessage('')
-    setSending(true)
+    console.log('[MessagesUI] Enviando mensaje con adjuntos:', attachmentIds)
 
     // Optimistic update
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`,
-      content: messageContent,
+      content: content,
       createdAt: new Date().toISOString(),
       senderId: user?.id || '',
       isMine: true,
@@ -198,11 +193,16 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
     setMessages(prev => [...prev, optimisticMessage])
 
     try {
+      const body: any = { content }
+      if (attachmentIds && attachmentIds.length > 0) {
+        body.attachmentIds = attachmentIds
+      }
+
       const response = await fetch(`/api/messages/threads/${threadId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ content: messageContent })
+        body: JSON.stringify(body)
       })
 
       if (response.status === 401) {
@@ -221,15 +221,6 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
       console.error('[MessagesUI] Error sending message:', error)
       toast.error('Error al enviar mensaje')
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
-    } finally {
-      setSending(false)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
     }
   }
 
@@ -489,32 +480,14 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input de mensaje */}
-      <div className="p-4 border-t border-gray-200 bg-white">
-        <div className="flex space-x-3">
-          <textarea
-            ref={textareaRef}
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Escribe tu mensaje..."
-            className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            rows={2}
-            disabled={sending}
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!newMessage.trim() || sending}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
-            aria-label="Enviar mensaje"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Enter = enviar, Shift+Enter = nueva línea
-        </p>
-      </div>
+      {/* Message Composer con soporte de adjuntos */}
+      <MessageComposerWithAttachments
+        conversationId={threadId}
+        onSendMessage={handleSendMessage}
+        placeholder="Escribe tu mensaje..."
+        maxLength={1000}
+        planTier="free"
+      />
     </div>
   )
 }
