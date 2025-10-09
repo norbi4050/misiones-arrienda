@@ -81,18 +81,20 @@ export default function MapPickerClient({ value, onChange }: MapPickerClientProp
   }, [value, marker, map]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="w-full h-72 rounded-lg border overflow-hidden">
         <div ref={mapRef} className="w-full h-full" />
       </div>
-      <div className="text-xs text-gray-500">
-        💡 Arrastrá el marcador o hacé click en el mapa para seleccionar la ubicación exacta
-      </div>
-      {value && (
-        <div className="text-xs text-gray-600">
-          📍 Coordenadas: {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
+      <div className="flex flex-col gap-2">
+        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+          💡 Arrastrá el marcador o hacé click en el mapa para seleccionar la ubicación exacta
         </div>
-      )}
+        {value && (
+          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded font-mono">
+            📍 Coordenadas: {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
