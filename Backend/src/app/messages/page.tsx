@@ -24,6 +24,8 @@ interface Conversation {
   unread_count: number
 }
 
+type MessageTab = 'properties' | 'community'
+
 export default function MessagesPage() {
   const { user, isLoading: authLoading } = useSupabaseAuth()
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -39,13 +41,16 @@ export default function MessagesPage() {
   // PROMPT 1 (D3): Estado para modal de avatar
   const [isAvatarUploadModalOpen, setIsAvatarUploadModalOpen] = useState(false)
 
+  // Detectar tab activo desde URL
+  const activeTab = (searchParams.get('tab') as MessageTab) || 'properties'
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login')
     }
   }, [user, authLoading, router])
 
-  // PROMPT D4: Invalidar caché al cambiar de usuario
+  // PROMPT D4: Invalidar caché al cambiar de usuario o tab
   useEffect(() => {
     if (user) {
       fetchConversations()
@@ -63,8 +68,10 @@ export default function MessagesPage() {
         setSelectedThreadId(threadId)
       }
       
-      // Configurar suscripción real-time para actualizaciones de threads
-      setupConversationsRealtime()
+      // Configurar suscripción real-time para actualizaciones de threads (solo para properties)
+      if (activeTab === 'properties') {
+        setupConversationsRealtime()
+      }
     }
 
     // Cleanup al desmontar
@@ -74,7 +81,7 @@ export default function MessagesPage() {
         realtimeChannelRef.current = null
       }
     }
-  }, [user?.id, searchParams])  // PROMPT D4: Dependencia en user.id para invalidar al cambiar cuenta
+  }, [user?.id, activeTab, searchParams])  // PROMPT D4: Dependencia en user.id y activeTab
 
   const handleCreateThread = async (toUserId: string) => {
     try {
@@ -168,7 +175,16 @@ export default function MessagesPage() {
   const fetchConversations = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/messages/threads', {
+      setError(null)
+      
+      // Determinar endpoint según el tab activo
+      const endpoint = activeTab === 'community' 
+        ? '/api/comunidad/messages' 
+        : '/api/messages/threads'
+      
+      console.log(`[MessagesPage] Fetching conversations from ${endpoint}`)
+      
+      const response = await fetch(endpoint, {
         credentials: 'include'
       })
       
@@ -181,13 +197,40 @@ export default function MessagesPage() {
         throw new Error('Error al cargar conversaciones')
       }
       
-      const data = await response.json()
+      const responseData = await response.json()
+      
+      // Manejar respuesta según el endpoint
+      if (activeTab === 'community') {
+        // Formato de /api/comunidad/messages: { conversations: [...], count: number }
+        console.log('[MessagesPage] Community conversations:', responseData.conversations?.length || 0)
+        
+        // Normalizar conversaciones de comunidad al formato esperado
+        const normalizedConversations = (responseData.conversations || []).map((conv: any) => {
+          return {
+            id: conv.id,
+            property_id: '',
+            property_title: 'Conversación de Comunidad',
+            property_image: null,
+            other_user_name: 'Usuario', // TODO: Obtener nombre real del otro usuario
+            other_user_avatar: null,
+            last_message: 'Conversación activa',
+            last_message_time: conv.last_message_at || conv.created_at || new Date().toISOString(),
+            unread_count: 0
+          }
+        })
+        
+        setConversations(normalizedConversations)
+        setLoading(false)
+        return
+      }
+      
+      // Formato de /api/messages/threads (propiedades)
       
       // PROMPT 4: Normalización defensiva con logs
-      console.log('[MessagesUI] Cargando threads, raw count:', (data.threads || []).length)
-      console.log('[MessagesUI] Raw threads data:', JSON.stringify(data.threads, null, 2))
+      console.log('[MessagesUI] Cargando threads, raw count:', (responseData.threads || []).length)
+      console.log('[MessagesUI] Raw threads data:', JSON.stringify(responseData.threads, null, 2))
       
-      const normalizedThreads = (data.threads || []).map((thread: any) => {
+      const normalizedThreads = (responseData.threads || []).map((thread: any) => {
         console.log('[MessagesUI] Processing thread:', thread.threadId, 'otherUser.avatarUrl:', thread.otherUser?.avatarUrl)
         // PROMPT 4: Garantizar threadId siempre presente
         const threadId = thread.threadId || thread.id || `unknown-${Date.now()}`
@@ -237,6 +280,13 @@ export default function MessagesPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Cambiar de tab
+  const handleTabChange = (tab: MessageTab) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', tab)
+    router.push(`/messages?${params.toString()}`)
   }
 
   if (authLoading) {
@@ -460,7 +510,7 @@ export default function MessagesPage() {
         />
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Mis Mensajes
           </h1>
@@ -476,6 +526,36 @@ export default function MessagesPage() {
               </>
             )}
           </p>
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => handleTabChange('properties')}
+              className={`
+                py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                ${activeTab === 'properties'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              Propiedades
+            </button>
+            <button
+              onClick={() => handleTabChange('community')}
+              className={`
+                py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                ${activeTab === 'community'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              Comunidad
+            </button>
+          </nav>
         </div>
 
         {/* Search */}
