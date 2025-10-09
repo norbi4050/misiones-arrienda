@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPaymentPreference } from '@/lib/mercadopago';
+import { preference, MP_CONFIG } from '@/lib/mercadopago/client';
 
 export const runtime = 'nodejs';
-// `dynamic` acá es opcional; los route handlers ya son dinámicos por defecto.
-// `revalidate` no tiene efecto en handlers, podés omitirlo.
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,43 +18,68 @@ export async function POST(req: NextRequest) {
         }],
         payer,
         back_urls: back_urls ?? {
-          success: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success`,
-          failure: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/failure`,
-          pending: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/pending`,
+          success: MP_CONFIG.successUrl,
+          failure: MP_CONFIG.failureUrl,
+          pending: MP_CONFIG.pendingUrl,
         },
         auto_return: 'approved' as const,
-        notification_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/webhook`,
+        notification_url: MP_CONFIG.notificationUrl,
         metadata: { ...metadata, site: "misionesarrienda" },
       };
 
-      // Aquí usaríamos directamente MercadoPago SDK si estuviera disponible
-      // Por ahora, devolvemos un mock response
+      const response = await preference.create({ body: preferenceData });
+
       return NextResponse.json({ 
-        id: 'mock-preference-id',
-        init_point: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock-preference-id',
-        sandbox_init_point: 'https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=mock-preference-id'
+        id: response.id,
+        init_point: response.init_point,
+        sandbox_init_point: response.sandbox_init_point
       });
     }
 
     // Si viene en el formato legacy (propertyId, amount, etc.)
     if (propertyId && amount && title && userEmail && userName) {
-      const preference = await createPaymentPreference({
-        title,
-        description: description || `Pago por propiedad: ${title}`,
-        price: amount,
-        quantity: 1,
-        propertyId,
-        userEmail,
-        userName
-      });
+      const preferenceData = {
+        items: [
+          {
+            id: propertyId,
+            title,
+            description: description || `Pago por propiedad: ${title}`,
+            quantity: 1,
+            unit_price: amount,
+            currency_id: 'ARS'
+          }
+        ],
+        payer: {
+          email: userEmail,
+          name: userName
+        },
+        back_urls: {
+          success: MP_CONFIG.successUrl,
+          failure: MP_CONFIG.failureUrl,
+          pending: MP_CONFIG.pendingUrl,
+        },
+        auto_return: 'approved' as const,
+        notification_url: MP_CONFIG.notificationUrl,
+        external_reference: propertyId,
+        expires: true,
+        expiration_date_from: new Date().toISOString(),
+        expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
+        payment_methods: {
+          excluded_payment_methods: [],
+          excluded_payment_types: [],
+          installments: 12
+        }
+      };
+
+      const response = await preference.create({ body: preferenceData });
 
       return NextResponse.json({
         success: true,
         preference: {
-          id: preference.id,
-          init_point: preference.init_point,
-          sandbox_init_point: preference.sandbox_init_point,
-          items: preference.items
+          id: response.id,
+          init_point: response.init_point,
+          sandbox_init_point: response.sandbox_init_point,
+          items: response.items
         }
       });
     }
