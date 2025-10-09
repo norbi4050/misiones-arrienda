@@ -89,6 +89,7 @@ export default function AttachmentButton({
       />
 
       <Button
+        type="button"
         variant="ghost"
         size="sm"
         className={`shrink-0 h-10 w-10 p-0 ${className}`}

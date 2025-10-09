@@ -1,11 +1,21 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Send, Smile } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { AttachmentButton, UploadQueue, useUploadQueue, type QueuedFile } from '@/components/messages'
 import { createClient } from 'lib/supabase/browser'
+
+// Emojis más comunes organizados por categoría
+const EMOJI_CATEGORIES = {
+  'Caras': ['😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '😎', '🤔', '😅', '😆', '😉', '😌', '😏', '🙂', '🤗'],
+  'Gestos': ['👍', '👎', '👏', '🙌', '👌', '✌️', '🤞', '🤝', '🙏', '💪', '👊', '✊', '🤚', '👋', '🤙', '👈'],
+  'Emociones': ['❤️', '💕', '💖', '💗', '💙', '💚', '💛', '🧡', '💜', '🖤', '💔', '❣️', '💞', '💓', '💝', '💘'],
+  'Celebración': ['🎉', '🎊', '🎈', '🎁', '🎂', '🎆', '🎇', '✨', '🌟', '⭐', '💫', '🔥', '💥', '🎯', '🏆', '🥇'],
+  'Objetos': ['📱', '💻', '📷', '📸', '🎵', '🎶', '🎤', '🎧', '📺', '🎮', '🏠', '🚗', '✈️', '🚀', '⚽', '🏀'],
+  'Naturaleza': ['🌞', '🌙', '⭐', '🌈', '☀️', '⛅', '☁️', '🌧️', '⛈️', '🌩️', '❄️', '🌸', '🌺', '🌻', '🌹', '🌷']
+}
 
 interface MessageComposerProps {
   conversationId: string
@@ -26,7 +36,9 @@ export default function MessageComposerWithAttachments({
 }: MessageComposerProps) {
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const emojiPickerRef = useRef<HTMLDivElement>(null)
   
   // Upload queue management
   const {
@@ -40,6 +52,40 @@ export default function MessageComposerWithAttachments({
   } = useUploadQueue()
 
   const supabase = createClient()
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false)
+      }
+    }
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showEmojiPicker])
+
+  // Handle emoji selection
+  const handleEmojiSelect = (emoji: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const newMessage = message.substring(0, start) + emoji + message.substring(end)
+    
+    setMessage(newMessage)
+    setShowEmojiPicker(false)
+    
+    // Restore focus and cursor position
+    setTimeout(() => {
+      textarea.focus()
+      const newPosition = start + emoji.length
+      textarea.setSelectionRange(newPosition, newPosition)
+    }, 0)
+  }
 
   // Handle file selection
   const handleFilesSelected = async (files: File[]) => {
@@ -180,11 +226,13 @@ export default function MessageComposerWithAttachments({
 
       <div className="flex items-end gap-2">
         {/* Attachment button */}
-        <AttachmentButton
-          onFilesSelected={handleFilesSelected}
-          disabled={disabled || sending || hasUploading}
-          planTier={planTier}
-        />
+        <div className="shrink-0">
+          <AttachmentButton
+            onFilesSelected={handleFilesSelected}
+            disabled={disabled || sending || hasUploading}
+            planTier={planTier}
+          />
+        </div>
 
         {/* Message input */}
         <div className="flex-1 relative">
@@ -213,19 +261,56 @@ export default function MessageComposerWithAttachments({
           )}
         </div>
 
-        {/* Emoji button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="shrink-0 h-10 w-10 p-0"
-          disabled={disabled || sending}
-          title="Agregar emoji"
-        >
-          <Smile className="h-4 w-4" />
-        </Button>
+        {/* Emoji button with picker */}
+        <div className="relative shrink-0" ref={emojiPickerRef}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-10 w-10 p-0"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            disabled={disabled || sending}
+            title="Agregar emoji"
+          >
+            <Smile className={`h-4 w-4 ${showEmojiPicker ? 'text-blue-500' : ''}`} />
+          </Button>
+
+          {/* Emoji Picker Popup */}
+          {showEmojiPicker && (
+            <div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-80 max-h-96 overflow-y-auto">
+              <div className="p-3">
+                <div className="text-xs font-semibold text-gray-500 mb-2 sticky top-0 bg-white pb-1">
+                  Selecciona un emoji
+                </div>
+                
+                {Object.entries(EMOJI_CATEGORIES).map(([category, emojis]) => (
+                  <div key={category} className="mb-3">
+                    <div className="text-xs font-medium text-gray-600 mb-1.5">
+                      {category}
+                    </div>
+                    <div className="grid grid-cols-8 gap-1">
+                      {emojis.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => handleEmojiSelect(emoji)}
+                          className="text-2xl hover:bg-gray-100 rounded p-1 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          title={emoji}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Send button */}
         <Button
+          type="button"
           onClick={handleSend}
           disabled={!canSend}
           size="sm"
