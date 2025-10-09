@@ -81,17 +81,27 @@ export default function MapPickerClient({ value, onChange }: MapPickerClientProp
   }, [value, marker, map]);
 
   return (
-    <div className="space-y-3">
-      <div className="w-full h-72 rounded-lg border overflow-hidden">
+    <div className="space-y-4">
+      <div className="w-full h-72 rounded-lg border border-gray-300 overflow-hidden shadow-sm">
         <div ref={mapRef} className="w-full h-full" />
       </div>
-      <div className="flex flex-col gap-2">
-        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-          💡 Arrastrá el marcador o hacé click en el mapa para seleccionar la ubicación exacta
+      
+      {/* Información debajo del mapa */}
+      <div className="space-y-2">
+        {/* Instrucciones de uso */}
+        <div className="flex items-start gap-2 text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-md p-3">
+          <span className="text-blue-500 flex-shrink-0">💡</span>
+          <p>Arrastrá el marcador o hacé click en el mapa para seleccionar la ubicación exacta</p>
         </div>
+        
+        {/* Coordenadas seleccionadas */}
         {value && (
-          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded font-mono">
-            📍 Coordenadas: {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
+          <div className="flex items-center gap-2 text-sm bg-green-50 border border-green-200 rounded-md p-3">
+            <span className="text-green-600 flex-shrink-0">✓</span>
+            <div className="flex-1">
+              <span className="font-medium text-gray-700">Coordenadas seleccionadas:</span>
+              <span className="ml-2 font-mono text-gray-900">{value.lat.toFixed(6)}, {value.lng.toFixed(6)}</span>
+            </div>
           </div>
         )}
       </div>
