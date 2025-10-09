@@ -1,6 +1,6 @@
 'use client'
 
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { getBrowserSupabase } from '@/lib/supabase/browser'
 
 export interface MessageRealtimePayload {
@@ -45,12 +45,12 @@ export const subscribeToMessages = (
         table: 'community_messages',
         filter: `conversation_id=eq.${conversationId}`
       },
-      (payload) => {
+      (payload: RealtimePostgresChangesPayload<any>) => {
         console.log('New message received:', payload)
         onNewMessage(payload.new as MessageRealtimePayload)
       }
     )
-    .subscribe((status) => {
+    .subscribe((status: string) => {
       console.log(`Messages subscription status: ${status}`)
     })
 
@@ -76,12 +76,12 @@ export const subscribeToConversations = (
         table: 'community_conversations',
         filter: `or(user1_id.eq.${userId},user2_id.eq.${userId})`
       },
-      (payload) => {
+      (payload: RealtimePostgresChangesPayload<any>) => {
         console.log('Conversation updated:', payload)
         onConversationUpdate(payload.new as ConversationRealtimePayload)
       }
     )
-    .subscribe((status) => {
+    .subscribe((status: string) => {
       console.log(`Conversations subscription status: ${status}`)
     })
 
@@ -104,13 +104,13 @@ export const subscribeToUserPresence = (
       const newState = channel.presenceState()
       onPresenceChange(newState)
     })
-    .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+    .on('presence', { event: 'join' }, ({ key, newPresences }: { key: string; newPresences: any }) => {
       console.log('User joined:', key, newPresences)
     })
-    .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+    .on('presence', { event: 'leave' }, ({ key, leftPresences }: { key: string; leftPresences: any }) => {
       console.log('User left:', key, leftPresences)
     })
-    .subscribe(async (status) => {
+    .subscribe(async (status: string) => {
       if (status === 'SUBSCRIBED') {
         // Marcar usuario como online
         await channel.track({

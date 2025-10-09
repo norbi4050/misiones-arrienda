@@ -45,6 +45,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Método 3: Información de ayuda
+    const headersObj: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      headersObj[key] = value;
+    });
+
     return NextResponse.json({
       success: false,
       message: 'No se encontró token en el request',
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
         method2: 'Abre DevTools > Console > Ejecuta: Object.keys(localStorage).filter(k => k.includes("auth"))',
         method3: 'Usa el endpoint /api/users/profile y copia el header Authorization de ese request'
       },
-      allHeaders: Object.fromEntries(request.headers.entries())
+      allHeaders: headersObj
     });
 
   } catch (error) {

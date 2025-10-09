@@ -18,6 +18,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
  * Sube un adjunto a un mensaje
  */
 export async function POST(request: NextRequest) {
+  let user: any = null;
+  
   try {
     // 1. Autenticación
     const authHeader = request.headers.get('authorization');
@@ -32,7 +34,8 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const token = authHeader.replace('Bearer ', '');
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+    user = authUser;
 
     if (authError || !user) {
       console.log('[ATTACHMENTS] Auth error:', authError?.message);
@@ -288,7 +291,7 @@ export async function POST(request: NextRequest) {
     // 9.5. Track upload success
     analytics.attachmentUpload({
       threadId,
-      messageId: finalMessageId,
+      messageId: finalMessageId || undefined,
       mime: file.type,
       sizeBytes: file.size,
       planTier,

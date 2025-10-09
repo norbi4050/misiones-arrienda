@@ -54,11 +54,8 @@ const PropertiesMap: React.FC<PropertiesMapProps> = ({
 
     const loadLeaflet = async () => {
       try {
-        // Importar Leaflet y sus estilos
+        // Importar Leaflet (los estilos CSS deben estar en globals.css o layout)
         const L = await import('leaflet');
-        await import('leaflet/dist/leaflet.css');
-        await import('leaflet.markercluster/dist/MarkerCluster.css');
-        await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
         const MarkerClusterGroup = await import('leaflet.markercluster');
 
         if (!mounted) return;

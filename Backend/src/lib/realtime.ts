@@ -1,6 +1,7 @@
 'use client'
 
 import { getBrowserClient } from '@/lib/supabase/client-singleton'
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 /**
  * Sistema realtime simplificado para mensajería
@@ -19,12 +20,12 @@ export function subscribeToMessages(conversationId: string, onNewMessage: (messa
         table: 'community_messages', // CORREGIDO: era 'messages', ahora 'community_messages'
         filter: `conversation_id=eq.${conversationId}`
       },
-      (payload) => {
+      (payload: RealtimePostgresChangesPayload<any>) => {
         console.log('🔴 Nuevo mensaje recibido via realtime:', payload)
         onNewMessage(payload.new)
       }
     )
-    .subscribe((status) => {
+    .subscribe((status: string) => {
       console.log(`📡 Estado suscripción mensajes: ${status}`)
       if (status === 'CHANNEL_ERROR') {
         console.error('❌ Error en suscripción realtime. Verifica políticas RLS en community_messages')
@@ -51,12 +52,12 @@ export function subscribeToConversations(userId: string, onConversationUpdate: (
         table: 'community_conversations', // CORREGIDO: era 'conversations', ahora 'community_conversations'
         filter: `or(user1_id.eq.${userId},user2_id.eq.${userId})` // CORREGIDO: columnas correctas
       },
-      (payload) => {
+      (payload: RealtimePostgresChangesPayload<any>) => {
         console.log('🔴 Conversación actualizada via realtime:', payload)
         onConversationUpdate(payload.new)
       }
     )
-    .subscribe((status) => {
+    .subscribe((status: string) => {
       console.log(`📡 Estado suscripción conversaciones: ${status}`)
       if (status === 'CHANNEL_ERROR') {
         console.error('❌ Error en suscripción realtime. Verifica políticas RLS en community_conversations')

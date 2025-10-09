@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         userData || { email: profile.userId },
         profile ? {
           full_name: profile.full_name,
-          companyName: profile.companyName
+          company_name: profile.companyName
         } : null
       )
 
