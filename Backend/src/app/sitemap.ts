@@ -1,3 +1,6 @@
+// Force dynamic rendering for Vercel
+export const dynamic = 'force-dynamic'
+
 import { MetadataRoute } from 'next'
 import { getProperties } from '@/lib/api'
 import { createClient } from '@/lib/supabase/server'

@@ -1,4 +1,7 @@
 // src/app/api/users/profile/route.ts
+// Force dynamic rendering for Vercel
+export const dynamic = 'force-dynamic'
+
 import { NextResponse, NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";

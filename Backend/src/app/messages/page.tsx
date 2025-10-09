@@ -1,5 +1,8 @@
 'use client'
 
+// Force dynamic rendering for Vercel (fixes useSearchParams SSR error)
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'

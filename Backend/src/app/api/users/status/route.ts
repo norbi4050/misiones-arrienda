@@ -1,6 +1,9 @@
 // src/app/api/users/status/route.ts
 // API para obtener el estado actual de la cuenta
 
+// Force dynamic rendering for Vercel
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { AccountStatusResponse } from '@/types/account'

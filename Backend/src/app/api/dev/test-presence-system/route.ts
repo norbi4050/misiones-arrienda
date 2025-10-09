@@ -13,6 +13,9 @@
  * @created 2025
  */
 
+// Force dynamic rendering for Vercel
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { 
