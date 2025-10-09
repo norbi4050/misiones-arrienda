@@ -1,6 +1,3 @@
-// Force dynamic rendering for Vercel (fixes useSearchParams SSR error)
-export const dynamic = 'force-dynamic'
-
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
