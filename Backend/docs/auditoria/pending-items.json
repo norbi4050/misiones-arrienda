@@ -1,0 +1,184 @@
+[
+  {
+    "area": "Security",
+    "severity": "CRITICAL",
+    "title": "Debug routes exposed in production",
+    "details": "100+ debug/test routes accessible without NODE_ENV protection",
+    "file": "src/app/api/debug-*",
+    "evidence": "Routes like /api/debug-credentials, /api/debug-env-vars, /api/test-service-role are accessible",
+    "recommendation": "Add NODE_ENV guard or move to /api/dev/* with authentication"
+  },
+  {
+    "area": "Security",
+    "severity": "CRITICAL",
+    "title": "Potential hardcoded secrets",
+    "details": "Need manual verification of payment and auth files for hardcoded credentials",
+    "file": "src/lib/mercadopago/client.ts, src/lib/supabase-admin.ts",
+    "evidence": "Files handle sensitive credentials - requires manual audit",
+    "recommendation": "Verify all secrets use environment variables only"
+  },
+  {
+    "area": "Build",
+    "severity": "HIGH",
+    "title": "Database schema mismatch - operationType column missing",
+    "details": "Prisma schema references Property.operationType but column doesn't exist in database",
+    "file": "prisma/schema.prisma",
+    "line": null,
+    "evidence": "Build error: The column `Property.operationType` does not exist in the current database",
+    "recommendation": "Run migration or remove field from schema"
+  },
+  {
+    "area": "Build",
+    "severity": "HIGH",
+    "title": "Pages Router conflict with App Router",
+    "details": "pages/dashboard.tsx exists alongside src/app/ structure",
+    "file": "pages/dashboard.tsx",
+    "evidence": "Potential routing conflict between Pages and App Router",
+    "recommendation": "Verify if pages/dashboard.tsx is still in use, migrate or remove"
+  },
+  {
+    "area": "Performance",
+    "severity": "MEDIUM",
+    "title": "Client-side rendering forced by useSearchParams",
+    "details": "Entire /messages page deopted into client-side rendering",
+    "file": "src/app/messages/page.tsx",
+    "line": null,
+    "evidence": "Build warning: Entire page deopted into client-side rendering due to useSearchParams()",
+    "recommendation": "Wrap useSearchParams in Suspense boundary or use searchParams prop"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "MEDIUM",
+    "title": "Temporary files in production",
+    "details": "30+ files with -temp, -fix, -backup, -simple suffixes",
+    "file": "Multiple files",
+    "evidence": "layout-temp.tsx, page-simple.tsx, middleware-temp.ts, etc.",
+    "recommendation": "Move to legacy/_quarantine/20250110/"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "MEDIUM",
+    "title": "Component duplication",
+    "details": "Multiple versions of same components (navbar, filter-section, property-card)",
+    "file": "src/components/",
+    "evidence": "navbar.tsx, navbar-safe.tsx, navbar-fixed.tsx all exist",
+    "recommendation": "Identify active version, deprecate others"
+  },
+  {
+    "area": "Database",
+    "severity": "MEDIUM",
+    "title": "Database connection errors during build",
+    "details": "Could not find table 'public.information_schema.columns' in schema cache",
+    "file": null,
+    "evidence": "Build log shows PGRST205 error",
+    "recommendation": "Verify Supabase connection and schema cache"
+  },
+  {
+    "area": "TypeScript",
+    "severity": "LOW",
+    "title": "Edge runtime disables static generation",
+    "details": "Using edge runtime on pages disables static generation",
+    "file": "Multiple pages",
+    "evidence": "Build warning about edge runtime",
+    "recommendation": "Review if edge runtime is necessary for all pages"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "LOW",
+    "title": "Duplicate Supabase client implementations",
+    "details": "Multiple Supabase client files with similar functionality",
+    "file": "lib/supabase/browser.ts, lib/supabase/server.ts, src/lib/supabase/browser.ts, src/lib/supabase/server.ts",
+    "evidence": "Both lib/ and src/lib/supabase/ directories exist",
+    "recommendation": "Consolidate to single implementation"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "LOW",
+    "title": "Alternative config files",
+    "details": "next.config.simple.js alongside next.config.js",
+    "file": "next.config.simple.js",
+    "evidence": "Unused alternative configuration",
+    "recommendation": "Move to legacy if not in use"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "LOW",
+    "title": "Backup route files",
+    "details": "Multiple -backup-original and -original route files",
+    "file": "src/app/api/properties/route-backup-original.ts, route-original.ts",
+    "evidence": "Backup files in production codebase",
+    "recommendation": "Move to legacy/_quarantine/"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "LOW",
+    "title": "Test connection files in root",
+    "details": "test-supabase-connection.js and test-unread-count.js in project root",
+    "file": "test-supabase-connection.js, test-unread-count.js",
+    "evidence": "Test files outside __tests__ directory",
+    "recommendation": "Move to __tests__/ or scripts/"
+  },
+  {
+    "area": "Documentation",
+    "severity": "INFO",
+    "title": "Multiple TODO files",
+    "details": "Several TODO files with pending implementations",
+    "file": "TODO.md, TODO-IMPLEMENTACION-MENSAJES-PROMPTS-A-J-COMPLETA-2025.md",
+    "evidence": "Active TODO lists",
+    "recommendation": "Review and consolidate TODOs"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "INFO",
+    "title": "Alternative page implementations",
+    "details": "Multiple versions of comunidad pages (page.tsx, page-simple.tsx, page-new.tsx, page-enterprise.tsx)",
+    "file": "src/app/comunidad/",
+    "evidence": "4 different implementations of same page",
+    "recommendation": "Identify active version, move others to legacy"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "INFO",
+    "title": "Duplicate layout files",
+    "details": "Multiple layout implementations (layout.tsx, layout-temp.tsx, layout-ultra-minimal.tsx, layout-minimal-fix.tsx)",
+    "file": "src/app/",
+    "evidence": "4 layout files in app directory",
+    "recommendation": "Keep only active layout, move others to legacy"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "INFO",
+    "title": "Alternative middleware implementations",
+    "details": "middleware-temp.ts and middleware-no-supabase.ts alongside middleware.ts",
+    "file": "src/",
+    "evidence": "3 middleware files",
+    "recommendation": "Remove alternatives if not in use"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "INFO",
+    "title": "Fixed component versions",
+    "details": "Multiple -fixed suffix components (filter-section-fixed, stats-section-fixed, hero-section-fixed)",
+    "file": "src/components/",
+    "evidence": "Iterative development artifacts",
+    "recommendation": "Consolidate to single version per component"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "INFO",
+    "title": "Legacy folder underutilized",
+    "details": "src/legacy/ exists but many legacy candidates not moved there",
+    "file": "src/legacy/",
+    "evidence": "Only 1 component in legacy folder",
+    "recommendation": "Move deprecated files to legacy structure"
+  },
+  {
+    "area": "Code Quality",
+    "severity": "INFO",
+    "title": "Prisma schema alternatives",
+    "details": "Multiple schema files (schema.prisma, schema-clean.prisma, schema-alternative.prisma, schema-inmobiliarias.prisma)",
+    "file": "prisma/",
+    "evidence": "4 schema files",
+    "recommendation": "Keep only active schema, archive others"
+  }
+]

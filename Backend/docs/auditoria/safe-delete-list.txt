@@ -1,0 +1,384 @@
+# SAFE DELETE LIST - Candidatos a Cuarentena
+# Fecha: 2025-01-10
+# Commit: 86670773d840432eb656a5ce2a335c32f4cbefe6
+
+## CRITERIO DE INCLUSIÓN
+- Archivos con sufijos temporales (-temp, -fix, -backup, -simple, -original)
+- Archivos alternativos no referenciados en código activo
+- Prueba de no uso mediante búsqueda de referencias
+- Riesgo: BAJO a MEDIO (todos reversibles)
+
+## ACCIÓN RECOMENDADA
+1. Mover a: legacy/_quarantine/20250110/
+2. Mantener estructura de carpetas original
+3. Ejecutar build después de cada movimiento
+4. Si build falla → Restaurar inmediatamente
+5. Mantener en cuarentena 30 días antes de eliminar
+
+---
+
+## CATEGORÍA 1: LAYOUTS ALTERNATIVOS (Riesgo: MEDIO)
+
+### src/app/layout-temp.tsx
+Evidencia de no uso:
+- Comando: git grep -n "layout-temp"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - Verificar que layout.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/
+
+### src/app/layout-ultra-minimal.tsx
+Evidencia de no uso:
+- Comando: git grep -n "layout-ultra-minimal"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - Verificar que layout.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/
+
+### src/app/layout-minimal-fix.tsx
+Evidencia de no uso:
+- Comando: git grep -n "layout-minimal-fix"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - Verificar que layout.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/
+
+### app/(private)/layout.tsx
+Evidencia de no uso:
+- Comando: git grep -n "app/(private)"
+- Resultado esperado: Verificar si hay rutas en app/(private)/
+- Riesgo: MEDIO - Puede ser estructura de grupos de rutas no usada
+- Acción: Verificar contenido de app/(private)/ primero
+
+---
+
+## CATEGORÍA 2: PÁGINAS ALTERNATIVAS (Riesgo: MEDIO)
+
+### src/app/page-simple.tsx
+Evidencia de no uso:
+- Comando: git grep -n "page-simple"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - page.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/
+
+### src/app/page-temp-fix.tsx
+Evidencia de no uso:
+- Comando: git grep -n "page-temp-fix"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - page.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/
+
+### src/app/page-debug.tsx
+Evidencia de no uso:
+- Comando: git grep -n "page-debug"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - Archivo de debug
+- Acción: Mover a legacy/_quarantine/20250110/src/app/
+
+### src/app/test-simple/page.tsx
+Evidencia de no uso:
+- Comando: git grep -n "test-simple"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - Página de test
+- Acción: Mover a legacy/_quarantine/20250110/src/app/test-simple/
+
+### src/app/comunidad/page-simple.tsx
+Evidencia de no uso:
+- Comando: git grep -n "comunidad/page-simple"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - page.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/comunidad/
+
+### src/app/comunidad/page-new.tsx
+Evidencia de no uso:
+- Comando: git grep -n "comunidad/page-new"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - page.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/comunidad/
+
+### src/app/comunidad/page-enterprise.tsx
+Evidencia de no uso:
+- Comando: git grep -n "comunidad/page-enterprise"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - page.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/comunidad/
+
+### src/app/mi-empresa/page-new.tsx
+Evidencia de no uso:
+- Comando: git grep -n "mi-empresa/page-new"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - page.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/mi-empresa/
+
+### pages/dashboard.tsx
+Evidencia de no uso:
+- Comando: git grep -n "pages/dashboard"
+- Resultado esperado: Verificar si hay imports
+- Riesgo: ALTO - Puede causar conflicto con App Router
+- Acción: VERIFICAR PRIMERO si está en uso antes de mover
+
+---
+
+## CATEGORÍA 3: MIDDLEWARE ALTERNATIVO (Riesgo: MEDIO)
+
+### src/middleware-temp.ts
+Evidencia de no uso:
+- Comando: git grep -n "middleware-temp"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - middleware.ts es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/
+
+### src/middleware-no-supabase.ts
+Evidencia de no uso:
+- Comando: git grep -n "middleware-no-supabase"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - middleware.ts es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/
+
+---
+
+## CATEGORÍA 4: CONFIGURACIÓN ALTERNATIVA (Riesgo: BAJO)
+
+### next.config.simple.js
+Evidencia de no uso:
+- Comando: git grep -n "next.config.simple"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - next.config.js es el activo
+- Acción: Mover a legacy/_quarantine/20250110/
+
+---
+
+## CATEGORÍA 5: COMPONENTES ALTERNATIVOS (Riesgo: MEDIO)
+
+### src/components/navbar-safe.tsx
+Evidencia de no uso:
+- Comando: git grep -n "navbar-safe"
+- Resultado esperado: Verificar imports
+- Riesgo: MEDIO - navbar.tsx probablemente es el activo
+- Acción: Verificar referencias antes de mover
+
+### src/components/navbar-fixed.tsx
+Evidencia de no uso:
+- Comando: git grep -n "navbar-fixed"
+- Resultado esperado: Verificar imports
+- Riesgo: MEDIO - navbar.tsx probablemente es el activo
+- Acción: Verificar referencias antes de mover
+
+### src/components/filter-section-fixed.tsx
+Evidencia de no uso:
+- Comando: git grep -n "filter-section-fixed"
+- Resultado esperado: Verificar imports
+- Riesgo: MEDIO
+- Acción: Verificar referencias antes de mover
+
+### src/components/stats-section-fixed.tsx
+Evidencia de no uso:
+- Comando: git grep -n "stats-section-fixed"
+- Resultado esperado: Verificar imports
+- Riesgo: MEDIO
+- Acción: Verificar referencias antes de mover
+
+### src/components/hero-section-fixed.tsx
+Evidencia de no uso:
+- Comando: git grep -n "hero-section-fixed"
+- Resultado esperado: Verificar imports
+- Riesgo: MEDIO
+- Acción: Verificar referencias antes de mover
+
+### src/components/search-history-fixed.tsx
+Evidencia de no uso:
+- Comando: git grep -n "search-history-fixed"
+- Resultado esperado: Verificar imports
+- Riesgo: MEDIO
+- Acción: Verificar referencias antes de mover
+
+### src/components/property-card-signed-urls.tsx
+Evidencia de no uso:
+- Comando: git grep -n "property-card-signed-urls"
+- Resultado esperado: Verificar imports
+- Riesgo: MEDIO - property-card.tsx probablemente es el activo
+- Acción: Verificar referencias antes de mover
+
+---
+
+## CATEGORÍA 6: RUTAS BACKUP (Riesgo: BAJO)
+
+### src/app/api/properties/route-backup-original.ts
+Evidencia de no uso:
+- Comando: git grep -n "route-backup-original"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - Claramente un backup
+- Acción: Mover a legacy/_quarantine/20250110/src/app/api/properties/
+
+### src/app/api/properties/route-original.ts
+Evidencia de no uso:
+- Comando: git grep -n "route-original"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - Claramente un backup
+- Acción: Mover a legacy/_quarantine/20250110/src/app/api/properties/
+
+### src/app/api/messages/[conversationId]/route-fixed.ts
+Evidencia de no uso:
+- Comando: git grep -n "route-fixed"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - route.ts es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/api/messages/[conversationId]/
+
+### src/app/api/og/agency/route-fixed.tsx
+Evidencia de no uso:
+- Comando: git grep -n "og/agency/route-fixed"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - route.tsx es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/api/og/agency/
+
+### src/app/api/users/profile/route-simple.ts
+Evidencia de no uso:
+- Comando: git grep -n "profile/route-simple"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - route.ts es el activo
+- Acción: Mover a legacy/_quarantine/20250110/src/app/api/users/profile/
+
+---
+
+## CATEGORÍA 7: ARCHIVOS DE TEST EN ROOT (Riesgo: BAJO)
+
+### test-supabase-connection.js
+Evidencia de no uso:
+- Comando: git grep -n "test-supabase-connection"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - Archivo de test
+- Acción: Mover a __tests__/ o scripts/
+
+### test-unread-count.js
+Evidencia de no uso:
+- Comando: git grep -n "test-unread-count"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - Archivo de test
+- Acción: Mover a __tests__/ o scripts/
+
+---
+
+## CATEGORÍA 8: SCHEMAS ALTERNATIVOS (Riesgo: MEDIO)
+
+### prisma/schema-clean.prisma
+Evidencia de no uso:
+- Comando: git grep -n "schema-clean"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - schema.prisma es el activo
+- Acción: Mover a legacy/_quarantine/20250110/prisma/
+
+### prisma/schema-alternative.prisma
+Evidencia de no uso:
+- Comando: git grep -n "schema-alternative"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - schema.prisma es el activo
+- Acción: Mover a legacy/_quarantine/20250110/prisma/
+
+### prisma/schema-inmobiliarias.prisma
+Evidencia de no uso:
+- Comando: git grep -n "schema-inmobiliarias"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: MEDIO - schema.prisma es el activo
+- Acción: Mover a legacy/_quarantine/20250110/prisma/
+
+---
+
+## CATEGORÍA 9: SUPABASE CLIENT DUPLICADO (Riesgo: ALTO - VERIFICAR)
+
+### src/lib/supabaseClient.ts
+Evidencia de no uso:
+- Comando: git grep -n "supabaseClient"
+- Resultado esperado: Verificar si hay imports activos
+- Riesgo: ALTO - Puede estar en uso
+- Acción: VERIFICAR EXHAUSTIVAMENTE antes de mover
+
+### lib/supabase/browser.ts
+Evidencia de no uso:
+- Comando: git grep -n "lib/supabase/browser"
+- Resultado esperado: Verificar imports vs src/lib/supabase/browser.ts
+- Riesgo: ALTO - Puede estar en uso
+- Acción: VERIFICAR si es duplicado de src/lib/supabase/browser.ts
+
+### lib/supabase/server.ts
+Evidencia de no uso:
+- Comando: git grep -n "lib/supabase/server"
+- Resultado esperado: Verificar imports vs src/lib/supabase/server.ts
+- Riesgo: ALTO - Puede estar en uso
+- Acción: VERIFICAR si es duplicado de src/lib/supabase/server.ts
+
+---
+
+## CATEGORÍA 10: COMPONENTES LEGACY YA IDENTIFICADOS (Riesgo: BAJO)
+
+### src/legacy/components/property-card-legacy.tsx
+Evidencia de no uso:
+- Comando: git grep -n "property-card-legacy"
+- Resultado esperado: Solo referencias en este archivo
+- Riesgo: BAJO - Ya está en carpeta legacy
+- Acción: Ya está en ubicación correcta, verificar si se puede eliminar
+
+---
+
+## RESUMEN DE ACCIONES
+
+TOTAL DE ARCHIVOS CANDIDATOS: ~35
+
+PRIORIDAD ALTA (Mover primero - Riesgo BAJO):
+- Archivos -backup, -original: 5 archivos
+- Archivos de test en root: 2 archivos
+- Configuración alternativa: 1 archivo
+- Páginas de debug/test: 2 archivos
+- Total: 10 archivos
+
+PRIORIDAD MEDIA (Verificar referencias primero - Riesgo MEDIO):
+- Layouts alternativos: 4 archivos
+- Páginas alternativas: 7 archivos
+- Middleware alternativo: 2 archivos
+- Componentes alternativos: 6 archivos
+- Schemas alternativos: 3 archivos
+- Total: 22 archivos
+
+PRIORIDAD BAJA (Requiere análisis exhaustivo - Riesgo ALTO):
+- pages/dashboard.tsx: 1 archivo
+- Supabase clients duplicados: 3 archivos
+- Total: 4 archivos
+
+---
+
+## COMANDOS DE VERIFICACIÓN
+
+Para cada archivo antes de mover:
+
+1. Buscar referencias:
+   git grep -n "nombre-archivo-sin-extension"
+
+2. Buscar imports:
+   git grep -n "from.*nombre-archivo"
+   git grep -n "import.*nombre-archivo"
+
+3. Verificar en build:
+   npm run build
+
+4. Si todo OK, mover:
+   New-Item -ItemType Directory -Force -Path "legacy/_quarantine/20250110/ruta/original"
+   Move-Item "archivo" "legacy/_quarantine/20250110/ruta/original/"
+
+5. Re-ejecutar build:
+   npm run build
+
+6. Si falla, restaurar:
+   Move-Item "legacy/_quarantine/20250110/ruta/original/archivo" "ruta/original/"
+
+---
+
+## NOTAS IMPORTANTES
+
+1. NO ELIMINAR NADA - Solo mover a cuarentena
+2. Mantener estructura de carpetas original
+3. Ejecutar build después de CADA movimiento
+4. Si build falla → Restaurar INMEDIATAMENTE
+5. Documentar cada movimiento en log
+6. Mantener en cuarentena 30 días mínimo
+7. Requiere aprobación explícita para eliminar
+
+---
+
+FIN DEL REPORTE
+Generado: 2025-01-10
