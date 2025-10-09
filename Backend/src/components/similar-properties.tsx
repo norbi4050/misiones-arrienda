@@ -196,7 +196,13 @@ export function SimilarProperties({
               bedrooms={property.bedrooms}
               bathrooms={property.bathrooms}
               area={property.area}
-              image={property.images?.[0] ?? "/placeholder-apartment-1.jpg"}
+              image={
+                (property as any)?.cover_url ??
+                (property as any)?.coverUrl ??
+                (property as any)?.image ??
+                property?.images?.[0] ??
+                '/placeholder-apartment-1.jpg'
+              }
               featured={property.featured}
             />
           ))}

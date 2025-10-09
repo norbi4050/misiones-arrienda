@@ -1,10 +1,10 @@
 "use client"
 
-import { MapPin, Bed, Bath, Square } from "lucide-react"
+import { MapPin, Bed, Bath, Square, Building2, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FavoriteButton } from "@/components/favorite-button"
-import Image from "next/image"
+import { FavoriteButton } from "@/components/ui/FavoriteButton"
+import PropertyImage from "@/components/ui/property-image"
 import Link from "next/link"
 
 interface PropertyCardProps {
@@ -17,7 +17,15 @@ interface PropertyCardProps {
   bathrooms: number
   area: number
   image: string
+  imageUrls?: string[]
+  coverUrl?: string
+  cover_url?: string  // Nueva prop del API
+  userId?: string
   featured?: boolean
+  // FASE 6: Owner info para link a perfil de inmobiliaria
+  owner_id?: string
+  owner_type?: string
+  owner_company_name?: string
 }
 
 export function PropertyCard({
@@ -30,15 +38,32 @@ export function PropertyCard({
   bathrooms,
   area,
   image,
-  featured = false
+  imageUrls,
+  coverUrl,
+  cover_url,
+  userId,
+  featured = false,
+  owner_id,
+  owner_type,
+  owner_company_name
 }: PropertyCardProps) {
+  // Paso 4: Usar cover_url en TODAS las cards, priorizando la nueva prop
+  const src = cover_url ?? coverUrl ?? image ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
+  
+  // FASE 6: Determinar si mostrar link a perfil de inmobiliaria
+  const showAgencyLink = owner_type === 'inmobiliaria' && owner_id;
+  
+  // Log de diagnóstico para auditoría
+  console.debug('[Card] src=', src, 'id=', id, 'cover_url=', cover_url);
+  
   return (
-    <Link href={`/property/${id}`} className="block">
+    <Link href={`/properties/${id}`} className="block">
       <div className="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
         <div className="aspect-[4/3] overflow-hidden relative">
-          <Image
-            src={image}
+          <PropertyImage
+            src={src}
             alt={title}
+            fallback="/placeholder-apartment-1.jpg"
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-110"
           />
@@ -47,12 +72,8 @@ export function PropertyCard({
               Destacado
             </Badge>
           )}
-          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <FavoriteButton 
-              propertyId={id}
-              size="sm"
-              className="bg-white/80 backdrop-blur-sm hover:bg-white"
-            />
+          <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
+            <FavoriteButton propertyId={id} />
           </div>
           
           {/* Overlay gradient on hover */}
@@ -93,13 +114,26 @@ export function PropertyCard({
             </div>
           </div>
           
+          {/* FASE 6: Link a perfil de inmobiliaria */}
+          {showAgencyLink && (
+            <Link
+              href={`/inmobiliaria/${owner_id}`}
+              className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors mb-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Building2 className="w-3 h-3" />
+              <span>Ver perfil de {owner_company_name || 'la inmobiliaria'}</span>
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          )}
+          
           <Button 
             className="w-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0" 
             variant="default"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              window.location.href = `/property/${id}`
+              window.location.href = `/properties/${id}`
             }}
           >
             Ver detalles

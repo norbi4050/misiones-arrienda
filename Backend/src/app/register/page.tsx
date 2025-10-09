@@ -4,6 +4,8 @@ import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useRouter } from "next/navigation";
 import { User, Building2, Search } from "lucide-react";
 import { ProfileImageUpload } from "@/components/ui/image-upload";
+import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox";
+import { logConsent, CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -18,6 +20,11 @@ export default function RegisterPage() {
   });
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  // Estado para consentimiento
+  const [checkedTerms, setCheckedTerms] = useState(false);
+  const [checkedPrivacy, setCheckedPrivacy] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
   
   const { register, isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
@@ -40,9 +47,17 @@ export default function RegisterPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
+    setConsentError(null);
     setLoading(true);
 
     try {
+      // Validar consentimiento
+      if (!checkedTerms || !checkedPrivacy) {
+        setConsentError("Debes aceptar los Términos y Condiciones y la Política de Privacidad para continuar");
+        setLoading(false);
+        return;
+      }
+
       // Validar que las contraseñas coincidan
       if (formData.password !== formData.confirmPassword) {
         setMsg("Error: Las contraseñas no coinciden");
@@ -105,17 +120,17 @@ export default function RegisterPage() {
         };
       case 'dueno_directo':
         return { 
-          icon: User, 
-          title: "Dueño Directo", 
-          description: "Alquila tu propia propiedad",
+          icon: Building2, 
+          title: "Empresa", 
+          description: "Gestiona propiedades corporativas",
           color: "border-green-500 bg-green-50"
         };
       case 'inquilino':
       default:
         return { 
-          icon: Search, 
-          title: "Inquilino", 
-          description: "Busca tu hogar ideal",
+          icon: User, 
+          title: "Inquilino / Dueño Directo", 
+          description: "Busca o alquila tu propiedad",
           color: "border-blue-500 bg-blue-50"
         };
     }
@@ -134,17 +149,16 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-6">
-          {/* Foto de perfil */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Foto de perfil (opcional)
-            </label>
-            <ProfileImageUpload
-              value={formData.profileImage}
-              onChange={(url) => setFormData(prev => ({ ...prev, profileImage: url }))}
-              disabled={loading}
-              className="mb-4"
-            />
+          {/* Banner publicitario - Próximamente */}
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-center space-x-2">
+              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <p className="text-sm font-semibold text-indigo-900">
+                🚀 Próximamente: <span className="text-purple-700">Perfil Empresa</span> - Unidades en Pozo
+              </p>
+            </div>
           </div>
 
           {/* Selector de tipo de usuario */}
@@ -153,7 +167,7 @@ export default function RegisterPage() {
               ¿Qué tipo de usuario eres?
             </label>
             <div className="grid grid-cols-1 gap-3">
-              {(['inquilino', 'dueno_directo', 'inmobiliaria'] as const).map((type) => {
+              {(['inquilino', 'inmobiliaria'] as const).map((type) => {
                 const info = getUserTypeInfo(type);
                 const Icon = info.icon;
                 return (
@@ -176,8 +190,7 @@ export default function RegisterPage() {
                     <div className="flex items-center">
                       <Icon className={`h-5 w-5 mr-3 ${
                         formData.userType === type 
-                          ? type === 'inmobiliaria' ? 'text-purple-600' : 
-                            type === 'dueno_directo' ? 'text-green-600' : 'text-blue-600'
+                          ? type === 'inmobiliaria' ? 'text-purple-600' : 'text-blue-600'
                           : 'text-gray-400'
                       }`} />
                       <div>
@@ -279,10 +292,20 @@ export default function RegisterPage() {
             </div>
           )}
 
+          {/* Consentimiento legal */}
+          <ConsentCheckbox
+            checkedTerms={checkedTerms}
+            checkedPrivacy={checkedPrivacy}
+            onChangeTerms={setCheckedTerms}
+            onChangePrivacy={setCheckedPrivacy}
+            error={consentError}
+            className="mt-6"
+          />
+
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !checkedTerms || !checkedPrivacy}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
             >
               {loading ? "Creando cuenta..." : "Crear cuenta"}

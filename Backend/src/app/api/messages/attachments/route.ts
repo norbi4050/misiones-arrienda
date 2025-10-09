@@ -1,0 +1,338 @@
+// =====================================================
+// B6 - API: Upload Message Attachments
+// =====================================================
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { validateAttachmentUpload } from '@/lib/attachment-guards';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { sanitizeFileName as sanitizeFileNameNew, validateFilePath, scanAttachment } from '@/lib/file-sanitizer';
+import { getUserPlanLimits } from '@/lib/plan-guards';
+import { analytics } from '@/lib/analytics/track';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+/**
+ * POST /api/messages/attachments
+ * Sube un adjunto a un mensaje
+ */
+export async function POST(request: NextRequest) {
+  let user: any = null;
+  
+  try {
+    // 1. Autenticación
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      console.log('[ATTACHMENTS] No authorization header');
+      return NextResponse.json(
+        { error: 'No autorizado', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const token = authHeader.replace('Bearer ', '');
+    
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+    user = authUser;
+
+    if (authError || !user) {
+      console.log('[ATTACHMENTS] Auth error:', authError?.message);
+      return NextResponse.json(
+        { error: 'No autorizado', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    // 2. Parse form data
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const threadId = formData.get('threadId') as string;
+    const messageId = formData.get('messageId') as string | null;
+
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No se proporcionó ningún archivo', code: 'VALIDATION_ERROR' },
+        { status: 400 }
+      );
+    }
+
+    if (!threadId) {
+      return NextResponse.json(
+        { error: 'threadId es requerido', code: 'VALIDATION_ERROR' },
+        { status: 400 }
+      );
+    }
+
+    console.log('[ATTACHMENTS] Upload request:', {
+      userId: user.id,
+      threadId,
+      messageId,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    });
+
+    // 2.5. Obtener plan del usuario para rate limiting
+    const userLimits = await getUserPlanLimits(user.id);
+    const planTier = userLimits?.plan_tier || 'free';
+
+    // 2.6. Verificar rate limit
+    const rateLimitCheck = await checkRateLimit(user.id, planTier);
+    
+    if (!rateLimitCheck.allowed) {
+      console.warn('[ATTACHMENTS] Rate limit exceeded:', {
+        userId: user.id,
+        planTier,
+        error: rateLimitCheck.error
+      });
+      
+      // Track rate limit event
+      analytics.attachmentRateLimited({
+        userId: user.id,
+        planTier,
+        limit: rateLimitCheck.limit || 0,
+        resetIn: rateLimitCheck.resetIn || 0
+      }).catch(err => console.error('[ATTACHMENTS] Analytics error:', err));
+      
+      return NextResponse.json(
+        { 
+          error: rateLimitCheck.error,
+          code: 'RATE_LIMITED',
+          details: {
+            remaining: rateLimitCheck.remaining,
+            resetIn: rateLimitCheck.resetIn,
+            limit: rateLimitCheck.limit
+          }
+        },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': String(rateLimitCheck.limit || 0),
+            'X-RateLimit-Remaining': String(rateLimitCheck.remaining || 0),
+            'X-RateLimit-Reset': String(Date.now() + (rateLimitCheck.resetIn || 0))
+          }
+        }
+      );
+    }
+
+    console.log('[ATTACHMENTS] Rate limit OK:', {
+      remaining: rateLimitCheck.remaining,
+      limit: rateLimitCheck.limit
+    });
+
+    // 3. Validar participación en thread
+    const { data: thread, error: threadError } = await supabase
+      .from('conversations')
+      .select('participant_1, participant_2')
+      .eq('id', threadId)
+      .single();
+
+    if (threadError || !thread) {
+      console.log('[ATTACHMENTS] Thread not found:', threadId);
+      return NextResponse.json(
+        { error: 'Conversación no encontrada', code: 'NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
+    if (thread.participant_1 !== user.id && thread.participant_2 !== user.id) {
+      console.log('[ATTACHMENTS] User not participant:', user.id, threadId);
+      return NextResponse.json(
+        { error: 'No tienes acceso a este hilo', code: 'FORBIDDEN' },
+        { status: 403 }
+      );
+    }
+
+    // 4. Validar límites de plan
+    const validation = await validateAttachmentUpload(user.id, {
+      size: file.size,
+      type: file.type
+    });
+
+    if (!validation.allowed) {
+      console.log('[ATTACHMENTS] Validation failed:', validation.errorCode, validation.error);
+      return NextResponse.json(
+        { 
+          error: validation.error, 
+          code: validation.errorCode,
+          details: validation.details
+        },
+        { status: 403 }
+      );
+    }
+
+    // 5. Sanitizar nombre de archivo (mejorado)
+    const sanitizedName = sanitizeFileNameNew(file.name);
+    const timestamp = Date.now();
+    const fileName = `${timestamp}-${sanitizedName}`;
+    const storagePath = `${user.id}/${threadId}/${fileName}`;
+
+    // 5.1. Validar path (prevenir path traversal)
+    if (!validateFilePath(storagePath)) {
+      console.error('[ATTACHMENTS] Invalid file path detected:', storagePath);
+      return NextResponse.json(
+        { error: 'Nombre de archivo inválido', code: 'VALIDATION_ERROR' },
+        { status: 400 }
+      );
+    }
+
+    // 5.2. Virus scan placeholder (TODO V1.1)
+    const fileBuffer = await file.arrayBuffer();
+    const scanResult = await scanAttachment(Buffer.from(fileBuffer));
+    
+    if (!scanResult.clean) {
+      console.error('[ATTACHMENTS] Virus detected:', scanResult.threat);
+      return NextResponse.json(
+        { 
+          error: 'Archivo potencialmente peligroso detectado',
+          code: 'SECURITY_THREAT',
+          details: scanResult.threat
+        },
+        { status: 400 }
+      );
+    }
+
+    // 6. Upload a storage
+    const { error: uploadError } = await supabase.storage
+      .from('message-attachments')
+      .upload(storagePath, fileBuffer, {
+        contentType: file.type,
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('[ATTACHMENTS] Upload error:', uploadError);
+      return NextResponse.json(
+        { error: 'Error al subir el archivo', code: 'UPLOAD_ERROR', details: uploadError.message },
+        { status: 500 }
+      );
+    }
+
+    // 7. Si no hay messageId, crear mensaje temporal o esperar a que se cree
+    let finalMessageId = messageId;
+    
+    if (!finalMessageId) {
+      // Crear un mensaje placeholder que se actualizará cuando se envíe el mensaje real
+      const { data: newMessage, error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: threadId,
+          sender_id: user.id,
+          body: '[Adjunto]',
+          is_read: false
+        })
+        .select()
+        .single();
+
+      if (messageError || !newMessage) {
+        // Rollback: eliminar archivo
+        await supabase.storage
+          .from('message-attachments')
+          .remove([storagePath]);
+
+        console.error('[ATTACHMENTS] Message creation error:', messageError);
+        return NextResponse.json(
+          { error: 'Error al crear el mensaje', code: 'DB_ERROR' },
+          { status: 500 }
+        );
+      }
+
+      finalMessageId = newMessage.id;
+    }
+
+    // 8. Crear registro en DB
+    const { data: attachment, error: dbError } = await supabase
+      .from('message_attachments')
+      .insert({
+        message_id: finalMessageId,
+        user_id: user.id,
+        path: storagePath,
+        mime: file.type,
+        size_bytes: file.size
+      })
+      .select()
+      .single();
+
+    if (dbError) {
+      // Rollback: eliminar archivo
+      await supabase.storage
+        .from('message-attachments')
+        .remove([storagePath]);
+
+      console.error('[ATTACHMENTS] DB error:', dbError);
+      return NextResponse.json(
+        { error: 'Error al guardar el adjunto', code: 'DB_ERROR', details: dbError.message },
+        { status: 500 }
+      );
+    }
+
+    // 9. Generar URL firmada (1 hora de validez)
+    const { data: signedUrlData, error: urlError } = await supabase.storage
+      .from('message-attachments')
+      .createSignedUrl(storagePath, 3600);
+
+    if (urlError) {
+      console.error('[ATTACHMENTS] Signed URL error:', urlError);
+    }
+
+    const signedUrl = signedUrlData?.signedUrl || '';
+
+    console.log('[ATTACHMENTS] SUCCESS', {
+      userId: user.id,
+      threadId,
+      messageId: finalMessageId,
+      attachmentId: attachment.id,
+      mime: file.type,
+      size: file.size
+    });
+
+    // 9.5. Track upload success
+    analytics.attachmentUpload({
+      threadId,
+      messageId: finalMessageId || undefined,
+      mime: file.type,
+      sizeBytes: file.size,
+      planTier,
+      result: 'success'
+    }).catch(err => console.error('[ATTACHMENTS] Analytics error:', err));
+
+    // 10. Respuesta exitosa
+    return NextResponse.json({
+      success: true,
+      attachment: {
+        id: attachment.id,
+        url: signedUrl,
+        mime: file.type,
+        sizeBytes: file.size,
+        fileName: file.name,
+        createdAt: attachment.created_at
+      },
+      messageId: finalMessageId
+    });
+
+  } catch (error) {
+    console.error('[ATTACHMENTS] Exception:', error);
+    
+    // Track upload error
+    const userLimits = await getUserPlanLimits(user?.id || '').catch(() => null);
+    analytics.attachmentUpload({
+      threadId: '',
+      mime: 'unknown',
+      sizeBytes: 0,
+      planTier: userLimits?.plan_tier || 'free',
+      result: 'error',
+      errorCode: 'INTERNAL_ERROR'
+    }).catch(err => console.error('[ATTACHMENTS] Analytics error:', err));
+    
+    return NextResponse.json(
+      { 
+        error: 'Error interno del servidor', 
+        code: 'INTERNAL_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}

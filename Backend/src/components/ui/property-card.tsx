@@ -40,6 +40,7 @@ interface PropertyCardProps {
     status: string;
     images: string[];
     featured: boolean;
+    featuredExpires?: string | null;
     createdAt: string;
     updatedAt: string;
     activePlan?: {
@@ -149,9 +150,7 @@ export function PropertyCard({
   isSelected = false,
   onSelect 
 }: PropertyCardProps) {
-  const mainImage = property.images && property.images.length > 0 
-    ? property.images[0] 
-    : '/images/placeholder-property.jpg';
+  const mainImage = (property as any)?.cover_url ?? (property as any)?.coverUrl ?? (property as any)?.image ?? property?.images?.[0] ?? '/placeholder-apartment-1.jpg';
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSelect?.(property.id, e.target.checked);
@@ -180,12 +179,12 @@ export function PropertyCard({
           alt={property.title}
           className="w-full h-full object-cover"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = '/images/placeholder-property.jpg';
+            (e.target as HTMLImageElement).src = '/placeholder-apartment-1.jpg';
           }}
         />
         
         {/* Featured Badge */}
-        {property.featured && (
+        {property.featured && property.featuredExpires && new Date(property.featuredExpires) > new Date() && (
           <div className="absolute top-3 right-3">
             <Badge className="bg-yellow-500 text-white">
               <Star className="w-3 h-3 mr-1" />

@@ -1,0 +1,58 @@
+﻿{
+    "passed":  0,
+    "timestamp":  "2025-10-01 15:05:31",
+    "total":  10,
+    "errors":  8,
+    "failed":  2,
+    "skipped":  0,
+    "tests":  [
+                  {
+                      "Status":  "ERROR",
+                      "Details":  "Error en el servidor remoto: (404) No se encontró.",
+                      "Test":  "PÃ¡gina responde"
+                  },
+                  {
+                      "Status":  "ERROR",
+                      "Details":  "Error en el servidor remoto: (404) No se encontró.",
+                      "Test":  "SEO title"
+                  },
+                  {
+                      "Status":  "ERROR",
+                      "Details":  "Error en el servidor remoto: (404) No se encontró.",
+                      "Test":  "Meta description"
+                  },
+                  {
+                      "Status":  "ERROR",
+                      "Details":  "Error en el servidor remoto: (404) No se encontró.",
+                      "Test":  "API propiedades"
+                  },
+                  {
+                      "Status":  "ERROR",
+                      "Details":  "Error en el servidor remoto: (404) No se encontró.",
+                      "Test":  "API perfil"
+                  },
+                  {
+                      "Status":  "ERROR",
+                      "Details":  "Error en el servidor remoto: (404) No se encontró.",
+                      "Test":  "PaginaciÃ³n"
+                  },
+                  {
+                      "Status":  "ERROR",
+                      "Details":  "Error en el servidor remoto: (404) No se encontró.",
+                      "Test":  "Ordenamiento"
+                  },
+                  {
+                      "Test":  "BotÃ³n Mi Empresa",
+                      "Status":  "FAIL"
+                  },
+                  {
+                      "Test":  "Sitemap",
+                      "Status":  "FAIL"
+                  },
+                  {
+                      "Status":  "ERROR",
+                      "Details":  "Error en el servidor remoto: (404) No se encontró.",
+                      "Test":  "Privacidad"
+                  }
+              ]
+}

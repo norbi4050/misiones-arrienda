@@ -1,4 +1,7 @@
 
+// PROMPT D1: Importar guardas de displayName
+import { applyDisplayNameGuards, logGuardApplication } from '@/lib/displayname-guards';
+
 // Manejo mejorado de errores
 const handleApiError = (error: any, context: string) => {
   console.error(`Error en ${context}:`, error);
@@ -48,6 +51,7 @@ interface RegisterRequestBody {
   companyName?: string;
   licenseNumber?: string;
   propertyCount?: number;
+  acceptTerms?: boolean;
 }
 
 // Interfaz para respuesta de error
@@ -119,7 +123,8 @@ export async function POST(request: NextRequest) {
       userType, 
       companyName, 
       licenseNumber, 
-      propertyCount 
+      propertyCount,
+      acceptTerms
     } = body;
     
     console.log(`📋 [REGISTRO] Datos recibidos: ${JSON.stringify({ 
@@ -189,13 +194,24 @@ export async function POST(request: NextRequest) {
     
     // Validaciones específicas por tipo de usuario
     if (userType === 'inmobiliaria') {
-      if (!companyName || !licenseNumber) {
-        console.warn('⚠️ [REGISTRO] Datos de inmobiliaria incompletos');
+      if (!companyName) {
+        console.warn('⚠️ [REGISTRO] Falta companyName para inmobiliaria');
         return NextResponse.json({
-          error: 'Datos de inmobiliaria incompletos',
-          details: 'Para inmobiliarias son requeridos: nombre de empresa y número de licencia',
+          error: 'VALIDATION_ERROR',
+          details: 'El nombre de la empresa es obligatorio para inmobiliarias',
+          issues: [{ path: 'companyName', message: 'Campo requerido' }],
           timestamp: new Date().toISOString(),
-          code: 'INCOMPLETE_INMOBILIARIA_DATA'
+          code: 'MISSING_COMPANY_NAME'
+        } as ErrorResponse, { status: 400 });
+      }
+      if (!acceptTerms) {
+        console.warn('⚠️ [REGISTRO] Falta aceptación de términos');
+        return NextResponse.json({
+          error: 'VALIDATION_ERROR',
+          details: 'Debe aceptar los términos y condiciones',
+          issues: [{ path: 'acceptTerms', message: 'Debe aceptar los términos' }],
+          timestamp: new Date().toISOString(),
+          code: 'TERMS_NOT_ACCEPTED'
         } as ErrorResponse, { status: 400 });
       }
     }
@@ -368,19 +384,38 @@ export async function POST(request: NextRequest) {
     }
     
     // ========================================
-    // 8. CREACIÓN DE PERFIL EN TABLA USERS
+    // 8. APLICAR GUARDAS DE DISPLAYNAME (PROMPT D1)
+    // ========================================
+    console.log('🛡️ [REGISTRO] Aplicando guardas de displayName...');
+    
+    const guardResult = applyDisplayNameGuards(name, email);
+    
+    // Log de auditoría con información completa
+    logGuardApplication('registration', {
+      email,
+      name: guardResult.name,
+      source: guardResult.source,
+      wasModified: guardResult.wasModified,
+      reason: guardResult.reason
+    });
+    
+    // ========================================
+    // 9. CREACIÓN DE PERFIL EN TABLA USERS
     // ========================================
     console.log('👤 [REGISTRO] Creando perfil de usuario en tabla users...');
     
     const userData = {
       id: authData.user.id,
-      name: name,           // ✅ Usa 'name' que es NOT NULL en Supabase
+      name: guardResult.name,  // ✅ PROMPT D1: Garantizado válido (no UUID, no vacío)
       email,
       phone: phone || '',   // ✅ Evita NULL en phone
       user_type: userType,
       company_name: userType === 'inmobiliaria' ? companyName : null,
-      license_number: userType === 'inmobiliaria' ? licenseNumber : null,
+      license_number: userType === 'inmobiliaria' ? (licenseNumber || null) : null,
       property_count: userType === 'dueno_directo' ? propertyCount : null,
+      // is_company es true para inmobiliaria Y dueno_directo (ahora llamado "Empresa")
+      is_company: userType === 'inmobiliaria' || userType === 'dueno_directo',
+      is_verified: false,  // Se activará con CUIT más adelante
       email_verified: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -447,7 +482,7 @@ export async function POST(request: NextRequest) {
     }
     
     // ========================================
-    // 9. PREPARACIÓN DE RESPUESTA EXITOSA
+    // 10. PREPARACIÓN DE RESPUESTA EXITOSA
     // ========================================
     const endTime = Date.now();
     const processingTime = endTime - startTime;
@@ -466,9 +501,18 @@ export async function POST(request: NextRequest) {
     };
     
     console.log(`🎉 [REGISTRO] Registro completado exitosamente en ${processingTime}ms`);
+    console.log(`[REGISTER] USER TYPE: ${userType}`);
+    
+    // Determinar ruta de redirección según userType
+    const nextRoute = userType === 'inmobiliaria' ? '/mi-empresa' : '/';
+    console.log(`[REGISTER] NEXT ROUTE: ${nextRoute}`);
     
     return NextResponse.json({
+      success: true,
       message: 'Usuario registrado exitosamente.',
+      userId: profileData.id,
+      userType: profileData.user_type,
+      nextRoute: nextRoute,
       user: responseUser,
       emailSent: true,
       emailConfigured: true,

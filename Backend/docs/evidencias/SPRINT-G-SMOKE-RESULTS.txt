@@ -1,0 +1,37 @@
+=== SPRINT G UNIFIED SMOKE TEST RESULTS ===
+Generated: PENDING EXECUTION
+Overall Status: PENDING
+
+This file will be populated when the following scripts are executed:
+
+1. npm run smoke:win
+2. scripts/smoke-tests-sprint-d.ps1  
+3. scripts/smoke-tests-analytics.ps1
+4. scripts/smoke-tests-map.ps1
+
+Expected format after execution:
+
+=== SECURITY SMOKE TESTS ===
+Status: PASS/FAIL
+Details: [First 30 lines from security-smoke.ps1 output]
+
+=== SPRINT D SMOKE TESTS ===  
+Status: PASS/FAIL
+Details: [First 30 lines from smoke-tests-sprint-d.ps1 output]
+
+=== ANALYTICS SMOKE TESTS ===
+Status: PASS/FAIL  
+Details: [First 30 lines from smoke-tests-analytics.ps1 output]
+
+=== MAP SMOKE TESTS ===
+Status: PASS/FAIL
+Details: [First 30 lines from smoke-tests-map.ps1 output]
+
+=== OVERALL SUMMARY ===
+Total Test Suites: 4
+Passed: 0
+Failed: 0
+Overall Result: PENDING
+
+To populate this file, run:
+powershell -ExecutionPolicy Bypass -File scripts/run-all-smoke-tests.ps1

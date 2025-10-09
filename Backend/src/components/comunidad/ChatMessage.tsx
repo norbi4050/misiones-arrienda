@@ -1,9 +1,10 @@
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 'use client'
 
 import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
+import AvatarUniversal from '@/components/ui/avatar-universal'
+import { SafeAvatar } from '@/components/ui/SafeAvatar'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 // Función simple para formatear tiempo relativo
 const formatTimeAgo = (date: string) => {
@@ -29,6 +30,8 @@ interface ChatMessageProps {
   }
   isFromCurrentUser: boolean
   senderName?: string
+  senderDisplayName?: string
+  senderAvatarUrl?: string
   showAvatar?: boolean
 }
 
@@ -36,8 +39,11 @@ export default function ChatMessage({
   message, 
   isFromCurrentUser, 
   senderName,
+  senderDisplayName,
+  senderAvatarUrl,
   showAvatar = true 
 }: ChatMessageProps) {
+  const { user } = useSupabaseAuth()
   
   if (message.type === 'system') {
     return (
@@ -49,36 +55,62 @@ export default function ChatMessage({
     )
   }
 
+  // Priorizar displayName sobre name, evitar "U" como último recurso
+  const displayName = senderDisplayName || senderName || 'Usuario'
+
+  // Log de diagnóstico (solo dev)
+  if (process.env.NODE_ENV === 'development') {
+    const now = new Date()
+    const past = new Date(message.created_at)
+    const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000)
+    
+    console.info('🔍 ChatMessage DEBUG ->', {
+      messageId: message.id,
+      content: message.content.substring(0, 30),
+      created_at: message.created_at,
+      created_at_parsed: past.toISOString(),
+      now: now.toISOString(),
+      diffInSeconds,
+      diffInHours: Math.floor(diffInSeconds / 3600),
+      diffInDays: Math.floor(diffInSeconds / 86400),
+      formatTimeAgoResult: formatTimeAgo(message.created_at),
+      senderDisplayName,
+      isFromCurrentUser
+    })
+  }
+
   return (
     <div className={cn(
-      "flex gap-3 mb-4",
+      "flex gap-2 mb-3",
       isFromCurrentUser ? "justify-end" : "justify-start"
     )}>
-      {/* Avatar (solo para mensajes de otros usuarios) */}
+      {/* Avatar - ✅ FIX: AvatarUniversal para usuario actual, SafeAvatar para otro usuario */}
       {!isFromCurrentUser && showAvatar && (
-        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-          {senderName?.charAt(0).toUpperCase() || 'U'}
-        </div>
+        <SafeAvatar
+          src={senderAvatarUrl || undefined}
+          name={displayName}
+          size="sm"
+        />
       )}
 
       {/* Mensaje */}
       <div className={cn(
-        "max-w-xs lg:max-w-md",
-        isFromCurrentUser ? "order-1" : "order-2"
+        "max-w-xs lg:max-w-md flex flex-col",
+        isFromCurrentUser ? "items-end" : "items-start"
       )}>
         {/* Nombre del remitente (solo para mensajes de otros usuarios) */}
-        {!isFromCurrentUser && senderName && (
-          <p className="text-xs text-gray-500 mb-1 px-1">
-            {senderName}
+        {!isFromCurrentUser && displayName && (
+          <p className="text-xs text-gray-600 mb-1 px-1 font-medium">
+            {displayName}
           </p>
         )}
 
-        {/* Contenido del mensaje */}
+        {/* Contenido del mensaje - BURBUJAS DIFERENCIADAS */}
         <div className={cn(
-          "px-4 py-2 rounded-2xl break-words",
+          "px-4 py-2 rounded-2xl break-words shadow-sm",
           isFromCurrentUser 
             ? "bg-blue-500 text-white rounded-br-md" 
-            : "bg-gray-100 text-gray-900 rounded-bl-md"
+            : "bg-white text-gray-900 border border-gray-200 rounded-bl-md"
         )}>
           {message.type === 'image' ? (
             <div className="space-y-2">
@@ -101,15 +133,22 @@ export default function ChatMessage({
           isFromCurrentUser ? "justify-end" : "justify-start"
         )}>
           <Clock className="w-3 h-3 text-gray-400" />
-          <span className="text-xs text-gray-400">
+          <span className={cn(
+            "text-xs",
+            isFromCurrentUser ? "text-blue-600" : "text-gray-500"
+          )}>
             {formatTimeAgo(message.created_at)}
           </span>
         </div>
       </div>
 
-      {/* Espaciador para mensajes del usuario actual */}
+      {/* Avatar del usuario actual */}
       {isFromCurrentUser && showAvatar && (
-        <div className="w-8 flex-shrink-0" />
+        <AvatarUniversal
+          userId={user?.id}
+          size="sm"
+          fallbackText="Tú"
+        />
       )}
     </div>
   )

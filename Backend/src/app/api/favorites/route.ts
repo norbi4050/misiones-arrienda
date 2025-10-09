@@ -1,137 +1,178 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { NextResponse } from "next/server";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
-export const runtime = 'nodejs';
-// `dynamic` es opcional en route handlers
-// export const dynamic = 'force-dynamic';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// Función para obtener el usuario del token
-async function getUserFromToken(request: NextRequest) {
+export async function GET() {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      return null;
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    return decoded.userId;
-  } catch (error) {
-    return null;
-  }
-}
-
-// GET - Obtener favoritos del usuario
-export async function GET(request: NextRequest) {
-  try {
-    const userId = await getUserFromToken(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-
-    const favorites = await prisma.favorite.findMany({
-      where: { userId },
-      include: {
-        property: {
-          include: {
-            agent: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    return NextResponse.json({ favorites });
-  } catch (error) {
-    console.error('Error al obtener favoritos:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
-  }
-}
-
-// POST - Agregar/quitar favorito
-export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserFromToken(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-
-    const { propertyId } = await request.json();
-    if (!propertyId) {
-      return NextResponse.json({ error: 'ID de propiedad requerido' }, { status: 400 });
-    }
-
-    // Verificar si ya existe el favorito
-    const existingFavorite = await prisma.favorite.findUnique({
-      where: {
-        userId_propertyId: {
-          userId,
-          propertyId
-        }
-      }
-    });
-
-    if (existingFavorite) {
-      // Si existe, lo eliminamos
-      await prisma.favorite.delete({
-        where: { id: existingFavorite.id }
-      });
-      
-      return NextResponse.json({ 
-        message: 'Favorito eliminado',
-        isFavorite: false 
-      });
-    } else {
-      // Si no existe, lo creamos
-      const newFavorite = await prisma.favorite.create({
-        data: {
-          userId,
-          propertyId
-        }
-      });
-      
-      return NextResponse.json({ 
-        message: 'Favorito agregado',
-        favorite: newFavorite,
-        isFavorite: true 
-      });
-    }
-  } catch (error) {
-    console.error('Error al manejar favorito:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
-  }
-}
-
-// DELETE - Eliminar favorito específico
-export async function DELETE(request: NextRequest) {
-  try {
-    const userId = await getUserFromToken(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
-
-    const propertyId = request.nextUrl.searchParams.get('propertyId');
+    const supabase = createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!propertyId) {
-      return NextResponse.json({ error: 'ID de propiedad requerido' }, { status: 400 });
+    if (!user) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    const deletedFavorite = await prisma.favorite.deleteMany({
-      where: {
-        userId,
-        propertyId
+    // Obtener favoritos con datos completos de propiedades
+    // Usar nombre explícito del FK (favorites_property_id_fkey)
+    const { data, error } = await supabase
+      .from("favorites")
+      .select(`
+        property_id,
+        properties!favorites_property_id_fkey (
+          id,
+          title,
+          price,
+          currency,
+          property_type,
+          bedrooms,
+          bathrooms,
+          area,
+          address,
+          city,
+          latitude,
+          longitude,
+          images,
+          cover_path,
+          featured,
+          status,
+          created_at,
+          updated_at,
+          user_id
+        )
+      `)
+      .eq("user_id", user.id)
+      .eq("properties.status", "PUBLISHED");
+
+    if (error) {
+      console.error('Error fetching favorites:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Formatear propiedades con cover_url resuelto
+    const properties = (data ?? []).map((fav: any) => {
+      const property = Array.isArray(fav.properties) ? fav.properties[0] : fav.properties;
+      
+      // Aplicar regla de prioridad cover_url
+      let imageUrls = [];
+      try {
+        imageUrls = property.images && typeof property.images === 'string' 
+          ? JSON.parse(property.images) 
+          : Array.isArray(property.images) 
+            ? property.images 
+            : [];
+      } catch (e) {
+        console.warn('Error parsing images for property:', property.id);
+        imageUrls = [];
       }
+
+      // Construir cover_url desde cover_path o usar primera imagen
+      const cover_url = property.cover_path 
+        ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/property-images/${property.cover_path}`
+        : imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
+
+      return {
+        id: property.id,
+        title: property.title,
+        price: property.price,
+        currency: property.currency || 'ARS',
+        propertyType: property.property_type,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        area: property.area,
+        address: property.address,
+        city: property.city,
+        latitude: property.latitude,
+        longitude: property.longitude,
+        images: imageUrls,
+        cover_url: cover_url,
+        featured: property.featured,
+        status: property.status,
+        created_at: property.created_at,
+        updated_at: property.updated_at,
+        user_id: property.user_id
+      };
     });
 
-    if (deletedFavorite.count === 0) {
-      return NextResponse.json({ error: 'Favorito no encontrado' }, { status: 404 });
+    return NextResponse.json({ 
+      ok: true, 
+      properties: properties,
+      count: properties.length
+    });
+  } catch (error) {
+    console.error('Unexpected error in GET /api/favorites:', error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { propertyId } = body;
+    
+    // Validar que propertyId esté presente
+    if (!propertyId) {
+      return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
     }
 
-    return NextResponse.json({ message: 'Favorito eliminado exitosamente' });
+    // Validar formato UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(propertyId)) {
+      return NextResponse.json({ error: "propertyId must be a valid UUID" }, { status: 400 });
+    }
+
+    const supabase = createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    // Verificar que la propiedad existe y está activa
+    const { data: property, error: propertyError } = await supabase
+      .from("properties")
+      .select("id, user_id, status")
+      .eq("id", propertyId)
+      .single();
+
+    if (propertyError || !property) {
+      return NextResponse.json({ error: "Property not found" }, { status: 404 });
+    }
+
+    // Verificar que la propiedad esté activa/disponible
+    if (!['PUBLISHED', 'AVAILABLE'].includes(property.status)) {
+      return NextResponse.json({ error: "Property is not available for favorites" }, { status: 400 });
+    }
+
+    // Verificar que el usuario no sea el propietario
+    if (property.user_id === user.id) {
+      return NextResponse.json({ error: "Cannot favorite your own property" }, { status: 400 });
+    }
+
+    // Intentar insertar el favorito
+    const { error } = await supabase
+      .from("favorites")
+      .insert({ user_id: user.id, property_id: propertyId })
+      .select("id")  // Force error if RLS fails
+      .single();
+
+    // Manejar error de clave duplicada (ya está en favoritos)
+    if (error && /duplicate key value/.test(error.message)) {
+      // Ya existe, esto está bien - devolver éxito (idempotente)
+      return NextResponse.json({ ok: true, message: "Property already in favorites" });
+    }
+
+    if (error) {
+      console.error('Error adding favorite:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, message: "Property added to favorites" });
   } catch (error) {
-    console.error('Error al eliminar favorito:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+    console.error('Unexpected error in POST /api/favorites:', error);
+    
+    // Manejar error de JSON malformado
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

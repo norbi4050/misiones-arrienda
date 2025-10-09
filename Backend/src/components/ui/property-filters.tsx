@@ -27,6 +27,7 @@ export interface PropertyFilters {
   search: string;
   status: string;
   propertyType: string;
+  operationType: string; // RENT, SALE, BOTH
   minPrice: string;
   maxPrice: string;
   city: string;
@@ -44,6 +45,7 @@ const defaultFilters: PropertyFilters = {
   search: '',
   status: '',
   propertyType: '',
+  operationType: 'BOTH',
   minPrice: '',
   maxPrice: '',
   city: '',
@@ -77,6 +79,12 @@ const propertyTypeOptions = [
   { value: 'WAREHOUSE', label: 'Depósito' },
   { value: 'PH', label: 'PH' },
   { value: 'STUDIO', label: 'Monoambiente' }
+];
+
+const operationTypeOptions = [
+  { value: 'BOTH', label: 'Venta y alquiler' },
+  { value: 'RENT', label: 'Solo alquiler' },
+  { value: 'SALE', label: 'Solo venta' }
 ];
 
 const sortOptions = [
@@ -152,6 +160,7 @@ export function PropertyFilters({
     if (filters.search) active.push({ key: 'search', label: 'Búsqueda', value: filters.search });
     if (filters.status) active.push({ key: 'status', label: 'Estado', value: statusOptions.find(o => o.value === filters.status)?.label });
     if (filters.propertyType) active.push({ key: 'propertyType', label: 'Tipo', value: propertyTypeOptions.find(o => o.value === filters.propertyType)?.label });
+    if (filters.operationType && filters.operationType !== 'BOTH') active.push({ key: 'operationType', label: 'Operación', value: operationTypeOptions.find(o => o.value === filters.operationType)?.label });
     if (filters.minPrice) active.push({ key: 'minPrice', label: 'Precio mín.', value: `$${filters.minPrice}` });
     if (filters.maxPrice) active.push({ key: 'maxPrice', label: 'Precio máx.', value: `$${filters.maxPrice}` });
     if (filters.city) active.push({ key: 'city', label: 'Ciudad', value: filters.city });
@@ -239,6 +248,21 @@ export function PropertyFilters({
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {propertyTypeOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de operación</label>
+          <select
+            value={filters.operationType}
+            onChange={(e) => handleFilterChange('operationType', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            {operationTypeOptions.map(option => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>

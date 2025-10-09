@@ -1,9 +1,8 @@
-// lib/supabase/server.ts
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 
 export const createSupabaseServer = () => {
-  const cookieStore = cookies() // ✅ sin await
+  const cookieStore = cookies()
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -23,11 +22,4 @@ export const createSupabaseServer = () => {
   )
 }
 
-// --- COMPATIBILIDAD TEMPORAL ---
-export const createClient = createSupabaseServer // ✅ alias correcto
-
-export async function getUserServer() {
-  const supabase = createSupabaseServer()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  return { supabase, user, error }
-}
+export const createClient = createSupabaseServer

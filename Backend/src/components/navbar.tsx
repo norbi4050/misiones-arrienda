@@ -3,25 +3,57 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Search, Heart, MessageCircle } from "lucide-react"
+import { Menu, X, Heart, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { ProfileDropdown } from "@/components/ui/profile-dropdown"
-import { useAuth } from "@/hooks/useAuth"
-
-const navigation = [
-  { name: 'Inicio', href: '/' },
-  { name: 'Propiedades', href: '/properties' },
-  { name: 'Comunidad', href: '/comunidad' },
-  { name: 'Publicar', href: '/publicar' },
-]
+import { useCurrentUser } from "@/lib/auth/useCurrentUser"
+import AvatarUniversal from "@/components/ui/avatar-universal"
+import { useMessagesUnread } from "@/hooks/useMessagesUnread"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
-  const [searchOpen, setSearchOpen] = React.useState(false)
   const pathname = usePathname()
-  const { user, loading, isAuthenticated, signOut } = useAuth()
+  const { user, isAuthenticated, isAgency, loading, signOut } = useCurrentUser()
+  const { count: unreadCount } = useMessagesUnread({ 
+    enabled: isAuthenticated && !isAgency // Solo para usuarios no-inmobiliarias
+  })
+
+  // [DEBUG] Log temporal para investigar
+  React.useEffect(() => {
+    if (user) {
+      console.log('[Navbar DEBUG] User data:', {
+        id: user.id,
+        email: user.email,
+        userType: user.userType,
+        isCompany: user.isCompany,
+        isAgency: isAgency,
+        should_hide_comunidad: isAgency
+      })
+    }
+  }, [user, isAgency])
+
+  // Navegación dinámica según userType
+  const navigation = React.useMemo(() => {
+    const baseNav = [
+      { name: 'Inicio', href: '/' },
+      { name: 'Propiedades', href: '/properties' },
+    ]
+    
+    // Solo mostrar Comunidad si NO es inmobiliaria
+    if (!isAgency) {
+      baseNav.push({ name: 'Comunidad', href: '/comunidad' })
+    }
+    
+    baseNav.push({ name: 'Publicar', href: '/publicar' })
+    
+    // Agregar "Mi Empresa" si es inmobiliaria
+    if (isAgency) {
+      baseNav.push({ name: 'Mi Empresa', href: '/mi-empresa' })
+    }
+    
+    return baseNav
+  }, [isAgency])
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -54,51 +86,33 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Search and Actions */}
+          {/* Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Search */}
-            <div className="relative">
-              {searchOpen ? (
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="text"
-                    placeholder="Buscar propiedades..."
-                    className="w-64"
-                    icon={<Search className="h-4 w-4" />}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSearchOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSearchOpen(true)}
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
             {/* Authentication Section */}
             {!loading && (
               <>
                 {isAuthenticated && user ? (
                   <>
                     {/* Quick Actions for authenticated users */}
-                    <Link href="/dashboard?tab=favorites">
+                    <Link href="/favorites">
                       <Button variant="ghost" size="sm" title="Mis Favoritos">
                         <Heart className="h-4 w-4" />
                       </Button>
                     </Link>
-                    <Link href="/dashboard?tab=messages">
-                      <Button variant="ghost" size="sm" title="Mensajes">
+                    <Link href={isAgency ? "/messages" : "/comunidad/mensajes"}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Mensajes"
+                        className="relative"
+                        aria-label={unreadCount > 0 ? `Tienes ${unreadCount} mensajes sin leer` : 'Mensajes'}
+                      >
                         <MessageCircle className="h-4 w-4" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
                       </Button>
                     </Link>
                     
@@ -114,8 +128,12 @@ export function Navbar() {
                       </Button>
                     </Link>
                     <Link href="/register">
-                      <Button variant="default" size="sm">
-                        Registrarse
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md"
+                      >
+                        Crear Cuenta
                       </Button>
                     </Link>
                   </>
@@ -160,15 +178,6 @@ export function Navbar() {
                 {item.name}
               </Link>
             ))}
-            
-            {/* Mobile Search */}
-            <div className="px-3 py-2">
-              <Input
-                type="text"
-                placeholder="Buscar propiedades..."
-                icon={<Search className="h-4 w-4" />}
-              />
-            </div>
 
             {/* Mobile Authentication Section */}
             {!loading && (
@@ -176,9 +185,11 @@ export function Navbar() {
                 {isAuthenticated && user ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 py-2">
-                      <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                        {user.name?.slice(0, 2).toUpperCase() || user.email?.slice(0, 2).toUpperCase() || 'U'}
-                      </div>
+                      <AvatarUniversal
+                        userId={user.id}
+                        size="sm"
+                        fallbackText={user.name || user.email || 'Usuario'}
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {user.name || user.email?.split('@')[0] || 'Usuario'}
@@ -188,26 +199,34 @@ export function Navbar() {
                         </p>
                       </div>
                     </div>
+                    {/* [AuthBridge] href y label dinámicos según isAgency */}
                     <Link
-                      href="/profile"
+                      href={isAgency ? '/mi-empresa' : '/profile/inquilino'}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
-                      Mi Perfil
+                      {isAgency ? 'Mi Empresa' : 'Mi Perfil'}
                     </Link>
                     <Link
-                      href="/dashboard?tab=favorites"
+                      href="/favorites"
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
                       Mis Favoritos
                     </Link>
                     <Link
-                      href="/dashboard?tab=messages"
-                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+                      href={isAgency ? "/messages" : "/comunidad/mensajes"}
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md relative"
                       onClick={() => setIsOpen(false)}
                     >
-                      Mensajes
+                      <span className="flex items-center justify-between">
+                        Mensajes
+                        {unreadCount > 0 && (
+                          <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
+                      </span>
                     </Link>
                     <button
                       onClick={() => {
@@ -230,10 +249,10 @@ export function Navbar() {
                     </Link>
                     <Link
                       href="/register"
-                      className="block px-3 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md text-center"
+                      className="block px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md text-center font-semibold shadow-md"
                       onClick={() => setIsOpen(false)}
                     >
-                      Registrarse
+                      Crear Cuenta
                     </Link>
                   </div>
                 )}

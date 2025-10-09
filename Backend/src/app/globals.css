@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== LEAFLET MAP STYLES ===== */
+/* Importar CSS de Leaflet para evitar problemas de SSR y mapa cargando infinito */
+@import "leaflet/dist/leaflet.css";
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -170,4 +176,18 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Shimmer effect para skeletons */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }

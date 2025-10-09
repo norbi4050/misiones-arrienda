@@ -39,7 +39,14 @@ export const propertySchema = z.object({
   
   // Contacto
   contact_name: z.string().max(100, 'El nombre es muy largo').optional(),
-  contact_phone: z.string().min(1, 'El teléfono de contacto es requerido').max(20, 'Teléfono inválido'),
+  contact_phone: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal("").transform(() => undefined))
+    .refine((v) => !v || /^\+?\d[\d\s-]{6,}$/.test(v), {
+      message: "Formato de teléfono inválido",
+    }),
   contact_email: z.string().email('Email inválido').optional(),
   
   // Multimedia - VALIDACIÓN JSON ESTRUCTURADA
@@ -47,6 +54,7 @@ export const propertySchema = z.object({
     (images) => images.length <= 20,
     { message: 'Máximo 20 imágenes permitidas' }
   ),
+  imagesCount: z.number().min(0).optional(),
   virtualTourUrl: z.string().url('URL inválida').optional(),
   
   // Características adicionales - VALIDACIÓN JSON ESTRUCTURADA
@@ -91,6 +99,8 @@ export const propertyFormSchema = propertySchema.pick({
   province: true,
   country: true,
   postalCode: true,
+  latitude: true,
+  longitude: true,
   contact_phone: true,
   images: true,
   amenities: true,
@@ -133,6 +143,22 @@ export const createPropertySchema = propertyFormSchema.extend({
     path: ['featured']
   }
 );
+
+// Schema para publicación (requiere al menos 1 imagen)
+export const publishPropertySchema = propertyFormSchema.extend({
+  imagesCount: z.number().min(1, "Agregá al menos 1 imagen para publicar"),
+}).refine(
+  (data) => data.images.length >= 1,
+  {
+    message: "Agregá al menos 1 imagen para publicar",
+    path: ['images']
+  }
+);
+
+// Schema para borrador (permite sin imágenes)
+export const draftPropertySchema = propertyFormSchema.extend({
+  status: z.literal('DRAFT').default('DRAFT')
+});
 
 // Schema para actualización
 export const updatePropertySchema = propertySchema.partial().extend({
@@ -195,6 +221,35 @@ export function validatePlanLimits(data: PropertyFormData, plan: string) {
   
   return {
     valid: errors.length === 0,
+    errors
+  };
+}
+
+// Función para validar si se puede publicar
+export function validateForPublish(data: PropertyFormData) {
+  const errors: string[] = [];
+  
+  // Validar imágenes mínimas
+  if (data.images.length < 1) {
+    errors.push("Necesitás al menos 1 imagen para publicar");
+  }
+  
+  // Validar campos requeridos para publicación
+  if (!data.title?.trim()) {
+    errors.push("El título es requerido");
+  }
+  
+  if (!data.description?.trim() || data.description.length < 10) {
+    errors.push("La descripción debe tener al menos 10 caracteres");
+  }
+  
+  if (!data.address?.trim()) {
+    errors.push("La dirección es requerida");
+  }
+  
+  return {
+    canPublish: errors.length === 0,
+    canSaveDraft: true, // Siempre se puede guardar como borrador
     errors
   };
 }

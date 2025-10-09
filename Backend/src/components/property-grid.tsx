@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { PropertyCard } from "@/components/property-card"
-import { FilterSection } from "@/components/filter-section-fixed"
 import { getProperties } from "@/lib/api"
 import { Property, PropertyFilters } from "@/types/property"
 
@@ -27,7 +26,14 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
       setLoading(true)
       setError(null)
       const response = await getProperties({ ...currentFilters, page, limit: pagination.limit })
-      setProperties(response.properties)
+      
+      // ✅ FIX: Append si page > 1, replace si page === 1
+      if (page === 1) {
+        setProperties(response.properties)
+      } else {
+        setProperties(prev => [...prev, ...response.properties])
+      }
+      
       setPagination(response.pagination)
     } catch (err) {
       setError('Error al cargar las propiedades')
@@ -61,10 +67,21 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
     }
   }
 
+  // Helper local para parsear imágenes de forma segura
+  const parseImages = (val: unknown): string[] => {
+    try {
+      if (Array.isArray(val)) return val.filter(Boolean) as string[];
+      if (typeof val === 'string') {
+        const arr = JSON.parse(val);
+        return Array.isArray(arr) ? (arr.filter(Boolean) as string[]) : [];
+      }
+      return [];
+    } catch { return []; }
+  };
+
   if (loading && properties.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <FilterSection onFilterChange={handleFilterChange} />
         <div className="flex justify-center items-center py-12">
           <div className="text-lg">Cargando propiedades...</div>
         </div>
@@ -74,8 +91,6 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <FilterSection onFilterChange={handleFilterChange} />
-      
       {error && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
           {error}
@@ -84,21 +99,32 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
       
       {/* Propiedades renderizadas server-side para SEO */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {properties.map((property) => (
-          <PropertyCard 
-            key={property.id} 
-            id={property.id}
-            title={property.title}
-            price={Number(property.price)}
-            type={property.propertyType}
-            location={`${property.city}, ${property.province}`}
-            bedrooms={property.bedrooms}
-            bathrooms={property.bathrooms}
-            area={Number(property.area)}
-            image={property.images[0] || "/placeholder-apartment-1.jpg"}
-            featured={property.featured}
-          />
-        ))}
+        {properties.map((property) => {
+          const imgs = parseImages(property.images);
+          const cover = imgs[0] ?? '/placeholder-apartment-1.jpg';
+          
+          // Log de diagnóstico para auditoría
+          console.debug('[Grid] item=', property.id, 'cover_url=', (property as any).cover_url);
+          
+          return (
+            <PropertyCard 
+              key={property.id} 
+              id={property.id}
+              title={property.title}
+              price={Number(property.price)}
+              type={property.propertyType}
+              location={`${property.city}, ${property.province}`}
+              bedrooms={property.bedrooms}
+              bathrooms={property.bathrooms}
+              area={Number(property.area)}
+              image={cover}
+              imageUrls={imgs}
+              coverUrl={(property as any).coverUrl}
+              cover_url={(property as any).cover_url}  // ✅ AGREGAR: Pasar cover_url del API
+              featured={property.featured}
+            />
+          );
+        })}
       </div>
       
       {properties.length === 0 && !loading && (

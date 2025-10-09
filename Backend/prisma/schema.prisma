@@ -36,6 +36,7 @@ model Property {
   latitude    Float?
   longitude   Float?
   propertyType String  // APARTMENT, HOUSE, COMMERCIAL, LAND, OFFICE, WAREHOUSE, PH, STUDIO
+  operationType String  @default("BOTH") // RENT, SALE, BOTH
   status      String   @default("AVAILABLE") // AVAILABLE, RENTED, SOLD, MAINTENANCE, RESERVED, EXPIRED
   images      String   // JSON string of array
   virtualTourUrl String?
@@ -137,6 +138,11 @@ model User {
   licenseNumber String? // Solo para inmobiliarias
   propertyCount String? // Solo para dueños directos
   
+  // Campos de presencia/estado online (NUEVO - 2025)
+  isOnline      Boolean   @default(false) @map("is_online")
+  lastSeen      DateTime? @map("last_seen") @db.Timestamptz(6)
+  lastActivity  DateTime  @default(now()) @map("last_activity") @db.Timestamptz(6)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -158,6 +164,8 @@ model User {
   
   // Relación con perfil de comunidad
   communityProfile UserProfile?
+  
+  @@index([isOnline, lastSeen])
 }
 
 model UserReview {
@@ -435,11 +443,8 @@ model PaymentNotification {
 // MODELOS PARA MÓDULO COMUNIDAD (ESTILO FLATMATES)
 // =============================================================================
 
-// Enums para el módulo Comunidad
-enum CommunityRole {
-  BUSCO     // Busco habitación/compañeros
-  OFREZCO   // Ofrezco habitación/casa
-}
+// Enums para el módulo Comunidad - Usando string union para flexibilidad
+// Los valores válidos se definen en src/domain/user/roles.ts
 
 enum PetPref {
   SI_PET        // Acepta mascotas
@@ -475,7 +480,7 @@ model UserProfile {
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Información básica del perfil
-  role                  CommunityRole
+  role                  String   @default("BUSCO") // Valores válidos: BUSCO, OFREZCO, TENANT, OWNER, AGENCY
   city                  String
   neighborhood          String?
   budgetMin             Int      // Presupuesto mínimo en ARS
@@ -500,6 +505,11 @@ model UserProfile {
   expiresAt             DateTime?
   isPaid                Boolean  @default(false)
   
+  // Campos de presencia/estado online (NUEVO - 2025)
+  isOnline      Boolean   @default(false) @map("is_online")
+  lastSeen      DateTime? @map("last_seen") @db.Timestamptz(6)
+  lastActivity  DateTime  @default(now()) @map("last_activity") @db.Timestamptz(6)
+  
   // Auditoría
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -517,6 +527,7 @@ model UserProfile {
   @@index([budgetMin, budgetMax])
   @@index([highlightedUntil])
   @@index([isSuspended])
+  @@index([isOnline, lastSeen])
 }
 
 model Room {

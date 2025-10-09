@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createSupabaseBrowser } from 'lib/supabase/browser'
 import { useRouter } from 'next/navigation'
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
+import { ensureProfile } from 'src/lib/auth/ensureProfile'
 
-const supabase = createClient()
+const supabase = createSupabaseBrowser()
 
 interface AuthUser {
   id: string
@@ -219,10 +220,32 @@ export function useSupabaseAuth() {
 
       if (error) throw error
 
+      // Asegurar que existe el perfil en user_profiles (idempotente)
+      if (data.user) {
+        try {
+          await ensureProfile()
+        } catch (profileError) {
+          console.warn('[ensureProfile] signIn:', profileError)
+        }
+      }
+
+      // Obtener perfil del usuario para determinar nextRoute
+      let nextRoute = '/'
+      if (data.user) {
+        const userProfile = await fetchUserProfile(data.user.id)
+        if (userProfile?.userType === 'inmobiliaria') {
+          nextRoute = '/mi-empresa'
+        }
+      }
+
       // Refresh router to update server components after login
       router.refresh()
 
-      return { success: true, data }
+      return { 
+        success: true, 
+        data,
+        nextRoute 
+      }
     } catch (error: any) {
       console.error('Login error:', error)
       return { success: false, error: error.message }
@@ -283,6 +306,17 @@ export function useSupabaseAuth() {
         throw error
       }
 
+      // Asegurar que existe el perfil en user_profiles (idempotente)
+      // Si el flujo requiere confirmación de email, esto también se ejecutará
+      // en el callback de auth cuando el usuario confirme su email
+      if (data.user) {
+        try {
+          await ensureProfile()
+        } catch (profileError) {
+          console.warn('[ensureProfile] signUp:', profileError)
+        }
+      }
+
       // Verificar si el usuario fue creado pero necesita confirmación
       if (data.user && !data.user.email_confirmed_at) {
         // Refresh router to update server components after registration
@@ -313,6 +347,48 @@ export function useSupabaseAuth() {
     }
   }
 
+  const requestPasswordReset = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`
+      })
+
+      if (error) throw error
+
+      return { 
+        success: true, 
+        message: 'Te enviamos un email con instrucciones para recuperar tu contraseña.' 
+      }
+    } catch (error: any) {
+      console.error('Password reset request error:', error)
+      return { 
+        success: false, 
+        error: error.message || 'Error al solicitar recuperación de contraseña' 
+      }
+    }
+  }
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (error) throw error
+
+      return { 
+        success: true, 
+        message: 'Contraseña actualizada exitosamente' 
+      }
+    } catch (error: any) {
+      console.error('Password update error:', error)
+      return { 
+        success: false, 
+        error: error.message || 'Error al actualizar contraseña' 
+      }
+    }
+  }
+
   return {
     user,
     session,
@@ -321,6 +397,8 @@ export function useSupabaseAuth() {
     login,
     logout,
     register,
-    refreshUserProfile // Nueva función para refrescar datos
+    refreshUserProfile, // Nueva función para refrescar datos
+    requestPasswordReset, // Nueva función para recuperación de contraseña
+    updatePassword // Nueva función para actualizar contraseña
   }
 }

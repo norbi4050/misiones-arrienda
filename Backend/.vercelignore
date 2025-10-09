@@ -1,0 +1,3 @@
+# Excluir rutas problemáticas del build
+src/app/mis-propiedades/page.tsx
+src/app/mis-propiedades/

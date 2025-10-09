@@ -1,20 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/comunidad',
-        permanent: false, // ponelo true cuando quieras que sea permanente
-      },
-    ]
-  },
   images: {
-    domains: [
-      'images.unsplash.com',
-      'via.placeholder.com',
-      'localhost'
-    ],
     remotePatterns: [
       {
         protocol: 'https',
@@ -25,6 +11,33 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'via.placeholder.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'qfeyhaaxyemmnohqdele.supabase.co',
+        pathname: '/storage/v1/object/public/avatars/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'qfeyhaaxyemmnohqdele.supabase.co',
+        pathname: '/storage/v1/object/public/property-images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
         port: '',
         pathname: '/**',
       }

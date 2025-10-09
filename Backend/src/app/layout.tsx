@@ -3,11 +3,14 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
 import { AIChatbot } from '@/components/ai-chatbot'
 import WhatsAppButton from '@/components/whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
-import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/components/auth-provider'
+import { MessagesProvider } from '@/contexts/MessagesContext'
+import ToasterProvider from '@/components/toaster-provider'
+import { PresenceTracker } from '@/components/presence/PresenceTracker'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -52,72 +55,37 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Navbar />
-            {children}
+          <MessagesProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <div className="flex flex-col min-h-screen">
+                <Navbar />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <Footer />
+              </div>
 
-            {/* WhatsApp Button Global - Siempre visible */}
-            <WhatsAppButton type="fixed" />
+              {/* WhatsApp Button Global - Siempre visible */}
+              <WhatsAppButton type="fixed" />
 
-            {/* AI Chatbot */}
-            <AIChatbot />
+              {/* AI Chatbot */}
+              <AIChatbot />
 
-            {/* Build Badge para debugging */}
-            <BuildBadge />
+              {/* Build Badge para debugging */}
+              <BuildBadge />
 
-            {/* Toast Notifications Mejoradas */}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                  fontSize: '14px',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  maxWidth: '400px',
-                },
-                success: {
-                  duration: 3000,
-                  style: {
-                    background: '#10b981',
-                    color: '#fff',
-                  },
-                  iconTheme: {
-                    primary: '#fff',
-                    secondary: '#10b981',
-                  },
-                },
-                error: {
-                  duration: 5000,
-                  style: {
-                    background: '#ef4444',
-                    color: '#fff',
-                  },
-                  iconTheme: {
-                    primary: '#fff',
-                    secondary: '#ef4444',
-                  },
-                },
-                loading: {
-                  style: {
-                    background: '#3b82f6',
-                    color: '#fff',
-                  },
-                  iconTheme: {
-                    primary: '#fff',
-                    secondary: '#3b82f6',
-                  },
-                },
-              }}
-            />
-          </ThemeProvider>
+              {/* Toast Notifications Sonner */}
+              <ToasterProvider />
+
+              {/* Presence Tracker - Sistema de tracking de estado online/offline */}
+              <PresenceTracker />
+            </ThemeProvider>
+          </MessagesProvider>
         </AuthProvider>
       </body>
     </html>

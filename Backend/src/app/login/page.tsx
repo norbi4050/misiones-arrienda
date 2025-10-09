@@ -15,7 +15,7 @@ export default function LoginPage() {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace("/dashboard");
+      router.replace("/");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -31,9 +31,9 @@ export default function LoginPage() {
         setMsg("¡Login exitoso! Redirigiendo...");
         // Refresh router to update server components after login
         router.refresh();
-        // Redirección explícita al dashboard después del login exitoso
+        // Usar nextRoute del resultado para redirigir según userType
         setTimeout(() => {
-          router.replace("/dashboard");
+          router.replace(result.nextRoute || "/");
         }, 1000);
       } else {
         setMsg(`Error: ${result.error}`);
@@ -107,6 +107,17 @@ export default function LoginPage() {
               <p className="text-sm">{msg}</p>
             </div>
           )}
+
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm">
+              <a 
+                href="/forgot-password" 
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+          </div>
 
           <div className="text-center">
             <a href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">

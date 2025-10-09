@@ -1,8 +1,10 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MessageCircle, Clock } from 'lucide-react'
+import { useProfile } from '@/hooks/useProfile'
 
 // Función simple para formatear tiempo relativo
 const formatTimeAgo = (date: string) => {
@@ -17,50 +19,36 @@ const formatTimeAgo = (date: string) => {
   return `hace ${Math.floor(diffInSeconds / 2592000)} meses`
 }
 
+type ConversationLite = {
+  id: string
+  participants: string[]
+  otherParticipant: string // UUID
+  created_at?: string | null
+  last_message_at?: string | null
+  last_message_content?: string
+  unread_count?: number
+  updated_at?: string
+}
+
 interface ConversationCardProps {
-  lastMessage: string
-  conversation: {
-    id: string
-    match: {
-      id: string
-      otherUser: {
-        id: string
-        name: string
-        profile: {
-          role: 'BUSCO' | 'OFREZCO'
-          city: string
-          neighborhood: string
-        }
-      }
-    }
-    last_message?: {
-      id: string
-      content: string
-      created_at: string
-      sender_id: string
-    }
-    unread_count: number
-    updated_at: string
-  }
+  conversation: ConversationLite
   currentUserId: string
-  onClick?: (conversationId: string) => void
 }
 
 export default function ConversationCard({ 
   conversation, 
-  currentUserId,
-  onClick 
+  currentUserId
 }: ConversationCardProps) {
-  const { match, last_message, unread_count } = conversation
-  const { otherUser } = match
+  const router = useRouter()
+  const { profile } = useProfile(conversation.otherParticipant)
 
   const handleClick = () => {
-    if (onClick) {
-      onClick(conversation.id)
-    }
+    router.push(`/comunidad/mensajes/${conversation.id}`)
   }
 
-  const isFromCurrentUser = last_message?.sender_id === currentUserId
+  const name = profile?.display_name ?? 'Usuario'
+  const initial = (name[0] ?? 'U').toUpperCase()
+  const avatarUrl = profile?.avatar_url
 
   return (
     <Card 
@@ -70,39 +58,45 @@ export default function ConversationCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-gray-900 truncate">
-                {otherUser.name}
-              </h3>
-              <Badge 
-                variant={otherUser.profile.role === 'BUSCO' ? 'default' : 'secondary'}
-                className="text-xs flex-shrink-0"
-              >
-                {otherUser.profile.role === 'BUSCO' ? 'Busca' : 'Ofrece'}
-              </Badge>
+            {/* Header con avatar */}
+            <div className="flex items-center gap-3 mb-2">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {avatarUrl ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt={name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span className="text-blue-600 font-semibold text-sm">
+                      {initial}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Nombre */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 truncate">
+                  {name}
+                </h3>
+              </div>
             </div>
 
-            {/* Location */}
-            <p className="text-sm text-gray-600 mb-2 truncate">
-              {otherUser.profile.neighborhood}, {otherUser.profile.city}
-            </p>
-
             {/* Last message */}
-            {last_message ? (
+            {conversation.last_message_content ? (
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <p className="text-xs font-medium text-gray-600">
-                    {isFromCurrentUser ? 'Tú' : otherUser.name}:
-                  </p>
                   <div className="flex items-center text-xs text-gray-500">
                     <Clock className="w-3 h-3 mr-1" />
-                    {formatTimeAgo(last_message.created_at)}
+                    {formatTimeAgo(conversation.last_message_at || conversation.updated_at || conversation.created_at || new Date().toISOString())}
                   </div>
                 </div>
                 <p className="text-sm text-gray-700 line-clamp-2 pl-6">
-                  {last_message.content}
+                  {conversation.last_message_content}
                 </p>
               </div>
             ) : (
@@ -116,10 +110,10 @@ export default function ConversationCard({
           </div>
 
           {/* Unread indicator */}
-          {unread_count > 0 && (
+          {(conversation.unread_count ?? 0) > 0 && (
             <div className="flex flex-col items-end gap-2 ml-3">
               <Badge variant="destructive" className="text-xs">
-                {unread_count}
+                {conversation.unread_count}
               </Badge>
             </div>
           )}
@@ -133,7 +127,7 @@ export default function ConversationCard({
               Match activo
             </div>
             <div className="text-xs text-gray-400">
-              {formatTimeAgo(conversation.updated_at)}
+              {formatTimeAgo(conversation.updated_at || conversation.created_at || new Date().toISOString())}
             </div>
           </div>
         </div>
