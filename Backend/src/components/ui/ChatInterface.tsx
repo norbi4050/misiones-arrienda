@@ -107,15 +107,7 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
       const data = await response.json()
       
       // PROMPT 4: Normalización defensiva
-      const normalizedMessages = (data.messages || []).map((msg: any) => {
-        console.log('[ChatInterface] Normalizing message:', {
-          id: msg.id,
-          hasAttachments: !!msg.attachments,
-          attachmentsCount: msg.attachments?.length || 0,
-          attachments: msg.attachments
-        })
-        
-        return {
+      const normalizedMessages = (data.messages || []).map((msg: any) => ({
           id: msg.id || `temp-${Date.now()}`,
           content: msg.content || '',
           createdAt: msg.createdAt || new Date().toISOString(),
@@ -490,14 +482,6 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
                             {message.attachments.map((att: any) => {
                               const isImage = att.mime?.startsWith('image/')
                               const isPdf = att.mime === 'application/pdf'
-                              
-                              // Debug: Log attachment data
-                              console.log('[ATTACHMENT DEBUG]', {
-                                id: att.id,
-                                fileName: att.fileName,
-                                url: att.url,
-                                mime: att.mime
-                              })
                               
                               const handleDownload = (e: React.MouseEvent) => {
                                 e.preventDefault()
