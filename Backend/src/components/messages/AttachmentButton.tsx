@@ -96,6 +96,7 @@ export default function AttachmentButton({
         onClick={handleButtonClick}
         disabled={disabled}
         title={`Adjuntar archivo (máx ${limits.maxSizeMB}MB)`}
+        aria-label="Adjuntar archivo"
       >
         <Paperclip className="h-4 w-4" />
       </Button>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Send, Smile } from 'lucide-react'
+import { Send, Smile, Paperclip } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { AttachmentButton, UploadQueue, useUploadQueue, type QueuedFile } from '@/components/messages'
@@ -180,13 +180,11 @@ export default function MessageComposerWithAttachments({
 
       <div className="flex items-end gap-2">
         {/* Attachment button */}
-        <div className="shrink-0">
-          <AttachmentButton
-            onFilesSelected={handleFilesSelected}
-            disabled={disabled || sending || hasUploading}
-            planTier={planTier}
-          />
-        </div>
+        <AttachmentButton
+          onFilesSelected={handleFilesSelected}
+          disabled={disabled || sending || hasUploading}
+          planTier={planTier}
+        />
 
         {/* Message input */}
         <div className="flex-1 relative">

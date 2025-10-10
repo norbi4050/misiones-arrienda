@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { subscribeToMessages, unsubscribeFromChannel, type MessageRealtimePayload } from '@/lib/supabase/realtime'
-import MessageComposer from '@/components/ui/message-composer'
+import MessageComposerWithAttachments from '@/components/ui/message-composer-with-attachments'
 import { SafeAvatar } from './SafeAvatar'
 import AvatarUniversal from './avatar-universal'
 
@@ -309,12 +309,13 @@ export default function Thread({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Composer integrado */}
-      <MessageComposer
+      {/* Composer integrado con soporte de adjuntos */}
+      <MessageComposerWithAttachments
         conversationId={conversationId}
         onSendMessage={handleSendMessage}
         disabled={!user}
         placeholder="Escribe tu mensaje..."
+        planTier="free"
       />
     </div>
   )

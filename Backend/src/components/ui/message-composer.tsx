@@ -65,15 +65,16 @@ export default function MessageComposer({
   return (
     <div className="border-t bg-white p-4">
       <div className="flex items-end gap-2">
-        {/* Attachment button */}
+        {/* Attachment button - Disabled temporarily */}
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           className="shrink-0 h-10 w-10 p-0"
-          disabled={disabled || sending}
-          title="Adjuntar archivo"
+          disabled={true}
+          title="Adjuntar archivo (próximamente)"
         >
-          <Paperclip className="h-4 w-4" />
+          <Paperclip className="h-4 w-4 text-gray-400" />
         </Button>
 
         {/* Message input */}
@@ -103,19 +104,21 @@ export default function MessageComposer({
           )}
         </div>
 
-        {/* Emoji button */}
+        {/* Emoji button - Disabled temporarily */}
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           className="shrink-0 h-10 w-10 p-0"
-          disabled={disabled || sending}
-          title="Agregar emoji"
+          disabled={true}
+          title="Agregar emoji (próximamente)"
         >
-          <Smile className="h-4 w-4" />
+          <Smile className="h-4 w-4 text-gray-400" />
         </Button>
 
         {/* Send button */}
         <Button
+          type="button"
           onClick={handleSend}
           disabled={disabled || sending || !message.trim() || isOverLimit}
           size="sm"

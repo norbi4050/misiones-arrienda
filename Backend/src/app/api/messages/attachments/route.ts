@@ -123,27 +123,51 @@ export async function POST(request: NextRequest) {
     });
 
     // 3. Validar participación en thread
-    const { data: thread, error: threadError } = await supabase
-      .from('conversations')
-      .select('participant_1, participant_2')
-      .eq('id', threadId)
+    // Intentar primero con tablas PRISMA (PascalCase), luego Supabase (lowercase)
+    
+    // Obtener perfil del usuario
+    const { data: userProfile } = await supabase
+      .from('UserProfile')
+      .select('id')
+      .eq('userId', user.id)
       .single();
 
-    if (threadError || !thread) {
-      console.log('[ATTACHMENTS] Thread not found:', threadId);
+    if (!userProfile) {
+      console.log('[ATTACHMENTS] UserProfile not found for user:', user.id);
+      return NextResponse.json(
+        { error: 'Perfil no encontrado', code: 'NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
+    // Buscar conversación en tabla PRISMA
+    const { data: conversation, error: convError } = await supabase
+      .from('Conversation')
+      .select('id, aId, bId, isActive')
+      .eq('id', threadId)
+      .eq('isActive', true)
+      .single();
+
+    if (convError || !conversation) {
+      console.log('[ATTACHMENTS] Conversation not found in PRISMA tables:', threadId, convError?.message);
       return NextResponse.json(
         { error: 'Conversación no encontrada', code: 'NOT_FOUND' },
         { status: 404 }
       );
     }
 
-    if (thread.participant_1 !== user.id && thread.participant_2 !== user.id) {
-      console.log('[ATTACHMENTS] User not participant:', user.id, threadId);
+    // Verificar que el usuario es participante (comparar con PROFILE ID, no USER ID)
+    const isParticipant = conversation.aId === userProfile.id || conversation.bId === userProfile.id;
+
+    if (!isParticipant) {
+      console.log('[ATTACHMENTS] User not participant:', user.id, 'profileId:', userProfile.id, threadId);
       return NextResponse.json(
         { error: 'No tienes acceso a este hilo', code: 'FORBIDDEN' },
         { status: 403 }
       );
     }
+
+    console.log('[ATTACHMENTS] Thread validation OK - user is participant (PRISMA schema)');
 
     // 4. Validar límites de plan
     const validation = await validateAttachmentUpload(user.id, {
@@ -210,18 +234,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 7. Si no hay messageId, crear mensaje temporal o esperar a que se cree
+    // 7. Si no hay messageId, crear mensaje temporal en tabla PRISMA
     let finalMessageId = messageId;
     
     if (!finalMessageId) {
-      // Crear un mensaje placeholder que se actualizará cuando se envíe el mensaje real
+      // Generar UUID para el mensaje
+      const messageUuid = crypto.randomUUID();
+      
+      // Crear un mensaje placeholder en tabla Message (PRISMA)
       const { data: newMessage, error: messageError } = await supabase
-        .from('messages')
+        .from('Message')
         .insert({
-          conversation_id: threadId,
-          sender_id: user.id,
+          id: messageUuid,  // PRISMA requiere ID explícito
+          conversationId: threadId,
+          senderId: userProfile.id,  // PRISMA usa PROFILE ID, no USER ID
           body: '[Adjunto]',
-          is_read: false
+          isRead: false
         })
         .select()
         .single();
@@ -242,15 +270,15 @@ export async function POST(request: NextRequest) {
       finalMessageId = newMessage.id;
     }
 
-    // 8. Crear registro en DB
+    // 8. Crear registro en DB usando tabla PRISMA MessageAttachment
     const { data: attachment, error: dbError } = await supabase
-      .from('message_attachments')
+      .from('MessageAttachment')
       .insert({
-        message_id: finalMessageId,
-        user_id: user.id,
+        messageId: finalMessageId,
+        userId: user.id,
         path: storagePath,
         mime: file.type,
-        size_bytes: file.size
+        sizeBytes: file.size
       })
       .select()
       .single();
@@ -279,7 +307,7 @@ export async function POST(request: NextRequest) {
 
     const signedUrl = signedUrlData?.signedUrl || '';
 
-    console.log('[ATTACHMENTS] SUCCESS', {
+    console.log('[ATTACHMENTS] SUCCESS - Using PRISMA MessageAttachment table', {
       userId: user.id,
       threadId,
       messageId: finalMessageId,
@@ -289,14 +317,15 @@ export async function POST(request: NextRequest) {
     });
 
     // 9.5. Track upload success
-    analytics.attachmentUpload({
-      threadId,
-      messageId: finalMessageId || undefined,
-      mime: file.type,
-      sizeBytes: file.size,
-      planTier,
-      result: 'success'
-    }).catch(err => console.error('[ATTACHMENTS] Analytics error:', err));
+    // TODO: Move analytics to client-side or use server-compatible tracking
+    // analytics.attachmentUpload({
+    //   threadId,
+    //   messageId: finalMessageId || undefined,
+    //   mime: file.type,
+    //   sizeBytes: file.size,
+    //   planTier,
+    //   result: 'success'
+    // }).catch(err => console.error('[ATTACHMENTS] Analytics error:', err));
 
     // 10. Respuesta exitosa
     return NextResponse.json({
@@ -305,9 +334,9 @@ export async function POST(request: NextRequest) {
         id: attachment.id,
         url: signedUrl,
         mime: file.type,
-        sizeBytes: file.size,
+        sizeBytes: attachment.sizeBytes,
         fileName: file.name,
-        createdAt: attachment.created_at
+        createdAt: attachment.createdAt
       },
       messageId: finalMessageId
     });
@@ -316,15 +345,16 @@ export async function POST(request: NextRequest) {
     console.error('[ATTACHMENTS] Exception:', error);
     
     // Track upload error
-    const userLimits = await getUserPlanLimits(user?.id || '').catch(() => null);
-    analytics.attachmentUpload({
-      threadId: '',
-      mime: 'unknown',
-      sizeBytes: 0,
-      planTier: userLimits?.plan_tier || 'free',
-      result: 'error',
-      errorCode: 'INTERNAL_ERROR'
-    }).catch(err => console.error('[ATTACHMENTS] Analytics error:', err));
+    // TODO: Move analytics to client-side or use server-compatible tracking
+    // const userLimits = await getUserPlanLimits(user?.id || '').catch(() => null);
+    // analytics.attachmentUpload({
+    //   threadId: '',
+    //   mime: 'unknown',
+    //   sizeBytes: 0,
+    //   planTier: userLimits?.plan_tier || 'free',
+    //   result: 'error',
+    //   errorCode: 'INTERNAL_ERROR'
+    // }).catch(err => console.error('[ATTACHMENTS] Analytics error:', err));
     
     return NextResponse.json(
       { 
