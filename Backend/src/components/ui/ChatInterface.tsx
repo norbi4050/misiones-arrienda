@@ -499,29 +499,54 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
                                 mime: att.mime
                               })
                               
-                              const handleDownload = async (e: React.MouseEvent) => {
+                              const handleDownload = (e: React.MouseEvent) => {
                                 e.preventDefault()
+                                e.stopPropagation()
+                                
                                 if (!att.url) {
                                   toast.error('URL de descarga no disponible')
+                                  console.error('[Download] No URL available for attachment:', att.id)
                                   return
                                 }
                                 
+                                console.log('[Download] Iniciando descarga:', {
+                                  id: att.id,
+                                  fileName: att.fileName,
+                                  url: att.url
+                                })
+                                
                                 try {
-                                  const response = await fetch(att.url)
-                                  if (!response.ok) throw new Error('Error al descargar')
+                                  // Método 1: Descarga directa usando <a> tag (más confiable con signed URLs)
+                                  const link = document.createElement('a')
+                                  link.href = att.url
+                                  link.download = att.fileName || 'archivo'
+                                  link.target = '_blank'
+                                  link.rel = 'noopener noreferrer'
                                   
-                                  const blob = await response.blob()
-                                  const url = window.URL.createObjectURL(blob)
-                                  const a = document.createElement('a')
-                                  a.href = url
-                                  a.download = att.fileName || 'archivo'
-                                  document.body.appendChild(a)
-                                  a.click()
-                                  window.URL.revokeObjectURL(url)
-                                  document.body.removeChild(a)
+                                  // Agregar al DOM temporalmente
+                                  document.body.appendChild(link)
+                                  link.click()
+                                  
+                                  // Limpiar después de un pequeño delay
+                                  setTimeout(() => {
+                                    if (document.body.contains(link)) {
+                                      document.body.removeChild(link)
+                                    }
+                                  }, 100)
+                                  
+                                  console.log('[Download] Descarga iniciada exitosamente')
+                                  toast.success('Descargando archivo...')
                                 } catch (error) {
-                                  console.error('[Download] Error:', error)
-                                  toast.error('Error al descargar el archivo')
+                                  console.error('[Download] Error al iniciar descarga:', error)
+                                  
+                                  // Fallback: Abrir en nueva pestaña
+                                  try {
+                                    window.open(att.url, '_blank', 'noopener,noreferrer')
+                                    toast.info('Archivo abierto en nueva pestaña')
+                                  } catch (fallbackError) {
+                                    console.error('[Download] Fallback también falló:', fallbackError)
+                                    toast.error('No se pudo descargar el archivo. Intenta de nuevo.')
+                                  }
                                 }
                               }
                               
