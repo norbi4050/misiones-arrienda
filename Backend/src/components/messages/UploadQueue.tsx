@@ -53,9 +53,21 @@ interface UploadQueueItemProps {
 
 function UploadQueueItem({ queuedFile, onRemove, onCancel }: UploadQueueItemProps) {
   const { id, file, status, progress, error } = queuedFile
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   const isImage = file.type.startsWith('image/')
   const isPdf = file.type === 'application/pdf'
+
+  // Generate image preview
+  useState(() => {
+    if (isImage) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  })
 
   const getStatusIcon = () => {
     switch (status) {
@@ -92,9 +104,15 @@ function UploadQueueItem({ queuedFile, onRemove, onCancel }: UploadQueueItemProp
       ${getStatusColor()}
       transition-all duration-200
     `}>
-      {/* Icon */}
+      {/* Preview/Icon */}
       <div className="shrink-0">
-        {isImage ? (
+        {isImage && imagePreview ? (
+          <img 
+            src={imagePreview} 
+            alt={file.name}
+            className="h-12 w-12 object-cover rounded border border-gray-200"
+          />
+        ) : isImage ? (
           <ImageIcon className="h-5 w-5 text-gray-600" />
         ) : isPdf ? (
           <FileText className="h-5 w-5 text-red-600" />

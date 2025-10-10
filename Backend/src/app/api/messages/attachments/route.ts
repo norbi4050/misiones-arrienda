@@ -234,47 +234,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 7. Si no hay messageId, crear mensaje temporal en tabla PRISMA
-    let finalMessageId = messageId;
+    // 7. Generar UUID para el adjunto (NO crear mensaje aún)
+    const attachmentUuid = crypto.randomUUID();
     
-    if (!finalMessageId) {
-      // Generar UUID para el mensaje
-      const messageUuid = crypto.randomUUID();
-      
-      // Crear un mensaje placeholder en tabla Message (PRISMA)
-      const { data: newMessage, error: messageError } = await supabase
-        .from('Message')
-        .insert({
-          id: messageUuid,  // PRISMA requiere ID explícito
-          conversationId: threadId,
-          senderId: userProfile.id,  // PRISMA usa PROFILE ID, no USER ID
-          body: '[Adjunto]',
-          isRead: false
-        })
-        .select()
-        .single();
-
-      if (messageError || !newMessage) {
-        // Rollback: eliminar archivo
-        await supabase.storage
-          .from('message-attachments')
-          .remove([storagePath]);
-
-        console.error('[ATTACHMENTS] Message creation error:', messageError);
-        return NextResponse.json(
-          { error: 'Error al crear el mensaje', code: 'DB_ERROR' },
-          { status: 500 }
-        );
-      }
-
-      finalMessageId = newMessage.id;
-    }
-
     // 8. Crear registro en DB usando tabla PRISMA MessageAttachment
+    // NOTA: messageId será NULL hasta que el usuario envíe el mensaje
     const { data: attachment, error: dbError } = await supabase
       .from('MessageAttachment')
       .insert({
-        messageId: finalMessageId,
+        id: attachmentUuid,
+        messageId: messageId || null,  // NULL si no hay mensaje aún
         userId: user.id,
         path: storagePath,
         mime: file.type,
@@ -307,13 +276,13 @@ export async function POST(request: NextRequest) {
 
     const signedUrl = signedUrlData?.signedUrl || '';
 
-    console.log('[ATTACHMENTS] SUCCESS - Using PRISMA MessageAttachment table', {
+    console.log('[ATTACHMENTS] SUCCESS - File uploaded, waiting for message send', {
       userId: user.id,
       threadId,
-      messageId: finalMessageId,
       attachmentId: attachment.id,
       mime: file.type,
-      size: file.size
+      size: file.size,
+      messageId: messageId || 'pending'
     });
 
     // 9.5. Track upload success
@@ -338,7 +307,7 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         createdAt: attachment.createdAt
       },
-      messageId: finalMessageId
+      messageId: messageId || null  // NULL si no hay mensaje aún
     });
 
   } catch (error) {
