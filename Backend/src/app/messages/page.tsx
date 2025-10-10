@@ -178,15 +178,31 @@ export default function MessagesPage() {
       setError(null)
       
       // Determinar endpoint según el tab activo
+      // FIX 304: Agregar timestamp para evitar caché
+      const timestamp = Date.now()
       const endpoint = activeTab === 'community' 
-        ? '/api/comunidad/messages' 
-        : '/api/messages/threads'
+        ? `/api/comunidad/messages?_t=${timestamp}` 
+        : `/api/messages/threads?_t=${timestamp}`
       
       console.log(`[MessagesPage] Fetching conversations from ${endpoint}`)
       
+      // FIX 304: Agregar headers anti-caché explícitos
       const response = await fetch(endpoint, {
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       })
+      
+      // FIX 304: Manejar explícitamente status 304
+      if (response.status === 304) {
+        console.log('[MessagesPage] 304 Not Modified - usando datos cacheados del navegador')
+        setLoading(false)
+        return
+      }
       
       if (response.status === 401) {
         router.push('/login')
@@ -197,7 +213,15 @@ export default function MessagesPage() {
         throw new Error('Error al cargar conversaciones')
       }
       
-      const responseData = await response.json()
+      
+      // FIX 304: Try-catch robusto para response.json()
+      let responseData
+      try {
+        responseData = await response.json()
+      } catch (jsonError) {
+        console.error('[MessagesPage] Error parsing JSON:', jsonError)
+        throw new Error('Error al procesar respuesta del servidor')
+      }
       
       // Manejar respuesta según el endpoint
       if (activeTab === 'community') {
@@ -278,6 +302,7 @@ export default function MessagesPage() {
       console.error('[MESSAGES] Error fetching conversations:', err)
       setError(err.message)
     } finally {
+      // FIX 304: GARANTIZAR que setLoading(false) SIEMPRE se ejecute
       setLoading(false)
     }
   }
