@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[ATTACHMENTS] Upload request:', {
-      userId: user.id,
+      authUserId: user.id,
       threadId,
       messageId,
       fileName: file.name,
@@ -291,12 +291,14 @@ export async function POST(request: NextRequest) {
     const signedUrl = signedUrlData?.signedUrl || '';
 
     console.log('[ATTACHMENTS] SUCCESS - File uploaded, waiting for message send', {
-      userId: user.id,
+      authUserId: user.id,
+      userProfileId: userProfile.id,
       threadId,
       attachmentId: attachment.id,
       mime: file.type,
       size: file.size,
-      messageId: messageId || 'pending'
+      messageId: messageId || 'pending',
+      savedWithUserId: userProfile.id  // ← Este es el ID que se guardó en la DB
     });
 
     // 9.5. Track upload success

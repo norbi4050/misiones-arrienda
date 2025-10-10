@@ -107,14 +107,23 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
       const data = await response.json()
       
       // PROMPT 4: Normalización defensiva
-      const normalizedMessages = (data.messages || []).map((msg: any) => ({
-        id: msg.id || `temp-${Date.now()}`,
-        content: msg.content || '',
-        createdAt: msg.createdAt || new Date().toISOString(),
-        senderId: msg.senderId || '',
-        isMine: Boolean(msg.isMine),  // ← Asegurar boolean
-        attachments: msg.attachments || []
-      }))
+      const normalizedMessages = (data.messages || []).map((msg: any) => {
+        console.log('[ChatInterface] Normalizing message:', {
+          id: msg.id,
+          hasAttachments: !!msg.attachments,
+          attachmentsCount: msg.attachments?.length || 0,
+          attachments: msg.attachments
+        })
+        
+        return {
+          id: msg.id || `temp-${Date.now()}`,
+          content: msg.content || '',
+          createdAt: msg.createdAt || new Date().toISOString(),
+          senderId: msg.senderId || '',
+          isMine: Boolean(msg.isMine),
+          attachments: msg.attachments || []
+        }
+      })
 
       const normalizedThread = data.thread ? {
         threadId: data.thread.threadId || threadId,

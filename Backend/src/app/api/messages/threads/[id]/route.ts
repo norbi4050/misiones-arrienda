@@ -241,13 +241,21 @@ export async function GET(
 
     // Obtener adjuntos si existen
     const messageIds = formattedMessages.map(m => m.id)
+    console.log('[GET Thread] Fetching attachments for message IDs:', messageIds.length)
+    
     const attachmentsMap = await getMessagesAttachments(messageIds)
+    console.log('[GET Thread] Attachments map size:', attachmentsMap.size)
+    console.log('[GET Thread] Attachments map entries:', Array.from(attachmentsMap.entries()).map(([id, atts]) => ({ messageId: id, count: atts.length })))
     
     // Agregar attachments a cada mensaje
-    const messagesWithAttachments = formattedMessages.map(msg => ({
-      ...msg,
-      attachments: attachmentsMap.get(msg.id) || []
-    }))
+    const messagesWithAttachments = formattedMessages.map(msg => {
+      const attachments = attachmentsMap.get(msg.id) || []
+      console.log(`[GET Thread] Message ${msg.id} has ${attachments.length} attachments`)
+      return {
+        ...msg,
+        attachments
+      }
+    })
 
     // PROMPT D1 & D2: Información enriquecida del thread para el header
     // NOTA: Priorizar user_profiles.avatar_url sobre User.avatar porque user_profiles es la fuente correcta

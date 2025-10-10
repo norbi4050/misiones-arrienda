@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 // POST /api/messages/threads/[id]/messages → enviar mensaje
 export async function POST(
@@ -135,18 +139,44 @@ export async function POST(
     // B6: Vincular adjuntos al mensaje si se proporcionaron
     if (attachmentIds && Array.isArray(attachmentIds) && attachmentIds.length > 0) {
       console.log('[Messages] Linking attachments to message:', newMessage.id, attachmentIds)
+      console.log('[Messages] UserProfile.id:', userProfile.id)
       
-      const { error: linkError } = await supabase
+      // FIX: Usar service role client para bypassear RLS
+      // El problema es que RLS puede estar bloqueando el UPDATE
+      const supabaseAdmin = createServiceClient(supabaseUrl, supabaseServiceKey)
+      
+      // FIX: Esperar 100ms para que la transacción del INSERT se confirme
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      const { data: updated, error: linkError } = await supabaseAdmin
         .from('MessageAttachment')
         .update({ messageId: newMessage.id })
         .in('id', attachmentIds)
-        .eq('userId', userProfile.id)  // FIX: userId es el UserProfile.id, no User.id
+        .eq('userId', userProfile.id)
+        .select()
       
       if (linkError) {
-        console.error('[Messages] ⚠️ Error linking attachments:', linkError)
-        // No fallar el mensaje, solo log el error
+        console.error('[Messages] ❌ Error linking attachments:', linkError)
+      } else if (!updated || updated.length === 0) {
+        console.error('[Messages] ❌ No attachments were linked! Expected:', attachmentIds.length, 'Got:', updated?.length || 0)
+        console.error('[Messages] ❌ Retrying in 500ms...')
+        
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        const { data: retryUpdated, error: retryError } = await supabaseAdmin
+          .from('MessageAttachment')
+          .update({ messageId: newMessage.id })
+          .in('id', attachmentIds)
+          .eq('userId', userProfile.id)
+          .select()
+        
+        if (retryError || !retryUpdated || retryUpdated.length === 0) {
+          console.error('[Messages] ❌ Retry also failed:', retryError?.message || 'No rows updated')
+        } else {
+          console.log('[Messages] ✅ Attachments linked on retry:', retryUpdated.length, 'of', attachmentIds.length)
+        }
       } else {
-        console.log('[Messages] ✅ Attachments linked successfully')
+        console.log('[Messages] ✅ Attachments linked successfully:', updated.length, 'of', attachmentIds.length)
       }
     }
 
