@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download, FileText, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SafeAvatar } from '@/components/ui/SafeAvatar'
@@ -453,6 +453,42 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
                             : 'bg-white text-gray-900 border border-gray-200 rounded-2xl rounded-bl-md shadow-sm'
                         }`}
                       >
+                        {/* Adjuntos */}
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="mb-2 space-y-2">
+                            {message.attachments.map((att: any) => {
+                              const isImage = att.mime?.startsWith('image/')
+                              const isPdf = att.mime === 'application/pdf'
+                              
+                              return (
+                                <a
+                                  key={att.id}
+                                  href={att.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`
+                                    flex items-center gap-2 p-2 rounded-lg
+                                    ${isMine ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-100 hover:bg-gray-200'}
+                                    transition-colors
+                                  `}
+                                >
+                                  {isImage ? (
+                                    <ImageIcon className={`h-4 w-4 ${isMine ? 'text-blue-100' : 'text-gray-600'}`} />
+                                  ) : isPdf ? (
+                                    <FileText className={`h-4 w-4 ${isMine ? 'text-blue-100' : 'text-red-600'}`} />
+                                  ) : (
+                                    <FileText className={`h-4 w-4 ${isMine ? 'text-blue-100' : 'text-gray-600'}`} />
+                                  )}
+                                  <span className={`text-xs truncate flex-1 ${isMine ? 'text-blue-50' : 'text-gray-700'}`}>
+                                    {att.fileName}
+                                  </span>
+                                  <Download className={`h-3 w-3 ${isMine ? 'text-blue-100' : 'text-gray-500'}`} />
+                                </a>
+                              )
+                            })}
+                          </div>
+                        )}
+
                         <p className="text-sm whitespace-pre-wrap break-words">
                           {message.content}
                         </p>

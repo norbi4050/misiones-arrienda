@@ -17,13 +17,15 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { content } = await request.json()
+    const { content, attachmentIds } = await request.json()
 
     if (!content || !content.trim()) {
       return NextResponse.json({ 
         error: 'Contenido del mensaje requerido' 
       }, { status: 400 })
     }
+
+    console.log('[Messages] Creating message with attachments:', attachmentIds)
 
     // Intentar primero con tabla Conversation (PRISMA schema)
     let thread: any = null
@@ -128,6 +130,24 @@ export async function POST(
     if (messageError) {
       console.error('[Messages] ❌ Error creating message:', messageError)
       return NextResponse.json({ error: 'Error al enviar mensaje' }, { status: 500 })
+    }
+
+    // B6: Vincular adjuntos al mensaje si se proporcionaron
+    if (attachmentIds && Array.isArray(attachmentIds) && attachmentIds.length > 0) {
+      console.log('[Messages] Linking attachments to message:', newMessage.id, attachmentIds)
+      
+      const { error: linkError } = await supabase
+        .from('MessageAttachment')
+        .update({ messageId: newMessage.id })
+        .in('id', attachmentIds)
+        .eq('userId', user.id)  // Seguridad: solo adjuntos del usuario actual
+      
+      if (linkError) {
+        console.error('[Messages] ⚠️ Error linking attachments:', linkError)
+        // No fallar el mensaje, solo log el error
+      } else {
+        console.log('[Messages] ✅ Attachments linked successfully')
+      }
     }
 
     // PROMPT A: Write-through de metadatos de conversación (best-effort)

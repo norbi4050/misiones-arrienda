@@ -13,12 +13,12 @@ export async function getMessageAttachments(messageId: string): Promise<Attachme
   try {
     const supabase = createClient();
     
-    // Obtener adjuntos del mensaje
+    // Obtener adjuntos del mensaje desde tabla PRISMA
     const { data: attachments, error } = await supabase
-      .from('message_attachments')
+      .from('MessageAttachment')
       .select('*')
-      .eq('message_id', messageId)
-      .order('created_at', { ascending: true });
+      .eq('messageId', messageId)
+      .order('createdAt', { ascending: true });
 
     if (error) {
       console.error('[Attachments Helper] Error fetching attachments:', error);
@@ -42,11 +42,11 @@ export async function getMessageAttachments(messageId: string): Promise<Attachme
           id: att.id,
           url: signedUrlData?.signedUrl || '',
           mime: att.mime,
-          sizeBytes: att.size_bytes,
+          sizeBytes: att.sizeBytes,
           width: att.width,
           height: att.height,
           fileName,
-          createdAt: att.created_at
+          createdAt: att.createdAt
         };
       })
     );
@@ -71,12 +71,12 @@ export async function getMessagesAttachments(
 
     const supabase = createClient();
     
-    // Obtener todos los adjuntos de una vez
+    // Obtener todos los adjuntos de una vez desde tabla PRISMA
     const { data: attachments, error } = await supabase
-      .from('message_attachments')
+      .from('MessageAttachment')
       .select('*')
-      .in('message_id', messageIds)
-      .order('created_at', { ascending: true });
+      .in('messageId', messageIds)
+      .order('createdAt', { ascending: true});
 
     if (error || !attachments) {
       console.error('[Attachments Helper] Batch error:', error);
@@ -97,16 +97,16 @@ export async function getMessagesAttachments(
         id: att.id,
         url: signedUrlData?.signedUrl || '',
         mime: att.mime,
-        sizeBytes: att.size_bytes,
+        sizeBytes: att.sizeBytes,
         width: att.width,
         height: att.height,
         fileName,
-        createdAt: att.created_at
+        createdAt: att.createdAt
       };
 
-      const existing = attachmentsByMessage.get(att.message_id) || [];
+      const existing = attachmentsByMessage.get(att.messageId) || [];
       existing.push(attachment);
-      attachmentsByMessage.set(att.message_id, existing);
+      attachmentsByMessage.set(att.messageId, existing);
     }
 
     return attachmentsByMessage;
