@@ -215,7 +215,29 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
         throw new Error('Error al enviar mensaje')
       }
 
-      await loadThread(false)
+      // Recargar mensajes sin mostrar loading
+      const url = new URL(`/api/messages/threads/${threadId}`, window.location.origin)
+      url.searchParams.set('limit', '30')
+
+      const reloadResponse = await fetch(url.toString(), {
+        credentials: 'include'
+      })
+
+      if (reloadResponse.ok) {
+        const reloadData = await reloadResponse.json()
+        const reloadedMessages = (reloadData.messages || []).map((msg: any) => ({
+          id: msg.id || `temp-${Date.now()}`,
+          content: msg.content || '',
+          createdAt: msg.createdAt || new Date().toISOString(),
+          senderId: msg.senderId || '',
+          isMine: Boolean(msg.isMine),
+          attachments: msg.attachments || []
+        }))
+        
+        setMessages(reloadedMessages)
+        setTimeout(() => scrollToBottom(), 100)
+      }
+      
       onThreadUpdate()
     } catch (error) {
       console.error('[MessagesUI] Error sending message:', error)
@@ -460,14 +482,46 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
                               const isImage = att.mime?.startsWith('image/')
                               const isPdf = att.mime === 'application/pdf'
                               
+                              // Debug: Log attachment data
+                              console.log('[ATTACHMENT DEBUG]', {
+                                id: att.id,
+                                fileName: att.fileName,
+                                url: att.url,
+                                mime: att.mime
+                              })
+                              
+                              const handleDownload = async (e: React.MouseEvent) => {
+                                e.preventDefault()
+                                if (!att.url) {
+                                  toast.error('URL de descarga no disponible')
+                                  return
+                                }
+                                
+                                try {
+                                  const response = await fetch(att.url)
+                                  if (!response.ok) throw new Error('Error al descargar')
+                                  
+                                  const blob = await response.blob()
+                                  const url = window.URL.createObjectURL(blob)
+                                  const a = document.createElement('a')
+                                  a.href = url
+                                  a.download = att.fileName || 'archivo'
+                                  document.body.appendChild(a)
+                                  a.click()
+                                  window.URL.revokeObjectURL(url)
+                                  document.body.removeChild(a)
+                                } catch (error) {
+                                  console.error('[Download] Error:', error)
+                                  toast.error('Error al descargar el archivo')
+                                }
+                              }
+                              
                               return (
-                                <a
+                                <button
                                   key={att.id}
-                                  href={att.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                  onClick={handleDownload}
                                   className={`
-                                    flex items-center gap-2 p-2 rounded-lg
+                                    flex items-center gap-2 p-2 rounded-lg cursor-pointer w-full
                                     ${isMine ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-100 hover:bg-gray-200'}
                                     transition-colors
                                   `}
@@ -479,11 +533,11 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
                                   ) : (
                                     <FileText className={`h-4 w-4 ${isMine ? 'text-blue-100' : 'text-gray-600'}`} />
                                   )}
-                                  <span className={`text-xs truncate flex-1 ${isMine ? 'text-blue-50' : 'text-gray-700'}`}>
-                                    {att.fileName}
+                                  <span className={`text-xs truncate flex-1 text-left ${isMine ? 'text-blue-50' : 'text-gray-700'}`}>
+                                    {att.fileName || 'Archivo'}
                                   </span>
                                   <Download className={`h-3 w-3 ${isMine ? 'text-blue-100' : 'text-gray-500'}`} />
-                                </a>
+                                </button>
                               )
                             })}
                           </div>

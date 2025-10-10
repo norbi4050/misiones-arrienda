@@ -140,7 +140,7 @@ export async function POST(
         .from('MessageAttachment')
         .update({ messageId: newMessage.id })
         .in('id', attachmentIds)
-        .eq('userId', user.id)  // Seguridad: solo adjuntos del usuario actual
+        .eq('userId', userProfile.id)  // FIX: userId es el UserProfile.id, no User.id
       
       if (linkError) {
         console.error('[Messages] ⚠️ Error linking attachments:', linkError)

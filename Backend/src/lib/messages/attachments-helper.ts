@@ -32,9 +32,21 @@ export async function getMessageAttachments(messageId: string): Promise<Attachme
     // Generar URLs firmadas para cada adjunto
     const attachmentsWithUrls = await Promise.all(
       attachments.map(async (att) => {
-        const { data: signedUrlData } = await supabase.storage
+        console.log('[Attachments Helper] Generando signed URL para:', att.path);
+        
+        const { data: signedUrlData, error: urlError } = await supabase.storage
           .from('message-attachments')
           .createSignedUrl(att.path, 3600); // 1 hora
+
+        if (urlError) {
+          console.error('[Attachments Helper] Error creating signed URL:', urlError);
+        }
+        
+        console.log('[Attachments Helper] Signed URL result:', {
+          path: att.path,
+          signedUrl: signedUrlData?.signedUrl,
+          error: urlError
+        });
 
         const fileName = att.path.split('/').pop() || 'archivo';
 
@@ -87,9 +99,21 @@ export async function getMessagesAttachments(
     const attachmentsByMessage = new Map<string, Attachment[]>();
 
     for (const att of attachments) {
-      const { data: signedUrlData } = await supabase.storage
+      console.log('[Attachments Helper BATCH] Generando signed URL para:', att.path);
+      
+      const { data: signedUrlData, error: urlError } = await supabase.storage
         .from('message-attachments')
         .createSignedUrl(att.path, 3600);
+
+      if (urlError) {
+        console.error('[Attachments Helper BATCH] Error creating signed URL:', urlError);
+      }
+      
+      console.log('[Attachments Helper BATCH] Signed URL result:', {
+        path: att.path,
+        signedUrl: signedUrlData?.signedUrl,
+        error: urlError
+      });
 
       const fileName = att.path.split('/').pop() || 'archivo';
 

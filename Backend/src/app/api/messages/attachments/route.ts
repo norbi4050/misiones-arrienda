@@ -191,7 +191,8 @@ export async function POST(request: NextRequest) {
     const sanitizedName = sanitizeFileNameNew(file.name);
     const timestamp = Date.now();
     const fileName = `${timestamp}-${sanitizedName}`;
-    const storagePath = `${user.id}/${threadId}/${fileName}`;
+    // IMPORTANTE: Usar userProfile.id en el path, NO user.id
+    const storagePath = `${userProfile.id}/${threadId}/${fileName}`;
 
     // 5.1. Validar path (prevenir path traversal)
     if (!validateFilePath(storagePath)) {
@@ -219,7 +220,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Upload a storage
-    const { error: uploadError } = await supabase.storage
+    console.log('[ATTACHMENTS] Uploading to storage:', {
+      bucket: 'message-attachments',
+      path: storagePath,
+      size: fileBuffer.byteLength,
+      contentType: file.type
+    });
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from('message-attachments')
       .upload(storagePath, fileBuffer, {
         contentType: file.type,
@@ -233,18 +241,24 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    
+    console.log('[ATTACHMENTS] Upload SUCCESS:', {
+      path: uploadData.path,
+      fullPath: uploadData.fullPath
+    });
 
     // 7. Generar UUID para el adjunto (NO crear mensaje aún)
     const attachmentUuid = crypto.randomUUID();
     
     // 8. Crear registro en DB usando tabla PRISMA MessageAttachment
     // NOTA: messageId será NULL hasta que el usuario envíe el mensaje
+    // IMPORTANTE: userId debe ser userProfile.id, NO user.id (Auth ID)
     const { data: attachment, error: dbError } = await supabase
       .from('MessageAttachment')
       .insert({
         id: attachmentUuid,
         messageId: messageId || null,  // NULL si no hay mensaje aún
-        userId: user.id,
+        userId: userProfile.id,  // ← FIX: usar userProfile.id en lugar de user.id
         path: storagePath,
         mime: file.type,
         sizeBytes: file.size
