@@ -114,8 +114,8 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
           senderId: msg.senderId || '',
           isMine: Boolean(msg.isMine),
           attachments: msg.attachments || []
-        }
-      })
+        })
+      )
 
       const normalizedThread = data.thread ? {
         threadId: data.thread.threadId || threadId,
@@ -599,3 +599,4 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
     </div>
   )
 }
+

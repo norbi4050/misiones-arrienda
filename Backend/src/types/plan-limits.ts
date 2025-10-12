@@ -37,19 +37,22 @@ export interface PlanLimits {
 // Constantes de límites de adjuntos por plan
 export const PLAN_ATTACHMENT_LIMITS = {
   free: {
+    maxFiles: 1,
     maxSizeMB: 5,
     dailyCount: 20,
-    allowedMimes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
+    allowedMimes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] as const
   },
   pro: {
+    maxFiles: 5,
     maxSizeMB: 15,
     dailyCount: 200,
-    allowedMimes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
+    allowedMimes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] as const
   },
   business: {
+    maxFiles: 10,
     maxSizeMB: 50,
     dailyCount: 1000,
-    allowedMimes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
+    allowedMimes: ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'] as const
   }
 } as const;
 
