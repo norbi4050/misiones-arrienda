@@ -506,17 +506,28 @@ export async function GET(request: NextRequest) {
     console.log(`[THREADS GET] ✅ ${threads.length} hilos en ${duration}ms usando rama ${schema}`)
 
     // PROMPT 2 & C & D4: Formato unificado para el cliente
-    return NextResponse.json({
-      success: true,
-      threads,
-      _meta: {
-        schema,
-        schema_reason: schemaReason,
-        count: threads.length,
-        duration_ms: duration,
-        version: 'v2_displayName'  // PROMPT D4: versionKey para forzar rehidratación
+    // FIX 304: Agregar headers anti-cache explícitos
+    return NextResponse.json(
+      {
+        success: true,
+        threads,
+        _meta: {
+          schema,
+          schema_reason: schemaReason,
+          count: threads.length,
+          duration_ms: duration,
+          version: 'v2_displayName'  // PROMPT D4: versionKey para forzar rehidratación
+        }
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'Surrogate-Control': 'no-store'
+        }
       }
-    })
+    )
 
   } catch (error: any) {
     console.error('[THREADS GET] ❌ Error:', error)

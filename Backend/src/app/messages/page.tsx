@@ -191,16 +191,19 @@ export default function MessagesPage() {
         credentials: 'include',
         cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Cache-Control': 'no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0',
           'Pragma': 'no-cache',
           'Expires': '0'
         }
       })
       
-      // FIX 304: Manejar explícitamente status 304
+      
+      
+      // FIX 304: Si recibimos 304, forzar reload completo para bypass cache
       if (response.status === 304) {
-        console.log('[MessagesPage] 304 Not Modified - usando datos cacheados del navegador')
-        setLoading(false)
+        console.warn('[MessagesPage] 304 Not Modified detected - forcing hard reload to bypass cache')
+        // Forzar reload con cache bypass
+        window.location.reload()
         return
       }
       

@@ -36,7 +36,18 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ conversations, count: conversations.length });
+    // FIX 304: Agregar headers anti-cache explícitos
+    return NextResponse.json(
+      { conversations, count: conversations.length },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'Surrogate-Control': 'no-store'
+        }
+      }
+    );
   } catch (e: any) {
     console.error('[community/messages] unexpected', e);
     return NextResponse.json({ conversations: [], error: e?.message ?? 'unexpected' });
