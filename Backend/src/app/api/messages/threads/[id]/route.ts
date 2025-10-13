@@ -183,7 +183,8 @@ export async function GET(
     const isReadField = isPrismaSchema ? 'isRead' : 'is_read'
     const bodyField = 'body'  // Siempre 'body' en ambos schemas
 
-    // PROMPT 1: Orden ascendente (más antiguos primero)
+    // ✅ FIX PAGINACIÓN: Traer últimos N mensajes por defecto (más recientes)
+    // Si hay cursor (load older), traer mensajes anteriores a ese cursor
     let messagesQuery = supabase
       .from(messageTable)
       .select(`
@@ -192,26 +193,31 @@ export async function GET(
         ${bodyField},
         ${createdAtField},
         ${isReadField}
-      `)
+      `, { count: 'exact' })
       .eq(conversationIdField, conversationId)
 
     if (cursor) {
+      // Cargar mensajes más antiguos (antes del cursor)
       messagesQuery = messagesQuery
         .lt(createdAtField, cursor)
-        .order(createdAtField, { ascending: true })  // ← PROMPT 1: Ascendente
+        .order(createdAtField, { ascending: false })
         .limit(limit)
     } else {
+      // Primera carga: traer los últimos N mensajes (más recientes)
       messagesQuery = messagesQuery
-        .order(createdAtField, { ascending: true })  // ← PROMPT 1: Ascendente
+        .order(createdAtField, { ascending: false })
         .limit(limit)
     }
 
-    const { data: messages, error: messagesError } = await messagesQuery
+    const { data: messagesData, error: messagesError, count: totalCount } = await messagesQuery
 
     if (messagesError) {
       console.error('[GET Thread] ❌ Error fetching messages:', messagesError)
       return NextResponse.json({ error: 'Error al cargar mensajes' }, { status: 500 })
     }
+
+    // ✅ FIX: Revertir orden para UI (ascendente = cronológico)
+    const messages = (messagesData || []).reverse()
 
     // Marcar como leídos
     if (userProfile) {
@@ -312,14 +318,18 @@ export async function GET(
       }
     }
 
+    // ✅ FIX PAGINACIÓN: Calcular hasMoreOlder correctamente
+    const hasMoreOlder = totalCount ? totalCount > formattedMessages.length : false
+
     return NextResponse.json({
       success: true,
       messages: messagesWithAttachments,
       thread: threadInfo,
       pagination: {
-        cursor: formattedMessages.length > 0 ? formattedMessages[formattedMessages.length - 1].createdAt : null,
+        cursor: formattedMessages.length > 0 ? formattedMessages[0].createdAt : null,
         limit,
-        hasMore: formattedMessages.length === limit
+        hasMore: hasMoreOlder,
+        total: totalCount || 0
       }
     })
 

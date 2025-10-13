@@ -29,13 +29,17 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/api/messages')
+      // ✅ FIX: Usar endpoint canónico
+      const response = await fetch('/api/messages/threads', {
+        cache: 'no-store'
+      })
+      
       if (!response.ok) {
         throw new Error('Error al cargar conversaciones')
       }
       
       const data = await response.json()
-      setConversations(data.conversations || [])
+      setConversations(data.threads || data.conversations || [])
     } catch (err: any) {
       if (process.env.NODE_ENV !== 'production') {
         console.warn('Error fetching conversations (non-blocking):', err)
@@ -51,7 +55,8 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return false
 
     try {
-      const response = await fetch(`/api/messages/${conversationId}`, {
+      // ✅ FIX: Usar endpoint canónico
+      const response = await fetch(`/api/messages/threads/${conversationId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +86,8 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return null
 
     try {
-      const response = await fetch('/api/messages', {
+      // ✅ FIX: Usar endpoint canónico
+      const response = await fetch('/api/messages/threads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +108,7 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       // Refrescar conversaciones
       await fetchConversations()
       
-      return data.conversationId
+      return data.conversationId || data.threadId
     } catch (err: any) {
       console.error('Error creating conversation:', err)
       setError(err.message)
@@ -114,8 +120,9 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return
 
     try {
-      const response = await fetch(`/api/messages/${conversationId}/read`, {
-        method: 'POST'
+      // ✅ FIX: Usar endpoint canónico
+      const response = await fetch(`/api/messages/threads/${conversationId}`, {
+        method: 'PATCH'
       })
 
       if (response.ok) {
@@ -177,7 +184,11 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     if (!user) return []
 
     try {
-      const response = await fetch(`/api/messages/${conversationId}`)
+      // ✅ FIX: Usar endpoint canónico
+      const response = await fetch(`/api/messages/threads/${conversationId}`, {
+        cache: 'no-store'
+      })
+      
       if (!response.ok) {
         throw new Error('Error al cargar mensajes')
       }

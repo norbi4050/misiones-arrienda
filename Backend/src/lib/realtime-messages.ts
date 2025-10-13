@@ -5,11 +5,11 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export interface MessageRealtimePayload {
   id: string
-  conversation_id: string
-  sender_id: string
+  conversationId: string
+  senderId: string
   content: string
-  created_at: string
-  is_read: boolean
+  createdAt: string
+  isRead: boolean
   sender?: {
     id: string
     full_name: string
@@ -19,10 +19,10 @@ export interface MessageRealtimePayload {
 
 export interface ConversationRealtimePayload {
   id: string
-  last_message: string
-  last_message_time: string
-  updated_at: string
-  unread_count: number
+  lastMessage: string
+  lastMessageTime: string
+  updatedAt: string
+  unreadCount: number
 }
 
 /**
@@ -42,15 +42,15 @@ export const subscribeToMessages = (
       {
         event: 'INSERT',
         schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`
+        table: 'Message',
+        filter: `conversationId=eq.${conversationId}`
       },
       (payload: any) => {
         console.log('🔴 New message received:', payload)
         const newMessage = payload.new as MessageRealtimePayload
         
         // Solo procesar si no es del usuario actual (evitar duplicados optimistas)
-        if (newMessage.sender_id !== currentUserId) {
+        if (newMessage.senderId !== currentUserId) {
           onNewMessage(newMessage)
         }
       }
@@ -78,8 +78,8 @@ export const subscribeToConversations = (
       {
         event: 'UPDATE',
         schema: 'public',
-        table: 'conversations',
-        filter: `or(sender_id.eq.${userId},receiver_id.eq.${userId})`
+        table: 'Conversation',
+        filter: `id=eq.${userId}`
       },
       (payload: any) => {
         console.log('🔴 Conversation updated:', payload)

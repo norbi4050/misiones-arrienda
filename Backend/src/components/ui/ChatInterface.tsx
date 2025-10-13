@@ -230,9 +230,9 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
         const formattedMessage: Message = {
           id: newMessage.id,
           content: newMessage.content,
-          createdAt: newMessage.created_at,
-          senderId: newMessage.sender_id,
-          isMine: newMessage.sender_id === userId,
+          createdAt: newMessage.createdAt,
+          senderId: newMessage.senderId,
+          isMine: newMessage.senderId === userId,
           attachments: []
         }
 

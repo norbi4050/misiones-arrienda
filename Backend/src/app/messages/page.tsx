@@ -32,7 +32,7 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedconversationId, setselectedConversationId] = useState<string | null>(null)
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [creatingThread, setCreatingThread] = useState(false)
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null)
   const router = useRouter()
@@ -57,7 +57,7 @@ export default function MessagesPage() {
       
       // Detectar parámetros de la URL
       const userId = searchParams.get('userId')
-      const conversationId = searchParams.get('thread')
+      const threadId = searchParams.get('thread')
       
       // Prioridad 1: Si hay userId (nuevo flujo desde comunidad)
       if (userId && !threadId) {
@@ -65,7 +65,7 @@ export default function MessagesPage() {
       } 
       // Prioridad 2: Si hay threadId (flujo existente)
       else if (threadId) {
-        setselectedConversationId(threadId)
+        setSelectedConversationId(threadId)
       }
       
       // Configurar suscripción real-time para actualizaciones de threads (solo para properties)
@@ -109,7 +109,7 @@ export default function MessagesPage() {
         
         // Actualizar URL y abrir thread
         router.push(`/messages/${data.conversationId}`)
-        setselectedConversationId(data.conversationId)
+        setSelectedConversationId(data.conversationId)
         
         // Refrescar lista de conversaciones
         await fetchConversations()
@@ -144,9 +144,9 @@ export default function MessagesPage() {
             if (conv.id === updatedConversation.id) {
               return {
                 ...conv,
-                last_message: updatedConversation.last_message,
-                last_message_time: updatedConversation.last_message_time,
-                unread_count: updatedConversation.unread_count
+                last_message: updatedConversation.lastMessage,
+                last_message_time: updatedConversation.lastMessageTime,
+                unread_count: updatedConversation.unreadCount
               }
             }
             return conv
@@ -421,7 +421,7 @@ export default function MessagesPage() {
                     className="flex-shrink-0 cursor-pointer"
                     onClick={() => {
                       console.log('[MessagesUI] Thread seleccionado:', conversation.id)
-                      setselectedConversationId(conversation.id)
+                      setSelectedConversationId(conversation.id)
                       router.push(`/messages/${conversation.id}`)
                     }}
                   >
@@ -435,7 +435,7 @@ export default function MessagesPage() {
                     className="flex-1 min-w-0 cursor-pointer"
                     onClick={() => {
                       console.log('[MessagesUI] Thread seleccionado:', conversation.id)
-                      setselectedConversationId(conversation.id)
+                      setSelectedConversationId(conversation.id)
                       router.push(`/messages/${conversation.id}`)
                     }}
                   >
@@ -497,7 +497,7 @@ export default function MessagesPage() {
                         
                         // Si era la conversación seleccionada, deseleccionar
                         if (selectedConversationId === conversation.id) {
-                          setselectedConversationId(null)
+                          setSelectedConversationId(null)
                           router.push('/messages')
                         }
                       } catch (err: any) {
@@ -520,7 +520,7 @@ export default function MessagesPage() {
 
         {/* Panel derecho - Chat interface */}
         <div className="flex-1 flex flex-col">
-          <ChatInterface threadId={selectedconversationId} onThreadUpdate={fetchConversations} />
+          <ChatInterface conversationId={selectedConversationId} onThreadUpdate={fetchConversations} />
         </div>
       </div>
     )
@@ -675,7 +675,7 @@ export default function MessagesPage() {
                 key={conversation.id}
                 onClick={() => {
                   console.log('[MessagesUI] Thread seleccionado:', conversation.id)
-                  setselectedConversationId(conversation.id)
+                  setSelectedConversationId(conversation.id)
                   router.push(`/messages/${conversation.id}`)
                 }}
                 className={`bg-white rounded-lg border p-6 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer ${
