@@ -717,13 +717,23 @@ export default function MessagesPage() {
                         e.stopPropagation()
                         if (!confirm('¿Eliminar esta conversación? Esta acción no se puede deshacer.')) return
 
+                        // Update optimista: remover de lista inmediatamente
+                        setConversations(prev => prev.filter(c => c.id !== conversation.id))
+
                         const ok = await deleteConversation(conversation.id, 'property')
                         if (ok) {
+                          console.debug('[MessagesPage] Conversación eliminada, refrescando...')
+                          // Refrescar desde servidor para confirmar
+                          await fetchConversations()
+                          
                           if (selectedConversationId === conversation.id) {
                             setSelectedConversationId(null)
                             router.push(`/messages?tab=${activeTab}`)
                           }
                         } else {
+                          // Revertir update optimista si falló
+                          console.debug('[MessagesPage] Error al eliminar, revirtiendo...')
+                          await fetchConversations()
                           alert('No se pudo eliminar la conversación')
                         }
                       }}
