@@ -655,14 +655,14 @@ export default function MessagesPage() {
             {filteredConversations.map((conversation: Conversation) => (
               <div
                 key={conversation.id}
+                className={`group relative bg-white rounded-lg border p-6 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer ${
+                  selectedConversationId === conversation.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'
+                }`}
                 onClick={() => {
                   console.log('[MessagesUI] Thread seleccionado:', conversation.id)
                   setSelectedConversationId(conversation.id)
                   router.push(`/messages/${conversation.id}`)
                 }}
-                className={`bg-white rounded-lg border p-6 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer ${
-                  selectedConversationId === conversation.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'
-                }`}
               >
                 <div className="flex items-start space-x-4">
                   {/* PROMPT 3 & 6: Avatar del otro usuario */}
@@ -704,8 +704,37 @@ export default function MessagesPage() {
                     </p>
                   </div>
 
-                  {/* Arrow */}
-                  <div className="flex-shrink-0 self-center">
+                  {/* Acciones a la derecha */}
+                  <div className="ml-auto flex items-center gap-2">
+                    {/* Botón eliminar - visible en mobile, hover en desktop */}
+                    <button
+                      type="button"
+                      aria-label="Eliminar conversación"
+                      title="Eliminar conversación"
+                      className="inline-flex items-center justify-center rounded-lg p-2 text-red-500 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-300 active:opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                      onClick={async (e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (!confirm('¿Eliminar esta conversación? Esta acción no se puede deshacer.')) return
+
+                        const ok = await deleteConversation(conversation.id, 'property')
+                        if (ok) {
+                          if (selectedConversationId === conversation.id) {
+                            setSelectedConversationId(null)
+                            router.push(`/messages?tab=${activeTab}`)
+                          }
+                        } else {
+                          alert('No se pudo eliminar la conversación')
+                        }
+                      }}
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+
+                    {/* Arrow */}
                     <span className="text-gray-400 text-xl">→</span>
                   </div>
                 </div>
