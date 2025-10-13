@@ -84,7 +84,7 @@ export default function ContactButton({
       const data = await response.json()
       const conversationId = data.conversationId
 
-      console.log('[Messages] ✅ Conversación creada/abierta:', threadId)
+      console.log('[Messages] ✅ Conversación creada/abierta:', conversationId)
 
       // ⭐ ANALYTICS: Track message sent (conversation created)
       try {

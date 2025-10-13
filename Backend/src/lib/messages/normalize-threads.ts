@@ -66,7 +66,7 @@ export function normalizeThread(rawThread: any): EnrichedThread {
   }
 
   return {
-    conversationId: rawthread.conversationId || rawThread.thread_id || rawThread.id || '',
+    conversationId: rawThread.conversationId || rawThread.thread_id || rawThread.id || '',
     otherUser,
     lastMessage,
     unreadCount: rawThread.unreadCount || rawThread.unread_count || 0,

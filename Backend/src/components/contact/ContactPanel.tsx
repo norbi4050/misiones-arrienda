@@ -66,9 +66,9 @@ export default function ContactPanel({
       }
 
       const threadData = await threadRes.json();
-      const conversationId = threaddata.conversationId;
+      const conversationId = threadData.conversationId;
 
-      console.log('[Messages] ✅ Thread creado/abierto:', threadId)
+      console.log('[Messages] ✅ Thread creado/abierto:', conversationId)
 
       // Enviar mensaje al hilo
       const msgRes = await fetch(`/api/messages/threads/${conversationId}/messages`, {

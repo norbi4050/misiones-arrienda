@@ -226,7 +226,7 @@ export default function UnifiedMessagesPage() {
 
           {/* Panel derecho - Chat interface */}
           <div className="flex-1 flex flex-col">
-            <ChatInterface threadId={selectedThreadId} onThreadUpdate={refetch} />
+            <ChatInterface conversationId={selectedThreadId} onThreadUpdate={refetch} />
           </div>
         </div>
       </div>
