@@ -55,17 +55,23 @@ function getServerSupabase() {
   );
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   const supabase = getServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   try {
+    // [FIX-400] Soporte para query param ?id=userId para consultar otros perfiles
+    const { searchParams } = new URL(req.url);
+    const targetUserId = searchParams.get('id') || user.id;
+    
+    console.debug('[Profile API] Fetching profile for user:', targetUserId);
+
     // STEP 1: Get user data from users table (contains is_company, user_type, etc.)
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, name, email, phone, user_type, is_company, company_name, license_number, property_count, verified, email_verified, created_at, updated_at')
-      .eq('id', user.id)
+      .eq('id', targetUserId)
       .maybeSingle();
 
     if (userError) {
@@ -86,7 +92,7 @@ export async function GET(_req: NextRequest) {
     const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', targetUserId)
       .maybeSingle();
 
     // Note: profileError is not critical, user_profiles is optional
