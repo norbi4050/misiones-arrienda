@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
 
       // Estrategia 1: RPC (si existe)
       try {
-        const { data, error } = await supabase.rpc('public.get_unread_messages_count', {
+        const { data, error } = await supabase.rpc('get_unread_messages_count', {
           p_uid: user.id
         })
 
