@@ -107,44 +107,10 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // Si RPC está deshabilitado o falló, usar estrategias alternativas
-      if (communityUnreadCount === 0) {
-        // Estrategia 2: Tabla messages clásica
-        try {
-          const { count: unreadCount } = await supabase
-            .from('public.messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('recipient_id', user.id)
-            .is('read_at', null)
-
-          if (typeof unreadCount === 'number') {
-            communityUnreadCount = unreadCount
-          }
-        } catch (tableError) {
-          // Estrategia 3: Tabla conversations con contadores
-          try {
-            const { data, error } = await supabase
-              .rpc('sql', {
-                query: `
-                  SELECT
-                    coalesce(sum(
-                      case when user1_id = $1 then unread_count_user1
-                           when user2_id = $1 then unread_count_user2
-                           else 0 end
-                    ),0) AS count
-                  FROM public.conversations
-                  WHERE $1 IN (user1_id, user2_id)
-                `,
-                params: [user.id]
-              })
-
-            if (data && data.length > 0 && typeof data[0].count === 'number') {
-              communityUnreadCount = data[0].count
-            }
-          } catch (convError) {
-            console.log('[UNREAD-COUNT] All community strategies failed')
-          }
-        }
+      // Si RPC está deshabilitado o falló, NO usar estrategias legacy
+      // (evita 404s por tablas que no existen: public.messages, etc.)
+      if (communityUnreadCount === 0 && !enableUnreadRpc) {
+        console.log('[UNREAD-COUNT] RPC deshabilitado, skipping legacy fallbacks (evita 404s)')
       }
 
       totalUnreadCount += communityUnreadCount
