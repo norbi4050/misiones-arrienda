@@ -45,12 +45,33 @@ export async function GET(
       attachmentId
     });
 
-    // 2. Obtener adjunto
-    const { data: attachment, error: fetchError } = await supabase
-      .from('message_attachments')
+    // 2. Obtener adjunto - Intentar primero con tabla Prisma, luego snake_case
+    let attachment: any = null;
+    let fetchError: any = null;
+    
+    // Intentar con MessageAttachment (Prisma/PascalCase)
+    const { data: attachmentPrisma, error: errorPrisma } = await supabase
+      .from('MessageAttachment')
       .select('*')
       .eq('id', attachmentId)
       .single();
+    
+    if (!errorPrisma && attachmentPrisma) {
+      attachment = attachmentPrisma;
+    } else {
+      // Fallback: Intentar con message_attachments (snake_case)
+      const { data: attachmentSnake, error: errorSnake } = await supabase
+        .from('message_attachments')
+        .select('*')
+        .eq('id', attachmentId)
+        .single();
+      
+      if (!errorSnake && attachmentSnake) {
+        attachment = attachmentSnake;
+      } else {
+        fetchError = errorPrisma || errorSnake;
+      }
+    }
 
     if (fetchError || !attachment) {
       console.log('[ATTACHMENTS] Attachment not found:', attachmentId);
@@ -60,11 +81,20 @@ export async function GET(
       );
     }
 
-    // 3. Generar URL firmada con transformación para descarga
+    // 3. Normalizar campos (Prisma usa camelCase, Supabase usa snake_case)
+    const normalizedAttachment = {
+      id: attachment.id,
+      path: attachment.path,
+      bucket: attachment.bucket || 'message-attachments',
+      file_name: attachment.fileName || attachment.file_name || 'download',
+      mime: attachment.mime
+    };
+
+    // 4. Generar URL firmada con transformación para descarga
     const { data: signedData, error: signedError } = await supabase.storage
-      .from(attachment.bucket || 'message-attachments')
-      .createSignedUrl(attachment.path, 3600, {
-        download: attachment.file_name || true // Forzar descarga con nombre original
+      .from(normalizedAttachment.bucket)
+      .createSignedUrl(normalizedAttachment.path, 3600, {
+        download: normalizedAttachment.file_name // Forzar descarga con nombre original
       });
 
     if (signedError || !signedData?.signedUrl) {
@@ -78,10 +108,11 @@ export async function GET(
     console.log('[ATTACHMENTS] Download URL generated:', {
       userId: user.id,
       attachmentId,
-      fileName: attachment.file_name
+      fileName: normalizedAttachment.file_name,
+      tableName: attachmentPrisma ? 'MessageAttachment' : 'message_attachments'
     });
 
-    // 4. Redirigir a la URL firmada con headers de descarga
+    // 5. Redirigir a la URL firmada con headers de descarga
     return NextResponse.redirect(signedData.signedUrl);
 
   } catch (error) {
@@ -134,12 +165,33 @@ export async function DELETE(
       attachmentId
     });
 
-    // 2. Obtener adjunto
-    const { data: attachment, error: fetchError } = await supabase
-      .from('message_attachments')
+    // 2. Obtener adjunto - Intentar primero con tabla Prisma, luego snake_case
+    let attachment: any = null;
+    let fetchError: any = null;
+    
+    // Intentar con MessageAttachment (Prisma/PascalCase)
+    const { data: attachmentPrisma, error: errorPrisma } = await supabase
+      .from('MessageAttachment')
       .select('*')
       .eq('id', attachmentId)
       .single();
+    
+    if (!errorPrisma && attachmentPrisma) {
+      attachment = attachmentPrisma;
+    } else {
+      // Fallback: Intentar con message_attachments (snake_case)
+      const { data: attachmentSnake, error: errorSnake } = await supabase
+        .from('message_attachments')
+        .select('*')
+        .eq('id', attachmentId)
+        .single();
+      
+      if (!errorSnake && attachmentSnake) {
+        attachment = attachmentSnake;
+      } else {
+        fetchError = errorPrisma || errorSnake;
+      }
+    }
 
     if (fetchError || !attachment) {
       console.log('[ATTACHMENTS] Attachment not found:', attachmentId);
