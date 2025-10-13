@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import ChatInterface from '@/components/ui/ChatInterface'
 
+// ⛑️ Referencia estable a nivel de módulo para evitar remounts
+const NOOP = () => {}
+
 export default function ConversationPage({ 
   params 
 }: { 
@@ -36,7 +39,7 @@ export default function ConversationPage({
       <div className="max-w-4xl mx-auto h-screen">
         <ChatInterface
           conversationId={params.conversationId}
-          onThreadUpdate={() => {}}
+          onThreadUpdate={NOOP}
         />
       </div>
     </div>
