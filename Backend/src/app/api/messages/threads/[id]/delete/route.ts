@@ -45,16 +45,7 @@ export async function DELETE(
       );
     }
 
-    // 3. Resolver profileId (soportar user_profiles con user_id o id)
-    const { data: prof } = await supabase
-      .from('user_profiles')
-      .select('id,user_id')
-      .or(`user_id.eq.${user.id},id.eq.${user.id}`)
-      .maybeSingle();
-    
-    const profileId = prof?.id ?? null;
-
-    // 4. Leer conversación (intentar ambos esquemas)
+    // 3. Leer conversación (intentar ambos esquemas)
     let conv = await supabase
       .from('Conversation')
       .select('id,aId,bId')
@@ -77,7 +68,7 @@ export async function DELETE(
       );
     }
 
-    // 5. Normalizar participantes (soportar todas las variantes de columnas)
+    // 4. Normalizar participantes (soportar todas las variantes de columnas)
     const convData = conv.data as any;
     const parts = [
       convData?.aId,
@@ -88,27 +79,29 @@ export async function DELETE(
       convData?.b_id
     ].filter(Boolean).map(String);
 
-    const me = [user.id, profileId].filter(Boolean).map(String);
-    const isParticipant = me.some(id => parts.includes(id));
+    const me = String(user.id);
+    const isParticipant = parts.includes(me);
 
-    console.debug('[DELETE/thread]', { threadId, userId: user.id, profileId, parts });
+    console.debug('[DELETE/thread] validate', { threadId, userId: user.id, parts, isParticipant });
 
     if (!isParticipant) {
       return NextResponse.json(
-        { ok: false, error: 'unauthorized' },
+        { ok: false, error: 'forbidden' },
         { status: 200 }
       );
     }
 
-    // 6. Eliminar mensajes (probar ambas tablas/columnas)
+    // 5. Eliminar mensajes (probar ambas tablas/columnas)
     await supabase.from('Message').delete().eq('conversationId', threadId);
     await supabase.from('messages').delete().eq('conversation_id', threadId);
 
-    // 7. Eliminar conversación (ambas tablas)
+    // 6. Eliminar conversación (ambas tablas)
     await supabase.from('Conversation').delete().eq('id', threadId);
     await supabase.from('conversations').delete().eq('id', threadId);
 
-    // 8. Respuesta exitosa
+    console.debug('[DELETE/thread] deleted', { threadId });
+
+    // 7. Respuesta exitosa
     return NextResponse.json(
       { ok: true },
       { status: 200 }
