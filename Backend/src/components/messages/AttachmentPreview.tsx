@@ -7,6 +7,7 @@ import type { Attachment } from '@/types/messages'
 import { formatFileSize } from '@/lib/attachment-guards'
 import Image from 'next/image'
 import AttachmentLightbox from './AttachmentLightbox'
+import { getBrowserClient } from '@/lib/supabase/client-singleton'
 
 interface AttachmentPreviewProps {
   attachment: Attachment
@@ -39,9 +40,56 @@ export default function AttachmentPreview({
     }
   }
 
-  const handleDownload = (e: React.MouseEvent) => {
+  const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    window.open(attachment.url, '_blank', 'noopener,noreferrer')
+    
+    try {
+      // Obtener el token de autenticación
+      const supabase = getBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        console.error('[ATTACHMENT] No session token available')
+        // Fallback: abrir URL directamente
+        window.open(attachment.url, '_blank', 'noopener,noreferrer')
+        return
+      }
+
+      // Crear un enlace temporal para descargar
+      const downloadUrl = `/api/messages/attachments/${attachment.id}`
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = attachment.fileName || 'download'
+      
+      // Agregar headers de autenticación mediante fetch y crear blob
+      const response = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Download failed')
+      }
+      
+      // Obtener el blob y crear URL temporal
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      
+      // Descargar usando el blob URL
+      link.href = blobUrl
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Limpiar el blob URL
+      window.URL.revokeObjectURL(blobUrl)
+      
+    } catch (error) {
+      console.error('[ATTACHMENT] Download error:', error)
+      // Fallback: abrir URL directamente
+      window.open(attachment.url, '_blank', 'noopener,noreferrer')
+    }
   }
 
   const handleDelete = (e: React.MouseEvent) => {

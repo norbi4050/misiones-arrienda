@@ -1,5 +1,5 @@
 // =====================================================
-// B6 - API: Delete Message Attachment
+// B6 - API: Message Attachment Operations
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -7,6 +7,95 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+/**
+ * GET /api/messages/attachments/[id]
+ * Descarga un adjunto con headers correctos para forzar descarga
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // 1. Autenticación
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'No autorizado', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const token = authHeader.replace('Bearer ', '');
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'No autorizado', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const attachmentId = params.id;
+
+    console.log('[ATTACHMENTS] Download request:', {
+      userId: user.id,
+      attachmentId
+    });
+
+    // 2. Obtener adjunto
+    const { data: attachment, error: fetchError } = await supabase
+      .from('message_attachments')
+      .select('*')
+      .eq('id', attachmentId)
+      .single();
+
+    if (fetchError || !attachment) {
+      console.log('[ATTACHMENTS] Attachment not found:', attachmentId);
+      return NextResponse.json(
+        { error: 'Adjunto no encontrado', code: 'NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+
+    // 3. Generar URL firmada con transformación para descarga
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from(attachment.bucket || 'message-attachments')
+      .createSignedUrl(attachment.path, 3600, {
+        download: attachment.file_name || true // Forzar descarga con nombre original
+      });
+
+    if (signedError || !signedData?.signedUrl) {
+      console.error('[ATTACHMENTS] Error generating signed URL:', signedError);
+      return NextResponse.json(
+        { error: 'Error al generar URL de descarga', code: 'STORAGE_ERROR' },
+        { status: 500 }
+      );
+    }
+
+    console.log('[ATTACHMENTS] Download URL generated:', {
+      userId: user.id,
+      attachmentId,
+      fileName: attachment.file_name
+    });
+
+    // 4. Redirigir a la URL firmada con headers de descarga
+    return NextResponse.redirect(signedData.signedUrl);
+
+  } catch (error) {
+    console.error('[ATTACHMENTS] Download exception:', error);
+    return NextResponse.json(
+      { 
+        error: 'Error interno del servidor', 
+        code: 'INTERNAL_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
 
 /**
  * DELETE /api/messages/attachments/[id]
