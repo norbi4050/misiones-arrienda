@@ -53,6 +53,12 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
+  // ⛑️ Guardias anti-doble-init y cleanup para Realtime
+  const initRef = useRef<string | null>(null)
+  const channelRef = useRef<any>(null)
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const fallbackTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   // Memoizar userId para evitar re-renders innecesarios
   const userId = useMemo(() => user?.id, [user?.id])
 
@@ -215,9 +221,15 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
     }
   }, [conversationId, userId, router, scrollToBottom, onThreadUpdate])
 
-  // 🔒 REALTIME SEGURO con feature flag y fallback polling
+  // 🔒 REALTIME SEGURO con feature flag, fallback polling y guardias anti-remount
   useEffect(() => {
     if (!conversationId) return
+    
+    // 🚫 Guardia: si ya se inicializó para este conversationId, no repetir
+    if (initRef.current === conversationId) {
+      rtLog('Ya inicializado para', conversationId, '- skipping')
+      return
+    }
     
     const enableRt = process.env.NEXT_PUBLIC_ENABLE_RT === '1'
     if (!enableRt) {
@@ -225,23 +237,42 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
       return
     }
 
+    // Marcar como inicializado ANTES de crear recursos
+    initRef.current = conversationId
+    rtLog('Inicializando RT para', conversationId)
+
+    // 🧹 Limpiar cualquier residuo previo
+    if (fallbackTimeoutRef.current) {
+      clearTimeout(fallbackTimeoutRef.current)
+      fallbackTimeoutRef.current = null
+    }
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current)
+      pollIntervalRef.current = null
+    }
+    if (channelRef.current) {
+      try {
+        const supabase = createBrowserSupabase()
+        supabase.removeChannel(channelRef.current)
+      } catch {}
+      channelRef.current = null
+    }
+
     const supabase = createBrowserSupabase()
-    let pollTimer: NodeJS.Timeout | null = null
     let ready = false
 
     const startPoll = () => {
-      if (pollTimer) return
+      if (pollIntervalRef.current) return
       rtLog('Iniciando fallback poll cada 10s')
-      pollTimer = setInterval(() => {
-        // Reuse del fetch existente para refrescar mensajes
+      pollIntervalRef.current = setInterval(() => {
         loadThread()
       }, 10000)
     }
 
     const stopPoll = () => {
-      if (pollTimer) {
-        clearInterval(pollTimer)
-        pollTimer = null
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+        pollIntervalRef.current = null
         rtLog('Fallback poll detenido')
       }
     }
@@ -261,12 +292,10 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
           const msg = payload.new as any
           rtLog('Nuevo mensaje recibido', { id: msg?.id, senderId: msg?.senderId })
 
-          // Añadir al estado evitando duplicados
           setMessages((prev: Message[]) => {
             if (!msg?.id) return prev
             if (prev.some((m) => m.id === msg.id)) return prev
             
-            // Formatear mensaje con la estructura esperada
             const formattedMessage: Message = {
               id: msg.id,
               content: msg.content || '',
@@ -288,24 +317,33 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
         rtLog('Estado canal:', status)
         if (status === 'SUBSCRIBED') {
           ready = true
-          stopPoll() // ya no necesitamos fallback
+          stopPoll()
         }
         if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-          // canal caído → usamos fallback hasta que se rehaga el montaje
           startPoll()
         }
       })
 
-    // Si en 3s no está listo el canal, arrancar fallback
-    const safety = setTimeout(() => {
+    // Guardar canal en ref
+    channelRef.current = channel
+
+    // Si en 3s no está listo, arrancar fallback
+    fallbackTimeoutRef.current = setTimeout(() => {
       if (!ready) startPoll()
     }, 3000)
 
     return () => {
-      clearTimeout(safety)
+      rtLog('Cleanup para', conversationId)
+      if (fallbackTimeoutRef.current) {
+        clearTimeout(fallbackTimeoutRef.current)
+        fallbackTimeoutRef.current = null
+      }
       stopPoll()
-      supabase.removeChannel(channel)
-      rtLog('Canal limpiado')
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
+      initRef.current = null
     }
   }, [conversationId, userId, loadThread, scrollToBottom, markAsRead, onThreadUpdate])
 
