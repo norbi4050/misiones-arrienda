@@ -6,10 +6,12 @@ import { ArrowLeft, Download, FileText, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { SafeAvatar } from '@/components/ui/SafeAvatar'
-import { subscribeToMessages, unsubscribeFromChannel, type MessageRealtimePayload } from '@/lib/realtime-messages'
+import { createBrowserSupabase } from '@/lib/supabase/browser'
 import MessageComposerWithAttachments from '@/components/ui/message-composer-with-attachments'
-import type { RealtimeChannel } from '@supabase/supabase-js'
 import React from 'react'
+
+// Helper de log compacto para Realtime
+const rtLog = (...args: any[]) => console.log('[RT]', ...args)
 
 // PROMPT 2: Interfaces actualizadas con isMine y otherUser
 interface Message {
@@ -49,7 +51,6 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
   const [cursor, setCursor] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const realtimeChannelRef = useRef<RealtimeChannel | null>(null)
   const router = useRouter()
 
   // Memoizar userId para evitar re-renders innecesarios
@@ -214,53 +215,107 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
     }
   }, [conversationId, userId, router, scrollToBottom, onThreadUpdate])
 
-  const setupRealtimeSubscription = useCallback(() => {
-    if (!userId || !conversationId) return
-
-    if (realtimeChannelRef.current) {
-      unsubscribeFromChannel(realtimeChannelRef.current)
+  // 🔒 REALTIME SEGURO con feature flag y fallback polling
+  useEffect(() => {
+    if (!conversationId) return
+    
+    const enableRt = process.env.NEXT_PUBLIC_ENABLE_RT === '1'
+    if (!enableRt) {
+      rtLog('Realtime deshabilitado por flag')
+      return
     }
 
-    const channel = subscribeToMessages(
-      conversationId,
-      userId,
-      (newMessage: MessageRealtimePayload) => {
-        console.log('[MessagesUI] Mensaje real-time recibido:', newMessage.id)
-        
-        const formattedMessage: Message = {
-          id: newMessage.id,
-          content: newMessage.content,
-          createdAt: newMessage.createdAt,
-          senderId: newMessage.senderId,
-          isMine: newMessage.senderId === userId,
-          attachments: []
-        }
+    const supabase = createBrowserSupabase()
+    let pollTimer: NodeJS.Timeout | null = null
+    let ready = false
 
-        setMessages(prev => [...prev, formattedMessage])
-        setTimeout(() => scrollToBottom(), 100)
-        markAsRead()
-        onThreadUpdate()
+    const startPoll = () => {
+      if (pollTimer) return
+      rtLog('Iniciando fallback poll cada 10s')
+      pollTimer = setInterval(() => {
+        // Reuse del fetch existente para refrescar mensajes
+        loadThread()
+      }, 10000)
+    }
+
+    const stopPoll = () => {
+      if (pollTimer) {
+        clearInterval(pollTimer)
+        pollTimer = null
+        rtLog('Fallback poll detenido')
       }
-    )
+    }
 
-    realtimeChannelRef.current = channel
-  }, [userId, conversationId, scrollToBottom, markAsRead, onThreadUpdate])
+    rtLog('Suscribiendo a INSERT en public."Message" para conversationId=', conversationId)
+    const channel = supabase
+      .channel('messages-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'Message',
+          filter: `conversationId=eq.${conversationId}`
+        },
+        (payload: any) => {
+          const msg = payload.new as any
+          rtLog('Nuevo mensaje recibido', { id: msg?.id, senderId: msg?.senderId })
+
+          // Añadir al estado evitando duplicados
+          setMessages((prev: Message[]) => {
+            if (!msg?.id) return prev
+            if (prev.some((m) => m.id === msg.id)) return prev
+            
+            // Formatear mensaje con la estructura esperada
+            const formattedMessage: Message = {
+              id: msg.id,
+              content: msg.content || '',
+              createdAt: msg.createdAt || new Date().toISOString(),
+              senderId: msg.senderId || '',
+              isMine: msg.senderId === userId,
+              attachments: msg.attachments || []
+            }
+            
+            setTimeout(() => scrollToBottom(), 100)
+            markAsRead()
+            onThreadUpdate()
+            
+            return [...prev, formattedMessage]
+          })
+        }
+      )
+      .subscribe((status: string) => {
+        rtLog('Estado canal:', status)
+        if (status === 'SUBSCRIBED') {
+          ready = true
+          stopPoll() // ya no necesitamos fallback
+        }
+        if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+          // canal caído → usamos fallback hasta que se rehaga el montaje
+          startPoll()
+        }
+      })
+
+    // Si en 3s no está listo el canal, arrancar fallback
+    const safety = setTimeout(() => {
+      if (!ready) startPoll()
+    }, 3000)
+
+    return () => {
+      clearTimeout(safety)
+      stopPoll()
+      supabase.removeChannel(channel)
+      rtLog('Canal limpiado')
+    }
+  }, [conversationId, userId, loadThread, scrollToBottom, markAsRead, onThreadUpdate])
 
   useEffect(() => {
     if (conversationId && userId) {
       console.log('[MessagesUI] Inicializando conversacion:', conversationId)
       loadThread()
       markAsRead()
-      setupRealtimeSubscription()
     }
-
-    return () => {
-      if (realtimeChannelRef.current) {
-        unsubscribeFromChannel(realtimeChannelRef.current)
-        realtimeChannelRef.current = null
-      }
-    }
-  }, [conversationId, userId, loadThread, markAsRead, setupRealtimeSubscription])
+  }, [conversationId, userId, loadThread, markAsRead])
 
   useEffect(() => {
     if (!loading && !loadingMore) {
