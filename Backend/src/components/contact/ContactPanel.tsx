@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -66,12 +66,12 @@ export default function ContactPanel({
       }
 
       const threadData = await threadRes.json();
-      const threadId = threadData.threadId;
+      const conversationId = threaddata.conversationId;
 
       console.log('[Messages] ✅ Thread creado/abierto:', threadId)
 
       // Enviar mensaje al hilo
-      const msgRes = await fetch(`/api/messages/threads/${threadId}/messages`, {
+      const msgRes = await fetch(`/api/messages/threads/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -86,7 +86,7 @@ export default function ContactPanel({
         setMsg(`Hola, me interesa esta propiedad en ${propertyCity}. ¿Podríamos coordinar una visita?`);
         
         // Navegar al hilo de mensajes
-        window.location.href = `/messages/${threadId}`;
+        window.location.href = `/messages/${conversationId}`;
       } else if (msgRes.status === 401) {
         console.log('[Messages] ⚠️ Usuario no autenticado al enviar mensaje')
         toast.error('Iniciá sesión para enviar mensajes');

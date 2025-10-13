@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Download, FileText, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
@@ -9,6 +9,7 @@ import { SafeAvatar } from '@/components/ui/SafeAvatar'
 import { subscribeToMessages, unsubscribeFromChannel, type MessageRealtimePayload } from '@/lib/realtime-messages'
 import MessageComposerWithAttachments from '@/components/ui/message-composer-with-attachments'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import React from 'react'
 
 // PROMPT 2: Interfaces actualizadas con isMine y otherUser
 interface Message {
@@ -27,17 +28,17 @@ interface OtherUser {
 }
 
 interface ThreadInfo {
-  threadId: string
+  conversationId: string
   otherUser: OtherUser  // ← PROMPT 2: info completa del otro usuario
 }
 
 interface ChatInterfaceProps {
-  threadId: string
+  conversationId: string
   onThreadUpdate: () => void
 }
 
-export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfaceProps) {
-  console.log('[MessagesUI] ChatInterface montado con threadId:', threadId)
+function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
+  console.log('[MessagesUI] ChatInterface montado con conversationId:', conversationId)
   
   const { user } = useSupabaseAuth()
   const [messages, setMessages] = useState<Message[]>([])
@@ -51,29 +52,28 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    if (threadId && user) {
-      console.log('[MessagesUI] Cargando thread:', threadId)
-      loadThread()
-      markAsRead()
-      setupRealtimeSubscription()
-    }
+  // Memoizar userId para evitar re-renders innecesarios
+  const userId = useMemo(() => user?.id, [user?.id])
 
-    return () => {
-      if (realtimeChannelRef.current) {
-        unsubscribeFromChannel(realtimeChannelRef.current)
-        realtimeChannelRef.current = null
-      }
-    }
-  }, [threadId, user])
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
 
-  useEffect(() => {
-    if (!loading && !loadingMore) {
-      scrollToBottom()
+  const markAsRead = useCallback(async () => {
+    try {
+      await fetch(`/api/messages/threads/${conversationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'mark_read' })
+      })
+      onThreadUpdate()
+    } catch (error) {
+      console.error('[MessagesUI] Error marking as read:', error)
     }
-  }, [messages.length, loading])
+  }, [conversationId, onThreadUpdate])
 
-  const loadThread = async (loadMore = false, cursorParam?: string) => {
+  const loadThread = useCallback(async (loadMore = false, cursorParam?: string) => {
     try {
       if (loadMore) {
         setLoadingMore(true)
@@ -84,7 +84,7 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
         setHasMore(true)
       }
 
-      const url = new URL(`/api/messages/threads/${threadId}`, window.location.origin)
+      const url = new URL(`/api/messages/threads/${conversationId}`, window.location.origin)
       if (cursorParam) {
         url.searchParams.set('cursor', cursorParam)
       }
@@ -118,7 +118,7 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
       )
 
       const normalizedThread = data.thread ? {
-        threadId: data.thread.threadId || threadId,
+        conversationId: data.thread.conversationId || conversationId,
         otherUser: {
           id: data.thread.otherUser?.id || '',
           displayName: data.thread.otherUser?.displayName || 'Usuario',
@@ -155,30 +155,16 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
       setLoading(false)
       setLoadingMore(false)
     }
-  }
+  }, [conversationId, router, scrollToBottom])
 
-  const loadMoreMessages = () => {
+  const loadMoreMessages = useCallback(() => {
     if (cursor && hasMore && !loadingMore) {
       loadThread(true, cursor)
     }
-  }
+  }, [cursor, hasMore, loadingMore, loadThread])
 
-  const markAsRead = async () => {
-    try {
-      await fetch(`/api/messages/threads/${threadId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ action: 'mark_read' })
-      })
-      onThreadUpdate()
-    } catch (error) {
-      console.error('[MessagesUI] Error marking as read:', error)
-    }
-  }
-
-  const handleSendMessage = async (content: string, type?: 'text' | 'image', attachmentIds?: string[]) => {
-    if (!content.trim()) return
+  const handleSendMessage = useCallback(async (content: string, type?: 'text' | 'image', attachmentIds?: string[]) => {
+    if (!content.trim() || !userId) return
 
     console.log('[MessagesUI] Enviando mensaje con adjuntos:', attachmentIds)
 
@@ -187,7 +173,7 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
       id: `temp-${Date.now()}`,
       content: content,
       createdAt: new Date().toISOString(),
-      senderId: user?.id || '',
+      senderId: userId,
       isMine: true,
       attachments: []
     }
@@ -199,7 +185,7 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
         body.attachmentIds = attachmentIds
       }
 
-      const response = await fetch(`/api/messages/threads/${threadId}/messages`, {
+      const response = await fetch(`/api/messages/threads/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -216,47 +202,28 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
         throw new Error('Error al enviar mensaje')
       }
 
-      // Recargar mensajes sin mostrar loading
-      const url = new URL(`/api/messages/threads/${threadId}`, window.location.origin)
-      url.searchParams.set('limit', '30')
-
-      const reloadResponse = await fetch(url.toString(), {
-        credentials: 'include'
-      })
-
-      if (reloadResponse.ok) {
-        const reloadData = await reloadResponse.json()
-        const reloadedMessages = (reloadData.messages || []).map((msg: any) => ({
-          id: msg.id || `temp-${Date.now()}`,
-          content: msg.content || '',
-          createdAt: msg.createdAt || new Date().toISOString(),
-          senderId: msg.senderId || '',
-          isMine: Boolean(msg.isMine),
-          attachments: msg.attachments || []
-        }))
-        
-        setMessages(reloadedMessages)
-        setTimeout(() => scrollToBottom(), 100)
-      }
-      
+      // ✅ FIX: NO recargar - confiar en optimistic update + realtime
+      // El mensaje ya está en la UI (optimistic update)
+      // Realtime lo confirmará cuando llegue del servidor
+      setTimeout(() => scrollToBottom(), 100)
       onThreadUpdate()
     } catch (error) {
       console.error('[MessagesUI] Error sending message:', error)
       toast.error('Error al enviar mensaje')
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
     }
-  }
+  }, [conversationId, userId, router, scrollToBottom, onThreadUpdate])
 
-  const setupRealtimeSubscription = () => {
-    if (!user || !threadId) return
+  const setupRealtimeSubscription = useCallback(() => {
+    if (!userId || !conversationId) return
 
     if (realtimeChannelRef.current) {
       unsubscribeFromChannel(realtimeChannelRef.current)
     }
 
     const channel = subscribeToMessages(
-      threadId,
-      user.id,
+      conversationId,
+      userId,
       (newMessage: MessageRealtimePayload) => {
         console.log('[MessagesUI] Mensaje real-time recibido:', newMessage.id)
         
@@ -265,7 +232,7 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
           content: newMessage.content,
           createdAt: newMessage.created_at,
           senderId: newMessage.sender_id,
-          isMine: newMessage.sender_id === user.id,
+          isMine: newMessage.sender_id === userId,
           attachments: []
         }
 
@@ -277,14 +244,32 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
     )
 
     realtimeChannelRef.current = channel
-  }
+  }, [userId, conversationId, scrollToBottom, markAsRead, onThreadUpdate])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  useEffect(() => {
+    if (conversationId && userId) {
+      console.log('[MessagesUI] Inicializando conversacion:', conversationId)
+      loadThread()
+      markAsRead()
+      setupRealtimeSubscription()
+    }
+
+    return () => {
+      if (realtimeChannelRef.current) {
+        unsubscribeFromChannel(realtimeChannelRef.current)
+        realtimeChannelRef.current = null
+      }
+    }
+  }, [conversationId, userId, loadThread, markAsRead, setupRealtimeSubscription])
+
+  useEffect(() => {
+    if (!loading && !loadingMore) {
+      scrollToBottom()
+    }
+  }, [messages.length, loading, loadingMore, scrollToBottom])
 
   // PROMPT 2 & 6: Helper para agrupar mensajes consecutivos del mismo autor
-  const groupMessages = (messages: Message[]) => {
+  const groupMessages = useCallback((messages: Message[]) => {
     const groups: Message[][] = []
     let currentGroup: Message[] = []
     let lastSenderId: string | null = null
@@ -306,10 +291,10 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
     }
 
     return groups
-  }
+  }, [])
 
   // PROMPT 6: Helper para separadores de fecha
-  const getDateSeparator = (dateStr: string) => {
+  const getDateSeparator = useCallback((dateStr: string) => {
     const date = new Date(dateStr)
     const today = new Date()
     const yesterday = new Date(today)
@@ -327,17 +312,19 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
         day: 'numeric' 
       })
     }
-  }
+  }, [])
 
   // PROMPT 6: Helper para detectar cambio de día
-  const shouldShowDateSeparator = (currentMsg: Message, prevMsg: Message | null) => {
+  const shouldShowDateSeparator = useCallback((currentMsg: Message, prevMsg: Message | null) => {
     if (!prevMsg) return true
     
     const currentDate = new Date(currentMsg.createdAt).toDateString()
     const prevDate = new Date(prevMsg.createdAt).toDateString()
     
     return currentDate !== prevDate
-  }
+  }, [])
+
+  const messageGroups = useMemo(() => groupMessages(messages), [messages, groupMessages])
 
   if (loading) {
     return (
@@ -362,8 +349,6 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
       </div>
     )
   }
-
-  const messageGroups = groupMessages(messages)
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
@@ -496,42 +481,14 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
                                 console.log('[Download] Iniciando descarga:', {
                                   id: att.id,
                                   fileName: att.fileName,
-                                  url: att.url
+                                  url: att.url,
+                                  hasDownloadParam: att.url.includes('download=')
                                 })
                                 
-                                try {
-                                  // Método 1: Descarga directa usando <a> tag (más confiable con signed URLs)
-                                  const link = document.createElement('a')
-                                  link.href = att.url
-                                  link.download = att.fileName || 'archivo'
-                                  link.target = '_blank'
-                                  link.rel = 'noopener noreferrer'
-                                  
-                                  // Agregar al DOM temporalmente
-                                  document.body.appendChild(link)
-                                  link.click()
-                                  
-                                  // Limpiar después de un pequeño delay
-                                  setTimeout(() => {
-                                    if (document.body.contains(link)) {
-                                      document.body.removeChild(link)
-                                    }
-                                  }, 100)
-                                  
-                                  console.log('[Download] Descarga iniciada exitosamente')
-                                  toast.success('Descargando archivo...')
-                                } catch (error) {
-                                  console.error('[Download] Error al iniciar descarga:', error)
-                                  
-                                  // Fallback: Abrir en nueva pestaña
-                                  try {
-                                    window.open(att.url, '_blank', 'noopener,noreferrer')
-                                    toast.info('Archivo abierto en nueva pestaña')
-                                  } catch (fallbackError) {
-                                    console.error('[Download] Fallback también falló:', fallbackError)
-                                    toast.error('No se pudo descargar el archivo. Intenta de nuevo.')
-                                  }
-                                }
+                                // La URL ya viene con el parámetro download desde el backend
+                                // Solo necesitamos abrir la URL y el navegador la descargará automáticamente
+                                window.location.href = att.url
+                                toast.success('Descargando archivo...')
                               }
                               
                               return (
@@ -590,7 +547,7 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
 
       {/* Message Composer con soporte de adjuntos */}
       <MessageComposerWithAttachments
-        conversationId={threadId}
+        conversationId={conversationId}
         onSendMessage={handleSendMessage}
         placeholder="Escribe tu mensaje..."
         maxLength={1000}
@@ -600,3 +557,8 @@ export default function ChatInterface({ threadId, onThreadUpdate }: ChatInterfac
   )
 }
 
+// Envolver con React.memo para prevenir re-renders innecesarios
+// Solo re-renderizar si threadId cambia
+export default React.memo(ChatInterface, (prevProps, nextProps) => {
+  return prevProps.conversationId === nextProps.conversationId
+})

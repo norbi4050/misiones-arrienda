@@ -261,7 +261,8 @@ export async function POST(request: NextRequest) {
         userId: userProfile.id,  // ← FIX: usar userProfile.id en lugar de user.id
         path: storagePath,
         mime: file.type,
-        sizeBytes: file.size
+        sizeBytes: file.size,
+        fileName: file.name  // ← FIX: Agregar fileName para que aparezca en el chat
       })
       .select()
       .single();

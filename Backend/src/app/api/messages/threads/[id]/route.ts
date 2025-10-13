@@ -14,7 +14,7 @@ export async function GET(
 ) {
   try {
     const supabase = createClient()
-    const { id: threadId } = params
+    const { id: conversationId } = params
     const { searchParams } = new URL(request.url)
     const cursor = searchParams.get('cursor') // ISO date or message ID
     const limit = parseInt(searchParams.get('limit') || '30')
@@ -33,7 +33,7 @@ export async function GET(
     const { data: prismaThread } = await supabase
       .from('Conversation')
       .select('id, aId, bId, isActive')
-      .eq('id', threadId)
+      .eq('id', conversationId)
       .eq('isActive', true)
       .single()
 
@@ -54,14 +54,23 @@ export async function GET(
     if (!thread) {
       const { data: supabaseThread } = await supabase
         .from('conversations')
-        .select('id, sender_id, receiver_id, property_id')
-        .eq('id', threadId)
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .select('id, a_id, b_id, participant_1, participant_2')
+        .eq('id', conversationId)
+        .or(`a_id.eq.${user.id},b_id.eq.${user.id},participant_1.eq.${user.id},participant_2.eq.${user.id}`)
         .single()
 
       if (supabaseThread) {
-        thread = supabaseThread
-        isPrismaSchema = false
+        // Verificar que el usuario es participante
+        const isParticipant = 
+          supabaseThread.a_id === user.id ||
+          supabaseThread.b_id === user.id ||
+          supabaseThread.participant_1 === user.id ||
+          supabaseThread.participant_2 === user.id
+        
+        if (isParticipant) {
+          thread = supabaseThread
+          isPrismaSchema = false
+        }
       }
     }
 
@@ -90,9 +99,12 @@ export async function GET(
       ? (thread.aId === userProfile.id ? thread.bId : thread.aId)
       : null  // Para Supabase, otherUserId es directamente el user_id
 
+    // FIX: Usar campos correctos de Supabase (a_id, b_id, participant_1, participant_2)
     const otherUserId = isPrismaSchema 
       ? null  // Lo obtendremos del UserProfile
-      : (thread.sender_id === user.id ? thread.receiver_id : thread.sender_id)
+      : (thread.a_id === user.id 
+          ? (thread.b_id || thread.participant_2)
+          : (thread.a_id || thread.participant_1))
 
     // PROMPT 1: Obtener datos completos del otro usuario
     let otherProfile: any = null
@@ -144,11 +156,11 @@ export async function GET(
 
     // PROMPT D1: Log detallado de displayName resolution
     const finalOtherUserId = otherUserData?.id || otherProfile?.userId || otherUserId
-    console.log(`[DISPLAYNAME] threadId=${threadId}, me.id=${user.id}, otherUser.id=${finalOtherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
+    console.log(`[DISPLAYNAME] conversationId=${conversationId}, me.id=${user.id}, otherUser.id=${finalOtherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
     
     // PROMPT D1: Warning si displayName está vacío o es UUID
     if (!displayName || displayName.trim() === '' || isUUID(displayName)) {
-      console.warn(`[DisplayName] MISSING → payload would fallback to threadId for thread=${threadId}`)
+      console.warn(`[DisplayName] MISSING → payload would fallback to conversationId for conversation=${conversationId}`)
     }
 
     // PROMPT D6: Check preventivo antes de responder
@@ -169,7 +181,7 @@ export async function GET(
     const senderIdField = isPrismaSchema ? 'senderId' : 'sender_id'
     const createdAtField = isPrismaSchema ? 'createdAt' : 'created_at'
     const isReadField = isPrismaSchema ? 'isRead' : 'is_read'
-    const bodyField = isPrismaSchema ? 'body' : 'content'
+    const bodyField = 'body'  // Siempre 'body' en ambos schemas
 
     // PROMPT 1: Orden ascendente (más antiguos primero)
     let messagesQuery = supabase
@@ -181,7 +193,7 @@ export async function GET(
         ${createdAtField},
         ${isReadField}
       `)
-      .eq(conversationIdField, threadId)
+      .eq(conversationIdField, conversationId)
 
     if (cursor) {
       messagesQuery = messagesQuery
@@ -286,7 +298,7 @@ export async function GET(
     const presence = await getUserPresence(finalOtherUserId)
     
     const threadInfo = {
-      threadId,
+      conversationId,
       otherUser: {
         id: finalOtherUserId,
         displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
@@ -324,7 +336,7 @@ export async function PATCH(
 ) {
   try {
     const supabase = createClient()
-    const { id: threadId } = params
+    const { id: conversationId } = params
 
     // Obtener usuario autenticado
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -345,7 +357,7 @@ export async function PATCH(
     const { data: prismaThread } = await supabase
       .from('Conversation')
       .select('id')
-      .eq('id', threadId)
+      .eq('id', conversationId)
       .single()
 
     if (prismaThread) {
@@ -394,10 +406,10 @@ export async function PATCH(
     }
 
     // Si no hay messageIds, marcar todos los mensajes no leídos del thread que no son del usuario
-    const { error: updateError, count } = await supabase
+      const { error: updateError, count } = await supabase
       .from(messageTable)
       .update(updateData)
-      .eq(conversationIdField, threadId)
+      .eq(conversationIdField, conversationId)
       .neq(senderIdField, userProfile.id)
       .eq(isReadField, false)
 
@@ -406,7 +418,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Error al marcar como leído' }, { status: 500 })
     }
 
-    console.log(`[PATCH Thread] ✅ Marked ${count || 0} messages as read in thread`)
+    console.log(`[PATCH Thread] ✅ Marked ${count || 0} messages as read in conversation`)
 
     return NextResponse.json({
       success: true,

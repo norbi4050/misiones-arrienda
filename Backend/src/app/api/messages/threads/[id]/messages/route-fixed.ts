@@ -13,7 +13,7 @@ export async function POST(
 ) {
   try {
     const supabase = createClient()
-    const { id: conversationId } = params
+    const { id: threadId } = params
 
     // Obtener usuario autenticado
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -38,7 +38,7 @@ export async function POST(
     const { data: prismaThread, error: prismaError } = await supabase
       .from('Conversation')
       .select('id, aId, bId, isActive')
-      .eq('id', conversationId)
+      .eq('id', threadId)
       .eq('isActive', true)
       .single()
 
@@ -63,28 +63,19 @@ export async function POST(
     if (!thread) {
       const { data: supabaseThread, error: supabaseError } = await supabase
         .from('conversations')
-        .select('id, a_id, b_id, participant_1, participant_2')
-        .eq('id', conversationId)
-        .or(`a_id.eq.${user.id},b_id.eq.${user.id},participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+        .select('id, sender_id, receiver_id, property_id')
+        .eq('id', threadId)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .single()
 
       if (!supabaseError && supabaseThread) {
-        // Verificar que el usuario es participante
-        const isParticipant = 
-          supabaseThread.a_id === user.id ||
-          supabaseThread.b_id === user.id ||
-          supabaseThread.participant_1 === user.id ||
-          supabaseThread.participant_2 === user.id
-        
-        if (isParticipant) {
-          thread = supabaseThread
-          isPrismaSchema = false
-        }
+        thread = supabaseThread
+        isPrismaSchema = false
       }
     }
 
     if (!thread) {
-      console.error('[Messages] ❌ Hilo no encontrado:', conversationId)
+      console.error('[Messages] ❌ Hilo no encontrado:', threadId)
       return NextResponse.json({ error: 'Hilo no encontrado' }, { status: 404 })
     }
 
@@ -113,10 +104,10 @@ export async function POST(
     const senderIdField = isPrismaSchema ? 'senderId' : 'sender_id'
     const isReadField = isPrismaSchema ? 'isRead' : 'is_read'
     const createdAtField = isPrismaSchema ? 'createdAt' : 'created_at'
-    const bodyField = 'body'  // Siempre 'body' en ambos schemas
+    const bodyField = isPrismaSchema ? 'body' : 'content'
 
     const messageData: any = {
-      [conversationIdField]: conversationId,
+      [conversationIdField]: threadId,
       [senderIdField]: userProfile.id,
       [bodyField]: content.trim(),
       [isReadField]: false,
@@ -282,12 +273,12 @@ export async function POST(
       const { error: updateErr } = await supabase
         .from(conversationTable)
         .update(updateData)
-        .eq('id', conversationId)
+        .eq('id', threadId)
 
       if (updateErr) {
         console.error('[Messages] ⚠️ Failed to update conversation metadata:', updateErr.message)
       } else {
-        console.log('[Messages] ✅ Conversation metadata updated:', conversationId)
+        console.log('[Messages] ✅ Conversation metadata updated:', threadId)
       }
     } catch (metaErr: any) {
       console.error('[Messages] ⚠️ Exception updating conversation metadata:', metaErr.message)
@@ -313,7 +304,7 @@ export async function POST(
 
     // Log para desarrollo
     if (process.env.NODE_ENV === 'development') {
-      console.log(`📨 Mensaje enviado en conversación ${conversationId}:`, {
+      console.log(`📨 Mensaje enviado en hilo ${threadId}:`, {
         messageId: newMessage.id,
         senderId: userProfile.id,
         content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
@@ -325,7 +316,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: formattedMessage,
-      conversationId
+      threadId
     })
 
   } catch (error) {

@@ -83,7 +83,7 @@ export interface ThreadProperty {
  * Formato de respuesta de GET /api/messages/threads
  */
 export interface EnrichedThread {
-  threadId: string
+  conversationId: string  // ← Cambiado de threadId para alinear con schema DB
   otherUser: EnrichedOtherUser
   lastMessage: EnrichedLastMessage | null
   unreadCount: number
@@ -109,7 +109,7 @@ export interface EnrichedMessage {
  * Formato de respuesta de GET /api/messages/threads/[id]
  */
 export interface EnrichedThreadDetail {
-  threadId: string
+  conversationId: string  // ← Cambiado de threadId para alinear con schema DB
   otherUser: EnrichedOtherUser
   messages: EnrichedMessage[]
   property?: ThreadProperty | null

@@ -13,7 +13,7 @@ export async function POST(
 ) {
   try {
     const supabase = createClient()
-    const { id: conversationId } = params
+    const { id: threadId } = params
 
     // Obtener usuario autenticado
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -38,7 +38,7 @@ export async function POST(
     const { data: prismaThread, error: prismaError } = await supabase
       .from('Conversation')
       .select('id, aId, bId, isActive')
-      .eq('id', conversationId)
+      .eq('id', threadId)
       .eq('isActive', true)
       .single()
 
@@ -63,28 +63,19 @@ export async function POST(
     if (!thread) {
       const { data: supabaseThread, error: supabaseError } = await supabase
         .from('conversations')
-        .select('id, a_id, b_id, participant_1, participant_2')
-        .eq('id', conversationId)
-        .or(`a_id.eq.${user.id},b_id.eq.${user.id},participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+        .select('id, sender_id, receiver_id, property_id')
+        .eq('id', threadId)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .single()
 
       if (!supabaseError && supabaseThread) {
-        // Verificar que el usuario es participante
-        const isParticipant = 
-          supabaseThread.a_id === user.id ||
-          supabaseThread.b_id === user.id ||
-          supabaseThread.participant_1 === user.id ||
-          supabaseThread.participant_2 === user.id
-        
-        if (isParticipant) {
-          thread = supabaseThread
-          isPrismaSchema = false
-        }
+        thread = supabaseThread
+        isPrismaSchema = false
       }
     }
 
     if (!thread) {
-      console.error('[Messages] ❌ Hilo no encontrado:', conversationId)
+      console.error('[Messages] ❌ Hilo no encontrado:', threadId)
       return NextResponse.json({ error: 'Hilo no encontrado' }, { status: 404 })
     }
 
@@ -113,10 +104,10 @@ export async function POST(
     const senderIdField = isPrismaSchema ? 'senderId' : 'sender_id'
     const isReadField = isPrismaSchema ? 'isRead' : 'is_read'
     const createdAtField = isPrismaSchema ? 'createdAt' : 'created_at'
-    const bodyField = 'body'  // Siempre 'body' en ambos schemas
+    const bodyField = isPrismaSchema ? 'body' : 'content'
 
     const messageData: any = {
-      [conversationIdField]: conversationId,
+      [conversationIdField]: threadId,
       [senderIdField]: userProfile.id,
       [bodyField]: content.trim(),
       [isReadField]: false,
@@ -147,92 +138,28 @@ export async function POST(
 
     // B6: Vincular adjuntos al mensaje si se proporcionaron
     if (attachmentIds && Array.isArray(attachmentIds) && attachmentIds.length > 0) {
-      console.log('[Messages] 🔗 Iniciando proceso de vinculación de adjuntos...')
-      console.log('[Messages] 🔍 DEBUG - Datos de vinculación:', {
-        attachmentIds,
-        messageId: newMessage.id,
-        authUserId: user.id,
-        userProfileId: userProfile.id
-      })
+      console.log('[Messages] Linking attachments to message:', newMessage.id, attachmentIds)
+      console.log('[Messages] UserProfile.id:', userProfile.id)
       
       // FIX: Usar service role client para bypassear RLS
+      // El problema es que RLS puede estar bloqueando el UPDATE
       const supabaseAdmin = createServiceClient(supabaseUrl, supabaseServiceKey)
       
-      // PASO 1: Validar que los adjuntos existen y pertenecen al usuario
-      console.log('[Messages] 🔍 Validando propiedad de adjuntos...')
-      const { data: attachmentsToLink, error: validateError } = await supabaseAdmin
-        .from('MessageAttachment')
-        .select('id, userId, path, fileName')
-        .in('id', attachmentIds)
-      
-      if (validateError) {
-        console.error('[Messages] ❌ Error validando adjuntos:', validateError)
-        return NextResponse.json({ 
-          error: 'Error al validar adjuntos' 
-        }, { status: 500 })
-      }
-      
-      console.log('[Messages] 🔍 Adjuntos encontrados:', attachmentsToLink)
-      
-      // Verificar que todos los adjuntos existen
-      if (!attachmentsToLink || attachmentsToLink.length !== attachmentIds.length) {
-        console.error('[Messages] ❌ Algunos adjuntos no fueron encontrados:', {
-          solicitados: attachmentIds.length,
-          encontrados: attachmentsToLink?.length || 0,
-          idssolicitados: attachmentIds,
-          idsEncontrados: attachmentsToLink?.map(a => a.id) || []
-        })
-        return NextResponse.json({ 
-          error: 'Algunos adjuntos no fueron encontrados' 
-        }, { status: 400 })
-      }
-      
-      // Verificar ownership (userId puede ser user.id O userProfile.id)
-      const invalidAttachments = attachmentsToLink.filter(
-        att => att.userId !== user.id && att.userId !== userProfile.id
-      )
-      
-      if (invalidAttachments.length > 0) {
-        console.error('[Messages] ❌ Adjuntos no autorizados:', {
-          cantidadInvalidos: invalidAttachments.length,
-          idsInvalidos: invalidAttachments.map(a => a.id),
-          userIdEsperado: user.id,
-          userProfileIdEsperado: userProfile.id
-        })
-        return NextResponse.json({ 
-          error: 'No autorizado para usar estos adjuntos' 
-        }, { status: 403 })
-      }
-      
-      console.log('[Messages] ✅ Todos los adjuntos validados correctamente')
-      
-      // PASO 2: Esperar 100ms para que la transacción del INSERT se confirme
+      // FIX: Esperar 100ms para que la transacción del INSERT se confirme
       await new Promise(resolve => setTimeout(resolve, 100))
       
-      // PASO 3: Vincular adjuntos (SIN filtro userId - ya validado arriba)
-      console.log('[Messages] 🔗 Vinculando adjuntos al mensaje...')
       const { data: updated, error: linkError } = await supabaseAdmin
         .from('MessageAttachment')
         .update({ messageId: newMessage.id })
         .in('id', attachmentIds)
+        .eq('userId', userProfile.id)
         .select()
       
       if (linkError) {
-        console.error('[Messages] ❌ Error vinculando adjuntos:', {
-          error: linkError,
-          code: linkError.code,
-          message: linkError.message,
-          details: linkError.details,
-          hint: linkError.hint
-        })
+        console.error('[Messages] ❌ Error linking attachments:', linkError)
       } else if (!updated || updated.length === 0) {
-        console.error('[Messages] ❌ No se vincularon adjuntos!', {
-          esperados: attachmentIds.length,
-          obtenidos: updated?.length || 0,
-          attachmentIds,
-          messageId: newMessage.id
-        })
-        console.error('[Messages] ⏳ Reintentando en 500ms...')
+        console.error('[Messages] ❌ No attachments were linked! Expected:', attachmentIds.length, 'Got:', updated?.length || 0)
+        console.error('[Messages] ❌ Retrying in 500ms...')
         
         await new Promise(resolve => setTimeout(resolve, 500))
         
@@ -240,29 +167,16 @@ export async function POST(
           .from('MessageAttachment')
           .update({ messageId: newMessage.id })
           .in('id', attachmentIds)
+          .eq('userId', userProfile.id)
           .select()
         
         if (retryError || !retryUpdated || retryUpdated.length === 0) {
-          console.error('[Messages] ❌ Reintento también falló:', {
-            error: retryError?.message || 'No se actualizaron filas',
-            esperados: attachmentIds.length,
-            obtenidos: retryUpdated?.length || 0
-          })
+          console.error('[Messages] ❌ Retry also failed:', retryError?.message || 'No rows updated')
         } else {
-          console.log('[Messages] ✅ Adjuntos vinculados en reintento:', {
-            cantidad: retryUpdated.length,
-            esperados: attachmentIds.length,
-            attachmentIds: retryUpdated.map(a => a.id),
-            messageId: newMessage.id
-          })
+          console.log('[Messages] ✅ Attachments linked on retry:', retryUpdated.length, 'of', attachmentIds.length)
         }
       } else {
-        console.log('[Messages] ✅ Adjuntos vinculados exitosamente:', {
-          cantidad: updated.length,
-          esperados: attachmentIds.length,
-          attachmentIds: updated.map(a => a.id),
-          messageId: newMessage.id
-        })
+        console.log('[Messages] ✅ Attachments linked successfully:', updated.length, 'of', attachmentIds.length)
       }
     }
 
@@ -282,12 +196,12 @@ export async function POST(
       const { error: updateErr } = await supabase
         .from(conversationTable)
         .update(updateData)
-        .eq('id', conversationId)
+        .eq('id', threadId)
 
       if (updateErr) {
         console.error('[Messages] ⚠️ Failed to update conversation metadata:', updateErr.message)
       } else {
-        console.log('[Messages] ✅ Conversation metadata updated:', conversationId)
+        console.log('[Messages] ✅ Conversation metadata updated:', threadId)
       }
     } catch (metaErr: any) {
       console.error('[Messages] ⚠️ Exception updating conversation metadata:', metaErr.message)
@@ -313,7 +227,7 @@ export async function POST(
 
     // Log para desarrollo
     if (process.env.NODE_ENV === 'development') {
-      console.log(`📨 Mensaje enviado en conversación ${conversationId}:`, {
+      console.log(`📨 Mensaje enviado en hilo ${threadId}:`, {
         messageId: newMessage.id,
         senderId: userProfile.id,
         content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
@@ -325,7 +239,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: formattedMessage,
-      conversationId
+      threadId
     })
 
   } catch (error) {

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -82,19 +82,19 @@ export default function ContactButton({
       }
 
       const data = await response.json()
-      const threadId = data.threadId
+      const conversationId = data.conversationId
 
       console.log('[Messages] ✅ Conversación creada/abierta:', threadId)
 
       // ⭐ ANALYTICS: Track message sent (conversation created)
       try {
-        analytics.messageSent(threadId, propertyId);
+        analytics.messageSent(conversationId, propertyId);
       } catch (e) {
         console.warn('[Analytics] messageSent failed:', e);
       }
 
         // Navegar al hilo de mensajes
-      router.push(`/messages/${threadId}`)
+      router.push(`/messages/${conversationId}`)
 
     } catch (error: any) {
       console.error('[Messages] ❌ Exception creating thread:', error)

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -32,7 +32,7 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
+  const [selectedconversationId, setselectedConversationId] = useState<string | null>(null)
   const [creatingThread, setCreatingThread] = useState(false)
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null)
   const router = useRouter()
@@ -57,7 +57,7 @@ export default function MessagesPage() {
       
       // Detectar parámetros de la URL
       const userId = searchParams.get('userId')
-      const threadId = searchParams.get('thread')
+      const conversationId = searchParams.get('thread')
       
       // Prioridad 1: Si hay userId (nuevo flujo desde comunidad)
       if (userId && !threadId) {
@@ -65,7 +65,7 @@ export default function MessagesPage() {
       } 
       // Prioridad 2: Si hay threadId (flujo existente)
       else if (threadId) {
-        setSelectedThreadId(threadId)
+        setselectedConversationId(threadId)
       }
       
       // Configurar suscripción real-time para actualizaciones de threads (solo para properties)
@@ -104,12 +104,12 @@ export default function MessagesPage() {
       
       const data = await response.json()
       
-      if (data.success && data.threadId) {
-        console.log('[CREATE THREAD] Thread creado/encontrado:', data.threadId, 'existing:', data.existing)
+      if (data.success && data.conversationId) {
+        console.log('[CREATE THREAD] Thread creado/encontrado:', data.conversationId, 'existing:', data.existing)
         
         // Actualizar URL y abrir thread
-        router.push(`/messages/${data.threadId}`)
-        setSelectedThreadId(data.threadId)
+        router.push(`/messages/${data.conversationId}`)
+        setselectedConversationId(data.conversationId)
         
         // Refrescar lista de conversaciones
         await fetchConversations()
@@ -258,9 +258,9 @@ export default function MessagesPage() {
       console.log('[MessagesUI] Raw threads data:', JSON.stringify(responseData.threads, null, 2))
       
       const normalizedThreads = (responseData.threads || []).map((thread: any) => {
-        console.log('[MessagesUI] Processing thread:', thread.threadId, 'otherUser.avatarUrl:', thread.otherUser?.avatarUrl)
+        console.log('[MessagesUI] Processing thread:', thread.conversationId, 'otherUser.avatarUrl:', thread.otherUser?.avatarUrl)
         // PROMPT 4: Garantizar threadId siempre presente
-        const threadId = thread.threadId || thread.id || `unknown-${Date.now()}`
+        const conversationId = thread.conversationId || thread.id || `unknown-${Date.now()}`
         
         // PROMPT D3: Sanitizar displayName para garantizar que nunca sea UUID
         const rawDisplayName = thread.otherUser?.displayName || 
@@ -287,7 +287,7 @@ export default function MessagesPage() {
         const updatedAtISO = updatedAtRaw ? new Date(updatedAtRaw).toISOString() : new Date().toISOString()
         
         return {
-          id: threadId,
+          id: conversationId,
           property_id: thread.property?.id || thread.propertyId || '',
           property_title: thread.property?.title || 'Conversación',
           property_image: thread.property?.coverUrl || thread.propertyImage || null,
@@ -361,7 +361,7 @@ export default function MessagesPage() {
   }
 
   // Si hay un thread seleccionado, mostrar el panel de chat
-  if (selectedThreadId) {
+  if (selectedConversationId) {
     return (
       <div className="h-screen flex bg-gray-50">
         {/* Panel izquierdo - Lista de threads */}
@@ -412,7 +412,7 @@ export default function MessagesPage() {
               <div
                 key={conversation.id}
                 className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors group ${
-                  selectedThreadId === conversation.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                  selectedConversationId === conversation.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                 }`}
               >
                 <div className="flex items-start space-x-3">
@@ -421,7 +421,7 @@ export default function MessagesPage() {
                     className="flex-shrink-0 cursor-pointer"
                     onClick={() => {
                       console.log('[MessagesUI] Thread seleccionado:', conversation.id)
-                      setSelectedThreadId(conversation.id)
+                      setselectedConversationId(conversation.id)
                       router.push(`/messages/${conversation.id}`)
                     }}
                   >
@@ -435,7 +435,7 @@ export default function MessagesPage() {
                     className="flex-1 min-w-0 cursor-pointer"
                     onClick={() => {
                       console.log('[MessagesUI] Thread seleccionado:', conversation.id)
-                      setSelectedThreadId(conversation.id)
+                      setselectedConversationId(conversation.id)
                       router.push(`/messages/${conversation.id}`)
                     }}
                   >
@@ -496,8 +496,8 @@ export default function MessagesPage() {
                         await fetchConversations()
                         
                         // Si era la conversación seleccionada, deseleccionar
-                        if (selectedThreadId === conversation.id) {
-                          setSelectedThreadId(null)
+                        if (selectedConversationId === conversation.id) {
+                          setselectedConversationId(null)
                           router.push('/messages')
                         }
                       } catch (err: any) {
@@ -520,7 +520,7 @@ export default function MessagesPage() {
 
         {/* Panel derecho - Chat interface */}
         <div className="flex-1 flex flex-col">
-          <ChatInterface threadId={selectedThreadId} onThreadUpdate={fetchConversations} />
+          <ChatInterface threadId={selectedconversationId} onThreadUpdate={fetchConversations} />
         </div>
       </div>
     )
@@ -675,11 +675,11 @@ export default function MessagesPage() {
                 key={conversation.id}
                 onClick={() => {
                   console.log('[MessagesUI] Thread seleccionado:', conversation.id)
-                  setSelectedThreadId(conversation.id)
+                  setselectedConversationId(conversation.id)
                   router.push(`/messages/${conversation.id}`)
                 }}
                 className={`bg-white rounded-lg border p-6 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer ${
-                  selectedThreadId === conversation.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'
+                  selectedConversationId === conversation.id ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'
                 }`}
               >
                 <div className="flex items-start space-x-4">

@@ -259,11 +259,11 @@ export async function GET(request: NextRequest) {
         )
 
         // PROMPT D1: Log detallado de displayName resolution
-        console.log(`[DISPLAYNAME] threadId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserData?.id || otherProfile?.userId || otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
+        console.log(`[DISPLAYNAME] conversationId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserData?.id || otherProfile?.userId || otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
         
         // PROMPT D1: Warning si displayName está vacío o es UUID
         if (!displayName || displayName.trim() === '' || isUUID(displayName)) {
-          console.warn(`[DisplayName] MISSING → payload would fallback to threadId for thread=${conv.id}`)
+          console.warn(`[DisplayName] MISSING → payload would fallback to conversationId for conversation=${conv.id}`)
         }
 
         // PROMPT D6: Check preventivo antes de responder
@@ -332,7 +332,7 @@ export async function GET(request: NextRequest) {
         console.log(`[AVATAR DEBUG] Final avatarUrl: ${finalAvatarUrl}, from userProfilesData: ${userProfilesData?.avatar_url}, from User: ${otherUserData?.avatar}`)
         
         threads.push({
-          threadId: conv.id,
+          conversationId: conv.id,
           otherUser: {
             id: otherUserData?.id || otherProfile?.userId || otherUserId,
             displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
@@ -417,11 +417,11 @@ export async function GET(request: NextRequest) {
                       'fallback'
 
         // PROMPT D1: Log detallado de displayName resolution
-        console.log(`[DISPLAYNAME] threadId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
+        console.log(`[DISPLAYNAME] conversationId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
         
         // PROMPT D1: Warning si displayName está vacío o es UUID
         if (!displayName || displayName.trim() === '' || isUUID(displayName)) {
-          console.warn(`[DisplayName] MISSING → payload would fallback to threadId for thread=${conv.id}`)
+          console.warn(`[DisplayName] MISSING → payload would fallback to conversationId for conversation=${conv.id}`)
         }
 
         // PROMPT D6: Check preventivo antes de responder
@@ -481,7 +481,7 @@ export async function GET(request: NextRequest) {
         const lastMessageCreatedAtISO = lastMsg?.created_at ? new Date(lastMsg.created_at).toISOString() : null
 
         threads.push({
-          threadId: conv.id,
+          conversationId: conv.id,
           otherUser: {
             id: otherUserId,
             displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
@@ -577,7 +577,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[SCHEMA] ✅ Usando rama: ${schema}, reason: ${schemaReason}`)
 
-    let threadId: string | null = null
+    let conversationId: string | null = null
     let existing = false
 
     // ============================================
@@ -628,9 +628,9 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (existingConv) {
-        threadId = existingConv.id
+        conversationId = existingConv.id
         existing = true
-        console.log(`[CONVERSATION] ✅ Existente: ${threadId}`)
+        console.log(`[CONVERSATION] ✅ Existente: ${conversationId}`)
       } else {
         // Crear nueva conversación
         const newId = crypto.randomUUID()
@@ -655,9 +655,9 @@ export async function POST(request: NextRequest) {
           }, { status: 500 })
         }
 
-        threadId = newConv.id
+        conversationId = newConv.id
         existing = false
-        console.log(`[CONVERSATION] ✅ Nueva: ${threadId}`)
+        console.log(`[CONVERSATION] ✅ Nueva: ${conversationId}`)
       }
     }
 
@@ -709,9 +709,9 @@ export async function POST(request: NextRequest) {
       const { data: existingConv } = await query.single()
 
       if (existingConv) {
-        threadId = existingConv.id
+        conversationId = existingConv.id
         existing = true
-        console.log(`[CONVERSATION] ✅ Existente: ${threadId}`)
+        console.log(`[CONVERSATION] ✅ Existente: ${conversationId}`)
       } else {
         // Crear nueva conversación
         const insertData: any = {
@@ -739,19 +739,19 @@ export async function POST(request: NextRequest) {
           }, { status: 500 })
         }
 
-        threadId = newConv.id
+        conversationId = newConv.id
         existing = false
-        console.log(`[CONVERSATION] ✅ Nueva: ${threadId}`)
+        console.log(`[CONVERSATION] ✅ Nueva: ${conversationId}`)
       }
     }
 
     const duration = Date.now() - startTime
-    console.log(`[THREADS POST] ✅ threadId: ${threadId}, existing: ${existing}, ${duration}ms, rama: ${schema}`)
+    console.log(`[THREADS POST] ✅ conversationId: ${conversationId}, existing: ${existing}, ${duration}ms, rama: ${schema}`)
 
-    // PROMPT 1, 2 & C & D4: Respuesta unificada con threadId
+    // PROMPT 1, 2 & C & D4: Respuesta unificada con conversationId
     return NextResponse.json({
       success: true,
-      threadId,
+      conversationId,
       existing,
       _meta: {
         schema,

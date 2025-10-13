@@ -35,7 +35,7 @@ export default function ConversationPage({
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto h-screen">
         <ChatInterface
-          threadId={params.conversationId}
+          conversationId={params.conversationId}
           onThreadUpdate={() => {}}
         />
       </div>

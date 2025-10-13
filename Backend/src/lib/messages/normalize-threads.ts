@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PROMPT 3: Normalización consistente de threads
  * 
  * Blindar el cliente ante pequeñas variaciones del API.
@@ -66,7 +66,7 @@ export function normalizeThread(rawThread: any): EnrichedThread {
   }
 
   return {
-    threadId: rawThread.threadId || rawThread.thread_id || rawThread.id || '',
+    conversationId: rawthread.conversationId || rawThread.thread_id || rawThread.id || '',
     otherUser,
     lastMessage,
     unreadCount: rawThread.unreadCount || rawThread.unread_count || 0,
@@ -89,7 +89,7 @@ export function normalizeThreads(rawThreads: any[]): EnrichedThread[] {
   }
 
   return rawThreads
-    .filter(thread => thread && (thread.threadId || thread.thread_id || thread.id))
+    .filter(thread => thread && (thread.conversationId || thread.thread_id || thread.id))
     .map(thread => {
       try {
         return normalizeThread(thread)
@@ -105,8 +105,8 @@ export function normalizeThreads(rawThreads: any[]): EnrichedThread[] {
  * Valida que un thread normalizado tenga todos los campos críticos
  */
 export function validateThread(thread: EnrichedThread): boolean {
-  if (!thread.threadId) {
-    console.warn('[validateThread] Missing threadId')
+  if (!thread.conversationId) {
+    console.warn('[validateThread] Missing conversationId')
     return false
   }
 
