@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useMessages } from '@/contexts/MessagesContext'
 import ChatInterface from '@/components/ui/ChatInterface'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SafeAvatar } from '@/components/ui/SafeAvatar'
@@ -28,6 +29,7 @@ type MessageTab = 'properties' | 'community'
 
 export default function MessagesPage() {
   const { user, isLoading: authLoading } = useSupabaseAuth()
+  const { deleteConversation } = useMessages()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -464,49 +466,29 @@ export default function MessagesPage() {
                       })}
                     </p>
                   </div>
-                  {/* Botón eliminar - visible al hover */}
+                  {/* Botón eliminar - visible en mobile, hover en desktop */}
                   <button
+                    type="button"
                     onClick={async (e) => {
                       e.stopPropagation()
                       if (!confirm('¿Estás seguro de que deseas eliminar esta conversación? Esta acción no se puede deshacer.')) {
                         return
                       }
                       
-                      try {
-                        const response = await fetch(`/api/messages/threads/${conversation.id}/delete`, {
-                          method: 'DELETE',
-                          credentials: 'include'
-                        })
-                        
-                        const data = await response.json()
-                        
-                        // Manejar respuesta con formato { ok: boolean, error?: string }
-                        if (!data.ok) {
-                          console.error('[DELETE] Error en respuesta:', data.error)
-                          const errorMessages: Record<string, string> = {
-                            'unauthorized': 'No estás autorizado para eliminar esta conversación',
-                            'not-found': 'Conversación no encontrada',
-                            'invalid-id': 'ID de conversación inválido',
-                            'unexpected': 'Error inesperado al eliminar la conversación'
-                          }
-                          throw new Error(errorMessages[data.error] || 'Error al eliminar conversación')
-                        }
-                        
-                        // Actualizar lista
-                        await fetchConversations()
-                        
+                      const ok = await deleteConversation(conversation.id, 'property')
+                      if (ok) {
                         // Si era la conversación seleccionada, deseleccionar
                         if (selectedConversationId === conversation.id) {
                           setSelectedConversationId(null)
                           router.push('/messages')
                         }
-                      } catch (err: any) {
-                        console.error('[DELETE] Error:', err)
-                        alert(err.message || 'Error al eliminar conversación')
+                      } else {
+                        alert('No se pudo eliminar la conversación')
                       }
                     }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                    className="md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 active:opacity-100 transition-opacity flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg"
                     title="Eliminar conversación"
+                    aria-label="Eliminar conversación"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

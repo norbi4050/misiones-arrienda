@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useMessages } from '@/contexts/MessagesContext'
 import { useUnifiedMessages } from '@/hooks/useUnifiedMessages'
 import { MessageTabs, ConversationBadge } from '@/components/messages'
 import { SafeAvatar } from '@/components/ui/SafeAvatar'
@@ -12,6 +13,7 @@ import type { UnifiedMessageFilter, UnifiedConversation, MessageType } from '@/t
 
 export default function UnifiedMessagesPage() {
   const { user, isLoading: authLoading } = useSupabaseAuth()
+  const { deleteConversation } = useMessages()
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -58,28 +60,14 @@ export default function UnifiedMessagesPage() {
     router.push(`/messages?tab=${activeTab}&thread=${conversation.id}`)
   }
 
-  // Handler para eliminar conversación
+  // Handler para eliminar conversación usando contexto
   const handleDeleteConversation = async (id: string, type: MessageType) => {
     if (!confirm('¿Estás seguro de que deseas eliminar esta conversación? Esta acción no se puede deshacer.')) {
       return
     }
 
-    try {
-      const endpoint = type === 'property' 
-        ? `/api/messages/threads/${id}/delete`
-        : `/api/comunidad/messages/${id}/delete`
-
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-
-      const data = await response.json()
-
-      if (!data.ok) {
-        throw new Error(data.error || 'Error al eliminar conversación')
-      }
-
+    const ok = await deleteConversation(id, type)
+    if (ok) {
       // Refrescar lista
       await refetch()
 
@@ -89,9 +77,8 @@ export default function UnifiedMessagesPage() {
         setSelectedThreadType(null)
         router.push(`/messages?tab=${activeTab}`)
       }
-    } catch (err: any) {
-      console.error('[DELETE] Error:', err)
-      alert(err.message || 'Error al eliminar conversación')
+    } else {
+      alert('No se pudo eliminar la conversación')
     }
   }
 
@@ -207,12 +194,14 @@ export default function UnifiedMessagesPage() {
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleDeleteConversation(conversation.id, conversation.type)
                       }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                      className="md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 active:opacity-100 transition-opacity flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg"
                       title="Eliminar conversación"
+                      aria-label="Eliminar conversación"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

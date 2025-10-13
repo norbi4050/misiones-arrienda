@@ -140,6 +140,35 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const deleteConversation = async (conversationId: string, type: 'property' | 'community' = 'property'): Promise<boolean> => {
+    if (!user) return false
+
+    try {
+      console.debug('[DeleteConversation] usando contexto', { conversationId, type })
+      
+      const endpoint = type === 'property'
+        ? `/api/messages/threads/${conversationId}/delete`
+        : `/api/comunidad/messages/${conversationId}/delete`
+
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      const ok = data?.ok === true || data?.success === true
+      if (!ok) return false
+
+      await fetchConversations()
+      return true
+    } catch (err: any) {
+      console.error('Error deleting conversation:', err)
+      setError(err.message)
+      return false
+    }
+  }
+
   const archiveConversation = async (conversationId: string): Promise<boolean> => {
     if (!user) return false
 
@@ -232,6 +261,7 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
     sendMessage,
     createConversation,
     markAsRead,
+    deleteConversation,
     archiveConversation,
     blockConversation,
     refreshConversations,

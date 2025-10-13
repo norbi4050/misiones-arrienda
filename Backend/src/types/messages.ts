@@ -193,6 +193,7 @@ export interface MessagesContextType {
   sendMessage: (conversationId: string, content: string) => Promise<boolean>
   createConversation: (propertyId: string, recipientId: string, initialMessage: string) => Promise<string | null>
   markAsRead: (conversationId: string) => Promise<void>
+  deleteConversation: (conversationId: string, type?: 'property' | 'community') => Promise<boolean>
   archiveConversation: (conversationId: string) => Promise<boolean>
   blockConversation: (conversationId: string) => Promise<boolean>
   refreshConversations: () => Promise<void>
