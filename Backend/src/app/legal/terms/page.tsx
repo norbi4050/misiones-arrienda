@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   }
 }
 
+// FIX 304: Deshabilitar caché para páginas legales
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function TermsPage() {
   const { responsable, contacto, marcoLegal } = LEGAL_INFO
 

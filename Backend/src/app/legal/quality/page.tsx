@@ -3,6 +3,10 @@ import Link from 'next/link'
 import { Award, Target, TrendingUp, FileText } from 'lucide-react'
 import { LEGAL_INFO, formatLegalDate } from '@/lib/legal-constants'
 
+// FIX 304: Deshabilitar caché para páginas legales
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: 'Política de Gestión de Calidad | Misiones Arrienda',
   description: 'Política de gestión de calidad y mejora continua de Misiones Arrienda.',
