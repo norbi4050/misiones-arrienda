@@ -90,16 +90,25 @@ export async function GET(request: NextRequest) {
       // Usar la lógica del endpoint existente de comunidad
       let communityUnreadCount = 0
 
-      // Estrategia 1: RPC (si existe)
-      try {
-        const { data, error } = await supabase.rpc('get_unread_messages_count', {
-          p_uid: user.id
-        })
+      // Estrategia 1: RPC (si existe y está habilitado)
+      const enableUnreadRpc = process.env.NEXT_PUBLIC_ENABLE_UNREAD_RPC === '1'
+      
+      if (enableUnreadRpc) {
+        try {
+          const { data, error } = await supabase.rpc('get_unread_messages_count', {
+            p_uid: user.id
+          })
 
-        if (typeof data === 'number') {
-          communityUnreadCount = data
+          if (typeof data === 'number') {
+            communityUnreadCount = data
+          }
+        } catch (rpcError) {
+          console.log('[UNREAD-COUNT] RPC not available, trying fallback strategies')
         }
-      } catch (rpcError) {
+      }
+      
+      // Si RPC está deshabilitado o falló, usar estrategias alternativas
+      if (communityUnreadCount === 0) {
         // Estrategia 2: Tabla messages clásica
         try {
           const { count: unreadCount } = await supabase

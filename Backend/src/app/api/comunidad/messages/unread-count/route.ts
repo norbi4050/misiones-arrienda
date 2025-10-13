@@ -21,6 +21,14 @@ export async function GET() {
       return NextResponse.json({ count: 0 }, { status: 200 })
     }
 
+    // Feature flag: solo llamar RPC si está habilitado (evita 404 si no existe)
+    const enableUnreadRpc = process.env.NEXT_PUBLIC_ENABLE_UNREAD_RPC === '1'
+    
+    if (!enableUnreadRpc) {
+      console.log('[unread-count] RPC deshabilitado por flag, returning count: 0')
+      return NextResponse.json({ count: 0 }, { status: 200 })
+    }
+
     // Call RPC function
     const { data, error } = await supabase.rpc('get_unread_messages_count', { 
       p_uid: user.id 
