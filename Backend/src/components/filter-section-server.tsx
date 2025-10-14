@@ -127,17 +127,17 @@ export function FilterSectionServer({
       }
     }
 
-    // Convert listing type filter
+    // Convert listing type filter (operationType)
     if (filters.listingType !== "all") {
       switch (filters.listingType) {
         case "rent":
-          apiFilters.listingType = "RENT"
+          apiFilters.operationType = "alquiler"
           break
         case "sale":
-          apiFilters.listingType = "SALE"
+          apiFilters.operationType = "venta"
           break
         case "both":
-          apiFilters.listingType = "BOTH"
+          apiFilters.operationType = "ambos"
           break
       }
     }
