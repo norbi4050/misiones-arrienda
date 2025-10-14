@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 // Rate limiting simple en memoria (por IP + minuto)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_MAX = 60; // 60 requests por minuto por IP

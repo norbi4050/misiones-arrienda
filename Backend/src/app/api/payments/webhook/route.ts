@@ -3,6 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { getPaymentInfo, validateWebhookSignature, processPaymentEffects } from '@/lib/mercadopago/helpers';
 import { MP_CONFIG } from '@/lib/mercadopago/client';
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🔔 Webhook MercadoPago recibido');

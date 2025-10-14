@@ -3,6 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 import { updateCommunityPostSchema } from '@/lib/validations/community'
 import type { CommunityPost } from '@/types/community'
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 // GET /api/comunidad/posts/[id] - Devuelve detalle + author_photo
 export async function GET(
   request: NextRequest,

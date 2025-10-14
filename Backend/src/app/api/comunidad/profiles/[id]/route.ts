@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 // Schema para actualizar perfil
 const updateProfileSchema = z.object({
   role: z.enum(['BUSCO', 'OFREZCO']).optional(),

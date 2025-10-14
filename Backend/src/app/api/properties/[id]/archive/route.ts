@@ -1,5 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 export async function POST(req: Request) {
   const { id } = await req.json()
   const supabase = createClient() // SSR client con cookies

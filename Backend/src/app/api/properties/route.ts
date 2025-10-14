@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { propertySchema } from '@/lib/validations/property';
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 // Mock data para desarrollo y testing (se puede remover en producción)
 const mockProperties = [
   {

@@ -3,6 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { createFeaturePreference } from '@/lib/mercadopago/helpers';
 import { isMPAvailable, logMPConfig } from '@/lib/mercadopago/client';
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🔧 POST /api/payments/feature iniciado');

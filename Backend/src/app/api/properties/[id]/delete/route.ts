@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient()

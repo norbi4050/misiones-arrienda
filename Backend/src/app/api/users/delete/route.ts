@@ -5,6 +5,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { DeleteAccountResponse } from '@/types/account'
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = createClient()

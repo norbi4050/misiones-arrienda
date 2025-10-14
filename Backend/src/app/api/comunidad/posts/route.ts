@@ -3,6 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createCommunityPostSchema, communityPostFiltersSchema } from '@/lib/validations/community'
 import type { CommunityPost, CommunityPostsResponse } from '@/types/community'
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 // GET /api/comunidad/posts - Lista paginada desde view public.community_posts_public
 export async function GET(request: NextRequest) {
   try {

@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { enforcePlanLimit } from '@/lib/plan-guards';
 
+// Marcar esta ruta como dinámica para evitar errores de build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   try {
     const supabase = createClient();
