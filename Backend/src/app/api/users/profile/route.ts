@@ -167,7 +167,22 @@ async function handleProfileUpdate(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   try {
-    // SAFE-FIX: Parse JSON with error handling
+    // ====================== SAFE-FIX NORMALIZACIÓN BODY ======================
+    // ROLLBACK hint: restaurar al bloque original si es necesario
+    
+    // Helper: convierte "" y null → undefined
+    const toNonEmpty = (v: unknown) => {
+      if (typeof v === 'string') {
+        const s = v.trim();
+        return s.length ? s : undefined;   // "" -> undefined
+      }
+      return v === null ? undefined : v;   // null -> undefined
+    };
+    
+    // Helper: valida números o devuelve undefined
+    const toNumberOrUndef = (v: unknown) =>
+      typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+
     let raw: any = {};
     try { 
       raw = await req.json(); 
@@ -175,7 +190,7 @@ async function handleProfileUpdate(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    // SAFE-FIX: Normalizar body - aceptar wrapper { profile: {...} } o JSON plano
+    // SAFE-FIX: aceptar wrapper { profile: {...} } o JSON plano
     const src = raw?.profile ?? raw;
 
     // SAFE-FIX: Log para debugging (ROLLBACK hint: remover en producción)
@@ -186,36 +201,35 @@ async function handleProfileUpdate(req: NextRequest) {
       }
     }
 
-    // SAFE-FIX: Normalizar campos con alias comunes
+    // SAFE-FIX: normalizar campos ("" / null -> undefined)
     const normalized = {
-      role: src.role,
-      city: src.city,
+      name: toNonEmpty(src.name ?? src.displayName),
+      role: toNonEmpty(src.role),
+      city: toNonEmpty(src.city),
       neighborhood: src.neighborhood ?? null,
-      budgetMin: src.budgetMin,
-      budgetMax: src.budgetMax,
       bio: src.bio ?? null,
-      photos: src.photos ?? null,
+      budgetMin: toNumberOrUndef(src.budgetMin),
+      budgetMax: toNumberOrUndef(src.budgetMax),
       age: src.age ?? null,
-      petPref: src.petPref ?? null,
-      smokePref: src.smokePref ?? null,
-      diet: src.diet ?? null,
+      petPref: toNonEmpty(src.petPref),
+      smokePref: toNonEmpty(src.smokePref),
+      diet: toNonEmpty(src.diet),
       scheduleNotes: src.scheduleNotes ?? null,
-      tags: src.tags ?? null,
-      acceptsMessages: src.acceptsMessages ?? null,
+      tags: Array.isArray(src.tags) ? src.tags : null,
+      acceptsMessages: typeof src.acceptsMessages === 'boolean' ? src.acceptsMessages : null,
       highlightedUntil: src.highlightedUntil ?? null,
-      isSuspended: src.isSuspended ?? null,
+      isSuspended: typeof src.isSuspended === 'boolean' ? src.isSuspended : null,
       expiresAt: src.expiresAt ?? null,
-      isPaid: src.isPaid ?? null,
-      // SAFE-FIX: Aceptar displayName como alias de name
-      name: src.name ?? src.displayName,
+      isPaid: typeof src.isPaid === 'boolean' ? src.isPaid : null,
+      photos: Array.isArray(src.photos) ? src.photos : null,
     };
 
-    // SAFE-FIX: Remover campos undefined para evitar escribir nulls innecesarios
+    // SAFE-FIX: limpiar undefined
     const cleanedData = Object.fromEntries(
       Object.entries(normalized).filter(([_, v]) => v !== undefined)
     );
 
-    // SAFE-FIX: Validar con Zod usando datos normalizados
+    // SAFE-FIX: validar con Zod actual
     const validation = UserProfileSchema.safeParse(cleanedData);
     if (!validation.success) {
       // SAFE-FIX: Log detallado en desarrollo
