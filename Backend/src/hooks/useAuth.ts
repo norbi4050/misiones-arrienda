@@ -1,6 +1,6 @@
 'use client';
 
-import { createBrowserClient } from '@supabase/ssr';
+import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ProfilePersistence } from '@/lib/profile-persistence';
@@ -40,11 +40,8 @@ export function useAuth() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Crear cliente de Supabase
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Get singleton Supabase client (prevents "Multiple GoTrueClient instances" warning)
+  const supabase = getBrowserSupabase();
 
   const fetchUserProfile = async (userId: string, useCache: boolean = true): Promise<User | null> => {
     try {
