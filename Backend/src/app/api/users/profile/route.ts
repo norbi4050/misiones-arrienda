@@ -167,19 +167,64 @@ async function handleProfileUpdate(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   try {
-    let body: any = {};
+    // SAFE-FIX: Parse JSON with error handling
+    let raw: any = {};
     try { 
-      body = await req.json(); 
+      raw = await req.json(); 
     } catch {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    // Validate with Zod
-    const validation = UserProfileSchema.safeParse(body);
+    // SAFE-FIX: Normalizar body - aceptar wrapper { profile: {...} } o JSON plano
+    const src = raw?.profile ?? raw;
+
+    // SAFE-FIX: Log para debugging (ROLLBACK hint: remover en producción)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Profile Update] Raw keys:', Object.keys(raw));
+      if (raw.profile) {
+        console.log('[Profile Update] Nested profile keys:', Object.keys(raw.profile));
+      }
+    }
+
+    // SAFE-FIX: Normalizar campos con alias comunes
+    const normalized = {
+      role: src.role,
+      city: src.city,
+      neighborhood: src.neighborhood ?? null,
+      budgetMin: src.budgetMin,
+      budgetMax: src.budgetMax,
+      bio: src.bio ?? null,
+      photos: src.photos ?? null,
+      age: src.age ?? null,
+      petPref: src.petPref ?? null,
+      smokePref: src.smokePref ?? null,
+      diet: src.diet ?? null,
+      scheduleNotes: src.scheduleNotes ?? null,
+      tags: src.tags ?? null,
+      acceptsMessages: src.acceptsMessages ?? null,
+      highlightedUntil: src.highlightedUntil ?? null,
+      isSuspended: src.isSuspended ?? null,
+      expiresAt: src.expiresAt ?? null,
+      isPaid: src.isPaid ?? null,
+      // SAFE-FIX: Aceptar displayName como alias de name
+      name: src.name ?? src.displayName,
+    };
+
+    // SAFE-FIX: Remover campos undefined para evitar escribir nulls innecesarios
+    const cleanedData = Object.fromEntries(
+      Object.entries(normalized).filter(([_, v]) => v !== undefined)
+    );
+
+    // SAFE-FIX: Validar con Zod usando datos normalizados
+    const validation = UserProfileSchema.safeParse(cleanedData);
     if (!validation.success) {
+      // SAFE-FIX: Log detallado en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Profile Update] Validation failed:', validation.error.flatten());
+      }
       return NextResponse.json({ 
         error: "Validation failed", 
-        details: validation.error.errors 
+        issues: validation.error.flatten()
       }, { status: 400 });
     }
 
@@ -301,7 +346,20 @@ async function handleProfileUpdate(req: NextRequest) {
       ...(validatedData.name !== undefined && { name: validatedData.name })
     };
 
-    return NextResponse.json({ profile: responsePayload }, { status: 200 });
+    // SAFE-FIX: Calcular versión para cache busting
+    const v = Math.floor(new Date().getTime() / 1000);
+
+    return NextResponse.json(
+      { 
+        success: true,
+        profile: { ...responsePayload, v }
+      }, 
+      { 
+        status: 200,
+        // SAFE-FIX: Headers para evitar caché
+        headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+      }
+    );
   } catch (error) {
     console.error('Profile update error:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
