@@ -27,6 +27,8 @@ export async function POST(req: Request) {
 
     const payload = {
       title: (body.title ?? '').slice(0, 255),
+      // FIX: Agregar description para que se guarde al crear el borrador
+      description: body.description ?? null,
       price,                       // puede ser null
       city: body.city ?? null,     // si usás city_id, ajustá
       province: body.province ?? null,
