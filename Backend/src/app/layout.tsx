@@ -1,16 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { ThemeProvider } from '@/components/theme-provider'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
-import { AIChatbot } from '@/components/ai-chatbot'
-import WhatsAppButton from '@/components/whatsapp-button'
-import BuildBadge from '@/components/BuildBadge'
-import { AuthProvider } from '@/components/auth-provider'
-import { MessagesProvider } from '@/contexts/MessagesContext'
-import ToasterProvider from '@/components/toaster-provider'
-import { PresenceTracker } from '@/components/presence/PresenceTracker'
+import { LayoutClientWrapper } from './layout-client-wrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -54,39 +45,10 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <MessagesProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <div className="flex flex-col min-h-screen">
-                <Navbar />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
-              </div>
-
-              {/* WhatsApp Button Global - Siempre visible */}
-              <WhatsAppButton type="fixed" />
-
-              {/* AI Chatbot */}
-              <AIChatbot />
-
-              {/* Build Badge para debugging */}
-              <BuildBadge />
-
-              {/* Toast Notifications Sonner */}
-              <ToasterProvider />
-
-              {/* Presence Tracker - Sistema de tracking de estado online/offline */}
-              <PresenceTracker />
-            </ThemeProvider>
-          </MessagesProvider>
-        </AuthProvider>
+        {/* PERF: Client wrapper para lazy loading condicional */}
+        <LayoutClientWrapper>
+          {children}
+        </LayoutClientWrapper>
       </body>
     </html>
   )

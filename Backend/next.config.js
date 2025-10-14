@@ -3,6 +3,8 @@ const nextConfig = {
   // Exclude dynamic pages from static generation
   experimental: {
     missingSuspenseWithCSRBailout: false,
+    // PERF: Optimiza imports de paquetes pesados para reducir bundle size
+    optimizePackageImports: ['lucide-react', 'date-fns', 'lodash', '@headlessui/react'],
   },
   images: {
     remotePatterns: [
