@@ -1,5 +1,6 @@
-// Force dynamic rendering for Vercel
+// SAFE-FIX: Force dynamic rendering + no revalidation for avatar changes
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
@@ -68,6 +69,7 @@ export async function GET(request: NextRequest) {
       : 0;
 
     // Devolver URL cruda sin ?v= - el frontend se encarga del cache-busting
+    // SAFE-FIX: No cache headers for avatar GET
     return NextResponse.json({
       url: url,  // URL cruda sin ?v=
       v: v,
@@ -77,7 +79,7 @@ export async function GET(request: NextRequest) {
     }, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, max-age=300'
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
       }
     })
 
@@ -116,22 +118,39 @@ export async function POST(req: NextRequest) {
     // 4) URL pública
     const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
     const url = pub.publicUrl
-    const v = Math.floor(Date.now() / 1000)
 
-    // 5) Guardar en user_profiles (usar id como PK)
-    const { error: updErr } = await supabase
+    // SAFE-FIX: Actualizar BD y leer updated_at real para calcular v consistente
+    const now = new Date().toISOString()
+    const { data: updatedProfile, error: updErr } = await supabase
       .from('user_profiles')
-      .update({ avatar_url: url, updated_at: new Date().toISOString() })
+      .update({ avatar_url: url, updated_at: now })
       .eq('id', user.id)
+      .select('updated_at')
+      .single()
 
-    // Si no existe la fila aún, upsert rápido
-    if (updErr?.code === 'PGRST116' /* 0 rows */ || updErr == null) {
-      await supabase
+    // Si no existe la fila aún, upsert y leer
+    let finalUpdatedAt = updatedProfile?.updated_at || now
+    if (updErr?.code === 'PGRST116' /* 0 rows */ || updErr) {
+      const { data: upserted } = await supabase
         .from('user_profiles')
-        .upsert({ id: user.id, avatar_url: url, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+        .upsert({ id: user.id, avatar_url: url, updated_at: now }, { onConflict: 'id' })
+        .select('updated_at')
+        .single()
+      finalUpdatedAt = upserted?.updated_at || now
     }
 
-    return NextResponse.json({ url: `${url}?v=${v}`, v, success: true })
+    // SAFE-FIX: Calcular v desde updated_at de BD (fuente única de verdad)
+    const v = Math.floor(new Date(finalUpdatedAt).getTime() / 1000)
+
+    // SAFE-FIX: Devolver URL cruda + v separado, sin ?v= pre-aplicado
+    // ROLLBACK hint: antes era { url: `${url}?v=${v}`, v, success: true }
+    return NextResponse.json({ 
+      url: url,  // URL cruda
+      v: v,      // v desde BD
+      success: true 
+    }, {
+      headers: { 'Cache-Control': 'no-store' }
+    })
   } catch (e) {
     console.error('avatar POST error:', e)
     return NextResponse.json({ error: 'server error' }, { status: 500 })

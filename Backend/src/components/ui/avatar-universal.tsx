@@ -115,11 +115,15 @@ export default function AvatarUniversal({
 
       const uploadData = await uploadResponse.json()
       
-      if (uploadData.success && uploadData.url) {
-        setAvatarUrl(uploadData.url)
-        onAvatarChange?.(uploadData.url)
-        // Recargar avatar para obtener nueva versión
+      // SAFE-FIX: No setear URL directamente, confiar en loadAvatar que usa GET (url cruda + v de BD)
+      // ROLLBACK hint: antes era setAvatarUrl(uploadData.url) + onAvatarChange + loadAvatar
+      if (uploadData.success) {
+        // Recargar desde GET para obtener URL cruda + v consistente desde BD
         await loadAvatar()
+        // Propagar el nuevo avatarUrl después de loadAvatar
+        if (onAvatarChange && avatarUrl) {
+          onAvatarChange(avatarUrl)
+        }
       }
 
     } catch (err) {
@@ -154,6 +158,7 @@ export default function AvatarUniversal({
       <div className={baseClasses}>
         {avatarUrl ? (
           <Image
+            key={avatarUrl}  // SAFE-FIX: Fuerza re-render cuando cambia la URL
             src={avatarUrl}
             alt="Avatar"
             fill
