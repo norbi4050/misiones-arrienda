@@ -50,7 +50,7 @@ export function HeroSection() {
               <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
                 Conectá con personas que buscan compartir vivienda. Encontrá compañeros de cuarto ideales y espacios compartidos.
               </p>
-              <Link href="/comunidad">
+              <Link href="/comunidad" prefetch={false}>
                 <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white">
                   Explorar comunidad
                 </Button>

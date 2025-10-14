@@ -7,8 +7,10 @@ import CommunityListClient from './community-list-client'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Users, MessageCircle, Shield, Heart, MapPin } from 'lucide-react'
+import { Users, MessageCircle, Shield, Heart, MapPin, Building2 } from 'lucide-react'
 import { PageTracker } from '@/components/analytics/page-tracker'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { FEATURE_COMMUNITY_SOFT_GUARD } from '@/utils/env'
 
 interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -86,7 +88,8 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // [AuthBridge] Guard: Verificar si es inmobiliaria y redirigir
+  // [AuthBridge] Guard: Verificar si es inmobiliaria
+  // GUARD: soft-guard en RSC para UX; seguridad sigue en RLS/APIs
   if (user) {
     try {
       const { data: userData } = await supabase
@@ -101,8 +104,39 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
                       userData?.user_type?.toUpperCase() === 'AGENCY'
 
       if (isAgency) {
-        console.log('[AuthBridge] Agency user detected, redirecting to /mi-empresa')
-        redirect('/mi-empresa')
+        // GUARD: Si soft-guard está activo, mostrar EmptyState en lugar de redirect
+        // Si está desactivado, mantener comportamiento legacy (redirect 307)
+        if (FEATURE_COMMUNITY_SOFT_GUARD) {
+          console.log('[AuthBridge] Agency user accessing /comunidad with soft-guard (showing EmptyState)')
+          return (
+            <main className="min-h-screen bg-gray-50">
+              <PageTracker eventName="visit_comunidad_agency_blocked" />
+              <EmptyState
+                title="Comunidad disponible para inquilinos y particulares"
+                description="Si sos inmobiliaria, gestioná tus propiedades y mensajes desde Mi Empresa. La sección Comunidad está diseñada para personas que buscan compartir vivienda."
+                icon={<Building2 className="w-16 h-16 text-purple-600" />}
+                actions={
+                  <>
+                    <Link href="/mi-empresa" prefetch={false}>
+                      <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+                        Ir a Mi Empresa
+                      </Button>
+                    </Link>
+                    <Link href="/properties" prefetch={false}>
+                      <Button size="lg" variant="outline">
+                        Ver Propiedades
+                      </Button>
+                    </Link>
+                  </>
+                }
+              />
+            </main>
+          )
+        } else {
+          // Legacy mode: redirect como antes
+          console.log('[AuthBridge] Agency user detected, redirecting to /mi-empresa (legacy mode)')
+          redirect('/mi-empresa')
+        }
       }
     } catch (error) {
       console.error('[AuthBridge] Error checking user type:', error)

@@ -87,7 +87,11 @@ export async function middleware(req: NextRequest) {
   }
 
   // [AuthBridge] Guard: Bloquear /comunidad para inmobiliarias
+  // GUARD: soft-guard habilitado por FEATURE_COMMUNITY_SOFT_GUARD; evitamos 307 en /comunidad
   if (req.nextUrl.pathname.startsWith('/comunidad')) {
+    // Importar flag dinámicamente para evitar problemas de edge runtime
+    const FEATURE_COMMUNITY_SOFT_GUARD = process.env.NEXT_PUBLIC_FEATURE_COMMUNITY_SOFT_GUARD !== 'false';
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -104,8 +108,15 @@ export async function middleware(req: NextRequest) {
                         userData?.user_type?.toUpperCase() === 'AGENCY';
 
         if (isAgency) {
-          console.log('[Middleware] Agency user blocked from /comunidad, redirecting to /mi-empresa');
-          return NextResponse.redirect(new URL('/mi-empresa', req.url));
+          // GUARD: Si soft-guard está activo, NO redirigir (dejar pasar a RSC)
+          // Si está desactivado, mantener comportamiento legacy (redirect 307)
+          if (!FEATURE_COMMUNITY_SOFT_GUARD) {
+            console.log('[Middleware] Agency user blocked from /comunidad, redirecting to /mi-empresa (legacy mode)');
+            return NextResponse.redirect(new URL('/mi-empresa', req.url));
+          } else {
+            console.log('[Middleware] Agency user accessing /comunidad with soft-guard enabled (no redirect)');
+            // Continuar sin redirect - el RSC mostrará el EmptyState
+          }
         }
       }
     } catch (error) {
