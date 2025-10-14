@@ -35,12 +35,7 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         title: true,
-        createdAt: true,
-        user: {
-          select: {
-            name: true
-          }
-        }
+        createdAt: true
       }
     });
 
@@ -77,7 +72,7 @@ export async function GET(request: NextRequest) {
       activity.push({
         id: `property-${property.id}`,
         type: 'property_published' as const,
-        description: `${property.user.name} publicó "${property.title}"`,
+        description: `Nueva propiedad publicada: "${property.title}"`,
         timestamp: property.createdAt.toLocaleString('es-AR', {
           day: '2-digit',
           month: '2-digit',
