@@ -100,7 +100,27 @@ export default function InmobiliariaProfileClient({
   teamMembers = [],
   stats = null,
 }: Props) {
-  // ✅ VALIDACIÓN: Prevenir errores de hooks si profile es inválido
+  // ✅ HOOKS PRIMERO - Antes de cualquier return condicional
+  const [properties, setProperties] = useState<Property[]>(initialProperties || []);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  
+  const pageSize = 12;
+  const totalPages = Math.ceil(totalProperties / pageSize);
+  const hasMore = page < totalPages;
+
+  // B7: Track profile view on mount
+  useEffect(() => {
+    try {
+      analytics.profileView(profile.id, profile.company_name);
+    } catch (error) {
+      // Silently fail - tracking should never break UX
+      console.debug('Analytics tracking failed:', error);
+    }
+  }, [profile?.id, profile?.company_name]);
+
+  // ✅ VALIDACIÓN: Después de los hooks
   if (!profile || !profile.id || !profile.company_name) {
     console.error('[InmobiliariaProfile] Invalid profile data received:', profile);
     return (
@@ -122,25 +142,6 @@ export default function InmobiliariaProfileClient({
       </div>
     );
   }
-
-  const [properties, setProperties] = useState<Property[]>(initialProperties || []);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false);
-  
-  const pageSize = 12;
-  const totalPages = Math.ceil(totalProperties / pageSize);
-  const hasMore = page < totalPages;
-
-  // B7: Track profile view on mount
-  useEffect(() => {
-    try {
-      analytics.profileView(profile.id, profile.company_name);
-    } catch (error) {
-      // Silently fail - tracking should never break UX
-      console.debug('Analytics tracking failed:', error);
-    }
-  }, [profile.id, profile.company_name]);
 
   // Cargar más propiedades
   const loadMore = async () => {
