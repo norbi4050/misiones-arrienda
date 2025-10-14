@@ -9,8 +9,40 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { LogoUploader } from "@/components/inmobiliarias/LogoUploader"
 import { PlanCard } from "@/components/plan/PlanCard"
-import BusinessHoursEditor from "@/components/inmobiliarias/BusinessHoursEditor"
-import TeamEditor from "@/components/inmobiliarias/TeamEditor"
+import dynamic from 'next/dynamic'
+
+// Lazy load componentes pesados para mejorar rendimiento
+const BusinessHoursEditor = dynamic(
+  () => import('@/components/inmobiliarias/BusinessHoursEditor'),
+  { 
+    loading: () => (
+      <div className="animate-pulse bg-gray-100 rounded-lg p-6 h-48">
+        <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-3 bg-gray-200 rounded"></div>
+          <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+        </div>
+      </div>
+    ),
+    ssr: false
+  }
+)
+
+const TeamEditor = dynamic(
+  () => import('@/components/inmobiliarias/TeamEditor'),
+  { 
+    loading: () => (
+      <div className="animate-pulse bg-gray-100 rounded-lg p-6 h-48">
+        <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-3 bg-gray-200 rounded"></div>
+          <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+        </div>
+      </div>
+    ),
+    ssr: false
+  }
+)
 import AvatarUniversal from "@/components/ui/avatar-universal"
 import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye, User, Clock, Users, Shield } from "lucide-react"
 import { toast } from "sonner"
@@ -55,15 +87,15 @@ export default function MiEmpresaPage() {
       return
     }
 
-    if (user && user.userType !== 'inmobiliaria') {
+    if (user?.userType !== 'inmobiliaria') {
       router.push('/')
       return
     }
 
-    if (user) {
+    if (user?.id) {
       loadProfile()
     }
-  }, [user, isLoading, isAuthenticated, router])
+  }, [user?.id, isLoading, isAuthenticated])
 
   const loadProfile = async () => {
     try {
