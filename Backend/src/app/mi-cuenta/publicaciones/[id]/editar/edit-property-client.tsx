@@ -90,6 +90,18 @@ export default function EditPropertyClient({ initialProperty }: { initialPropert
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
+            <label className="block text-sm font-medium mb-1">Tipo de operación</label>
+            <select
+              value={form.operation_type || 'alquiler'}
+              onChange={e => update('operation_type', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="alquiler">Alquiler</option>
+              <option value="venta">Venta</option>
+              <option value="ambos">Alquiler y Venta</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1">Precio</label>
             <Input
               type="number"
@@ -97,6 +109,9 @@ export default function EditPropertyClient({ initialProperty }: { initialPropert
               onChange={e => update('price', e.target.value === '' ? null : Number(e.target.value))}
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Superficie (m²)</label>
             <Input
@@ -104,6 +119,9 @@ export default function EditPropertyClient({ initialProperty }: { initialPropert
               value={form.area ?? ''}
               onChange={e => update('area', e.target.value === '' ? null : Number(e.target.value))}
             />
+          </div>
+          <div>
+            {/* Espacio vacío para mantener el grid */}
           </div>
         </div>
 

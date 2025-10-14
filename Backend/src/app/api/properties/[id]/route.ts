@@ -126,6 +126,20 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       if (!Array.isArray(updateData.images)) updateData.images = []
     }
 
+    // SAFE-FIX: Sanitizar operation_type (validar valores en español)
+    if ('operation_type' in updateData) {
+      const validOperations = ['alquiler', 'venta', 'ambos'];
+      if (!validOperations.includes(updateData.operation_type)) {
+        // Si viene en inglés, convertir a español
+        const englishToSpanish: Record<string, string> = {
+          'RENT': 'alquiler',
+          'SALE': 'venta',
+          'BOTH': 'ambos'
+        };
+        updateData.operation_type = englishToSpanish[updateData.operation_type] || 'alquiler';
+      }
+    }
+
     const { data, error } = await supabase
       .from('properties')
       .update(updateData)

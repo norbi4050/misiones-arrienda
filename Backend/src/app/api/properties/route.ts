@@ -150,9 +150,14 @@ export async function GET(request: NextRequest) {
         query = query.eq('propertyType', type);
       }
       
-      // Filtro por tipo de operación (RENT, SALE, BOTH)
-      if (operationType && operationType !== 'BOTH') {
-        query = query.eq('operationType', operationType);
+      // Filtro por tipo de operación (alquiler, venta, ambos)
+      // SAFE-FIX: Soporta valores en español e inglés para compatibilidad
+      if (operationType && operationType !== 'BOTH' && operationType !== 'ambos') {
+        // Normalizar valores en inglés a español si es necesario
+        const normalizedOp = operationType === 'RENT' ? 'alquiler' 
+                           : operationType === 'SALE' ? 'venta'
+                           : operationType; // ya está en español
+        query = query.eq('operation_type', normalizedOp);
       }
       
       if (minPrice) {

@@ -19,6 +19,9 @@ export const propertySchema = z.object({
   // Tipo de propiedad - CORREGIDO: propertyType en lugar de type
   propertyType: z.enum(['APARTMENT', 'HOUSE', 'COMMERCIAL', 'LAND', 'OFFICE', 'WAREHOUSE', 'PH', 'STUDIO']),
   
+  // Tipo de operación (alquiler/venta) - NUEVO
+  operationType: z.enum(['alquiler', 'venta', 'ambos']).default('alquiler'),
+  
   // Características
   bedrooms: z.number().min(0, 'Los dormitorios no pueden ser negativos').max(20, 'Demasiados dormitorios'),
   bathrooms: z.number().min(0, 'Los baños no pueden ser negativos').max(20, 'Demasiados baños'),
@@ -90,6 +93,7 @@ export const propertyFormSchema = propertySchema.pick({
   price: true,
   currency: true,
   propertyType: true,
+  operationType: true, // NUEVO: Incluir tipo de operación
   bedrooms: true,
   bathrooms: true,
   garages: true,
@@ -169,6 +173,7 @@ export const updatePropertySchema = propertySchema.partial().extend({
 export const propertyFiltersSchema = z.object({
   city: z.string().optional(),
   propertyType: z.enum(['APARTMENT', 'HOUSE', 'COMMERCIAL', 'LAND', 'OFFICE', 'WAREHOUSE', 'PH', 'STUDIO']).optional(),
+  operationType: z.enum(['alquiler', 'venta', 'ambos']).optional(), // NUEVO: Filtro por tipo de operación
   minPrice: z.number().positive().optional(),
   maxPrice: z.number().positive().optional(),
   minBedrooms: z.number().min(0).optional(),

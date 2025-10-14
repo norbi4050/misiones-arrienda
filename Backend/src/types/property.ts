@@ -20,7 +20,7 @@ export interface Property {
   longitude?: number
   propertyType: 'APARTMENT' | 'HOUSE' | 'COMMERCIAL' | 'LAND' | 'OFFICE' | 'WAREHOUSE' | 'PH' | 'STUDIO'
   status: 'AVAILABLE' | 'RENTED' | 'SOLD' | 'MAINTENANCE' | 'RESERVED' | 'EXPIRED'
-  listingType?: 'SALE' | 'RENT' // Campo faltante agregado
+  operationType: 'alquiler' | 'venta' | 'ambos' // Tipo de operación en español
   images: string[] // Array de URLs de imágenes
   virtualTourUrl?: string
   amenities: string[] // Array de amenidades
@@ -64,18 +64,18 @@ export interface Property {
 // Tipos exportados individuales
 export type PropertyType = Property['propertyType']
 export type PropertyStatus = Property['status']
-export type ListingType = 'SALE' | 'RENT' | 'BOTH'
+export type OperationType = Property['operationType']
 
 // Tipo para filtros de propiedades
 export interface PropertyFilters {
   city?: string
-  province?: string // Campo faltante agregado
+  province?: string
   propertyType?: Property['propertyType']
-  listingType?: ListingType // Campo faltante agregado
+  operationType?: OperationType // Filtro por tipo de operación
   minPrice?: number
   maxPrice?: number
   minBedrooms?: number
-  maxBedrooms?: number // Campo faltante agregado
+  maxBedrooms?: number
   minBathrooms?: number
   featured?: boolean
   status?: Property['status']
@@ -103,6 +103,9 @@ export interface PropertyFormData {
   
   // Tipo de propiedad
   propertyType: Property['propertyType']
+  
+  // Tipo de operación
+  operationType: OperationType
   
   // Características
   bedrooms: number

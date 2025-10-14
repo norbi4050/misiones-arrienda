@@ -20,6 +20,7 @@ import {
   Heart,
   MessageSquare
 } from 'lucide-react';
+import { getOperationLabel } from '@/lib/operation-helpers';
 
 interface PropertyCardProps {
   property: {
@@ -37,6 +38,7 @@ interface PropertyCardProps {
     city: string;
     province: string;
     propertyType: string;
+    operationType?: string; // NUEVO: tipo de operación
     status: string;
     images: string[];
     featured: boolean;
@@ -183,6 +185,23 @@ export function PropertyCard({
           }}
         />
         
+        {/* Operation Type Badge - Top Left */}
+        {property.operationType && (
+          <div className="absolute top-3 left-3">
+            <Badge 
+              className={
+                property.operationType === 'venta' 
+                  ? 'bg-green-600 text-white' 
+                  : property.operationType === 'alquiler'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-purple-600 text-white'
+              }
+            >
+              {getOperationLabel(property.operationType, 'badge')}
+            </Badge>
+          </div>
+        )}
+
         {/* Featured Badge */}
         {property.featured && property.featuredExpires && new Date(property.featuredExpires) > new Date() && (
           <div className="absolute top-3 right-3">

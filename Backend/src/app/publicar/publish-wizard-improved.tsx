@@ -61,6 +61,7 @@ export default function PublishWizardImproved() {
       price: 0,
       currency: "ARS",
       propertyType: "HOUSE",
+      operationType: "alquiler", // NUEVO: Default a alquiler
       bedrooms: 0,
       bathrooms: 0,
       area: 1,
@@ -160,6 +161,7 @@ export default function PublishWizardImproved() {
             province: watchedValues.province,
             address: watchedValues.address,
             property_type: watchedValues.propertyType,
+            operation_type: watchedValues.operationType, // NUEVO: Incluir tipo de operación
             bedrooms: watchedValues.bedrooms,
             bathrooms: watchedValues.bathrooms,
             area: watchedValues.area,
@@ -424,6 +426,23 @@ export default function PublishWizardImproved() {
                     <option value="COMMERCIAL">Local Comercial</option>
                     <option value="LAND">Terreno</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de operación
+                  </label>
+                  <select
+                    className="w-full p-3 border border-gray-300 rounded-md bg-white"
+                    {...register("operationType")}
+                  >
+                    <option value="alquiler">Alquiler</option>
+                    <option value="venta">Venta</option>
+                    <option value="ambos">Alquiler y Venta</option>
+                  </select>
+                  {errors.operationType && (
+                    <p className="text-sm text-red-600 mt-1">{errors.operationType.message}</p>
+                  )}
                 </div>
 
                 <div>

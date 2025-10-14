@@ -45,7 +45,7 @@ const defaultFilters: PropertyFilters = {
   search: '',
   status: '',
   propertyType: '',
-  operationType: 'BOTH',
+  operationType: 'ambos',
   minPrice: '',
   maxPrice: '',
   city: '',
@@ -82,9 +82,9 @@ const propertyTypeOptions = [
 ];
 
 const operationTypeOptions = [
-  { value: 'BOTH', label: 'Venta y alquiler' },
-  { value: 'RENT', label: 'Solo alquiler' },
-  { value: 'SALE', label: 'Solo venta' }
+  { value: 'ambos', label: 'Alquiler y venta' },
+  { value: 'alquiler', label: 'Solo alquiler' },
+  { value: 'venta', label: 'Solo venta' }
 ];
 
 const sortOptions = [
@@ -160,7 +160,7 @@ export function PropertyFilters({
     if (filters.search) active.push({ key: 'search', label: 'Búsqueda', value: filters.search });
     if (filters.status) active.push({ key: 'status', label: 'Estado', value: statusOptions.find(o => o.value === filters.status)?.label });
     if (filters.propertyType) active.push({ key: 'propertyType', label: 'Tipo', value: propertyTypeOptions.find(o => o.value === filters.propertyType)?.label });
-    if (filters.operationType && filters.operationType !== 'BOTH') active.push({ key: 'operationType', label: 'Operación', value: operationTypeOptions.find(o => o.value === filters.operationType)?.label });
+    if (filters.operationType && filters.operationType !== 'ambos') active.push({ key: 'operationType', label: 'Operación', value: operationTypeOptions.find(o => o.value === filters.operationType)?.label });
     if (filters.minPrice) active.push({ key: 'minPrice', label: 'Precio mín.', value: `$${filters.minPrice}` });
     if (filters.maxPrice) active.push({ key: 'maxPrice', label: 'Precio máx.', value: `$${filters.maxPrice}` });
     if (filters.city) active.push({ key: 'city', label: 'Ciudad', value: filters.city });

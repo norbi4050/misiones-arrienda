@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       bathrooms: body.bathrooms ?? 0,
       area_m2: body.area_m2 ?? 0,
       property_type: body.property_type ?? 'HOUSE', // mapeá a tu enum real
+      operation_type: body.operation_type ?? 'alquiler', // SAFE-FIX: default español
       user_id: user.id,           // moderno (uuid)
       user_id_text: user.id,      // legacy (text) ← ESTA LÍNEA EVITA EL 500
       contact_phone: phone ?? null,
