@@ -244,136 +244,74 @@ async function handleProfileUpdate(req: NextRequest) {
 
     const validatedData = validation.data;
 
-    // ========================================
-    // PROMPT D1: Si se está actualizando el name, aplicar guardas
-    // ========================================
+    // ====================== SAFE-FIX (WRITE v1: columnas reales) ======================
+    // ROLLBACK hint: restaurar al bloque de upsert anterior si es necesario
+    
+    // Construir patch SOLO con columnas que existen hoy: display_name, updated_at
+    const patch: any = { updated_at: new Date().toISOString() };
+
+    // Si el payload incluye "name", mapear a display_name
     if (validatedData.name !== undefined) {
-      console.log('🛡️ [PROFILE_UPDATE] Aplicando guardas de displayName...');
-      
-      // Obtener datos actuales del usuario
-      const { data: currentUser, error: userError } = await supabase
-        .from('users')
-        .select('name, email')
+      patch.display_name = validatedData.name;
+    }
+
+    // Hacemos UPDATE por id (auth.uid()) y seleccionamos SOLO columnas reales
+    let row;
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update(patch)
         .eq('id', user.id)
+        .select('id, display_name, avatar_url, updated_at')
         .single();
 
-      if (userError) {
-        console.error('Error fetching current user:', userError);
-        return NextResponse.json({ error: "Error fetching user data" }, { status: 500 });
-      }
+      if (error) {
+        // Si no hay fila (0 rows), intentar insert mínimo y reintentar el update
+        // ROLLBACK hint: eliminar este bloque si no se desea auto-insertar
+        if ((error as any)?.code === 'PGRST116') {
+          const { error: insErr } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: user.id,
+              display_name: patch.display_name ?? null,
+              updated_at: patch.updated_at,
+            });
+          if (insErr) throw insErr;
 
-      if (currentUser) {
-        // Aplicar guardas con el name existente para no sobrescribirlo si es válido
-        const guardResult = applyDisplayNameGuards(
-          validatedData.name,
-          currentUser.email,
-          currentUser.name // existing name - no sobrescribir si es válido
-        );
-
-        // Log de auditoría
-        logGuardApplication('profile_edit', {
-          email: currentUser.email,
-          name: guardResult.name,
-          source: guardResult.source,
-          wasModified: guardResult.wasModified,
-          reason: guardResult.reason
-        });
-
-        // Actualizar en la tabla users
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ 
-            name: guardResult.name,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-
-        if (updateError) {
-          console.error('Error updating user name:', updateError);
-          return NextResponse.json({ error: "Error updating name" }, { status: 500 });
+          const { data: data2, error: err2 } = await supabase
+            .from('user_profiles')
+            .update(patch)
+            .eq('id', user.id)
+            .select('id, display_name, avatar_url, updated_at')
+            .single();
+          if (err2) throw err2;
+          row = data2;
+        } else {
+          throw error;
         }
-
-        console.log(`✅ [PROFILE_UPDATE] Name updated successfully: "${guardResult.name}"`);
+      } else {
+        row = data;
       }
+    } catch (e: any) {
+      console.error('[users/profile] DB error:', e?.message || e);
+      return NextResponse.json({ error: e?.message ?? 'DB error' }, { status: 500 });
     }
 
-    // ========================================
-    // Actualizar user_profiles (preferencias)
-    // ========================================
-    // Convert camelCase to snake_case for database
-    const dbPayload: any = {
-      user_id: user.id, // Always include user_id for upsert
-    };
-
-    if (validatedData.role !== undefined) dbPayload.role = validatedData.role;
-    if (validatedData.city !== undefined) dbPayload.city = validatedData.city;
-    if (validatedData.neighborhood !== undefined) dbPayload.neighborhood = validatedData.neighborhood;
-    if (validatedData.budgetMin !== undefined) dbPayload.budget_min = validatedData.budgetMin;
-    if (validatedData.budgetMax !== undefined) dbPayload.budget_max = validatedData.budgetMax;
-    if (validatedData.bio !== undefined) dbPayload.bio = validatedData.bio;
-    if (validatedData.photos !== undefined) dbPayload.photos = validatedData.photos;
-    if (validatedData.age !== undefined) dbPayload.age = validatedData.age;
-    if (validatedData.petPref !== undefined) dbPayload.pet_pref = validatedData.petPref;
-    if (validatedData.smokePref !== undefined) dbPayload.smoke_pref = validatedData.smokePref;
-    if (validatedData.diet !== undefined) dbPayload.diet = validatedData.diet;
-    if (validatedData.scheduleNotes !== undefined) dbPayload.schedule_notes = validatedData.scheduleNotes;
-    if (validatedData.tags !== undefined) dbPayload.tags = validatedData.tags;
-    if (validatedData.acceptsMessages !== undefined) dbPayload.accepts_messages = validatedData.acceptsMessages;
-    if (validatedData.highlightedUntil !== undefined) dbPayload.highlighted_until = validatedData.highlightedUntil;
-    if (validatedData.isSuspended !== undefined) dbPayload.is_suspended = validatedData.isSuspended;
-    if (validatedData.expiresAt !== undefined) dbPayload.expires_at = validatedData.expiresAt;
-    if (validatedData.isPaid !== undefined) dbPayload.is_paid = validatedData.isPaid;
-
-    // Upsert to user_profiles table
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert(dbPayload, { onConflict: 'user_id' })
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      console.error('Profile update error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Convert response back to camelCase
+    // Armar respuesta en camelCase + versión cache-busting
+    const v = Math.floor(new Date(row.updated_at).getTime() / 1000);
     const responsePayload = {
-      role: data.role,
-      city: data.city,
-      neighborhood: data.neighborhood,
-      budgetMin: data.budget_min,
-      budgetMax: data.budget_max,
-      bio: data.bio,
-      photos: data.photos,
-      age: data.age,
-      petPref: data.pet_pref,
-      smokePref: data.smoke_pref,
-      diet: data.diet,
-      scheduleNotes: data.schedule_notes,
-      tags: data.tags,
-      acceptsMessages: data.accepts_messages,
-      highlightedUntil: data.highlighted_until,
-      isSuspended: data.is_suspended,
-      expiresAt: data.expires_at,
-      isPaid: data.is_paid,
-      // PROMPT D1: Incluir name actualizado si fue modificado
-      ...(validatedData.name !== undefined && { name: validatedData.name })
+      id: row.id,
+      name: row.display_name ?? null,
+      avatarUrl: row.avatar_url ?? null,
+      v,
     };
 
-    // SAFE-FIX: Calcular versión para cache busting
-    const v = Math.floor(new Date().getTime() / 1000);
-
+    // Cache-Control estricto
     return NextResponse.json(
-      { 
-        success: true,
-        profile: { ...responsePayload, v }
-      }, 
-      { 
-        status: 200,
-        // SAFE-FIX: Headers para evitar caché
-        headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
-      }
+      { success: true, profile: responsePayload },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
     );
+    // ====================== /SAFE-FIX =================================================
   } catch (error) {
     console.error('Profile update error:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
