@@ -20,32 +20,68 @@ export async function DELETE(
   context: { params: { id: string } }
 ) {
   const params = context.params;
+  const startTime = Date.now();
   
   try {
+    // PROMPT C: Log de inicio
+    console.debug('[DELETE/thread] START', { 
+      threadId: params.id, 
+      ts: new Date().toISOString() 
+    });
+
     const supabase = await createClient();
     
     // 1. Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
+      console.debug('[DELETE/thread] unauthenticated', { error: authError?.message });
       return NextResponse.json(
-        { ok: false, error: 'unauthenticated' },
+        { ok: false, reason: 'unauthenticated' },
         { status: 200 }
       );
     }
+
+    console.debug('[DELETE/thread] authenticated', { userId: user.id });
 
     const threadId = params.id;
 
     // 2. Validar UUID
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(threadId)) {
+      console.debug('[DELETE/thread] invalid-id', { threadId });
       return NextResponse.json(
-        { ok: false, error: 'invalid-id' },
+        { ok: false, reason: 'invalid-id' },
         { status: 200 }
       );
     }
 
+    // PROMPT B: Obtener profileId de user_profiles
+    // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
+    const { data: userProfile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const profileId = userProfile?.id || null;
+    
+    if (profileError) {
+      console.debug('[DELETE/thread] profile lookup error', { 
+        error: profileError.message, 
+        userId: user.id 
+      });
+    }
+
+    console.debug('[DELETE/thread] profile resolved', { 
+      userId: user.id, 
+      profileId,
+      hasProfile: !!profileId
+    });
+
     // 3. Leer conversación (intentar ambos esquemas)
+    console.debug('[DELETE/thread] QUERY', { step: 'fetch_conversation', threadId });
+    
     let conv = await supabase
       .from('Conversation')
       .select('id,aId,bId')
@@ -62,8 +98,9 @@ export async function DELETE(
     }
 
     if (!conv?.data) {
+      console.debug('[DELETE/thread] not-found', { threadId });
       return NextResponse.json(
-        { ok: false, error: 'not-found' },
+        { ok: false, reason: 'not-found' },
         { status: 200 }
       );
     }
@@ -79,27 +116,52 @@ export async function DELETE(
       convData?.b_id
     ].filter(Boolean).map(String);
 
-    const me = String(user.id);
-    const isParticipant = parts.includes(me);
+    // PROMPT B: Crear Set con userId + profileId para validación robusta
+    const validIds = new Set<string>();
+    validIds.add(String(user.id));
+    if (profileId) {
+      validIds.add(String(profileId));
+    }
 
-    console.debug('[DELETE/thread] validate', { threadId, userId: user.id, parts, isParticipant });
+    // PROMPT B: Validar participación con ambos IDs
+    const isParticipant = parts.some(p => validIds.has(String(p)));
+
+    // PROMPT B & C: Log detallado de validación
+    console.debug('[DELETE/thread] validate', { 
+      threadId, 
+      userId: String(user.id), 
+      profileId: profileId ? String(profileId) : null,
+      parts, 
+      isParticipant 
+    });
 
     if (!isParticipant) {
+      console.debug('[DELETE/thread] forbidden - not a participant', { 
+        threadId, 
+        userId: user.id,
+        profileId,
+        parts
+      });
       return NextResponse.json(
-        { ok: false, error: 'forbidden' },
+        { ok: false, reason: 'not-participant' },
         { status: 200 }
       );
     }
 
     // 5. Eliminar mensajes (probar ambas tablas/columnas)
+    console.debug('[DELETE/thread] QUERY', { step: 'delete_messages', threadId });
+    
     await supabase.from('Message').delete().eq('conversationId', threadId);
     await supabase.from('messages').delete().eq('conversation_id', threadId);
 
     // 6. Eliminar conversación (ambas tablas)
+    console.debug('[DELETE/thread] QUERY', { step: 'delete_conversation', threadId });
+    
     await supabase.from('Conversation').delete().eq('id', threadId);
     await supabase.from('conversations').delete().eq('id', threadId);
 
-    console.debug('[DELETE/thread] deleted', { threadId });
+    const duration = Date.now() - startTime;
+    console.debug('[DELETE/thread] deleted', { threadId, duration_ms: duration });
 
     // 7. Respuesta exitosa
     return NextResponse.json(
@@ -108,9 +170,16 @@ export async function DELETE(
     );
 
   } catch (error: any) {
-    console.debug('[DELETE/thread] Error inesperado:', error?.message);
+    // PROMPT C: Log de error estructurado
+    console.error('[DELETE/thread] ERROR', { 
+      step: 'unexpected',
+      message: error?.message, 
+      code: error?.code,
+      threadId: params.id
+    });
+    
     return NextResponse.json(
-      { ok: false, error: 'unexpected' },
+      { ok: false, reason: 'unexpected' },
       { status: 200 }
     );
   }

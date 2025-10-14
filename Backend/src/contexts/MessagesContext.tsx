@@ -155,7 +155,24 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include'
       })
 
-      const data = await response.json().catch(() => ({}))
+      // PROMPT C: Log de respuesta cruda del cliente
+      const contentType = response.headers.get('content-type') || 'unknown'
+      const rawBody = await response.text()
+      
+      console.debug('[DELETE/client] Response', { 
+        status: response.status, 
+        contentType, 
+        rawBody 
+      })
+
+      // Intentar parsear JSON
+      let data: any = {}
+      try {
+        data = JSON.parse(rawBody)
+        console.debug('[DELETE/client] Parsed', { data })
+      } catch (parseErr) {
+        console.error('[DELETE/client] JSON parse error', { parseErr, rawBody })
+      }
 
       const ok = data?.ok === true || data?.success === true
       if (!ok) return false
@@ -163,7 +180,7 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       await fetchConversations()
       return true
     } catch (err: any) {
-      console.error('Error deleting conversation:', err)
+      console.error('[DELETE/client] Error deleting conversation:', err)
       setError(err.message)
       return false
     }
