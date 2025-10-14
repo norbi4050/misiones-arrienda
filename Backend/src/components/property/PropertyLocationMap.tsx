@@ -14,25 +14,19 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
   lng,
   className = ""
 }) => {
-  // ✅ Validación robusta de coordenadas
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    return (
-      <div className={`flex items-center justify-center h-72 bg-gray-100 rounded-xl ${className}`}>
-        <div className="text-center p-6">
-          <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Ubicación no disponible</h3>
-          <p className="text-gray-600 text-sm">Las coordenadas de esta propiedad no son válidas</p>
-        </div>
-      </div>
-    )
-  }
-
+  // ✅ Hooks SIEMPRE deben estar al inicio, antes de cualquier return
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<any>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
 
+  // ✅ Validación robusta de coordenadas DESPUÉS de los hooks
+  const hasValidCoordinates = Number.isFinite(lat) && Number.isFinite(lng)
+
   useEffect(() => {
+    // Si las coordenadas no son válidas, no hacer nada
+    if (!hasValidCoordinates) return
+
     let cancelled = false
 
     async function boot() {
@@ -117,7 +111,20 @@ const PropertyLocationMap: React.FC<PropertyLocationMapProps> = ({
         mapRef.current = null
       }
     }
-  }, [lat, lng])
+  }, [lat, lng, hasValidCoordinates])
+
+  // ✅ Renderizado condicional DESPUÉS de los hooks
+  if (!hasValidCoordinates) {
+    return (
+      <div className={`flex items-center justify-center h-72 bg-gray-100 rounded-xl ${className}`}>
+        <div className="text-center p-6">
+          <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Ubicación no disponible</h3>
+          <p className="text-gray-600 text-sm">Las coordenadas de esta propiedad no son válidas</p>
+        </div>
+      </div>
+    )
+  }
 
   if (loadError) {
     return (
