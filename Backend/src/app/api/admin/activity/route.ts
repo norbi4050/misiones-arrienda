@@ -32,7 +32,10 @@ export async function GET(request: NextRequest) {
         createdAt: 'desc'
       },
       take: 5,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
         user: {
           select: {
             name: true
