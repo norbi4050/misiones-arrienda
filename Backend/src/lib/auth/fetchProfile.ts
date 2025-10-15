@@ -1,7 +1,7 @@
 // src/lib/auth/fetchProfile.ts
 // PROMPT 2: Cliente que adjunta Bearer token (puente temporal, seguro)
 
-import { createBrowserClient } from '@supabase/ssr'
+import { getBrowserSupabase } from '@/lib/supabase/browser'
 
 /**
  * Fetches user profile from /api/users/profile endpoint
@@ -11,10 +11,7 @@ import { createBrowserClient } from '@supabase/ssr'
  * @throws Error if not authenticated
  */
 export async function fetchUserProfile() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getBrowserSupabase()
   
   const { data: { session } } = await supabase.auth.getSession()
   const accessToken = session?.access_token
