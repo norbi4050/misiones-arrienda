@@ -1,11 +1,20 @@
-// ⬅️ PARCHE DE DIAGNÓSTICO (1 deploy)
+/**
+ * /api/users/profile - Endpoint completo de perfil de usuario
+ * 
+ * GET: Retorna los datos completos del perfil del usuario autenticado
+ * PUT: Actualiza los datos del perfil del usuario autenticado
+ * 
+ * Usa mapUserProfile para normalizar los datos a formato CurrentUser
+ */
+
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic'; // evita caching
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { mapUserProfile } from "@/lib/auth/mapUserProfile";
 
 const CUSTOM_AUTH_COOKIE = "misiones-arrienda-auth";
 
@@ -23,14 +32,6 @@ function getChunkAware(store: ReturnType<typeof cookies>, base: string): string 
 
 function aliasCookieGet(store: ReturnType<typeof cookies>, name: string) {
   return getChunkAware(store, name) ?? getChunkAware(store, CUSTOM_AUTH_COOKIE);
-}
-
-function countChunks(store: ReturnType<typeof cookies>, base: string) {
-  let n = 0;
-  for (let i = 0; i < 12; i++) {
-    if (store.get(`${base}.${i}`)?.value) n++; else break;
-  }
-  return n;
 }
 
 function getServerSupabase(req: NextRequest) {
@@ -51,21 +52,147 @@ function getServerSupabase(req: NextRequest) {
   );
 }
 
+/**
+ * GET /api/users/profile
+ * Obtiene el perfil del usuario autenticado
+ */
 export async function GET(req: NextRequest) {
-  const store = cookies();
   const supabase = getServerSupabase(req);
-  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  // Obtener usuario autenticado
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   const hdrs = new Headers();
-  hdrs.set("x-auth-hdr", String(!!req.headers.get("authorization")));
-  hdrs.set("x-cookie-chunks", String(countChunks(store, CUSTOM_AUTH_COOKIE)));
-  hdrs.set("x-has-base", String(!!store.get(CUSTOM_AUTH_COOKIE)));
-  hdrs.set("x-build", process.env.VERCEL_GIT_COMMIT_SHA || "local");
   hdrs.set("cache-control", "no-store");
+  hdrs.set("x-build", process.env.VERCEL_GIT_COMMIT_SHA || "local");
 
-  if (error || !user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401, headers: hdrs });
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Not authenticated" }, 
+      { status: 401, headers: hdrs }
+    );
   }
 
-  return NextResponse.json({ ok: true, userId: user.id }, { headers: hdrs });
+  // Obtener perfil de user_profiles
+  const { data: profileData, error: profileError } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    console.error('[API /users/profile GET] Error fetching profile:', profileError);
+    return NextResponse.json(
+      { error: "Profile not found", details: profileError.message }, 
+      { status: 404, headers: hdrs }
+    );
+  }
+
+  if (!profileData) {
+    return NextResponse.json(
+      { error: "Profile not found" }, 
+      { status: 404, headers: hdrs }
+    );
+  }
+
+  // Mapear a CurrentUser usando mapUserProfile
+  const profile = mapUserProfile(profileData);
+
+  if (!profile) {
+    console.error('[API /users/profile GET] mapUserProfile returned null');
+    return NextResponse.json(
+      { error: "Failed to map profile data" }, 
+      { status: 500, headers: hdrs }
+    );
+  }
+
+  return NextResponse.json({ profile }, { headers: hdrs });
+}
+
+/**
+ * PUT /api/users/profile
+ * Actualiza el perfil del usuario autenticado
+ */
+export async function PUT(req: NextRequest) {
+  const supabase = getServerSupabase(req);
+  
+  // Obtener usuario autenticado
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  const hdrs = new Headers();
+  hdrs.set("cache-control", "no-store");
+  hdrs.set("x-build", process.env.VERCEL_GIT_COMMIT_SHA || "local");
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Not authenticated" }, 
+      { status: 401, headers: hdrs }
+    );
+  }
+
+  // Parsear body
+  let body: any;
+  try {
+    body = await req.json();
+  } catch (e) {
+    return NextResponse.json(
+      { error: "Invalid JSON body" }, 
+      { status: 400, headers: hdrs }
+    );
+  }
+
+  // Construir objeto de actualización solo con campos permitidos
+  const updateData: any = {
+    updated_at: new Date().toISOString(),
+  };
+
+  // Mapear campos del body a columnas de user_profiles
+  if (body.displayName !== undefined) {
+    updateData.display_name = body.displayName;
+  }
+  if (body.avatarUrl !== undefined) {
+    updateData.avatar_url = body.avatarUrl;
+  }
+  if (body.display_name !== undefined) {
+    updateData.display_name = body.display_name;
+  }
+  if (body.avatar_url !== undefined) {
+    updateData.avatar_url = body.avatar_url;
+  }
+
+  // Actualizar en user_profiles
+  const { data: updatedData, error: updateError } = await supabase
+    .from('user_profiles')
+    .update(updateData)
+    .eq('id', user.id)
+    .select()
+    .single();
+
+  if (updateError) {
+    console.error('[API /users/profile PUT] Error updating profile:', updateError);
+    return NextResponse.json(
+      { error: "Failed to update profile", details: updateError.message }, 
+      { status: 500, headers: hdrs }
+    );
+  }
+
+  if (!updatedData) {
+    return NextResponse.json(
+      { error: "Profile not found after update" }, 
+      { status: 404, headers: hdrs }
+    );
+  }
+
+  // Mapear a CurrentUser
+  const profile = mapUserProfile(updatedData);
+
+  if (!profile) {
+    console.error('[API /users/profile PUT] mapUserProfile returned null');
+    return NextResponse.json(
+      { error: "Failed to map updated profile data" }, 
+      { status: 500, headers: hdrs }
+    );
+  }
+
+  return NextResponse.json({ profile }, { headers: hdrs });
 }

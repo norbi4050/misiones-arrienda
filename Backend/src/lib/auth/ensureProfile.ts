@@ -1,20 +1,19 @@
 /**
  * ensureProfile.ts
- * PROMPT 3: Helper que usa columnas REALES de user_profiles
+ * Helper que asegura la existencia de un perfil en user_profiles
  * 
  * - Tabla user_profiles: PK = id (UUID), columnas: display_name, avatar_url, updated_at
- * - NO tiene columna user_id ni userId
- * - Idempotente: usa insert con onConflict='id'
- * - Evita PGRST204 usando solo columnas que existen
+ * - Usa upsert nativo de Supabase para manejar conflicts automáticamente
+ * - Idempotente y seguro contra errores 409
  */
 
 import { getBrowserSupabase } from '@/lib/supabase/browser'
 
 /**
  * Asegura que existe un perfil básico en user_profiles.
- * Usa columnas reales: id, display_name, avatar_url, updated_at
+ * Usa upsert nativo de Supabase para evitar errores 409.
  * 
- * @throws Error si no hay usuario autenticado o si falla el insert
+ * @throws Error si no hay usuario autenticado o si falla el upsert
  */
 export async function ensureProfile(): Promise<void> {
   const supabase = getBrowserSupabase()
@@ -26,7 +25,7 @@ export async function ensureProfile(): Promise<void> {
     throw new Error('No hay usuario autenticado')
   }
 
-  // PROMPT 3: Construir payload con columnas REALES de user_profiles
+  // Construir payload con columnas REALES de user_profiles
   const payload = {
     id: user.id, // PK real (UUID)
     display_name: user.user_metadata?.name 
@@ -36,31 +35,18 @@ export async function ensureProfile(): Promise<void> {
     updated_at: new Date().toISOString(),
   }
 
-  // PROMPT 3: Insert con onConflict en 'id' (PK real)
+  // Usar upsert nativo de Supabase
+  // onConflict: 'id' - Detecta conflict en la PK
+  // ignoreDuplicates: false - Actualiza si ya existe
   const { error: upsertError } = await supabase
     .from('user_profiles')
-    .insert(payload)
-    .select()
-    .single()
+    .upsert(payload, {
+      onConflict: 'id',
+      ignoreDuplicates: false
+    })
 
-  // Si ya existe (conflict), hacer merge/update
-  if (upsertError && upsertError.code === '23505') {
-    // Conflict en PK, hacer update
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({
-        display_name: payload.display_name,
-        avatar_url: payload.avatar_url,
-        updated_at: payload.updated_at,
-      })
-      .eq('id', user.id)
-
-    if (updateError) {
-      console.warn('[ensureProfile] update error:', updateError)
-      throw updateError
-    }
-  } else if (upsertError) {
-    console.warn('[ensureProfile] insert error:', upsertError)
+  if (upsertError) {
+    console.warn('[ensureProfile] upsert error:', upsertError)
     throw upsertError
   }
 }
