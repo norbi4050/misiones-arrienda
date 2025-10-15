@@ -1,6 +1,7 @@
 // src/app/api/users/profile/route.ts
-// ULTRA-SEGURO: Endpoint con switch por rol (agency_profiles vs user_profiles)
-export const runtime = 'edge'
+// PROMPTS 1-12: SSR Auth con cookies + Bearer + needsOnboarding
+// Runtime nodejs para soporte completo de cookies
+export const runtime = 'nodejs'
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
@@ -9,7 +10,6 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { mapUserProfile } from "@/lib/auth/mapUserProfile";
-// PROMPT D1: Importar guardas de displayName
 import { applyDisplayNameGuards, logGuardApplication } from '@/lib/displayname-guards';
 
 // Zod schema for user_profiles validation
@@ -36,111 +36,167 @@ const UserProfileSchema = z.object({
   name: z.string().min(1).max(80).optional(),
 });
 
-// ULTRA-SEGURO: Función que soporta cookies O Bearer token
+// PROMPT 1: Función SSR que soporta cookies Y Bearer token simultáneamente
 function getServerSupabase(request: NextRequest) {
   const cookieStore = cookies();
-  const authz = request.headers.get('authorization'); // "Bearer <token>" si el cliente lo manda
+  const authHeader = request.headers.get('authorization');
 
-  // Si hay Bearer token, usarlo (fallback para inmobiliarias)
-  if (authz) {
-    return createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: { headers: { Authorization: authz } },
-        cookies: { 
-          get() { return undefined; }, 
-          set() {}, 
-          remove() {} 
-        }
-      }
-    );
-  }
-
-  // Caso normal: usar cookies (inquilinos, dueños directos)
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // PROMPT 1: Si hay Authorization header, pasarlo en global.headers
+      global: authHeader ? { headers: { Authorization: authHeader } } : undefined,
       cookies: {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options });
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            // Cookies solo se pueden modificar en Route Handlers
+          }
         },
         remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: "", ...options });
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch {
+            // Cookies solo se pueden modificar en Route Handlers
+          }
         },
       },
     }
   );
 }
 
-// PROMPT 1: Helper para leer perfil - usa columna correcta según tabla
-async function safeSelectByUserId(supabase: any, table: string, userId: string) {
-  // UserProfile (camelCase) usa "userId" (TEXT)
-  // user_profiles (snake_case) usa "id" (UUID) como PK
-  const columnName = table === 'UserProfile' ? 'userId' : 'id';
+// PROMPT 2: Helper getJoinColumn - determina columna correcta por tabla
+function getJoinColumn(table: string): string {
+  return table === 'UserProfile' ? 'userId' : 'id';
+}
+
+// PROMPT 2: Helper safeSelectByUserId - usa columna correcta y maneja errores
+async function safeSelectByUserId(
+  supabase: any, 
+  table: 'UserProfile' | 'user_profiles', 
+  userId: string
+) {
+  const col = getJoinColumn(table);
   
-  const { data, error } = await supabase
-    .from(table)
-    .select('*')
-    .eq(columnName, userId)
-    .maybeSingle();
-  
-  if (error && error.code !== 'PGRST116') {
-    // PGRST116 = no rows; cualquier otro error → tratamos como null
-    console.warn(`[profiles] ${table} read error:`, error);
+  try {
+    const { data, error } = await supabase
+      .from(table)
+      .select('*')
+      .eq(col, userId)
+      .maybeSingle();
+    
+    // PGRST116 = no rows (no es error)
+    if (error && error.code !== 'PGRST116') {
+      console.warn(`[profiles] read ${table} error`, { code: error.code });
+      return null;
+    }
+    
+    return data ?? null;
+  } catch (err) {
+    console.warn(`[profiles] ${table} exception:`, err);
     return null;
   }
-  
-  return data ?? null;
 }
 
 export async function GET(req: NextRequest) {
-  // ULTRA-SEGURO: Usar función mejorada que soporta Bearer token
   const supabase = getServerSupabase(req);
   
-  // 1) Obtener sesión
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  // PROMPT 7: Logging mínimo (solo en dev)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[profile:get]', {
+      hasAuthHeader: !!req.headers.get('Authorization'),
+      hasCookie0: !!cookies().get('misiones-arrienda-auth.0'),
+    });
+  }
+  
+  // PROMPT 1: Usar getUser() en lugar de getSession() para auth
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  // PROMPT 1: Devolver 401 SOLO si no hay usuario
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: 'Not authenticated' }, 
+      { 
+        status: 401,
+        headers: { 'Cache-Control': 'no-store' } // PROMPT 8
+      }
+    );
   }
 
-  const userId = session.user.id;
-  const userType = session.user.user_metadata?.userType ?? null;
+  const userId = user.id;
+  const userType = user.user_metadata?.userType ?? null;
 
   try {
-    // ULTRA-SEGURO: Switch por rol para leer la tabla correcta
+    // PROMPT 3: Intentar leer perfil con fallback
     let profile: any = null;
     
     if (userType === 'inmobiliaria') {
       // 1) Primero intentar perfil de inmobiliaria
-      profile = await safeSelectByUserId(supabase, 'agency_profiles', userId);
+      profile = await safeSelectByUserId(supabase, 'user_profiles', userId);
       
-      // 2) Fallback opcional a user_profiles si el proyecto así lo requiere
+      // 2) Fallback opcional a agency_profiles si existe
+      if (!profile) {
+        try {
+          const { data } = await supabase
+            .from('agency_profiles')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle();
+          profile = data;
+        } catch {
+          // Ignorar si agency_profiles no existe
+        }
+      }
+    } else {
+      // PROMPT 3: inquilino / dueño_directo - intentar UserProfile primero
+      profile = await safeSelectByUserId(supabase, 'UserProfile', userId);
+      
+      // PROMPT 3: Fallback a user_profiles por id
       if (!profile) {
         profile = await safeSelectByUserId(supabase, 'user_profiles', userId);
       }
-    } else {
-      // inquilino / dueño_directo
-      profile = await safeSelectByUserId(supabase, 'user_profiles', userId);
     }
 
-    // ULTRA-SEGURO: Devolver respuesta con needsOnboarding
-    return NextResponse.json({
-      user: { 
-        id: userId, 
-        email: session.user.email, 
-        userType 
+    // PROMPT 3: Devolver respuesta con needsOnboarding
+    // IMPORTANTE: 200 con needsOnboarding: true (NO 401)
+    return NextResponse.json(
+      {
+        user: { 
+          id: userId, 
+          email: user.email, 
+          userType 
+        },
+        profile,
+        needsOnboarding: !profile  // PROMPT 3: boolean flag
       },
-      profile,
-      needsOnboarding: !profile
-    });
+      {
+        headers: { 'Cache-Control': 'no-store' } // PROMPT 1 & 8
+      }
+    );
   } catch (error) {
-    console.error('Profile fetch error:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    // PROMPT 7: Try/catch para errores no-críticos
+    console.error('[profile:get] error:', error);
+    
+    // Devolver null + needsOnboarding en lugar de 500
+    return NextResponse.json(
+      {
+        user: { 
+          id: userId, 
+          email: user.email, 
+          userType 
+        },
+        profile: null,
+        needsOnboarding: true
+      },
+      {
+        headers: { 'Cache-Control': 'no-store' }
+      }
+    );
   }
 }
 

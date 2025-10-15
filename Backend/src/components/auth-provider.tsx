@@ -8,6 +8,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const router = useRouter()
   const supabase = getBrowserSupabase()
   const isHandlingInvalidToken = useRef(false)
+  const hasInitializedProfile = useRef(false)
 
   useEffect(() => {
     // Manejar refresh token inválido al montar
@@ -33,18 +34,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
+    // PROMPT 6: Fetch profile post-SIGNIN sin carrera
+    const fetchProfileAfterSignIn = async () => {
+      // Evitar múltiples fetches
+      if (hasInitializedProfile.current) return
+      
+      try {
+        // PROMPT 6: Esperar a que getSession() devuelva ANTES de fetch
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.access_token) {
+          hasInitializedProfile.current = true
+          
+          // PROMPT 6: Fetch con Bearer token si existe
+          await fetch('/api/users/profile', {
+            headers: session.access_token 
+              ? { Authorization: `Bearer ${session.access_token}` } 
+              : {},
+            credentials: 'include', // PROMPT 6: incluir cookies
+            cache: 'no-store',      // PROMPT 6: no cachear
+          })
+        }
+      } catch (err) {
+        console.error('[auth] Error fetching profile:', err)
+      }
+    }
+
     // Ejecutar al montar
     handleInvalidToken()
+    fetchProfileAfterSignIn()
 
     // Listener de cambios de auth
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, _session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: any, _session: any) => {
       if (_event === 'TOKEN_REFRESHED') {
         console.log('[auth] Token refreshed successfully')
       }
       
       if (_event === 'SIGNED_OUT') {
         console.log('[auth] User signed out')
+        hasInitializedProfile.current = false
+      }
+      
+      // PROMPT 6: Fetch profile después de SIGNED_IN (sin carrera)
+      if (_event === 'SIGNED_IN' && _session?.access_token) {
+        // Esperar un tick para asegurar que la sesión está completamente establecida
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        try {
+          await fetch('/api/users/profile', {
+            headers: { Authorization: `Bearer ${_session.access_token}` },
+            credentials: 'include',
+            cache: 'no-store',
+          })
+        } catch (err) {
+          console.error('[auth] Error fetching profile after SIGNED_IN:', err)
+        }
       }
       
       router.refresh()
