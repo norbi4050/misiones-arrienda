@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { updateUserActivity } from '@/lib/presence/activity-tracker'
+import { getPresenceMode } from '@/utils/env'
 
 /**
  * POST /api/presence/update
@@ -21,6 +22,18 @@ import { updateUserActivity } from '@/lib/presence/activity-tracker'
  * Response: { success: boolean, error?: string }
  */
 export async function POST(request: NextRequest) {
+  // ⚠️ GUARD: En modo 'realtime', este endpoint está deshabilitado
+  if (getPresenceMode() === 'realtime') {
+    return NextResponse.json(
+      { 
+        success: false,
+        error: 'PRESENCE_DB_DISABLED',
+        message: 'Database-based presence tracking is disabled. Using Realtime Presence instead.'
+      },
+      { status: 410 } // 410 Gone - El recurso ya no está disponible
+    )
+  }
+
   try {
     // Intentar parsear body con manejo robusto de errores
     let body

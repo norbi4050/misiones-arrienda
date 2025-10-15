@@ -4,6 +4,9 @@ import { useState, useRef, useEffect } from 'react'
 import ThreadHeader from './ThreadHeader'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
+import { useRealtimePresence } from '@/lib/realtime/presence'
+import { getPresenceMode } from '@/utils/env'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Message {
   id: string
@@ -60,6 +63,17 @@ export default function ThreadView({
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [sending, setSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth()
+  
+  // ✅ Realtime Presence (solo si modo === 'realtime')
+  const presenceMode = getPresenceMode()
+  const { state: presenceState } = presenceMode === 'realtime' && user?.id
+    ? useRealtimePresence(
+        `conversation:${conversation.id}`,
+        user.id,
+        { displayName: user.name || 'Usuario' }
+      )
+    : { state: {} as Record<string, any> }
 
   // Auto-scroll al final cuando hay nuevos mensajes
   useEffect(() => {
@@ -111,6 +125,8 @@ export default function ThreadView({
       <ThreadHeader 
         participant={otherParticipant}
         matchStatus={conversation.match?.status}
+        conversationId={conversation.id}
+        presenceState={presenceMode === 'realtime' ? presenceState : undefined}
       />
       
       {/* Mensajes */}

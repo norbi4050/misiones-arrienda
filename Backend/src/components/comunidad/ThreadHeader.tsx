@@ -5,9 +5,13 @@ import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { OnlineBadge } from '@/components/presence/OnlineDot'
+import { isUserOnlineInPresence, type PresenceMap } from '@/lib/realtime/presence'
+import { getPresenceMode } from '@/utils/env'
 
 interface ThreadHeaderProps {
   participant: {
+    userId?: string  // Agregado para Realtime Presence
     displayName: string
     avatarUrl?: string | null
     profileUpdatedAt?: string | number | null
@@ -18,9 +22,16 @@ interface ThreadHeaderProps {
     }
   }
   matchStatus?: string
+  conversationId?: string  // Agregado para Realtime Presence
+  presenceState?: PresenceMap  // Agregado para Realtime Presence
 }
 
-export default function ThreadHeader({ participant, matchStatus }: ThreadHeaderProps) {
+export default function ThreadHeader({ 
+  participant, 
+  matchStatus,
+  conversationId,
+  presenceState 
+}: ThreadHeaderProps) {
   const router = useRouter()
   
   // Cache-busting para avatar
@@ -63,12 +74,19 @@ export default function ThreadHeader({ participant, matchStatus }: ThreadHeaderP
   }
 
   const lastSeenText = getLastSeenText()
-  const isOnline = participant.presence?.isOnline || false
+  
+  // ✅ Determinar presencia según modo
+  const presenceMode = getPresenceMode()
+  const isOnline = presenceMode === 'realtime' && presenceState && participant.userId
+    ? isUserOnlineInPresence(presenceState, participant.userId)
+    : participant.presence?.isOnline || false
 
   // Log de diagnóstico (solo dev)
   if (process.env.NODE_ENV === 'development') {
     console.info('🔍 ThreadHeader participant ->', participant)
-    console.info('🔍 ThreadHeader presence ->', participant.presence)
+    console.info('🔍 ThreadHeader presence mode ->', presenceMode)
+    console.info('🔍 ThreadHeader presence (legacy) ->', participant.presence)
+    console.info('🔍 ThreadHeader presenceState (realtime) ->', presenceState)
   }
 
   return (
@@ -91,7 +109,9 @@ export default function ThreadHeader({ participant, matchStatus }: ThreadHeaderP
         />
         
         {/* Indicador online/offline - Badge absoluto sobre avatar */}
-        {participant.presence && (
+        {presenceMode === 'realtime' && presenceState && participant.userId ? (
+          <OnlineBadge userId={participant.userId} presences={presenceState} />
+        ) : participant.presence ? (
           <div 
             className={`
               absolute bottom-0 right-0 
@@ -102,7 +122,7 @@ export default function ThreadHeader({ participant, matchStatus }: ThreadHeaderP
             title={isOnline ? 'En línea' : 'Desconectado'}
             aria-label={isOnline ? 'Usuario en línea' : 'Usuario desconectado'}
           />
-        )}
+        ) : null}
       </div>
       
       {/* Info del participante */}

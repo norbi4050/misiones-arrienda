@@ -18,6 +18,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { getPresenceMode } from '@/utils/env'
 
 // Constantes de configuración optimizadas para rendimiento
 const ACTIVITY_INTERVAL = 300000 // 5 minutos - Intervalo entre actualizaciones (solo si hay actividad)
@@ -42,6 +43,15 @@ export function usePresenceTracking() {
   const lastUpdateRef = useRef<number>(0)
 
   useEffect(() => {
+    // ⚠️ GUARD: Solo ejecutar en modo 'db' (legacy)
+    // En modo 'realtime', este hook no hace nada
+    if (getPresenceMode() === 'realtime') {
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[usePresenceTracking] ⏭️ Skipped - Realtime Presence mode active')
+      }
+      return
+    }
+
     // Solo ejecutar si hay usuario autenticado
     if (!user?.id) {
       return
