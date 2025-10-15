@@ -67,13 +67,14 @@ export default function ThreadView({
   
   // ✅ Realtime Presence (solo si modo === 'realtime')
   const presenceMode = getPresenceMode()
-  const { state: presenceState } = presenceMode === 'realtime' && user?.id
-    ? useRealtimePresence(
-        `conversation:${conversation.id}`,
-        user.id,
-        { displayName: user.name || 'Usuario' }
-      )
-    : { state: {} as Record<string, any> }
+  const shouldUsePresence = presenceMode === 'realtime' && !!user?.id
+  
+  // Siempre llamar al hook, pero con canal vacío si no se debe usar
+  const { state: presenceState } = useRealtimePresence(
+    shouldUsePresence ? `conversation:${conversation.id}` : '',
+    shouldUsePresence ? user!.id : '',
+    shouldUsePresence ? { displayName: user!.name || 'Usuario' } : {}
+  )
 
   // Auto-scroll al final cuando hay nuevos mensajes
   useEffect(() => {
