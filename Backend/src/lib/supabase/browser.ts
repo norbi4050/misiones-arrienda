@@ -28,8 +28,10 @@ if (!client) {
     globalThis.__supabaseClient__ = client;
   }
 
-  // Debug log to confirm single initialization
-  console.debug('[supabase] browser client init once');
+  // Debug log to confirm single initialization (controlled by env var)
+  if (process.env.NEXT_PUBLIC_DEBUG_SUPABASE === '1') {
+    console.debug('[supabase] browser client init once');
+  }
 }
 
 /**
@@ -50,5 +52,3 @@ export function getBrowserSupabase() {
 export function createBrowserSupabase() {
   return client;
 }
->>>>>>>
-

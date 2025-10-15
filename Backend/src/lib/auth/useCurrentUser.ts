@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createSupabaseBrowser } from 'lib/supabase/browser'
 import { useRouter } from 'next/navigation'
 import { mapUserProfile, type CurrentUser, isAgency } from './mapUserProfile'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 export interface UseCurrentUserReturn {
   user: CurrentUser | null
@@ -160,7 +161,7 @@ export function useCurrentUser(): UseCurrentUserReturn {
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         if (!mounted) return
 
         console.log('[AuthBridge] Auth state changed:', event)

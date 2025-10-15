@@ -4,6 +4,7 @@ import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ProfilePersistence } from '@/lib/profile-persistence';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
@@ -170,7 +171,7 @@ export function useAuth() {
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         if (!mounted) return;
 
         console.log('Auth state changed:', event, session?.user?.id);

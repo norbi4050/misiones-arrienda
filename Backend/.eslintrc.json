@@ -16,5 +16,29 @@
     "@typescript-eslint/no-require-imports": "warn",
     "import/no-anonymous-default-export": "warn",
     "jsx-a11y/alt-text": "warn"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.ts", "src/**/*.tsx"],
+      "excludedFiles": [
+        "src/lib/supabase/browser.ts",
+        "src/lib/supabase/client.ts",
+        "src/lib/supabase/singleton-client.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@supabase/ssr",
+                "importNames": ["createBrowserClient"],
+                "message": "Do not use createBrowserClient directly. Use getBrowserSupabase() from @/lib/supabase/browser to prevent 'Multiple GoTrueClient instances' warnings."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
