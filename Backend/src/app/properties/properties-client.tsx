@@ -67,7 +67,7 @@ export function PropertiesPageClient() {
         garages: 1,
         area: 150,
         propertyType: "HOUSE",
-        operationType: "venta",
+        listingType: "SALE",
         status: "AVAILABLE",
         address: "Av. Mitre 1234",
         postalCode: "3300",
@@ -104,7 +104,7 @@ export function PropertiesPageClient() {
         garages: 0,
         area: 80,
         propertyType: "APARTMENT",
-        operationType: "venta",
+        listingType: "SALE",
         status: "AVAILABLE",
         address: "San Martín 567",
         postalCode: "3360",
@@ -141,7 +141,7 @@ export function PropertiesPageClient() {
         garages: 0,
         area: 120,
         propertyType: "COMMERCIAL",
-        operationType: "alquiler",
+        listingType: "RENT",
         status: "AVAILABLE",
         address: "Av. Brasil 890",
         postalCode: "3370",
@@ -178,7 +178,7 @@ export function PropertiesPageClient() {
         garages: 0,
         area: 1000,
         propertyType: "LAND",
-        operationType: "venta",
+        listingType: "SALE",
         status: "AVAILABLE",
         address: "Ruta 12 Km 45",
         postalCode: "3380",
@@ -213,8 +213,8 @@ export function PropertiesPageClient() {
       filtered = filtered.filter(p => p.propertyType === filters.propertyType)
     }
     
-    if (filters.operationType) {
-      filtered = filtered.filter(p => p.operationType === filters.operationType)
+    if (filters.listingType) {
+      filtered = filtered.filter(p => p.listingType === filters.listingType)
     }
     
     if (filters.minPrice !== undefined) {

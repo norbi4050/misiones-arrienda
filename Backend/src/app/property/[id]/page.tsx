@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    keywords: `${property.city}, ${property.province}, ${property.propertyType}, ${property.operationType === 'venta' ? 'venta' : 'alquiler'}, ${property.bedrooms} dormitorios, inmobiliaria misiones`,
+    keywords: `${property.city}, ${property.province}, ${property.propertyType}, ${property.listingType === 'SALE' ? 'venta' : 'alquiler'}, ${property.bedrooms} dormitorios, inmobiliaria misiones`,
     openGraph: {
       title,
       description,

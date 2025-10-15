@@ -1,4 +1,4 @@
-import { PropertyStatus, PropertyType, OperationType } from '@/types/property';
+import { PropertyStatus, PropertyType, ListingType } from '@/types/property';
 
 /**
  * Type normalization helpers to safely convert strings to union types
@@ -23,17 +23,14 @@ export const normalizePropertyType = (type: string | PropertyType): PropertyType
     : 'HOUSE';
 };
 
-// Helper to normalize OperationType (previously ListingType)
-export const normalizeOperationType = (type: string | OperationType): OperationType => {
-  const validTypes: OperationType[] = ['alquiler', 'venta', 'ambos'];
-  const lowerType = type.toString().toLowerCase();
-  return (validTypes as readonly string[]).includes(lowerType) 
-    ? (lowerType as OperationType) 
-    : 'venta';
+// Helper to normalize ListingType
+export const normalizeListingType = (type: string | ListingType): ListingType => {
+  const validTypes: ListingType[] = ['RENT', 'SALE', 'BOTH'];
+  const upperType = type.toString().toUpperCase();
+  return (validTypes as readonly string[]).includes(upperType) 
+    ? (upperType as ListingType) 
+    : 'SALE';
 };
-
-// Legacy alias for backward compatibility
-export const normalizeListingType = normalizeOperationType;
 
 /**
  * Comprehensive property normalizer
@@ -44,7 +41,7 @@ export const normalizeProperty = (property: any): any => {
     ...property,
     status: normalizePropertyStatus(property.status),
     propertyType: normalizePropertyType(property.propertyType),
-    operationType: normalizeOperationType(property.operationType),
+    listingType: normalizeListingType(property.listingType),
     // Ensure dates are properly formatted
     createdAt: property.createdAt instanceof Date 
       ? property.createdAt.toISOString() 

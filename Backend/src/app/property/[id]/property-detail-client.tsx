@@ -130,7 +130,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                     </Badge>
                   )}
                   <Badge className="bg-blue-500 text-white shadow-lg">
-                    {property.operationType === 'venta' ? 'En Venta' : 'En Alquiler'}
+                    {property.listingType === 'SALE' ? 'En Venta' : 'En Alquiler'}
                   </Badge>
                 </div>
 
@@ -240,7 +240,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                     ${property.price.toLocaleString()}
                   </div>
                   <div className="text-sm text-gray-500 mt-1">
-                    {property.operationType === 'venta' ? 'Precio de venta' : 'Por mes'}
+                    {property.listingType === 'SALE' ? 'Precio de venta' : 'Por mes'}
                   </div>
                 </div>
               </div>
