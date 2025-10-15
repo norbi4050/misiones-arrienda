@@ -1,5 +1,5 @@
 // src/app/api/users/profile/route.ts
-// PROMPT 1: Endpoint robusto con soporte cookies + Bearer + needsOnboarding
+// ULTRA-SEGURO: Endpoint con switch por rol (agency_profiles vs user_profiles)
 export const runtime = 'edge'
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
@@ -36,7 +36,7 @@ const UserProfileSchema = z.object({
   name: z.string().min(1).max(80).optional(),
 });
 
-// PROMPT 1: Función que soporta cookies O Bearer token
+// ULTRA-SEGURO: Función que soporta cookies O Bearer token
 function getServerSupabase(request: NextRequest) {
   const cookieStore = cookies();
   const authz = request.headers.get('authorization'); // "Bearer <token>" si el cliente lo manda
@@ -77,122 +77,66 @@ function getServerSupabase(request: NextRequest) {
   );
 }
 
+// PROMPT 1: Helper para leer perfil - usa columna correcta según tabla
+async function safeSelectByUserId(supabase: any, table: string, userId: string) {
+  // UserProfile (camelCase) usa "userId" (TEXT)
+  // user_profiles (snake_case) usa "id" (UUID) como PK
+  const columnName = table === 'UserProfile' ? 'userId' : 'id';
+  
+  const { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .eq(columnName, userId)
+    .maybeSingle();
+  
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 = no rows; cualquier otro error → tratamos como null
+    console.warn(`[profiles] ${table} read error:`, error);
+    return null;
+  }
+  
+  return data ?? null;
+}
+
 export async function GET(req: NextRequest) {
-  // PROMPT 1: Usar función mejorada que soporta Bearer token
+  // ULTRA-SEGURO: Usar función mejorada que soporta Bearer token
   const supabase = getServerSupabase(req);
   
-  // 2) Autenticar
-  const { data: { user }, error: uerr } = await supabase.auth.getUser();
-  if (!user || uerr) {
+  // 1) Obtener sesión
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
+  const userId = session.user.id;
+  const userType = session.user.user_metadata?.userType ?? null;
+
   try {
-    // [FIX-400] Soporte para query param ?id=userId para consultar otros perfiles
-    const { searchParams } = new URL(req.url);
-    const targetUserId = searchParams.get('id') || user.id;
+    // ULTRA-SEGURO: Switch por rol para leer la tabla correcta
+    let profile: any = null;
     
-    console.debug('[Profile API] Fetching profile for user:', targetUserId);
-
-    // STEP 1: Get user data from users table (contains is_company, user_type, etc.)
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('id, name, email, phone, user_type, is_company, company_name, license_number, property_count, verified, email_verified, created_at, updated_at')
-      .eq('id', targetUserId)
-      .maybeSingle();
-
-    if (userError) {
-      console.error('Error fetching user data:', userError);
-      return NextResponse.json({ error: "Error fetching user data" }, { status: 500 });
+    if (userType === 'inmobiliaria') {
+      // 1) Primero intentar perfil de inmobiliaria
+      profile = await safeSelectByUserId(supabase, 'agency_profiles', userId);
+      
+      // 2) Fallback opcional a user_profiles si el proyecto así lo requiere
+      if (!profile) {
+        profile = await safeSelectByUserId(supabase, 'user_profiles', userId);
+      }
+    } else {
+      // inquilino / dueño_directo
+      profile = await safeSelectByUserId(supabase, 'user_profiles', userId);
     }
 
-    // [DEBUG] Log datos crudos de la BD
-    console.log('[Profile API] Raw userData from DB:', {
-      id: userData?.id,
-      email: userData?.email,
-      user_type: userData?.user_type,
-      is_company: userData?.is_company,
-      company_name: userData?.company_name
-    });
-
-    // 3) Traer perfil de UserProfile (puede NO existir si es la 1ra vez con "inmobiliaria")
-    const { data: profileData, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', targetUserId)
-      .maybeSingle();
-
-    // PROMPT 1: Si error real (distinto de "no rows"), devolver error
-    if (profileError && profileError.code !== 'PGRST116') {
-      console.error('Error fetching user_profiles:', profileError);
-      return NextResponse.json({ error: profileError.message }, { status: 400 });
-    }
-
-    // 4) PROMPT 1: Si no hay perfil, devolver 200 con needsOnboarding
-    if (!profileData) {
-      const userType = userData?.user_type ?? (user.user_metadata as any)?.userType ?? null;
-      return NextResponse.json({
-        user: { id: user.id, email: user.email, userType },
-        profile: null,
-        needsOnboarding: true
-      });
-    }
-
-    // 5) Perfil ok - Merge data from both tables and normalize
-    // IMPORTANTE: Priorizar user_type de users sobre role de user_profiles
-    const mergedData = {
-      ...profileData,  // Primero profileData
-      ...userData,     // Luego userData (sobrescribe)
-      // Forzar que user_type y is_company de users table tengan prioridad absoluta
-      user_type: userData?.user_type,
-      is_company: userData?.is_company,
-      // NO usar role de profileData, solo user_type de users
-      role: undefined,  // Eliminar role de profileData para evitar conflictos
-    };
-
-    // Normalizar usando mapUserProfile para consistencia
-    const normalizedProfile = mapUserProfile(mergedData);
-
-    if (!normalizedProfile) {
-      return NextResponse.json({ error: "Failed to normalize profile" }, { status: 500 });
-    }
-
-    // Agregar campos adicionales que no están en mapUserProfile
-    const completeProfile = {
-      ...normalizedProfile,
-      // Campos adicionales de user_profiles
-      role: profileData?.role || 'BUSCO',
-      city: profileData?.city || '',
-      neighborhood: profileData?.neighborhood || null,
-      budgetMin: profileData?.budget_min || null,
-      budgetMax: profileData?.budget_max || null,
-      photos: profileData?.photos || null,
-      petPref: profileData?.pet_pref || null,
-      smokePref: profileData?.smoke_pref || null,
-      diet: profileData?.diet || null,
-      scheduleNotes: profileData?.schedule_notes || null,
-      tags: profileData?.tags || null,
-      acceptsMessages: profileData?.accepts_messages !== undefined ? profileData.accepts_messages : true,
-      highlightedUntil: profileData?.highlighted_until || null,
-      isSuspended: profileData?.is_suspended || false,
-      expiresAt: profileData?.expires_at || null,
-      isPaid: profileData?.is_paid || false,
-      propertyCount: userData?.property_count,
-      isVerified: userData?.verified || false,
-      emailVerified: userData?.email_verified || false,
-      created_at: userData?.created_at,
-      updated_at: userData?.updated_at,
-    };
-
-    // PROMPT 1: Siempre devolver 200 con needsOnboarding: false cuando hay perfil
+    // ULTRA-SEGURO: Devolver respuesta con needsOnboarding
     return NextResponse.json({
       user: { 
-        id: user.id, 
-        email: user.email, 
-        userType: completeProfile.userType ?? userData?.user_type ?? (user.user_metadata as any)?.userType ?? null 
+        id: userId, 
+        email: session.user.email, 
+        userType 
       },
-      profile: completeProfile,
-      needsOnboarding: false
+      profile,
+      needsOnboarding: !profile
     });
   } catch (error) {
     console.error('Profile fetch error:', error);

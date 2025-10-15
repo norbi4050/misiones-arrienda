@@ -1,22 +1,20 @@
 /**
  * ensureProfile.ts
+ * PROMPT 3: Helper que usa columnas REALES de user_profiles
  * 
- * Helper para garantizar que existe un registro en public.user_profiles
- * después de que el usuario se autentica (signUp o signIn).
- * 
- * - Usa RLS (NO service role)
- * - user_profiles.id es PK (UUID)
- * - user_profiles.userId es UNIQUE (vincula con User)
- * - role tiene default 'BUSCO' en DB → no lo enviamos desde cliente
- * - Idempotente: usa upsert con onConflict='id'
+ * - Tabla user_profiles: PK = id (UUID), columnas: display_name, avatar_url, updated_at
+ * - NO tiene columna user_id ni userId
+ * - Idempotente: usa insert con onConflict='id'
+ * - Evita PGRST204 usando solo columnas que existen
  */
 
 import { getBrowserSupabase } from '@/lib/supabase/browser'
 
 /**
- * Asegura que existe un perfil en user_profiles para el usuario autenticado.
+ * Asegura que existe un perfil básico en user_profiles.
+ * Usa columnas reales: id, display_name, avatar_url, updated_at
  * 
- * @throws Error si no hay usuario autenticado o si falla el upsert
+ * @throws Error si no hay usuario autenticado o si falla el insert
  */
 export async function ensureProfile(): Promise<void> {
   const supabase = getBrowserSupabase()
@@ -28,27 +26,41 @@ export async function ensureProfile(): Promise<void> {
     throw new Error('No hay usuario autenticado')
   }
 
-  // Upsert en user_profiles
-  // IMPORTANTE: La PK es 'id', no 'user_id'
-  // user_id es UNIQUE pero no es la PK
+  // PROMPT 3: Construir payload con columnas REALES de user_profiles
+  const payload = {
+    id: user.id, // PK real (UUID)
+    display_name: user.user_metadata?.name 
+      ?? user.email?.split('@')[0] 
+      ?? 'Usuario',
+    avatar_url: user.user_metadata?.avatar_url ?? null,
+    updated_at: new Date().toISOString(),
+  }
+
+  // PROMPT 3: Insert con onConflict en 'id' (PK real)
   const { error: upsertError } = await supabase
     .from('user_profiles')
-    .upsert(
-      {
-        id: user.id,      // PK - obligatorio para upsert
-        userId: user.id,  // UNIQUE - vincula con tabla User
-        // role: NO lo enviamos, usa default 'BUSCO' del schema
-        // avatar_url: NO lo tocamos, se maneja en otro flujo
-        // display_name: NO lo tocamos, se maneja en otro flujo
-      },
-      { 
-        onConflict: 'id',  // PK correcta
-        ignoreDuplicates: false // Actualizar si ya existe
-      }
-    )
+    .insert(payload)
+    .select()
+    .single()
 
-  if (upsertError) {
-    console.warn('[ensureProfile] upsert error', upsertError)
+  // Si ya existe (conflict), hacer merge/update
+  if (upsertError && upsertError.code === '23505') {
+    // Conflict en PK, hacer update
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update({
+        display_name: payload.display_name,
+        avatar_url: payload.avatar_url,
+        updated_at: payload.updated_at,
+      })
+      .eq('id', user.id)
+
+    if (updateError) {
+      console.warn('[ensureProfile] update error:', updateError)
+      throw updateError
+    }
+  } else if (upsertError) {
+    console.warn('[ensureProfile] insert error:', upsertError)
     throw upsertError
   }
 }
