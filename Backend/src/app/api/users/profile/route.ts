@@ -1,5 +1,7 @@
 // src/app/api/users/profile/route.ts
-// Force dynamic rendering for Vercel
+// PROMPT 1: Endpoint robusto con soporte cookies + Bearer + needsOnboarding
+export const runtime = 'edge'
+export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
 import { NextResponse, NextRequest } from "next/server";
@@ -34,8 +36,28 @@ const UserProfileSchema = z.object({
   name: z.string().min(1).max(80).optional(),
 });
 
-function getServerSupabase() {
+// PROMPT 1: Función que soporta cookies O Bearer token
+function getServerSupabase(request: NextRequest) {
   const cookieStore = cookies();
+  const authz = request.headers.get('authorization'); // "Bearer <token>" si el cliente lo manda
+
+  // Si hay Bearer token, usarlo (fallback para inmobiliarias)
+  if (authz) {
+    return createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: { headers: { Authorization: authz } },
+        cookies: { 
+          get() { return undefined; }, 
+          set() {}, 
+          remove() {} 
+        }
+      }
+    );
+  }
+
+  // Caso normal: usar cookies (inquilinos, dueños directos)
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -56,9 +78,14 @@ function getServerSupabase() {
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  // PROMPT 1: Usar función mejorada que soporta Bearer token
+  const supabase = getServerSupabase(req);
+  
+  // 2) Autenticar
+  const { data: { user }, error: uerr } = await supabase.auth.getUser();
+  if (!user || uerr) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
 
   try {
     // [FIX-400] Soporte para query param ?id=userId para consultar otros perfiles
@@ -88,19 +115,30 @@ export async function GET(req: NextRequest) {
       company_name: userData?.company_name
     });
 
-    // STEP 2: Get profile from user_profiles table (optional, contains preferences)
+    // 3) Traer perfil de UserProfile (puede NO existir si es la 1ra vez con "inmobiliaria")
     const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('user_id', targetUserId)
       .maybeSingle();
 
-    // Note: profileError is not critical, user_profiles is optional
-    if (profileError) {
-      console.warn('Warning fetching user_profiles (non-critical):', profileError);
+    // PROMPT 1: Si error real (distinto de "no rows"), devolver error
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error fetching user_profiles:', profileError);
+      return NextResponse.json({ error: profileError.message }, { status: 400 });
     }
 
-    // STEP 3: Merge data from both tables and normalize using mapUserProfile
+    // 4) PROMPT 1: Si no hay perfil, devolver 200 con needsOnboarding
+    if (!profileData) {
+      const userType = userData?.user_type ?? (user.user_metadata as any)?.userType ?? null;
+      return NextResponse.json({
+        user: { id: user.id, email: user.email, userType },
+        profile: null,
+        needsOnboarding: true
+      });
+    }
+
+    // 5) Perfil ok - Merge data from both tables and normalize
     // IMPORTANTE: Priorizar user_type de users sobre role de user_profiles
     const mergedData = {
       ...profileData,  // Primero profileData
@@ -146,7 +184,16 @@ export async function GET(req: NextRequest) {
       updated_at: userData?.updated_at,
     };
 
-    return NextResponse.json({ profile: completeProfile });
+    // PROMPT 1: Siempre devolver 200 con needsOnboarding: false cuando hay perfil
+    return NextResponse.json({
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        userType: completeProfile.userType ?? userData?.user_type ?? (user.user_metadata as any)?.userType ?? null 
+      },
+      profile: completeProfile,
+      needsOnboarding: false
+    });
   } catch (error) {
     console.error('Profile fetch error:', error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -162,7 +209,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 async function handleProfileUpdate(req: NextRequest) {
-  const supabase = getServerSupabase();
+  // PROMPT 1: Usar función mejorada que soporta Bearer token
+  const supabase = getServerSupabase(req);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
