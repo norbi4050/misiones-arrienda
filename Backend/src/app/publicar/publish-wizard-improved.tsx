@@ -103,38 +103,28 @@ export default function PublishWizardImproved() {
     }
   }, [user])
 
-  // [InmobiliariaFix] Validar perfil completo de inmobiliaria al iniciar
-  useEffect(() => {
-    const checkInmobiliariaProfile = async () => {
-      if (!user || user.userType !== 'inmobiliaria') return;
-      
-      console.log('[InmobiliariaFix] Validando perfil de inmobiliaria...');
-      
-      try {
-        const res = await fetch('/api/inmobiliarias/profile');
-        if (!res.ok) {
-          console.error('[InmobiliariaFix] Error al obtener perfil');
-          return;
-        }
-        
-        const { profile } = await res.json();
-        
-        if (!profile.company_name || !profile.phone || !profile.address) {
-          console.log('[InmobiliariaFix] Perfil incompleto, redirigiendo...');
-          toast.error('Completá tu perfil de empresa antes de publicar');
-          router.push('/mi-empresa');
-        } else {
-          console.log('[InmobiliariaFix] Perfil completo ✓');
-        }
-      } catch (error) {
-        console.error('[InmobiliariaFix] Error validando perfil:', error);
-      }
-    };
-
-    if (user && user.userType === 'inmobiliaria') {
-      checkInmobiliariaProfile();
+  // PERF: Función helper para validar perfil de inmobiliaria (se llama solo al publicar)
+  async function ensureInmobiliariaProfileComplete() {
+    if (!user || user.userType !== 'inmobiliaria') return;
+    
+    console.log('[InmobiliariaFix] Validando perfil de inmobiliaria...');
+    
+    const res = await fetch('/api/inmobiliarias/profile', { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error('No se pudo validar el perfil de inmobiliaria');
     }
-  }, [user, router]);
+    
+    const { profile } = await res.json();
+    
+    if (!profile.company_name || !profile.phone || !profile.address) {
+      console.log('[InmobiliariaFix] Perfil incompleto');
+      toast.error('Completá tu perfil de empresa antes de publicar');
+      router.push('/mi-empresa');
+      throw new Error('Perfil de inmobiliaria incompleto');
+    }
+    
+    console.log('[InmobiliariaFix] Perfil completo ✓');
+  }
 
   // Paso 1 → crear borrador y pasar a Paso 2
   async function handleContinueFromStep1() {
@@ -216,26 +206,9 @@ export default function PublishWizardImproved() {
     }
 
     startPublishing(async () => {
-      // [InmobiliariaFix] Validar perfil completo antes de publicar
-      if (user?.userType === 'inmobiliaria') {
-        console.log('[InmobiliariaFix] Validando perfil antes de publicar...');
-        try {
-          const res = await fetch('/api/inmobiliarias/profile');
-          if (res.ok) {
-            const { profile } = await res.json();
-            if (!profile.company_name || !profile.phone || !profile.address) {
-              console.log('[InmobiliariaFix] Perfil incompleto al publicar');
-              toast.error('Completá tu perfil de empresa antes de publicar');
-              router.push('/mi-empresa');
-              return;
-            }
-          }
-        } catch (error) {
-          console.error('[InmobiliariaFix] Error validando perfil al publicar:', error);
-        }
-      }
-
       try {
+        // PERF: Validar perfil de inmobiliaria SOLO al publicar (no al montar)
+        await ensureInmobiliariaProfileComplete();
         // Validar consentimiento
         if (!checkedTerms || !checkedPrivacy) {
           setConsentError("Debes aceptar los Términos y Condiciones y la Política de Privacidad para publicar")

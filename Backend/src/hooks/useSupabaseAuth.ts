@@ -1,12 +1,16 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createSupabaseBrowser } from 'lib/supabase/browser'
 import { useRouter } from 'next/navigation'
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { ensureProfile } from 'src/lib/auth/ensureProfile'
 
 const supabase = createSupabaseBrowser()
+
+// PERF: Caché global de sesión con TTL (60 segundos)
+let sessionCache: { at: number; session: Session | null } | null = null
+const SESSION_CACHE_TTL = 60_000 // 60 segundos
 
 interface AuthUser {
   id: string
@@ -44,6 +48,7 @@ export function useSupabaseAuth() {
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState<Session | null>(null)
   const router = useRouter()
+  const fetchingRef = useRef<Promise<any> | null>(null)
 
   // Función para obtener datos completos del usuario desde la tabla users
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
@@ -110,16 +115,47 @@ export function useSupabaseAuth() {
   useEffect(() => {
     let isMounted = true
 
-    // Obtener sesión inicial
+    // Obtener sesión inicial con caché
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        const now = Date.now()
+
+        // PERF: Cache hit - usar sesión cacheada si es reciente
+        if (sessionCache && now - sessionCache.at < SESSION_CACHE_TTL) {
+          console.debug('[useSupabaseAuth] Cache HIT - usando sesión cacheada')
+          if (isMounted) {
+            setSession(sessionCache.session)
+            
+            if (sessionCache.session?.user) {
+              const userProfile = await fetchUserProfile(sessionCache.session.user.id)
+              if (userProfile && isMounted) {
+                setUser(userProfile)
+              }
+            }
+            
+            setIsLoading(false)
+          }
+          return
+        }
+
+        // PERF: Dedupe concurrent fetches
+        if (!fetchingRef.current) {
+          console.debug('[useSupabaseAuth] Cache MISS - fetching nueva sesión')
+          fetchingRef.current = supabase.auth.getSession().finally(() => {
+            fetchingRef.current = null
+          })
+        }
+
+        const { data: { session }, error } = await fetchingRef.current
 
         if (error) {
           console.error('Error getting session:', error)
           if (isMounted) setIsLoading(false)
           return
         }
+
+        // PERF: Actualizar caché
+        sessionCache = { at: Date.now(), session }
 
         if (isMounted) {
           setSession(session)
@@ -165,6 +201,9 @@ export function useSupabaseAuth() {
 
         if (!isMounted) return
 
+        // PERF: Invalidar caché al cambiar auth
+        sessionCache = { at: Date.now(), session }
+        
         setSession(session)
 
         if (session?.user) {

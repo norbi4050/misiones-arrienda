@@ -44,17 +44,23 @@ export function LayoutClientWrapper({ children }: { children: React.ReactNode })
   const needsMessages = pathname?.startsWith('/messages') || 
                         pathname?.startsWith('/comunidad/mensajes')
   
+  // PERF: Detectar si debe mostrar AIChatbot (excluir rutas específicas)
+  const shouldShowChatbot = !!(pathname &&
+    !pathname.startsWith('/publicar') &&
+    !pathname.startsWith('/login') &&
+    !pathname.startsWith('/register'))
+  
   return (
     <AuthProvider>
       {/* PERF: Condicional por pathname - MessagesProvider (~18 KB) */}
       {needsMessages ? (
         <MessagesProvider>
-          <LayoutContent user={user}>
+          <LayoutContent user={user} shouldShowChatbot={shouldShowChatbot}>
             {children}
           </LayoutContent>
         </MessagesProvider>
       ) : (
-        <LayoutContent user={user}>
+        <LayoutContent user={user} shouldShowChatbot={shouldShowChatbot}>
           {children}
         </LayoutContent>
       )}
@@ -64,10 +70,12 @@ export function LayoutClientWrapper({ children }: { children: React.ReactNode })
 
 function LayoutContent({ 
   children, 
-  user 
+  user,
+  shouldShowChatbot
 }: { 
   children: React.ReactNode
   user: any
+  shouldShowChatbot: boolean
 }) {
   return (
     <ThemeProvider
@@ -87,8 +95,8 @@ function LayoutContent({
       {/* WhatsApp Button Global - Siempre visible */}
       <WhatsAppButton type="fixed" />
 
-      {/* PERF: Lazy load AIChatbot (~25 KB) - dynamic import con ssr:false */}
-      <AIChatbot />
+      {/* PERF: Lazy load AIChatbot (~25 KB) - condicional por ruta */}
+      {shouldShowChatbot && <AIChatbot />}
 
       {/* Build Badge para debugging */}
       <BuildBadge />
