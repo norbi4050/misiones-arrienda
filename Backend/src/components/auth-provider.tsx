@@ -47,9 +47,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (token) {
           hasInitializedProfile.current = true
           
-          // FIX-401: Siempre enviar Authorization header
-          const headers: HeadersInit = {};
-          if (token) headers["Authorization"] = `Bearer ${token}`;
+          // FIX-401 DIAGNÓSTICO: Siempre enviar Authorization header
+          const headers: HeadersInit = {
+            "Authorization": `Bearer ${token}`
+          };
           
           await fetch('/api/users/profile', {
             method: "GET",
@@ -84,10 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Esperar un tick para asegurar que la sesión está completamente establecida
         await new Promise(resolve => setTimeout(resolve, 100))
         
-        // FIX-401: Siempre enviar Authorization header
-        const token = _session.access_token;
-        const headers: HeadersInit = {};
-        if (token) headers["Authorization"] = `Bearer ${token}`;
+        // FIX-401 DIAGNÓSTICO: Siempre enviar Authorization header
+        const headers: HeadersInit = {
+          "Authorization": `Bearer ${_session.access_token}`
+        };
         
         try {
           await fetch('/api/users/profile', {
