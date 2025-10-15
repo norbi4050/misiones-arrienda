@@ -36,50 +36,45 @@ const UserProfileSchema = z.object({
   name: z.string().min(1).max(80).optional(),
 });
 
-// FIX-401: Helper para reconstruir cookies chunkeadas
-function reconstructChunkedCookie(cookieStore: ReturnType<typeof cookies>, baseName: string): string | undefined {
-  // Intentar cookie base primero
+// FIX-401: Helper para reconstruir cookies chunkeadas (base + .0, .1, .2...)
+function getChunkAware(cookieStore: ReturnType<typeof cookies>, baseName: string): string | undefined {
   const base = cookieStore.get(baseName)?.value;
   if (base) return base;
   
-  // Buscar chunks: baseName.0, baseName.1, etc.
-  const chunks: string[] = [];
-  let i = 0;
-  while (i < 10) { // Límite de seguridad: máximo 10 chunks
-    const chunk = cookieStore.get(`${baseName}.${i}`)?.value;
-    if (!chunk) break;
-    chunks.push(chunk);
-    i++;
+  const parts: string[] = [];
+  for (let i = 0; i < 12; i++) { // límite de seguridad
+    const v = cookieStore.get(`${baseName}.${i}`)?.value;
+    if (!v) break;
+    parts.push(v);
   }
-  
-  return chunks.length > 0 ? chunks.join('') : undefined;
+  return parts.length ? parts.join("") : undefined;
 }
 
 // PROMPT 1: Función SSR que soporta cookies Y Bearer token simultáneamente
 function getServerSupabase(request: NextRequest) {
   const cookieStore = cookies();
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get("authorization") ?? undefined;
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      // PROMPT 1: Si hay Authorization header, pasarlo en global.headers
+      // Si viene Authorization: Bearer ..., que Supabase lo use
       global: authHeader ? { headers: { Authorization: authHeader } } : undefined,
+
+      // ¡CLAVE! Supabase leerá cookies usando ESTE get (reconstruye chunks)
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
+        get: (name: string) => getChunkAware(cookieStore, name),
+        set: (name, value, options) => {
           try {
             cookieStore.set({ name, value, ...options });
           } catch {
             // Cookies solo se pueden modificar en Route Handlers
           }
         },
-        remove(name: string, options: CookieOptions) {
+        remove: (name, options) => {
           try {
-            cookieStore.set({ name, value: "", ...options });
+            cookieStore.set({ name, value: "", expires: new Date(0), ...options });
           } catch {
             // Cookies solo se pueden modificar en Route Handlers
           }
@@ -134,100 +129,7 @@ export async function GET(req: NextRequest) {
   }
   
   // PROMPT 1: Usar getUser() en lugar de getSession() para auth
-  let { data: { user }, error: authError } = await supabase.auth.getUser();
-  
-  // FIX-401: Fallback si no hay usuario y feature flag activo
-  if ((!user || authError) && process.env.FEATURE_PROFILE_AUTH_FALLBACK === 'true') {
-    const authHeader = req.headers.get('authorization');
-    
-    // Opción A: Intentar con Authorization header si existe
-    if (authHeader && !user) {
-      console.warn('[profile:get] using AUTH_HEADER_FALLBACK');
-      const supabaseWithBearer = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          global: { headers: { Authorization: authHeader } },
-          cookies: {
-            get(name: string) {
-              return cookies().get(name)?.value;
-            },
-            set(name: string, value: string, options: CookieOptions) {
-              try {
-                cookies().set({ name, value, ...options });
-              } catch {
-                // Cookies solo se pueden modificar en Route Handlers
-              }
-            },
-            remove(name: string, options: CookieOptions) {
-              try {
-                cookies().set({ name, value: "", ...options });
-              } catch {
-                // Cookies solo se pueden modificar en Route Handlers
-              }
-            },
-          },
-        }
-      );
-      
-      const retry = await supabaseWithBearer.auth.getUser();
-      if (retry.data.user && !retry.error) {
-        user = retry.data.user;
-        authError = null;
-      }
-    }
-    
-    // Opción B: Reconstruir cookie chunkeada si aún no hay user
-    if (!user) {
-      const cookieStore = cookies();
-      const reconstructed = reconstructChunkedCookie(cookieStore, 'misiones-arrienda-auth');
-      
-      if (reconstructed) {
-        console.warn('[profile:get] using CHUNKED_COOKIE_FALLBACK');
-        
-        try {
-          // Parsear session y extraer access_token
-          const session = JSON.parse(reconstructed);
-          if (session?.access_token) {
-            const supabaseWithToken = createServerClient(
-              process.env.NEXT_PUBLIC_SUPABASE_URL!,
-              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-              {
-                global: { headers: { Authorization: `Bearer ${session.access_token}` } },
-                cookies: {
-                  get(name: string) {
-                    return cookies().get(name)?.value;
-                  },
-                  set(name: string, value: string, options: CookieOptions) {
-                    try {
-                      cookies().set({ name, value, ...options });
-                    } catch {
-                      // Cookies solo se pueden modificar en Route Handlers
-                    }
-                  },
-                  remove(name: string, options: CookieOptions) {
-                    try {
-                      cookies().set({ name, value: "", ...options });
-                    } catch {
-                      // Cookies solo se pueden modificar en Route Handlers
-                    }
-                  },
-                },
-              }
-            );
-            
-            const retry = await supabaseWithToken.auth.getUser();
-            if (retry.data.user && !retry.error) {
-              user = retry.data.user;
-              authError = null;
-            }
-          }
-        } catch (e) {
-          console.warn('[profile:get] failed to parse chunked cookie');
-        }
-      }
-    }
-  }
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
   
   // PROMPT 1: Devolver 401 SOLO si no hay usuario
   if (authError || !user) {

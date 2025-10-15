@@ -42,22 +42,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         // PROMPT 6: Esperar a que getSession() devuelva ANTES de fetch
         const { data: { session } } = await supabase.auth.getSession()
+        const token = session?.access_token
         
-        if (session?.access_token) {
+        if (token) {
           hasInitializedProfile.current = true
           
-          // FIX-401: Construir headers con Authorization si feature flag activo
+          // FIX-401: Siempre enviar Authorization header
           const headers: HeadersInit = {};
+          if (token) headers["Authorization"] = `Bearer ${token}`;
           
-          if (process.env.NEXT_PUBLIC_FEATURE_PROFILE_AUTH_FALLBACK === 'true' && session.access_token) {
-            headers['Authorization'] = `Bearer ${session.access_token}`;
-          }
-          
-          // PROMPT 6: Fetch con Bearer token si existe
           await fetch('/api/users/profile', {
+            method: "GET",
             headers,
-            credentials: 'include', // PROMPT 6: incluir cookies
-            cache: 'no-store',      // PROMPT 6: no cachear
+            credentials: 'include',
+            cache: 'no-store',
           })
         }
       } catch (err) {
@@ -86,15 +84,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Esperar un tick para asegurar que la sesión está completamente establecida
         await new Promise(resolve => setTimeout(resolve, 100))
         
-        // FIX-401: Construir headers con Authorization si feature flag activo
+        // FIX-401: Siempre enviar Authorization header
+        const token = _session.access_token;
         const headers: HeadersInit = {};
-        
-        if (process.env.NEXT_PUBLIC_FEATURE_PROFILE_AUTH_FALLBACK === 'true' && _session.access_token) {
-          headers['Authorization'] = `Bearer ${_session.access_token}`;
-        }
+        if (token) headers["Authorization"] = `Bearer ${token}`;
         
         try {
           await fetch('/api/users/profile', {
+            method: "GET",
             headers,
             credentials: 'include',
             cache: 'no-store',
