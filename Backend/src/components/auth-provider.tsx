@@ -46,11 +46,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.access_token) {
           hasInitializedProfile.current = true
           
+          // FIX-401: Construir headers con Authorization si feature flag activo
+          const headers: HeadersInit = {};
+          
+          if (process.env.NEXT_PUBLIC_FEATURE_PROFILE_AUTH_FALLBACK === 'true' && session.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+          }
+          
           // PROMPT 6: Fetch con Bearer token si existe
           await fetch('/api/users/profile', {
-            headers: session.access_token 
-              ? { Authorization: `Bearer ${session.access_token}` } 
-              : {},
+            headers,
             credentials: 'include', // PROMPT 6: incluir cookies
             cache: 'no-store',      // PROMPT 6: no cachear
           })
@@ -81,9 +86,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Esperar un tick para asegurar que la sesión está completamente establecida
         await new Promise(resolve => setTimeout(resolve, 100))
         
+        // FIX-401: Construir headers con Authorization si feature flag activo
+        const headers: HeadersInit = {};
+        
+        if (process.env.NEXT_PUBLIC_FEATURE_PROFILE_AUTH_FALLBACK === 'true' && _session.access_token) {
+          headers['Authorization'] = `Bearer ${_session.access_token}`;
+        }
+        
         try {
           await fetch('/api/users/profile', {
-            headers: { Authorization: `Bearer ${_session.access_token}` },
+            headers,
             credentials: 'include',
             cache: 'no-store',
           })
