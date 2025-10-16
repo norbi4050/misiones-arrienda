@@ -7,7 +7,7 @@ import type { Attachment } from '@/types/messages'
 import { formatFileSize } from '@/lib/attachment-guards'
 import Image from 'next/image'
 import AttachmentLightbox from './AttachmentLightbox'
-import { getBrowserClient } from '@/lib/supabase/client-singleton'
+import { getBrowserSupabase } from '@/lib/supabase/browser'
 
 interface AttachmentPreviewProps {
   attachment: Attachment
@@ -45,7 +45,7 @@ export default function AttachmentPreview({
     
     try {
       // Obtener el token de autenticación
-      const supabase = getBrowserClient()
+      const supabase = getBrowserSupabase()
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.access_token) {

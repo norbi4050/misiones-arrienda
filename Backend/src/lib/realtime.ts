@@ -1,6 +1,6 @@
 'use client'
 
-import { getBrowserClient } from '@/lib/supabase/client-singleton'
+import { getBrowserSupabase } from '@/lib/supabase/browser'
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 /**
@@ -8,7 +8,7 @@ import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
  * CORREGIDO: Usa tabla 'community_messages' que existe en el schema
  */
 export function subscribeToMessages(conversationId: string, onNewMessage: (message: any) => void) {
-  const supabase = getBrowserClient()
+  const supabase = getBrowserSupabase()
   
   const channel = supabase
     .channel(`messages:${conversationId}`)
@@ -40,7 +40,7 @@ export function subscribeToMessages(conversationId: string, onNewMessage: (messa
  * CORREGIDO: Usa tabla 'community_conversations' y columnas correctas
  */
 export function subscribeToConversations(userId: string, onConversationUpdate: (conversation: any) => void) {
-  const supabase = getBrowserClient()
+  const supabase = getBrowserSupabase()
   
   const channel = supabase
     .channel(`conversations:${userId}`)
