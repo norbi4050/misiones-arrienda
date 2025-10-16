@@ -45,9 +45,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Obtener datos de user_profiles y users para construir avatar_url único
+    // NOTA: user_profiles usa 'userId' como FK, no 'id'
     const [{ data: userData }, { data: profile }] = await Promise.all([
       supabase.from('users').select('id,name,profile_image,avatar,logo_url').eq('id', userId).maybeSingle(),
-      supabase.from('user_profiles').select('avatar_url,updated_at').eq('id', userId).maybeSingle(),
+      supabase.from('user_profiles').select('avatar_url,updated_at').eq('userId', userId).maybeSingle(),
     ])
 
     if (!userData) {
@@ -118,17 +119,17 @@ export async function POST(req: NextRequest) {
     const url = pub.publicUrl
     const v = Math.floor(Date.now() / 1000)
 
-    // 5) Guardar en user_profiles (usar id como PK)
+    // 5) Guardar en user_profiles (usar userId como FK)
     const { error: updErr } = await supabase
       .from('user_profiles')
       .update({ avatar_url: url, updated_at: new Date().toISOString() })
-      .eq('id', user.id)
+      .eq('userId', user.id)
 
     // Si no existe la fila aún, upsert rápido
     if (updErr?.code === 'PGRST116' /* 0 rows */ || updErr == null) {
       await supabase
         .from('user_profiles')
-        .upsert({ id: user.id, avatar_url: url, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+        .upsert({ userId: user.id, avatar_url: url, updated_at: new Date().toISOString() }, { onConflict: 'userId' })
     }
 
     return NextResponse.json({ url: `${url}?v=${v}`, v, success: true })
@@ -150,7 +151,7 @@ export async function DELETE(request: NextRequest) {
 
     const userId = authHeader.replace('Bearer ', '')
 
-    // Remover avatar poniendo array vacío
+    // Remover avatar poniendo NULL
     const now = new Date()
     const { data: removeResult, error: removeError } = await supabase
       .from('user_profiles')
@@ -158,7 +159,7 @@ export async function DELETE(request: NextRequest) {
         avatar_url: null,  // NULL para remover avatar
         updated_at: now.toISOString()
       })
-      .eq('id', userId)
+      .eq('userId', userId)
       .select('updated_at')
       .single()
 
