@@ -26,8 +26,9 @@ export async function ensureProfile(): Promise<void> {
   }
 
   // Construir payload con columnas REALES de user_profiles
+  // NOTA: userId es la columna UNIQUE, no id
   const payload = {
-    id: user.id, // PK real (UUID)
+    userId: user.id, // FK a auth.users.id (UNIQUE)
     display_name: user.user_metadata?.name 
       ?? user.email?.split('@')[0] 
       ?? 'Usuario',
@@ -36,12 +37,12 @@ export async function ensureProfile(): Promise<void> {
   }
 
   // Usar upsert nativo de Supabase
-  // onConflict: 'id' - Detecta conflict en la PK
+  // onConflict: 'userId' - Detecta conflict en la columna UNIQUE
   // ignoreDuplicates: false - Actualiza si ya existe
   const { error: upsertError } = await supabase
     .from('user_profiles')
     .upsert(payload, {
-      onConflict: 'id',
+      onConflict: 'userId',
       ignoreDuplicates: false
     })
 

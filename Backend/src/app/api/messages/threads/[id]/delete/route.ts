@@ -57,11 +57,11 @@ export async function DELETE(
     }
 
     // PROMPT B: Obtener profileId de user_profiles
-    // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
+    // NOTA: En user_profiles, userId es la FK a auth.users.id
     const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('id')
-      .eq('id', user.id)
+      .eq('userId', user.id)
       .maybeSingle();
 
     const profileId = userProfile?.id || null;

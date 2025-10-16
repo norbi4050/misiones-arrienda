@@ -109,8 +109,9 @@ export function mapUserProfile(db: any): CurrentUser | null {
     return null
   }
   
-  // Extraer ID (puede venir como 'id' o 'user_id')
-  const id = db.user_id ?? db.id
+  // Extraer ID del usuario de auth (NO el ID del perfil)
+  // IMPORTANTE: Priorizar userId/user_id (FK a auth.users) sobre id (PK del perfil)
+  const id = db.userId ?? db.user_id ?? db.id
   if (!id) {
     console.warn('[AuthBridge] mapUserProfile: No user ID found in data')
     return null
