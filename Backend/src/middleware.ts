@@ -4,8 +4,29 @@ import type { NextRequest } from 'next/server';
 import { LEGACY_ROUTES } from '@/lib/legal-constants';
 
 export async function middleware(req: NextRequest) {
-  // Redirects 301 para rutas legales legacy
   const pathname = req.nextUrl.pathname;
+
+  // ========================================
+  // SECURITY: Protección de Rutas Debug
+  // ========================================
+  // Bloquear TODAS las rutas /api/debug-* en producción
+  if (pathname.startsWith('/api/debug-')) {
+    // Capa 1: NODE_ENV check
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Capa 2: Feature flag (más confiable que NODE_ENV)
+    const debugEnabled = process.env.ENABLE_DEBUG_ENDPOINTS === 'true';
+
+    if (isProduction || !debugEnabled) {
+      console.warn(`[SECURITY] Blocked debug endpoint: ${pathname} (NODE_ENV=${process.env.NODE_ENV}, DEBUG_ENABLED=${debugEnabled})`);
+      return new NextResponse('Not Found', { status: 404 });
+    }
+
+    // En desarrollo, permitir con log
+    console.log(`[DEBUG] Allowed access to: ${pathname}`);
+  }
+
+  // Redirects 301 para rutas legales legacy
   if (pathname in LEGACY_ROUTES) {
     const canonicalUrl = new URL(LEGACY_ROUTES[pathname as keyof typeof LEGACY_ROUTES], req.url);
     return NextResponse.redirect(canonicalUrl, { status: 301 });
