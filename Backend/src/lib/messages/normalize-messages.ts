@@ -23,9 +23,9 @@ export function normalizeMessage(rawMessage: any): EnrichedMessage {
       if (att && att.id) {
         attachments.push({
           id: att.id,
-          url: att.url || '',
-          mime: att.mime || att.mimeType || 'application/octet-stream',
-          sizeBytes: att.sizeBytes || att.size_bytes || att.size || 0,
+          storageUrl: att.storageUrl || att.url || '',
+          mimeType: att.mimeType || att.mime || 'application/octet-stream',
+          fileSize: att.fileSize || att.sizeBytes || att.size_bytes || att.size || 0,
           width: att.width,
           height: att.height,
           fileName: att.fileName || att.file_name || 'file',

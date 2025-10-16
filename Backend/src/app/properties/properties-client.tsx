@@ -57,7 +57,6 @@ export function PropertiesPageClient() {
         currency: "ARS",
         city: "Posadas",
         province: "Misiones",
-        country: "Argentina",
         latitude: -27.3621,
         longitude: -55.9008,
         images: ["/placeholder-house-1.jpg", "/placeholder-house-2.jpg"],
@@ -67,7 +66,7 @@ export function PropertiesPageClient() {
         garages: 1,
         area: 150,
         propertyType: "HOUSE",
-        listingType: "SALE",
+        operationType: "venta",
         status: "AVAILABLE",
         address: "Av. Mitre 1234",
         postalCode: "3300",
@@ -94,7 +93,6 @@ export function PropertiesPageClient() {
         currency: "ARS",
         city: "Oberá",
         province: "Misiones",
-        country: "Argentina",
         latitude: -27.4878,
         longitude: -55.1199,
         images: ["/placeholder-apartment-1.jpg", "/placeholder-apartment-2.jpg"],
@@ -104,7 +102,7 @@ export function PropertiesPageClient() {
         garages: 0,
         area: 80,
         propertyType: "APARTMENT",
-        listingType: "SALE",
+        operationType: "venta",
         status: "AVAILABLE",
         address: "San Martín 567",
         postalCode: "3360",
@@ -131,7 +129,6 @@ export function PropertiesPageClient() {
         currency: "ARS",
         city: "Puerto Iguazú",
         province: "Misiones",
-        country: "Argentina",
         latitude: -25.5948,
         longitude: -54.5805,
         images: ["/placeholder-commercial-1.jpg"],
@@ -141,7 +138,7 @@ export function PropertiesPageClient() {
         garages: 0,
         area: 120,
         propertyType: "COMMERCIAL",
-        listingType: "RENT",
+        operationType: "alquiler",
         status: "AVAILABLE",
         address: "Av. Brasil 890",
         postalCode: "3370",
@@ -168,7 +165,6 @@ export function PropertiesPageClient() {
         currency: "ARS",
         city: "Eldorado",
         province: "Misiones",
-        country: "Argentina",
         latitude: -26.4009,
         longitude: -54.6156,
         images: ["/placeholder-land-1.jpg"],
@@ -178,7 +174,7 @@ export function PropertiesPageClient() {
         garages: 0,
         area: 1000,
         propertyType: "LAND",
-        listingType: "SALE",
+        operationType: "venta",
         status: "AVAILABLE",
         address: "Ruta 12 Km 45",
         postalCode: "3380",
@@ -213,8 +209,8 @@ export function PropertiesPageClient() {
       filtered = filtered.filter(p => p.propertyType === filters.propertyType)
     }
     
-    if (filters.listingType) {
-      filtered = filtered.filter(p => p.listingType === filters.listingType)
+    if (filters.operationType) {
+      filtered = filtered.filter(p => p.operationType === filters.operationType)
     }
     
     if (filters.minPrice !== undefined) {

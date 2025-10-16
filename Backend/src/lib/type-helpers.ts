@@ -1,8 +1,11 @@
-import { PropertyStatus, PropertyType, ListingType } from '@/types/property';
+import { PropertyStatus, PropertyType } from '@/types/property';
 
 /**
  * Type normalization helpers to safely convert strings to union types
  * These functions ensure type safety when data comes from external sources (DB/API)
+ * 
+ * NOTA: ListingType fue eliminado del tipo Property.
+ * Ahora se usa operationType en su lugar.
  */
 
 // Helper to normalize PropertyStatus
@@ -23,15 +26,6 @@ export const normalizePropertyType = (type: string | PropertyType): PropertyType
     : 'HOUSE';
 };
 
-// Helper to normalize ListingType
-export const normalizeListingType = (type: string | ListingType): ListingType => {
-  const validTypes: ListingType[] = ['RENT', 'SALE', 'BOTH'];
-  const upperType = type.toString().toUpperCase();
-  return (validTypes as readonly string[]).includes(upperType) 
-    ? (upperType as ListingType) 
-    : 'SALE';
-};
-
 /**
  * Comprehensive property normalizer
  * Normalizes all enum fields in a property object to ensure type safety
@@ -41,7 +35,7 @@ export const normalizeProperty = (property: any): any => {
     ...property,
     status: normalizePropertyStatus(property.status),
     propertyType: normalizePropertyType(property.propertyType),
-    listingType: normalizeListingType(property.listingType),
+    // NOTA: listingType ya no existe en Property, se usa operationType
     // Ensure dates are properly formatted
     createdAt: property.createdAt instanceof Date 
       ? property.createdAt.toISOString() 

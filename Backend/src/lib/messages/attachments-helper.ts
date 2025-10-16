@@ -55,9 +55,9 @@ export async function getMessageAttachments(messageId: string): Promise<Attachme
 
         return {
           id: att.id,
-          url: signedUrlData?.signedUrl || '',
-          mime: att.mime,
-          sizeBytes: att.sizeBytes,
+          storageUrl: signedUrlData?.signedUrl || '',
+          mimeType: att.mime,
+          fileSize: att.sizeBytes,
           width: att.width,
           height: att.height,
           fileName,
@@ -125,9 +125,9 @@ export async function getMessagesAttachments(
 
       const attachment: Attachment = {
         id: att.id,
-        url: signedUrlData?.signedUrl || '',
-        mime: att.mime,
-        sizeBytes: att.sizeBytes,
+        storageUrl: signedUrlData?.signedUrl || '',
+        mimeType: att.mime,
+        fileSize: att.sizeBytes,
         width: att.width,
         height: att.height,
         fileName,

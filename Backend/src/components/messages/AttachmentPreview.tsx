@@ -27,8 +27,8 @@ export default function AttachmentPreview({
   const [imageError, setImageError] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   
-  const isImage = attachment.mime.startsWith('image/')
-  const isPdf = attachment.mime === 'application/pdf'
+  const isImage = attachment.mimeType.startsWith('image/')
+  const isPdf = attachment.mimeType === 'application/pdf'
 
   // Handler para abrir lightbox
   const handlePreviewClick = () => {
@@ -51,7 +51,7 @@ export default function AttachmentPreview({
       if (!session?.access_token) {
         console.error('[ATTACHMENT] No session token available')
         // Fallback: abrir URL directamente
-        window.open(attachment.url, '_blank', 'noopener,noreferrer')
+        window.open(attachment.storageUrl, '_blank', 'noopener,noreferrer')
         return
       }
 
@@ -88,7 +88,7 @@ export default function AttachmentPreview({
     } catch (error) {
       console.error('[ATTACHMENT] Download error:', error)
       // Fallback: abrir URL directamente
-      window.open(attachment.url, '_blank', 'noopener,noreferrer')
+      window.open(attachment.storageUrl, '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -112,7 +112,7 @@ export default function AttachmentPreview({
         >
         <div className="relative w-full h-32 bg-gray-100">
           <Image
-            src={attachment.url}
+            src={attachment.storageUrl}
             alt={attachment.fileName}
             fill
             className="object-cover"
@@ -158,7 +158,7 @@ export default function AttachmentPreview({
           {/* Info */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
             <p className="text-xs text-white truncate">{attachment.fileName}</p>
-            <p className="text-xs text-gray-300">{formatFileSize(attachment.sizeBytes)}</p>
+            <p className="text-xs text-gray-300">{formatFileSize(attachment.fileSize)}</p>
           </div>
         </div>
 
@@ -194,7 +194,7 @@ export default function AttachmentPreview({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{attachment.fileName}</p>
-        <p className="text-xs text-gray-500">{formatFileSize(attachment.sizeBytes)}</p>
+        <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>
         {isPdf && (
           <p className="text-xs text-gray-400 mt-1">PDF Document</p>
         )}

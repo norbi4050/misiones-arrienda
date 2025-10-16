@@ -104,9 +104,9 @@ export async function GET(
 
         return {
           id: att.id,
-          url: signedUrlData?.signedUrl || '',
-          mime: att.mime,
-          sizeBytes: att.size_bytes,
+          storageUrl: signedUrlData?.signedUrl || '',
+          mimeType: att.mime,
+          fileSize: att.size_bytes,
           width: att.width,
           height: att.height,
           fileName,

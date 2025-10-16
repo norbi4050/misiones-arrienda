@@ -68,7 +68,6 @@ export default function PublishWizardImproved() {
       address: "",
       city: "",
       province: "Misiones",
-      country: "Argentina",
       postalCode: "",
       contact_phone: user?.phone || "",
       latitude: undefined,

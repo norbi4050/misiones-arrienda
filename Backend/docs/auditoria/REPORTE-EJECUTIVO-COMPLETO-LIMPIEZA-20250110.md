@@ -557,4 +557,110 @@ legacy/_quarantine/20250110/
 
 #### ROTAR CREDENCIALES DE MERCADOPAGO INMEDIATAMENTE
 
-Las siguientes credenciales fueron expuestas en el código y DEBEN ser invali
+Las siguientes credenciales fueron expuestas en el código y DEBEN ser invalidadas:
+
+```
+Access Token: APP_USR-3647290553297438-082512-ea1978cb2f7b9768080ad2bab3df7600-77412419
+Client Secret: ENlqoDJIZ0fffS8QftXGYfvePfMDd8NO
+Public Key: APP_USR-5abed961-c23a-4458-82c7-0f564bf7b9d5
+Client ID: 3647290553297438
+```
+
+**Pasos a seguir**:
+1. Ir al panel de MercadoPago (https://www.mercadopago.com.ar/developers)
+2. Invalidar el Access Token expuesto
+3. Invalidar el Client Secret expuesto
+4. Generar nuevas credenciales
+5. Actualizar variables de entorno en `.env.local`:
+   ```env
+   MP_ACCESS_TOKEN=<nuevo_token_de_produccion>
+   MP_WEBHOOK_SECRET=<nuevo_webhook_secret>
+   ```
+6. Reiniciar la aplicación
+
+**Urgencia**: INMEDIATA - Las credenciales están en el historial de Git
+
+---
+
+## 11. GARANTÍAS Y REVERSIÓN
+
+### Backup Disponible
+```
+Tag: auditoria-backup-20250110
+Commit: 615158c
+Fecha: 2025-01-10
+```
+
+### Reversión Completa
+```bash
+# Opción 1: Revertir ambos commits
+git revert 6bd1189  # Revertir Fase 2
+git revert 8ddcb77  # Revertir Fase 1
+
+# Opción 2: Volver al backup completo
+git checkout auditoria-backup-20250110
+
+# Opción 3: Restaurar archivo específico
+git checkout 8ddcb77~1 -- src/lib/mercadopago.ts
+```
+
+### Restaurar desde Cuarentena
+```powershell
+# Ejemplo: Restaurar mercadopago.ts
+Move-Item "legacy/_quarantine/20250110/src/lib/mercadopago.ts" "src/lib/"
+```
+
+### Garantías
+- ✅ Backup completo disponible
+- ✅ Todos los cambios en Git
+- ✅ Archivos en cuarentena (no eliminados)
+- ✅ Build verificado funcionando
+- ✅ Documentación completa
+- ✅ Reversible en cualquier momento
+
+---
+
+## 12. CONCLUSIONES Y RECOMENDACIONES
+
+### Conclusiones
+
+#### Lo que se logró
+1. **Seguridad mejorada**: Eliminadas credenciales hardcodeadas del código activo
+2. **Código más limpio**: 12 archivos legacy removidos
+3. **Mejor organización**: Archivos de test en ubicación correcta
+4. **Cero downtime**: Build funcionando en todo momento
+5. **Documentación completa**: 5 documentos generados
+
+#### Lo que se descubrió
+1. **Archivos en `lib/` son válidos**: No son duplicados, son ubicaciones alternativas en uso
+2. **Muchos archivos ya limpiados**: 22 archivos ya no existían
+3. **Dashboard requiere migración**: `src/app/dashboard/page.tsx` usa `supabaseClient` legacy
+4. **Build robusto**: Soportó todos los cambios sin problemas
+
+### Recomendaciones
+
+#### Inmediato
+1. ⚠️ **ROTAR CREDENCIALES DE MERCADOPAGO** (crítico)
+2. ✅ Mantener archivos en cuarentena por 30 días
+3. ✅ Monitorear el build en producción
+
+#### Corto Plazo (1-2 semanas)
+1. Migrar `src/app/dashboard/page.tsx` para usar `@/lib/supabase/browser`
+2. Luego mover `src/lib/supabaseClient.ts` a cuarentena
+3. Revisar y proteger rutas `/api/debug-*` con `NODE_ENV` guards
+4. Revisar y proteger rutas `/api/dev/*` con `NODE_ENV` guards
+
+#### Mediano Plazo (1 mes)
+1. Eliminar archivos de cuarentena después de 30 días
+2. Crear `.env.local.example` con variables requeridas
+3. Implementar pre-commit hooks para detectar secretos
+4. Configurar GitHub Secret Scanning
+
+#### Largo Plazo (3 meses)
+1. Limpiar historial de Git para eliminar credenciales (si repo es público)
+2. Auditoría de seguridad completa
+3. Implementar secret scanning automatizado
+4. Documentar proceso de manejo de secretos
+
+### Lecciones Aprendidas
+

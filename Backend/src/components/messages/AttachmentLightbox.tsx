@@ -33,8 +33,8 @@ export default function AttachmentLightbox({
   const [zoom, setZoom] = useState(100)
   const [imageError, setImageError] = useState(false)
 
-  const isImage = attachment.mime.startsWith('image/')
-  const isPdf = attachment.mime === 'application/pdf'
+  const isImage = attachment.mimeType.startsWith('image/')
+  const isPdf = attachment.mimeType === 'application/pdf'
 
   // Reset zoom cuando cambia el adjunto y track preview
   useEffect(() => {
@@ -45,11 +45,11 @@ export default function AttachmentLightbox({
       // Track attachment preview
       analytics.attachmentPreview({
         attachmentId: attachment.id,
-        mime: attachment.mime,
+        mime: attachment.mimeType,
         source: 'lightbox'
       }).catch(err => console.error('[LIGHTBOX] Analytics error:', err))
     }
-  }, [isOpen, attachment.id, attachment.mime])
+  }, [isOpen, attachment.id, attachment.mimeType])
 
   // Keyboard support: ESC para cerrar
   useEffect(() => {
@@ -88,13 +88,13 @@ export default function AttachmentLightbox({
     // Track download
     analytics.attachmentDownload({
       attachmentId: attachment.id,
-      mime: attachment.mime,
-      sizeBytes: attachment.sizeBytes
+      mime: attachment.mimeType,
+      sizeBytes: attachment.fileSize
     }).catch(err => console.error('[LIGHTBOX] Analytics error:', err))
     
     // Abrir en nueva pestaña con seguridad
-    window.open(attachment.url, '_blank', 'noopener,noreferrer')
-  }, [attachment.url, attachment.id, attachment.mime, attachment.sizeBytes])
+    window.open(attachment.storageUrl, '_blank', 'noopener,noreferrer')
+  }, [attachment.storageUrl, attachment.id, attachment.mimeType, attachment.fileSize])
 
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     // Solo cerrar si se hace click en el backdrop, no en el contenido
@@ -180,7 +180,7 @@ export default function AttachmentLightbox({
               }}
             >
               <Image
-                src={attachment.url}
+                src={attachment.storageUrl}
                 alt={attachment.fileName}
                 width={attachment.width || 1200}
                 height={attachment.height || 800}
@@ -262,7 +262,7 @@ export default function AttachmentLightbox({
           )}
           {isPdf && (
             <p className="text-white/70 text-xs mt-1">
-              Documento PDF • {(attachment.sizeBytes / 1024 / 1024).toFixed(2)} MB
+              Documento PDF • {(attachment.fileSize / 1024 / 1024).toFixed(2)} MB
             </p>
           )}
         </div>
