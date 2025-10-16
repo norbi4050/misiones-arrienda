@@ -2,7 +2,7 @@ export type CommunityRole = 'BUSCO' | 'OFREZCO'
 export type PetPreference = 'SI_PET' | 'NO_PET' | 'INDIFERENTE'
 export type SmokePreference = 'FUMADOR' | 'NO_FUMADOR' | 'INDIFERENTE'
 export type DietType = 'NINGUNA' | 'VEGETARIANO' | 'VEGANO' | 'CELIACO' | 'OTRO'
-export type RoomType = 'INDIVIDUAL' | 'COMPARTIDA' | 'ESTUDIO' | 'CASA_COMPLETA'
+export type RoomType = 'PRIVADA' | 'COMPARTIDA' | 'ESTUDIO' | 'CASA_COMPLETA'
 export type SortType = 'recent' | 'highlight'
 
 export interface CommunityPost {

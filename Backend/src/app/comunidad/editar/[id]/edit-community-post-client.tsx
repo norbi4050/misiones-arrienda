@@ -341,7 +341,7 @@ export function EditCommunityPostClient({ post }: EditCommunityPostClientProps) 
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="INDIVIDUAL">Habitación individual</SelectItem>
+                      <SelectItem value="PRIVADA">Habitación privada</SelectItem>
                       <SelectItem value="COMPARTIDA">Habitación compartida</SelectItem>
                       <SelectItem value="ESTUDIO">Estudio/monoambiente</SelectItem>
                       <SelectItem value="CASA_COMPLETA">Casa completa</SelectItem>

@@ -14,13 +14,13 @@ export const communityRoleSchema = z.enum(['BUSCO', 'OFREZCO'])
 export const petPreferenceSchema = z.enum(['SI_PET', 'NO_PET', 'INDIFERENTE'])
 export const smokePreferenceSchema = z.enum(['FUMADOR', 'NO_FUMADOR', 'INDIFERENTE'])
 export const dietTypeSchema = z.enum(['NINGUNA', 'VEGETARIANO', 'VEGANO', 'CELIACO', 'OTRO'])
-export const roomTypeSchema = z.enum(['INDIVIDUAL', 'COMPARTIDA', 'ESTUDIO', 'CASA_COMPLETA'])
+export const roomTypeSchema = z.enum(['PRIVADA', 'COMPARTIDA', 'ESTUDIO', 'CASA_COMPLETA'])
 export const sortTypeSchema = z.enum(['recent', 'highlight'])
 
 // Unions con normalización
 const Role = z.union([z.literal('BUSCO'), z.literal('OFREZCO')])
 const RoomType = z.union([
-  z.literal('INDIVIDUAL'),
+  z.literal('PRIVADA'),
   z.literal('COMPARTIDA'),
   z.literal('ESTUDIO'),
   z.literal('CASA_COMPLETA')

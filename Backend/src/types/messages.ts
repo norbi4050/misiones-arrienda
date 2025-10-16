@@ -3,9 +3,9 @@
 // Tipo para adjuntos de mensajes
 export interface Attachment {
   id: string;
-  url: string;
-  mime: string;
-  sizeBytes: number;
+  storageUrl: string;
+  mimeType: string;
+  fileSize: number;
   width?: number;
   height?: number;
   fileName: string;

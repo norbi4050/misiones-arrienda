@@ -139,9 +139,9 @@ model User {
   propertyCount String? // Solo para dueños directos
   
   // Campos de presencia/estado online (NUEVO - 2025)
-  isOnline      Boolean   @default(false) @map("is_online")
-  lastSeen      DateTime? @map("last_seen") @db.Timestamptz(6)
-  lastActivity  DateTime  @default(now()) @map("last_activity") @db.Timestamptz(6)
+  isOnline      Boolean   @default(false)
+  lastSeen      DateTime? @db.Timestamptz(6)
+  lastActivity  DateTime  @default(now()) @db.Timestamptz(6)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -470,6 +470,7 @@ enum RoomType {
   PRIVADA       // Habitación privada
   COMPARTIDA    // Habitación compartida
   ESTUDIO       // Estudio/monoambiente
+  CASA_COMPLETA // Casa completa
 }
 
 model UserProfile {
@@ -506,9 +507,9 @@ model UserProfile {
   isPaid                Boolean  @default(false)
   
   // Campos de presencia/estado online (NUEVO - 2025)
-  isOnline      Boolean   @default(false) @map("is_online")
-  lastSeen      DateTime? @map("last_seen") @db.Timestamptz(6)
-  lastActivity  DateTime  @default(now()) @map("last_activity") @db.Timestamptz(6)
+  isOnline      Boolean   @default(false)
+  lastSeen      DateTime? @db.Timestamptz(6)
+  lastActivity  DateTime  @default(now()) @db.Timestamptz(6)
   
   // Auditoría
   createdAt             DateTime @default(now())

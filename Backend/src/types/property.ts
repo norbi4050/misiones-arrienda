@@ -14,7 +14,6 @@ export interface Property {
   address: string
   city: string
   province: string
-  country: string // Campo faltante agregado
   postalCode: string
   latitude?: number
   longitude?: number
@@ -118,7 +117,6 @@ export interface PropertyFormData {
   address: string
   city: string
   province: string
-  country: string
   postalCode: string
   latitude?: number
   longitude?: number
