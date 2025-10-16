@@ -111,7 +111,10 @@ export class DatabaseAdapter {
    * Verificar conectividad de ambos sistemas
    */
   static async healthCheck() {
-    const results = {
+    const results: {
+      supabase: { status: string; error: string | null }
+      prisma: { status: string; error: string | null }
+    } = {
       supabase: { status: 'unknown', error: null },
       prisma: { status: 'unknown', error: null }
     }
