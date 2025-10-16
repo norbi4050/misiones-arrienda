@@ -73,11 +73,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Obtener perfil de user_profiles
+  // Obtener perfil de user_profiles usando userId (no id)
   const { data: profileData, error: profileError } = await supabase
     .from('user_profiles')
     .select('*')
-    .eq('id', user.id)
+    .eq('userId', user.id)
     .single();
 
   if (profileError) {
@@ -160,11 +160,11 @@ export async function PUT(req: NextRequest) {
     updateData.avatar_url = body.avatar_url;
   }
 
-  // Actualizar en user_profiles
+  // Actualizar en user_profiles usando userId (no id)
   const { data: updatedData, error: updateError } = await supabase
     .from('user_profiles')
     .update(updateData)
-    .eq('id', user.id)
+    .eq('userId', user.id)
     .select()
     .single();
 
