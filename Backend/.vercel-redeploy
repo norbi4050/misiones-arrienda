@@ -1,3 +1,5 @@
 Redeploy trigger - RLS policies updated
-Timestamp: 2025-10-17T01:18:00Z
-Reason: Updated RLS policies in Supabase to allow public avatar reads
+Timestamp: 2025-10-17T01:20:30Z
+Reason: Force Vercel redeploy after RLS policy updates in Supabase
+Policies updated: public.User and public.users SELECT policies
+Expected result: /api/users/avatar should return avatar URLs instead of 404
