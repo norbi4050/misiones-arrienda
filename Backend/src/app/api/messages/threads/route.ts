@@ -732,11 +732,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Buscar conversación existente (idempotente)
-      // NOTA: No filtrar por property_id ya que esa columna no existe en conversations
+      // NOTA: Usar a_id, b_id, participant_1, participant_2 (no sender_id/receiver_id)
       const { data: existingConv } = await supabase
         .from('conversations')
         .select('id')
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${toUserId}),and(sender_id.eq.${toUserId},receiver_id.eq.${user.id})`)
+        .or(`and(a_id.eq.${user.id},b_id.eq.${toUserId}),and(a_id.eq.${toUserId},b_id.eq.${user.id}),and(participant_1.eq.${user.id},participant_2.eq.${toUserId}),and(participant_1.eq.${toUserId},participant_2.eq.${user.id})`)
         .maybeSingle()
 
       if (existingConv) {
@@ -745,17 +745,15 @@ export async function POST(request: NextRequest) {
         console.log(`[CONVERSATION] ✅ Existente: ${conversationId}`)
       } else {
         // Crear nueva conversación
-        // NOTA: property_id es opcional, solo incluirlo si se proporcionó
+        // NOTA: Usar participant_1 y participant_2 (no sender_id/receiver_id)
         const insertData: any = {
-          sender_id: user.id,
-          receiver_id: toUserId,
+          participant_1: user.id,
+          participant_2: toUserId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
 
-        // NO incluir property_id por ahora - la tabla conversations no tiene esa columna
-        // TODO: Agregar columna property_id a la tabla conversations si se necesita
-        console.log(`[CONVERSATION] Creando conversación sin property_id (columna no existe)`)
+        console.log(`[CONVERSATION] Creando conversación: ${user.id} <-> ${toUserId}`)
 
         const { data: newConv, error: createError } = await supabase
           .from('conversations')
