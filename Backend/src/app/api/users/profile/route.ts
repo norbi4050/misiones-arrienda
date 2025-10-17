@@ -73,26 +73,44 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Obtener perfil de user_profiles usando userId (no id)
-  const { data: profileData, error: profileError } = await supabase
-    .from('user_profiles')
+  // Obtener datos de tabla users (fuente de verdad para user_type)
+  const { data: userData, error: userError } = await supabase
+    .from('users')
     .select('*')
-    .eq('userId', user.id)
+    .eq('id', user.id)
     .single();
 
-  if (profileError) {
-    console.error('[API /users/profile GET] Error fetching profile:', profileError);
+  if (userError) {
+    console.error('[API /users/profile GET] Error fetching user:', userError);
     return NextResponse.json(
-      { error: "Profile not found", details: profileError.message }, 
+      { error: "User not found", details: userError.message },
       { status: 404, headers: hdrs }
     );
   }
 
-  if (!profileData) {
+  if (!userData) {
     return NextResponse.json(
-      { error: "Profile not found" }, 
+      { error: "User not found" },
       { status: 404, headers: hdrs }
     );
+  }
+
+  // Si el usuario es BUSCO/INQUILINO, obtener datos adicionales de user_profiles
+  let profileData = userData;
+  if (userData.user_type === 'inquilino' || userData.user_type === 'busco') {
+    const { data: communityData } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('userId', user.id)
+      .maybeSingle();
+
+    if (communityData) {
+      // Combinar datos, priorizando userData para campos importantes como user_type
+      profileData = {
+        ...communityData,
+        ...userData,
+      };
+    }
   }
 
   // Mapear a CurrentUser usando mapUserProfile

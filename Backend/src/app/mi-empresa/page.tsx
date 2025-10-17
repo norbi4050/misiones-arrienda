@@ -15,31 +15,31 @@ export const revalidate = 60
  */
 async function getInmobiliariaProfile(userId: string) {
   const supabase = createClient()
-  
+
   try {
-    // Fetch perfil de inmobiliaria
+    // Fetch perfil de inmobiliaria desde tabla users
     const { data: profile, error: profileError } = await supabase
-      .from('inmobiliarias')
+      .from('users')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single()
-    
+
     if (profileError) {
       console.error('[Server] Error fetching inmobiliaria profile:', profileError)
       throw profileError
     }
-    
-    // Fetch equipo
+
+    // Fetch equipo (si existe tabla inmobiliaria_team)
     const { data: team, error: teamError } = await supabase
       .from('inmobiliaria_team')
       .select('*')
-      .eq('inmobiliaria_id', profile.id)
+      .eq('user_id', userId)  // Changed from inmobiliaria_id to user_id
       .order('display_order', { ascending: true })
-    
+
     if (teamError) {
-      console.error('[Server] Error fetching team:', teamError)
+      console.log('[Server] No team data found (table may not exist):', teamError.message)
     }
-    
+
     // Parsear business_hours desde JSONB
     let businessHours = DEFAULT_BUSINESS_HOURS
     if (profile.business_hours) {
@@ -48,11 +48,11 @@ async function getInmobiliariaProfile(userId: string) {
         businessHours = parsed
       }
     }
-    
+
     // Transformar a formato esperado por el cliente
     const transformedProfile = {
       id: profile.id,
-      user_id: profile.user_id,
+      user_id: profile.id,  // El user_id es el mismo que id
       company_name: profile.company_name || '',
       phone: profile.phone || '',
       commercial_phone: profile.commercial_phone || null,
@@ -73,10 +73,10 @@ async function getInmobiliariaProfile(userId: string) {
       show_map_public: profile.show_map_public ?? true,
       show_stats_public: profile.show_stats_public ?? true
     }
-    
-    return { 
-      profile: transformedProfile, 
-      team: team || [] 
+
+    return {
+      profile: transformedProfile,
+      team: team || []
     }
   } catch (error) {
     console.error('[Server] Error in getInmobiliariaProfile:', error)
@@ -137,14 +137,15 @@ export default async function MiEmpresaPage() {
     redirect('/login')
   }
   
-  // Verificar tipo de usuario en servidor
+  // Verificar tipo de usuario en servidor (usando tabla users)
   const { data: userProfile, error: profileError } = await supabase
-    .from('user_profiles')
-    .select('user_type')
+    .from('users')
+    .select('user_type, is_company')
     .eq('id', user.id)
     .single()
-  
+
   if (profileError || userProfile?.user_type !== 'inmobiliaria') {
+    console.error('[mi-empresa/page] User is not inmobiliaria:', userProfile)
     redirect('/')
   }
   

@@ -10,7 +10,7 @@ import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox"
 import { MapPin, Check, Loader2, Lock, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
-import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
+import { useCurrentUser } from "@/lib/auth/useCurrentUser"
 import { useRouter } from "next/navigation"
 import { propertyFormSchema } from "@/lib/validations/property"
 import { logConsentClient } from "@/lib/consent/logConsent.client"
@@ -21,8 +21,8 @@ import type { PlanLimitError } from "@/types/plan-limits"
 
 export default function PublishWizardImproved() {
   console.debug('[Wizard NUEVO] montado')
-  
-  const { user, isLoading } = useSupabaseAuth()
+
+  const { user, loading: isLoading } = useCurrentUser()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
   const selectedPlan = 'basico' // Solo plan básico disponible
