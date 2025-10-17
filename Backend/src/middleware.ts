@@ -43,48 +43,8 @@ export async function middleware(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return req.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            req.cookies.set(name, value);
-            res.cookies.set(name, value, options);
-          });
-        },
         get(name: string) {
-          // FIX: Handle chunked cookies (misiones-arrienda-auth.0, misiones-arrienda-auth.1, etc.)
-          // @supabase/ssr splits large cookies into chunks, we need to reconstruct them
-          const cookie = req.cookies.get(name);
-          if (cookie) {
-            console.log(`[MIDDLEWARE] Found cookie: ${name}`);
-            return cookie.value;
-          }
-
-          // Check for chunked cookies (name.0, name.1, name.2, etc.)
-          const chunks: string[] = [];
-          let chunkIndex = 0;
-
-          while (true) {
-            const chunkName = `${name}.${chunkIndex}`;
-            const chunk = req.cookies.get(chunkName);
-
-            if (!chunk) {
-              break; // No more chunks
-            }
-
-            chunks.push(chunk.value);
-            chunkIndex++;
-          }
-
-          // If we found chunks, reconstruct the full value
-          if (chunks.length > 0) {
-            console.log(`[MIDDLEWARE] Reconstructed chunked cookie: ${name} (${chunks.length} chunks)`);
-            return chunks.join('');
-          }
-
-          console.log(`[MIDDLEWARE] Cookie not found: ${name}`);
-          return undefined;
+          return req.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
           req.cookies.set({
