@@ -8,7 +8,11 @@
       "Bash(Invoke-WebRequest -Uri \"http://localhost:3000/api/debug-credentials\" -Method POST -ContentType \"application/json\" -Body '{}' -UseBasicParsing)",
       "Bash(Select-Object -First 5)",
       "Bash(npm test:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(node scripts/audit-sync-usuarios.js:*)",
+      "Bash(node scripts/impact-analysis.js:*)",
+      "Bash(curl:*)",
+      "Bash(node scripts/verify-table-name.js:*)"
     ],
     "deny": [],
     "ask": []
