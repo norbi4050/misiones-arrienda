@@ -577,23 +577,26 @@ export async function POST(request: NextRequest) {
 
     console.log(`[SCHEMA] ✅ Usando rama: ${schema}, reason: ${schemaReason}`)
 
-    // FIX: Verificar si el usuario es inmobiliaria antes de requerir UserProfile
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('user_type')
-      .eq('id', user.id)
-      .single()
-
-    const userType = userData?.user_type?.toLowerCase()
-    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
-
-    console.log(`[USER TYPE] userId=${user.id}, userType=${userType}, isInmobiliaria=${isInmobiliaria}`)
-
-    // Si es inmobiliaria, forzar uso de rama SUPABASE (no requiere UserProfile)
+    // FIX: Verificar si el usuario tiene UserProfile antes de usar rama PRISMA
     let finalSchema = schema
-    if (isInmobiliaria && schema === 'PRISMA') {
-      console.log('[SCHEMA] 🔄 Usuario inmobiliaria detectado, forzando rama SUPABASE')
-      finalSchema = 'SUPABASE'
+    let hasUserProfile = false
+
+    if (schema === 'PRISMA') {
+      const { data: userProfile } = await supabase
+        .from('UserProfile')
+        .select('id')
+        .eq('userId', user.id)
+        .maybeSingle()
+
+      hasUserProfile = !!userProfile
+
+      // Si NO tiene UserProfile, forzar SUPABASE (no requiere UserProfile)
+      if (!hasUserProfile) {
+        console.log(`[SCHEMA] 🔄 Usuario ${user.id} NO tiene UserProfile, forzando rama SUPABASE`)
+        finalSchema = 'SUPABASE'
+      } else {
+        console.log(`[SCHEMA] ✅ Usuario ${user.id} tiene UserProfile, usando rama PRISMA`)
+      }
     }
 
     let conversationId: string | null = null
@@ -787,7 +790,7 @@ export async function POST(request: NextRequest) {
       existing,
       _meta: {
         schema: finalSchema,
-        schema_reason: isInmobiliaria && schema === 'PRISMA' ? 'INMOBILIARIA_FORCED_SUPABASE' : schemaReason,
+        schema_reason: !hasUserProfile && schema === 'PRISMA' ? 'NO_USERPROFILE_FORCED_SUPABASE' : schemaReason,
         duration_ms: duration,
         version: 'v2_displayName'  // PROMPT D4: versionKey para forzar rehidratación
       }
