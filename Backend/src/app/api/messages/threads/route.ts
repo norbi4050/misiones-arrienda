@@ -732,16 +732,12 @@ export async function POST(request: NextRequest) {
       }
 
       // Buscar conversación existente (idempotente)
-      let query = supabase
+      // NOTA: No filtrar por property_id ya que esa columna no existe en conversations
+      const { data: existingConv } = await supabase
         .from('conversations')
         .select('id')
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${toUserId}),and(sender_id.eq.${toUserId},receiver_id.eq.${user.id})`)
-
-      if (propertyId) {
-        query = query.eq('property_id', propertyId)
-      }
-
-      const { data: existingConv } = await query.single()
+        .maybeSingle()
 
       if (existingConv) {
         conversationId = existingConv.id
@@ -749,6 +745,7 @@ export async function POST(request: NextRequest) {
         console.log(`[CONVERSATION] ✅ Existente: ${conversationId}`)
       } else {
         // Crear nueva conversación
+        // NOTA: property_id es opcional, solo incluirlo si se proporcionó
         const insertData: any = {
           sender_id: user.id,
           receiver_id: toUserId,
@@ -756,9 +753,9 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString()
         }
 
-        if (propertyId) {
-          insertData.property_id = propertyId
-        }
+        // NO incluir property_id por ahora - la tabla conversations no tiene esa columna
+        // TODO: Agregar columna property_id a la tabla conversations si se necesita
+        console.log(`[CONVERSATION] Creando conversación sin property_id (columna no existe)`)
 
         const { data: newConv, error: createError } = await supabase
           .from('conversations')
