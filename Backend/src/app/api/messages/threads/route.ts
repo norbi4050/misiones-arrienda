@@ -583,9 +583,9 @@ export async function POST(request: NextRequest) {
 
     if (schema === 'PRISMA') {
       const { data: userProfile } = await supabase
-        .from('UserProfile')
+        .from('user_profiles')
         .select('id')
-        .eq('userId', user.id)
+        .eq('user_id', user.id)
         .maybeSingle()
 
       hasUserProfile = !!userProfile
@@ -754,12 +754,12 @@ export async function POST(request: NextRequest) {
 
           // Crear UserProfile minimal para el usuario actual
           const { data: newProfile, error: createError } = await supabase
-            .from('UserProfile')
+            .from('user_profiles')
             .insert({
-              userId: user.id,
+              user_id: user.id,
               city: 'Sin especificar',
-              budgetMin: 0,
-              budgetMax: 1000000,
+              budget_min: 0,
+              budget_max: 1000000,
               role: 'BUSCO'
             })
             .select('id')
@@ -777,9 +777,9 @@ export async function POST(request: NextRequest) {
         } else {
           // Usuario actual ya tiene UserProfile, obtener su ID
           const { data: existingProfile } = await supabase
-            .from('UserProfile')
+            .from('user_profiles')
             .select('id')
-            .eq('userId', user.id)
+            .eq('user_id', user.id)
             .single()
 
           currentUserProfileId = existingProfile!.id
@@ -787,21 +787,21 @@ export async function POST(request: NextRequest) {
 
         // Verificar/crear UserProfile para usuario destino
         const { data: targetProfile } = await supabase
-          .from('UserProfile')
+          .from('user_profiles')
           .select('id')
-          .eq('userId', toUserId)
+          .eq('user_id', toUserId)
           .maybeSingle()
 
         if (!targetProfile) {
           console.log(`[USERPROFILE] Creando UserProfile faltante para usuario destino ${toUserId}`)
 
           const { data: newTargetProfile, error: createTargetError } = await supabase
-            .from('UserProfile')
+            .from('user_profiles')
             .insert({
-              userId: toUserId,
+              user_id: toUserId,
               city: 'Sin especificar',
-              budgetMin: 0,
-              budgetMax: 1000000,
+              budget_min: 0,
+              budget_max: 1000000,
               role: 'BUSCO'
             })
             .select('id')
