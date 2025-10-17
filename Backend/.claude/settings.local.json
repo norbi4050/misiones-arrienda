@@ -25,7 +25,8 @@
       "Bash(node check-user-role.js:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(Select-Object -First 100)"
+      "Bash(Select-Object -First 100)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []
