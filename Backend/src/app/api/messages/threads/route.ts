@@ -606,38 +606,85 @@ export async function POST(request: NextRequest) {
     // RAMA A: PRISMA (Conversation con aId/bId)
     // ============================================
     if (finalSchema === 'PRISMA') {
-      // Obtener UserProfile del usuario actual
+      // Obtener o crear UserProfile del usuario actual
+      let currentProfileId: string
+
       const { data: currentProfile, error: currentProfileError } = await supabase
-        .from('UserProfile')
+        .from('user_profiles')
         .select('id')
         .eq('userId', user.id)
-        .single()
+        .maybeSingle()
 
       if (currentProfileError || !currentProfile) {
-        console.error('[PROFILE] ❌ No se encontró UserProfile para usuario:', user.id)
-        return NextResponse.json({
-          error: 'PROFILE_NOT_FOUND',
-          details: 'Necesitas completar tu perfil de comunidad primero'
-        }, { status: 403 })
+        console.log('[PROFILE] ⚠️ No se encontró UserProfile para usuario, creando...:', user.id)
+
+        // Auto-crear UserProfile minimal
+        const { data: newProfile, error: createError } = await supabase
+          .from('user_profiles')
+          .insert({
+            userId: user.id,
+            city: 'Sin especificar',
+            budgetMin: 0,
+            budgetMax: 1000000,
+            role: 'BUSCO'
+          })
+          .select('id')
+          .single()
+
+        if (createError || !newProfile) {
+          console.error('[PROFILE] ❌ Error creando perfil:', createError)
+          return NextResponse.json({
+            error: 'DB_ERROR',
+            details: `No se pudo crear perfil: ${createError?.message}`
+          }, { status: 500 })
+        }
+
+        currentProfileId = newProfile.id
+        console.log('[PROFILE] ✅ UserProfile creado:', currentProfileId)
+      } else {
+        currentProfileId = currentProfile.id
+        console.log('[PROFILE] ✅ UserProfile existente:', currentProfileId)
       }
 
-      // Obtener UserProfile del usuario destino
+      // Obtener o crear UserProfile del usuario destino
+      let targetProfileId: string
+
       const { data: targetProfile, error: targetProfileError } = await supabase
-        .from('UserProfile')
+        .from('user_profiles')
         .select('id')
         .eq('userId', toUserId)
-        .single()
+        .maybeSingle()
 
       if (targetProfileError || !targetProfile) {
-        console.error('[PROFILE] ❌ No se encontró UserProfile para toUserId:', toUserId)
-        return NextResponse.json({ 
-          error: 'TARGET_USER_NOT_FOUND',
-          details: 'El usuario destino no tiene perfil de comunidad'
-        }, { status: 404 })
-      }
+        console.log('[PROFILE] ⚠️ No se encontró UserProfile para usuario destino, creando...:', toUserId)
 
-      const currentProfileId = currentProfile.id
-      const targetProfileId = targetProfile.id
+        // Auto-crear UserProfile minimal para usuario destino
+        const { data: newTargetProfile, error: createTargetError } = await supabase
+          .from('user_profiles')
+          .insert({
+            userId: toUserId,
+            city: 'Sin especificar',
+            budgetMin: 0,
+            budgetMax: 1000000,
+            role: 'BUSCO'
+          })
+          .select('id')
+          .single()
+
+        if (createTargetError || !newTargetProfile) {
+          console.error('[PROFILE] ❌ Error creando perfil destino:', createTargetError)
+          return NextResponse.json({
+            error: 'DB_ERROR',
+            details: `No se pudo crear perfil destino: ${createTargetError?.message}`
+          }, { status: 500 })
+        }
+
+        targetProfileId = newTargetProfile.id
+        console.log('[PROFILE] ✅ UserProfile destino creado:', targetProfileId)
+      } else {
+        targetProfileId = targetProfile.id
+        console.log('[PROFILE] ✅ UserProfile destino existente:', targetProfileId)
+      }
 
       console.log(`[PROFILE] ✅ Current: ${currentProfileId}, Target: ${targetProfileId}`)
 
