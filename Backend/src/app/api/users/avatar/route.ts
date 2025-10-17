@@ -34,8 +34,14 @@ function getTimestampEpoch(): number {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getServerClient()
-    
+    // Usar SERVICE ROLE para bypass RLS - los avatares son públicos
+    const supabase = createServiceClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+
     // Obtener userId del query params (público)
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
