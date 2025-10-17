@@ -12,7 +12,10 @@
       "Bash(node scripts/audit-sync-usuarios.js:*)",
       "Bash(node scripts/impact-analysis.js:*)",
       "Bash(curl:*)",
-      "Bash(node scripts/verify-table-name.js:*)"
+      "Bash(node scripts/verify-table-name.js:*)",
+      "Bash(node check-auth-users.js:*)",
+      "Bash(node test-middleware-cookies.js)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
