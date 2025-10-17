@@ -115,65 +115,79 @@ export async function middleware(req: NextRequest) {
     }
   );
 
-  // Rutas que requieren autenticación
+  // ========================================
+  // AUTHENTICATION CHECK (Unified)
+  // ========================================
+  // Get user session ONCE and reuse for all checks
+  let user = null;
+  let authError = null;
+
+  try {
+    const { data: { user: authUser }, error } = await supabase.auth.getUser();
+    user = authUser;
+    authError = error;
+
+    if (authError) {
+      console.log(`[MIDDLEWARE] Auth error: ${authError.message}`);
+    } else if (user) {
+      console.log(`[MIDDLEWARE] User authenticated: ${user.id}`);
+    } else {
+      console.log(`[MIDDLEWARE] No authenticated user`);
+    }
+  } catch (error) {
+    console.error('[MIDDLEWARE] Exception getting user:', error);
+    authError = error;
+  }
+
+  // ========================================
+  // PROTECTED ROUTES CHECK
+  // ========================================
   const protectedRoutes = ['/profile', '/publicar', '/favorites', '/messages', '/mi-cuenta'];
-  const isProtectedRoute = protectedRoutes.some(route => 
+  const isProtectedRoute = protectedRoutes.some(route =>
     req.nextUrl.pathname.startsWith(route)
   );
 
   if (isProtectedRoute) {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (error || !user) {
-        // Redirigir a login si no está autenticado
-        const redirectUrl = new URL('/login', req.url);
-        redirectUrl.searchParams.set('redirect', req.nextUrl.pathname);
-        return NextResponse.redirect(redirectUrl);
-      }
-    } catch (error) {
-      console.error('Error en middleware:', error);
+    if (authError || !user) {
+      console.log(`[MIDDLEWARE] Redirecting to login: ${pathname}`);
       const redirectUrl = new URL('/login', req.url);
+      redirectUrl.searchParams.set('redirect', req.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
   }
 
-  // [AuthBridge] Guard: Bloquear /comunidad para inmobiliarias
-  // GUARD: soft-guard habilitado por FEATURE_COMMUNITY_SOFT_GUARD; evitamos 307 en /comunidad
+  // ========================================
+  // COMUNIDAD ACCESS GUARD (Inmobiliarias)
+  // ========================================
   if (req.nextUrl.pathname.startsWith('/comunidad')) {
-    // Importar flag dinámicamente para evitar problemas de edge runtime
     const FEATURE_COMMUNITY_SOFT_GUARD = process.env.NEXT_PUBLIC_FEATURE_COMMUNITY_SOFT_GUARD !== 'false';
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
+
+    // Only check if user is authenticated
+    if (user) {
+      try {
         // Verificar si es inmobiliaria
         const { data: userData } = await supabase
           .from('users')
           .select('user_type, is_company')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        const isAgency = userData?.is_company === true || 
+        const isAgency = userData?.is_company === true ||
                         userData?.user_type?.toUpperCase() === 'INMOBILIARIA' ||
                         userData?.user_type?.toUpperCase() === 'AGENCY';
 
         if (isAgency) {
-          // GUARD: Si soft-guard está activo, NO redirigir (dejar pasar a RSC)
-          // Si está desactivado, mantener comportamiento legacy (redirect 307)
           if (!FEATURE_COMMUNITY_SOFT_GUARD) {
-            console.log('[Middleware] Agency user blocked from /comunidad, redirecting to /mi-empresa (legacy mode)');
+            console.log('[MIDDLEWARE] Agency blocked from /comunidad (legacy mode)');
             return NextResponse.redirect(new URL('/mi-empresa', req.url));
           } else {
-            console.log('[Middleware] Agency user accessing /comunidad with soft-guard enabled (no redirect)');
-            // Continuar sin redirect - el RSC mostrará el EmptyState
+            console.log('[MIDDLEWARE] Agency accessing /comunidad with soft-guard');
           }
         }
+      } catch (error) {
+        console.error('[MIDDLEWARE] Error checking agency status:', error);
+        // Fail-open: permitir acceso en caso de error
       }
-    } catch (error) {
-      console.error('[Middleware] Error checking agency status:', error);
-      // En caso de error, permitir acceso (fail-open)
     }
   }
 
