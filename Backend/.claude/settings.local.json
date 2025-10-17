@@ -24,7 +24,8 @@
       "Bash(node test-login-flow.js:*)",
       "Bash(node check-user-role.js:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(Select-Object -First 100)"
     ],
     "deny": [],
     "ask": []

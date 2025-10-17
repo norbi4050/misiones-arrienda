@@ -123,21 +123,41 @@ export async function POST(request: NextRequest) {
     });
 
     // 3. Validar participación en thread
-    // Intentar primero con tablas PRISMA (PascalCase), luego Supabase (lowercase)
-    
-    // Obtener perfil del usuario
-    const { data: userProfile } = await supabase
-      .from('UserProfile')
-      .select('id')
-      .eq('userId', user.id)
+    // FIX: Verificar user_type antes de requerir UserProfile
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('user_type')
+      .eq('id', user.id)
       .single();
 
-    if (!userProfile) {
-      console.log('[ATTACHMENTS] UserProfile not found for user:', user.id);
-      return NextResponse.json(
-        { error: 'Perfil no encontrado', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+    const userType = userData?.user_type?.toLowerCase()
+    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
+
+    // Obtener perfil del usuario (solo si NO es inmobiliaria)
+    let userProfileId: string
+
+    if (isInmobiliaria) {
+      // Para inmobiliarias, usar directamente user.id
+      userProfileId = user.id
+      console.log('[ATTACHMENTS] Usuario inmobiliaria detectado, usando user.id:', user.id)
+    } else {
+      // Para inquilinos/busco, buscar en UserProfile
+      const { data: userProfile } = await supabase
+        .from('UserProfile')
+        .select('id')
+        .eq('userId', user.id)
+        .single();
+
+      if (!userProfile) {
+        console.log('[ATTACHMENTS] UserProfile not found for user:', user.id);
+        return NextResponse.json(
+          { error: 'Perfil no encontrado', code: 'NOT_FOUND' },
+          { status: 404 }
+        );
+      }
+
+      userProfileId = userProfile.id
     }
 
     // Buscar conversación en tabla PRISMA
@@ -157,10 +177,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar que el usuario es participante (comparar con PROFILE ID, no USER ID)
-    const isParticipant = conversation.aId === userProfile.id || conversation.bId === userProfile.id;
+    const isParticipant = conversation.aId === userProfileId || conversation.bId === userProfileId;
 
     if (!isParticipant) {
-      console.log('[ATTACHMENTS] User not participant:', user.id, 'profileId:', userProfile.id, threadId);
+      console.log('[ATTACHMENTS] User not participant:', user.id, 'profileId:', userProfileId, threadId);
       return NextResponse.json(
         { error: 'No tienes acceso a este hilo', code: 'FORBIDDEN' },
         { status: 403 }
@@ -191,8 +211,8 @@ export async function POST(request: NextRequest) {
     const sanitizedName = sanitizeFileNameNew(file.name);
     const timestamp = Date.now();
     const fileName = `${timestamp}-${sanitizedName}`;
-    // IMPORTANTE: Usar userProfile.id en el path, NO user.id
-    const storagePath = `${userProfile.id}/${threadId}/${fileName}`;
+    // IMPORTANTE: Usar userProfileId en el path
+    const storagePath = `${userProfileId}/${threadId}/${fileName}`;
 
     // 5.1. Validar path (prevenir path traversal)
     if (!validateFilePath(storagePath)) {
@@ -252,13 +272,13 @@ export async function POST(request: NextRequest) {
     
     // 8. Crear registro en DB usando tabla PRISMA MessageAttachment
     // NOTA: messageId será NULL hasta que el usuario envíe el mensaje
-    // IMPORTANTE: userId debe ser userProfile.id, NO user.id (Auth ID)
+    // IMPORTANTE: userId debe ser userProfileId
     const { data: attachment, error: dbError } = await supabase
       .from('MessageAttachment')
       .insert({
         id: attachmentUuid,
         messageId: messageId || null,  // NULL si no hay mensaje aún
-        userId: userProfile.id,  // ← FIX: usar userProfile.id en lugar de user.id
+        userId: userProfileId,  // ← FIX: usar userProfileId
         path: storagePath,
         mime: file.type,
         sizeBytes: file.size,
@@ -293,13 +313,13 @@ export async function POST(request: NextRequest) {
 
     console.log('[ATTACHMENTS] SUCCESS - File uploaded, waiting for message send', {
       authUserId: user.id,
-      userProfileId: userProfile.id,
+      userProfileId: userProfileId,
       threadId,
       attachmentId: attachment.id,
       mime: file.type,
       size: file.size,
       messageId: messageId || 'pending',
-      savedWithUserId: userProfile.id  // ← Este es el ID que se guardó en la DB
+      savedWithUserId: userProfileId  // ← Este es el ID que se guardó en la DB
     });
 
     // 9.5. Track upload success

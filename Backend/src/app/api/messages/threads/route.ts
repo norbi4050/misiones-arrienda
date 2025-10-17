@@ -577,13 +577,32 @@ export async function POST(request: NextRequest) {
 
     console.log(`[SCHEMA] ✅ Usando rama: ${schema}, reason: ${schemaReason}`)
 
+    // FIX: Verificar si el usuario es inmobiliaria antes de requerir UserProfile
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('user_type')
+      .eq('id', user.id)
+      .single()
+
+    const userType = userData?.user_type?.toLowerCase()
+    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
+
+    console.log(`[USER TYPE] userId=${user.id}, userType=${userType}, isInmobiliaria=${isInmobiliaria}`)
+
+    // Si es inmobiliaria, forzar uso de rama SUPABASE (no requiere UserProfile)
+    let finalSchema = schema
+    if (isInmobiliaria && schema === 'PRISMA') {
+      console.log('[SCHEMA] 🔄 Usuario inmobiliaria detectado, forzando rama SUPABASE')
+      finalSchema = 'SUPABASE'
+    }
+
     let conversationId: string | null = null
     let existing = false
 
     // ============================================
     // RAMA A: PRISMA (Conversation con aId/bId)
     // ============================================
-    if (schema === 'PRISMA') {
+    if (finalSchema === 'PRISMA') {
       // Obtener UserProfile del usuario actual
       const { data: currentProfile, error: currentProfileError } = await supabase
         .from('UserProfile')
@@ -593,7 +612,7 @@ export async function POST(request: NextRequest) {
 
       if (currentProfileError || !currentProfile) {
         console.error('[PROFILE] ❌ No se encontró UserProfile para usuario:', user.id)
-        return NextResponse.json({ 
+        return NextResponse.json({
           error: 'PROFILE_NOT_FOUND',
           details: 'Necesitas completar tu perfil de comunidad primero'
         }, { status: 403 })
@@ -664,7 +683,7 @@ export async function POST(request: NextRequest) {
     // ============================================
     // RAMA B: SUPABASE (conversations con sender_id/receiver_id)
     // ============================================
-    else if (schema === 'SUPABASE') {
+    else if (finalSchema === 'SUPABASE') {
       // Verificar que la propiedad existe (si se proporciona)
       if (propertyId) {
         const { data: property, error: propertyError } = await supabase
@@ -681,19 +700,32 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Verificar que el usuario destino existe
+      // Verificar que el usuario destino existe (intentar user_profiles primero, luego users)
       // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
-      const { data: targetUser, error: userError } = await supabase
+      const { data: targetUserProfile } = await supabase
         .from('user_profiles')
         .select('id, display_name')
         .eq('id', toUserId)
-        .single()
+        .maybeSingle()
 
-      if (userError || !targetUser) {
-        console.error('[USER] ❌ Usuario destino no encontrado:', toUserId)
-        return NextResponse.json({ 
-          error: 'TARGET_USER_NOT_FOUND' 
-        }, { status: 404 })
+      // Si no está en user_profiles, verificar en tabla users (puede ser inmobiliaria)
+      if (!targetUserProfile) {
+        const { data: targetUserData, error: targetUserError } = await supabase
+          .from('users')
+          .select('id, user_type')
+          .eq('id', toUserId)
+          .single()
+
+        if (targetUserError || !targetUserData) {
+          console.error('[USER] ❌ Usuario destino no encontrado en user_profiles ni users:', toUserId)
+          return NextResponse.json({
+            error: 'TARGET_USER_NOT_FOUND'
+          }, { status: 404 })
+        }
+
+        console.log(`[USER] ✅ Usuario destino encontrado en users (${targetUserData.user_type}):`, toUserId)
+      } else {
+        console.log(`[USER] ✅ Usuario destino encontrado en user_profiles:`, toUserId)
       }
 
       // Buscar conversación existente (idempotente)
@@ -746,7 +778,7 @@ export async function POST(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime
-    console.log(`[THREADS POST] ✅ conversationId: ${conversationId}, existing: ${existing}, ${duration}ms, rama: ${schema}`)
+    console.log(`[THREADS POST] ✅ conversationId: ${conversationId}, existing: ${existing}, ${duration}ms, rama: ${finalSchema}`)
 
     // PROMPT 1, 2 & C & D4: Respuesta unificada con conversationId
     return NextResponse.json({
@@ -754,8 +786,8 @@ export async function POST(request: NextRequest) {
       conversationId,
       existing,
       _meta: {
-        schema,
-        schema_reason: schemaReason,
+        schema: finalSchema,
+        schema_reason: isInmobiliaria && schema === 'PRISMA' ? 'INMOBILIARIA_FORCED_SUPABASE' : schemaReason,
         duration_ms: duration,
         version: 'v2_displayName'  // PROMPT D4: versionKey para forzar rehidratación
       }

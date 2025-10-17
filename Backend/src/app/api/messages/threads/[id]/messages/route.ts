@@ -95,21 +95,44 @@ export async function POST(
 
     console.log(`[Messages] ✅ Hilo encontrado usando schema: ${isPrismaSchema ? 'PRISMA' : 'SUPABASE'}`)
 
-    // Obtener el perfil del usuario para el sender_id
-    const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
-    const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
-    
-    const { data: userProfile, error: profileError } = await supabase
-      .from(profileTable)
-      .select('id')
-      .eq(profileIdField, user.id)
+    // FIX: Verificar user_type antes de requerir UserProfile
+    const { data: userData } = await supabase
+      .from('users')
+      .select('user_type')
+      .eq('id', user.id)
       .single()
 
-    if (profileError || !userProfile) {
-      console.error('[Messages] ❌ Perfil no encontrado para usuario:', user.id)
-      return NextResponse.json({ 
-        error: 'Perfil de usuario no encontrado' 
-      }, { status: 403 })
+    const userType = userData?.user_type?.toLowerCase()
+    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
+
+    // Obtener el perfil del usuario para el sender_id (solo si NO es inmobiliaria)
+    let senderId: string
+    let userProfileId: string | null = null
+
+    if (isInmobiliaria) {
+      // Para inmobiliarias, usar directamente user.id
+      senderId = user.id
+      console.log(`[Messages] Usuario inmobiliaria detectado, usando user.id como senderId: ${user.id}`)
+    } else {
+      // Para inquilinos/busco, buscar en UserProfile
+      const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
+      const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
+
+      const { data: userProfile, error: profileError } = await supabase
+        .from(profileTable)
+        .select('id')
+        .eq(profileIdField, user.id)
+        .single()
+
+      if (profileError || !userProfile) {
+        console.error('[Messages] ❌ Perfil no encontrado para usuario:', user.id)
+        return NextResponse.json({
+          error: 'Perfil de usuario no encontrado'
+        }, { status: 403 })
+      }
+
+      senderId = userProfile.id
+      userProfileId = userProfile.id
     }
 
     // Crear nuevo mensaje
@@ -122,7 +145,7 @@ export async function POST(
 
     const messageData: any = {
       [conversationIdField]: conversationId,
-      [senderIdField]: userProfile.id,
+      [senderIdField]: senderId,
       [bodyField]: content.trim(),
       [isReadField]: false,
       [createdAtField]: new Date().toISOString()
@@ -157,7 +180,7 @@ export async function POST(
         attachmentIds,
         messageId: newMessage.id,
         authUserId: user.id,
-        userProfileId: userProfile.id
+        userProfileId: userProfileId
       })
       
       // FIX: Usar service role client para bypassear RLS
@@ -192,9 +215,9 @@ export async function POST(
         }, { status: 400 })
       }
       
-      // Verificar ownership (userId puede ser user.id O userProfile.id)
+      // Verificar ownership (userId puede ser user.id O userProfileId si existe)
       const invalidAttachments = attachmentsToLink.filter(
-        att => att.userId !== user.id && att.userId !== userProfile.id
+        att => att.userId !== user.id && (!userProfileId || att.userId !== userProfileId)
       )
       
       if (invalidAttachments.length > 0) {
@@ -202,7 +225,7 @@ export async function POST(
           cantidadInvalidos: invalidAttachments.length,
           idsInvalidos: invalidAttachments.map(a => a.id),
           userIdEsperado: user.id,
-          userProfileIdEsperado: userProfile.id
+          userProfileIdEsperado: userProfileId
         })
         return NextResponse.json({ 
           error: 'No autorizado para usar estos adjuntos' 
@@ -320,7 +343,7 @@ export async function POST(
     if (process.env.NODE_ENV === 'development') {
       console.log(`📨 Mensaje enviado en conversación ${conversationId}:`, {
         messageId: newMessage.id,
-        senderId: userProfile.id,
+        senderId: senderId,
         content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
         attachmentsCount: attachments.length,
         schema: isPrismaSchema ? 'PRISMA' : 'SUPABASE'

@@ -80,23 +80,46 @@ export async function GET(
 
     console.log(`[GET Thread] ✅ Schema: ${isPrismaSchema ? 'PRISMA' : 'SUPABASE'}`)
 
-    // Obtener perfil del usuario actual
-    const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
-    const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
-    
-    const { data: userProfile } = await supabase
-      .from(profileTable)
-      .select('id')
-      .eq(profileIdField, user.id)
+    // FIX: Verificar user_type antes de requerir UserProfile
+    const { data: userData } = await supabase
+      .from('users')
+      .select('user_type')
+      .eq('id', user.id)
       .single()
 
-    if (!userProfile) {
-      return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
+    const userType = userData?.user_type?.toLowerCase()
+    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
+
+    // Obtener perfil del usuario actual (solo si NO es inmobiliaria)
+    let userProfile: any = null
+    let userProfileId: string
+
+    if (isInmobiliaria) {
+      // Para inmobiliarias, usar directamente user.id
+      userProfileId = user.id
+      console.log(`[GET Thread] Usuario inmobiliaria detectado, usando user.id: ${user.id}`)
+    } else {
+      // Para inquilinos/busco, buscar en UserProfile
+      const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
+      const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
+
+      const { data: profile } = await supabase
+        .from(profileTable)
+        .select('id')
+        .eq(profileIdField, user.id)
+        .single()
+
+      if (!profile) {
+        return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
+      }
+
+      userProfile = profile
+      userProfileId = profile.id
     }
 
     // PROMPT 1: Determinar el otro usuario (PROFILE ID, no USER ID)
-    const otherProfileId = isPrismaSchema 
-      ? (thread.aId === userProfile.id ? thread.bId : thread.aId)
+    const otherProfileId = isPrismaSchema
+      ? (thread.aId === userProfileId ? thread.bId : thread.aId)
       : null  // Para Supabase, otherUserId es directamente el user_id
 
     // FIX: Usar campos correctos de Supabase (a_id, b_id, participant_1, participant_2)
@@ -220,9 +243,9 @@ export async function GET(
     const messages = (messagesData || []).reverse()
 
     // Marcar como leídos
-    if (userProfile) {
+    if (userProfileId) {
       const messagesToMarkRead = (messages || [])
-        .filter((msg: any) => (msg as any)[senderIdField] !== userProfile.id && !(msg as any)[isReadField])
+        .filter((msg: any) => (msg as any)[senderIdField] !== userProfileId && !(msg as any)[isReadField])
         .map((msg: any) => msg.id)
 
       if (messagesToMarkRead.length > 0) {
@@ -242,10 +265,10 @@ export async function GET(
       const messageSenderId = (message as any)[senderIdField]
       
       // ✅ FIX CRÍTICO: Comparar correctamente según el esquema
-      // PRISMA: senderId es PROFILE ID → comparar con userProfile.id
+      // PRISMA: senderId es PROFILE ID → comparar con userProfileId
       // SUPABASE: sender_id es USER ID → comparar con user.id
-      const isMine = isPrismaSchema 
-        ? messageSenderId === userProfile.id  // PRISMA: PROFILE ID
+      const isMine = isPrismaSchema
+        ? messageSenderId === userProfileId  // PRISMA: PROFILE ID
         : messageSenderId === user.id         // SUPABASE: USER ID
       
       return {
@@ -379,18 +402,39 @@ export async function PATCH(
     const senderIdField = isPrismaSchema ? 'senderId' : 'sender_id'
     const isReadField = isPrismaSchema ? 'isRead' : 'is_read'
 
-    // Obtener perfil del usuario
-    const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
-    const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
-    
-    const { data: userProfile } = await supabase
-      .from(profileTable)
-      .select('id')
-      .eq(profileIdField, user.id)
+    // FIX: Verificar user_type antes de requerir UserProfile
+    const { data: userData } = await supabase
+      .from('users')
+      .select('user_type')
+      .eq('id', user.id)
       .single()
 
-    if (!userProfile) {
-      return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
+    const userType = userData?.user_type?.toLowerCase()
+    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
+
+    // Obtener perfil del usuario (solo si NO es inmobiliaria)
+    let userProfileId: string
+
+    if (isInmobiliaria) {
+      // Para inmobiliarias, usar directamente user.id
+      userProfileId = user.id
+      console.log(`[PATCH Thread] Usuario inmobiliaria detectado, usando user.id: ${user.id}`)
+    } else {
+      // Para inquilinos/busco, buscar en UserProfile
+      const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
+      const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
+
+      const { data: userProfile } = await supabase
+        .from(profileTable)
+        .select('id')
+        .eq(profileIdField, user.id)
+        .single()
+
+      if (!userProfile) {
+        return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
+      }
+
+      userProfileId = userProfile.id
     }
 
     const updateData: any = { [isReadField]: true }
@@ -420,7 +464,7 @@ export async function PATCH(
       .from(messageTable)
       .update(updateData)
       .eq(conversationIdField, conversationId)
-      .neq(senderIdField, userProfile.id)
+      .neq(senderIdField, userProfileId)
       .eq(isReadField, false)
 
     if (updateError) {
