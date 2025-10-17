@@ -43,6 +43,15 @@ export async function middleware(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            req.cookies.set(name, value);
+            res.cookies.set(name, value, options);
+          });
+        },
         get(name: string) {
           // FIX: Handle chunked cookies (misiones-arrienda-auth.0, misiones-arrienda-auth.1, etc.)
           // @supabase/ssr splits large cookies into chunks, we need to reconstruct them

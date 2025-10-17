@@ -15,7 +15,13 @@
       "Bash(node scripts/verify-table-name.js:*)",
       "Bash(node check-auth-users.js:*)",
       "Bash(node test-middleware-cookies.js)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(cat:*)",
+      "Bash(node test-login-flow.js:*)"
     ],
     "deny": [],
     "ask": []

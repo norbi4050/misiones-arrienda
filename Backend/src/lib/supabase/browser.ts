@@ -16,7 +16,9 @@ if (!client) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
-        storageKey: SUPABASE_AUTH_STORAGE_KEY,
+        // FIX: Remove custom storageKey to use default Supabase format
+        // This ensures cookies match what middleware expects: sb-{project_ref}-auth-token
+        // storageKey: SUPABASE_AUTH_STORAGE_KEY,
         persistSession: true,
         autoRefreshToken: true,
       },
