@@ -732,11 +732,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Buscar conversación existente (idempotente)
-      // NOTA: Usar a_id, b_id, participant_1, participant_2 (no sender_id/receiver_id)
+      // NOTA: La tabla Conversation usa a_id y b_id (NO participant_1/participant_2)
       const { data: existingConv } = await supabase
         .from('conversations')
         .select('id')
-        .or(`and(a_id.eq.${user.id},b_id.eq.${toUserId}),and(a_id.eq.${toUserId},b_id.eq.${user.id}),and(participant_1.eq.${user.id},participant_2.eq.${toUserId}),and(participant_1.eq.${toUserId},participant_2.eq.${user.id})`)
+        .or(`and(a_id.eq.${user.id},b_id.eq.${toUserId}),and(a_id.eq.${toUserId},b_id.eq.${user.id})`)
         .maybeSingle()
 
       if (existingConv) {
@@ -744,16 +744,91 @@ export async function POST(request: NextRequest) {
         existing = true
         console.log(`[CONVERSATION] ✅ Existente: ${conversationId}`)
       } else {
-        // Crear nueva conversación
-        // NOTA: Usar participant_1 y participant_2 (no sender_id/receiver_id)
+        // CRÍTICO: La tabla Conversation requiere UserProfile.id en aId y bId
+        // Si el usuario NO tiene UserProfile, crearlo automáticamente
+        let currentUserProfileId: string
+        let targetUserProfileId: string
+
+        if (!hasUserProfile) {
+          console.log(`[USERPROFILE] Creando UserProfile faltante para usuario ${user.id}`)
+
+          // Crear UserProfile minimal para el usuario actual
+          const { data: newProfile, error: createError } = await supabase
+            .from('UserProfile')
+            .insert({
+              userId: user.id,
+              city: 'Sin especificar',
+              budgetMin: 0,
+              budgetMax: 1000000,
+              role: 'BUSCO'
+            })
+            .select('id')
+            .single()
+
+          if (createError || !newProfile) {
+            console.error('[USERPROFILE] ❌ Error creando perfil:', createError)
+            return NextResponse.json({
+              error: 'DB_ERROR',
+              details: `No se pudo crear perfil de usuario: ${createError?.message}`
+            }, { status: 500 })
+          }
+
+          currentUserProfileId = newProfile.id
+        } else {
+          // Usuario actual ya tiene UserProfile, obtener su ID
+          const { data: existingProfile } = await supabase
+            .from('UserProfile')
+            .select('id')
+            .eq('userId', user.id)
+            .single()
+
+          currentUserProfileId = existingProfile!.id
+        }
+
+        // Verificar/crear UserProfile para usuario destino
+        const { data: targetProfile } = await supabase
+          .from('UserProfile')
+          .select('id')
+          .eq('userId', toUserId)
+          .maybeSingle()
+
+        if (!targetProfile) {
+          console.log(`[USERPROFILE] Creando UserProfile faltante para usuario destino ${toUserId}`)
+
+          const { data: newTargetProfile, error: createTargetError } = await supabase
+            .from('UserProfile')
+            .insert({
+              userId: toUserId,
+              city: 'Sin especificar',
+              budgetMin: 0,
+              budgetMax: 1000000,
+              role: 'BUSCO'
+            })
+            .select('id')
+            .single()
+
+          if (createTargetError || !newTargetProfile) {
+            console.error('[USERPROFILE] ❌ Error creando perfil destino:', createTargetError)
+            return NextResponse.json({
+              error: 'DB_ERROR',
+              details: `No se pudo crear perfil de usuario destino: ${createTargetError?.message}`
+            }, { status: 500 })
+          }
+
+          targetUserProfileId = newTargetProfile.id
+        } else {
+          targetUserProfileId = targetProfile.id
+        }
+
+        // Ahora crear la conversación con los UserProfile.id correctos
         const insertData: any = {
-          participant_1: user.id,
-          participant_2: toUserId,
+          a_id: currentUserProfileId,
+          b_id: targetUserProfileId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
 
-        console.log(`[CONVERSATION] Creando conversación: ${user.id} <-> ${toUserId}`)
+        console.log(`[CONVERSATION] Creando conversación: ${currentUserProfileId} <-> ${targetUserProfileId}`)
 
         const { data: newConv, error: createError } = await supabase
           .from('conversations')
