@@ -12,16 +12,16 @@ import type { Attachment } from '@/types/messages';
 export async function getMessageAttachments(messageId: string): Promise<Attachment[]> {
   try {
     const supabase = createClient();
-    
-    // Obtener adjuntos del mensaje desde tabla PRISMA
+
+    // Obtener adjuntos del mensaje - usar nombre correcto de tabla PostgreSQL
     const { data: attachments, error } = await supabase
-      .from('MessageAttachment')
+      .from('message_attachments')
       .select('*')
-      .eq('messageId', messageId)
-      .order('createdAt', { ascending: true });
+      .eq('message_id', messageId)
+      .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('[Attachments Helper] Error fetching attachments:', error);
+      console.warn('[Attachments Helper] No se pudieron cargar adjuntos (404 esperado si no existen):', error);
       return [];
     }
 
@@ -32,21 +32,21 @@ export async function getMessageAttachments(messageId: string): Promise<Attachme
     // Generar URLs firmadas para cada adjunto
     const attachmentsWithUrls = await Promise.all(
       attachments.map(async (att) => {
-        const fileName = att.path.split('/').pop() || 'archivo';
-        console.log('[Attachments Helper] Generando signed URL para:', att.path);
-        
+        const fileName = att.storage_path.split('/').pop() || 'archivo';
+        console.log('[Attachments Helper] Generando signed URL para:', att.storage_path);
+
         const { data: signedUrlData, error: urlError } = await supabase.storage
           .from('message-attachments')
-          .createSignedUrl(att.path, 3600, {
+          .createSignedUrl(att.storage_path, 3600, {
             download: fileName  // Forzar descarga con nombre de archivo
           });
 
         if (urlError) {
           console.error('[Attachments Helper] Error creating signed URL:', urlError);
         }
-        
+
         console.log('[Attachments Helper] Signed URL result:', {
-          path: att.path,
+          path: att.storage_path,
           fileName,
           signedUrl: signedUrlData?.signedUrl,
           hasDownloadParam: signedUrlData?.signedUrl?.includes('download='),
@@ -56,12 +56,12 @@ export async function getMessageAttachments(messageId: string): Promise<Attachme
         return {
           id: att.id,
           storageUrl: signedUrlData?.signedUrl || '',
-          mimeType: att.mime,
-          fileSize: att.sizeBytes,
+          mimeType: att.mime_type,
+          fileSize: att.file_size,
           width: att.width,
           height: att.height,
           fileName,
-          createdAt: att.createdAt
+          createdAt: att.created_at
         };
       })
     );
@@ -85,16 +85,16 @@ export async function getMessagesAttachments(
     }
 
     const supabase = createClient();
-    
-    // Obtener todos los adjuntos de una vez desde tabla PRISMA
+
+    // Obtener todos los adjuntos de una vez - usar nombre correcto de tabla PostgreSQL
     const { data: attachments, error } = await supabase
-      .from('MessageAttachment')
+      .from('message_attachments')
       .select('*')
-      .in('messageId', messageIds)
-      .order('createdAt', { ascending: true});
+      .in('message_id', messageIds)
+      .order('created_at', { ascending: true});
 
     if (error || !attachments) {
-      console.error('[Attachments Helper] Batch error:', error);
+      console.warn('[Attachments Helper] Batch - No se pudieron cargar adjuntos (404 esperado si no existen):', error);
       return new Map();
     }
 
@@ -102,21 +102,21 @@ export async function getMessagesAttachments(
     const attachmentsByMessage = new Map<string, Attachment[]>();
 
     for (const att of attachments) {
-      const fileName = att.path.split('/').pop() || 'archivo';
-      console.log('[Attachments Helper BATCH] Generando signed URL para:', att.path);
-      
+      const fileName = att.storage_path.split('/').pop() || 'archivo';
+      console.log('[Attachments Helper BATCH] Generando signed URL para:', att.storage_path);
+
       const { data: signedUrlData, error: urlError } = await supabase.storage
         .from('message-attachments')
-        .createSignedUrl(att.path, 3600, {
+        .createSignedUrl(att.storage_path, 3600, {
           download: fileName  // Forzar descarga con nombre de archivo
         });
 
       if (urlError) {
         console.error('[Attachments Helper BATCH] Error creating signed URL:', urlError);
       }
-      
+
       console.log('[Attachments Helper BATCH] Signed URL result:', {
-        path: att.path,
+        path: att.storage_path,
         fileName,
         signedUrl: signedUrlData?.signedUrl,
         hasDownloadParam: signedUrlData?.signedUrl?.includes('download='),
@@ -126,17 +126,17 @@ export async function getMessagesAttachments(
       const attachment: Attachment = {
         id: att.id,
         storageUrl: signedUrlData?.signedUrl || '',
-        mimeType: att.mime,
-        fileSize: att.sizeBytes,
+        mimeType: att.mime_type,
+        fileSize: att.file_size,
         width: att.width,
         height: att.height,
         fileName,
-        createdAt: att.createdAt
+        createdAt: att.created_at
       };
 
-      const existing = attachmentsByMessage.get(att.messageId) || [];
+      const existing = attachmentsByMessage.get(att.message_id) || [];
       existing.push(attachment);
-      attachmentsByMessage.set(att.messageId, existing);
+      attachmentsByMessage.set(att.message_id, existing);
     }
 
     return attachmentsByMessage;
