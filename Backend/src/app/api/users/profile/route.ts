@@ -159,55 +159,71 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  // Construir objeto de actualización solo con campos permitidos
-  const updateData: any = {
-    updated_at: new Date().toISOString(),
-  };
+  // Mapear campos del body a columnas de user_profiles y users
+  const userProfilesUpdate: any = { updated_at: new Date().toISOString() };
+  const usersUpdate: any = { updated_at: new Date().toISOString() };
 
-  // Mapear campos del body a columnas de user_profiles
-  if (body.displayName !== undefined) {
-    updateData.display_name = body.displayName;
-  }
-  if (body.avatarUrl !== undefined) {
-    updateData.avatar_url = body.avatarUrl;
-  }
-  if (body.display_name !== undefined) {
-    updateData.display_name = body.display_name;
-  }
-  if (body.avatar_url !== undefined) {
-    updateData.avatar_url = body.avatar_url;
+  if (body.displayName !== undefined || body.display_name !== undefined) {
+    const displayName = body.displayName || body.display_name;
+    userProfilesUpdate.display_name = displayName;
+    usersUpdate.name = displayName; // También actualizar users.name
   }
 
-  // Actualizar en user_profiles usando userId (no id)
-  const { data: updatedData, error: updateError } = await supabase
+  if (body.avatarUrl !== undefined || body.avatar_url !== undefined) {
+    const avatarUrl = body.avatarUrl || body.avatar_url;
+    userProfilesUpdate.avatar_url = avatarUrl;
+    usersUpdate.avatar = avatarUrl; // También actualizar users.avatar
+  }
+
+  // FIX: Actualizar AMBAS tablas para máxima compatibilidad
+  // Esto maneja todos los casos: inquilinos, inmobiliarias nuevas, inmobiliarias migradas
+
+  // Actualizar user_profiles (si existe)
+  const { data: profileData, error: profileError } = await supabase
     .from('user_profiles')
-    .update(updateData)
+    .update(userProfilesUpdate)
     .eq('userId', user.id)
+    .select()
+    .maybeSingle();
+
+  // Actualizar users (SIEMPRE)
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .update(usersUpdate)
+    .eq('id', user.id)
     .select()
     .single();
 
-  if (updateError) {
-    console.error('[API /users/profile PUT] Error updating profile:', updateError);
-    return NextResponse.json(
-      { error: "Failed to update profile", details: updateError.message }, 
-      { status: 500, headers: hdrs }
-    );
+  if (userError) {
+    console.error('[API /users/profile PUT] Error updating users:', userError);
+    // Si falla users pero profile funcionó, continuar con profile data
+    if (!profileData) {
+      return NextResponse.json(
+        { error: "Failed to update profile", details: userError.message },
+        { status: 500, headers: hdrs }
+      );
+    }
   }
 
-  if (!updatedData) {
+  console.log(`[API /users/profile PUT] Updated user_profiles: ${!!profileData}, users: ${!!userData}`);
+
+  // Obtener datos combinados para respuesta
+  const finalData = profileData ? { ...profileData, ...userData } : userData;
+
+  if (!finalData) {
     return NextResponse.json(
-      { error: "Profile not found after update" }, 
+      { error: "Profile not found after update" },
       { status: 404, headers: hdrs }
     );
   }
 
   // Mapear a CurrentUser
-  const profile = mapUserProfile(updatedData);
+  const profile = mapUserProfile(finalData);
 
   if (!profile) {
     console.error('[API /users/profile PUT] mapUserProfile returned null');
     return NextResponse.json(
-      { error: "Failed to map updated profile data" }, 
+      { error: "Failed to map updated profile data" },
       { status: 500, headers: hdrs }
     );
   }
