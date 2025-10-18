@@ -74,6 +74,7 @@ export function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={false}
                 className={cn(
                   "px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
                   pathname === item.href
@@ -167,6 +168,7 @@ export function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={false}
                 className={cn(
                   "block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200",
                   pathname === item.href
