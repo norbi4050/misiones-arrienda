@@ -212,8 +212,8 @@ export async function getUserPresence(userId: string): Promise<UserPresence | nu
 
     return {
       isOnline: isActuallyOnline,
-      lastSeen: data.lastSeen,
-      lastActivity: data.lastActivity ?? now.toISOString()
+      lastSeen: data.lastSeen ? data.lastSeen.toISOString() : null,
+      lastActivity: data.lastActivity ? data.lastActivity.toISOString() : now.toISOString()
     }
   } catch (error) {
     console.error('[activity-tracker] Unexpected error in getUserPresence:', error)
