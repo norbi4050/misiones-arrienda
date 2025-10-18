@@ -314,16 +314,15 @@ export async function GET(
 
     // PROMPT D1 & D2: Información enriquecida del thread para el header
     // Generar avatar automático si el usuario no tiene uno
-    // Prioridad: UserProfile.photos[0] > User.avatar > auto-generado
-    const profilePhoto = otherProfile?.photos && otherProfile.photos.length > 0 ? otherProfile.photos[0] : null
-    const existingAvatar = profilePhoto || otherUserData?.avatar || null
+    // Prioridad: UserProfile.avatar_url > User.avatar > auto-generado
+    const existingAvatar = otherProfile?.avatar_url || otherUserData?.avatar || null
     const finalAvatarUrl = getAvatarUrl(
       otherUserData?.name || null,
       otherUserData?.email || 'unknown@example.com',
       existingAvatar
     )
 
-    console.log(`[AVATAR DEBUG] Avatar final: ${finalAvatarUrl} (source: ${profilePhoto ? 'UserProfile.photos[0]' : otherUserData?.avatar ? 'User.avatar' : 'auto-generated'})`)
+    console.log(`[AVATAR DEBUG] Avatar final: ${finalAvatarUrl} (source: ${otherProfile?.avatar_url ? 'UserProfile.avatar_url' : otherUserData?.avatar ? 'User.avatar' : 'auto-generated'})`)
     
     // ONLINE STATUS: Obtener información de presencia del otro usuario
     const presence = await getUserPresence(finalOtherUserId)

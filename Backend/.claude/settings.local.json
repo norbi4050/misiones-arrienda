@@ -28,7 +28,8 @@
       "Bash(Select-Object -First 100)",
       "Bash(node -e:*)",
       "Bash(node check-avatar-data.js:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx prisma generate:*)"
     ],
     "deny": [],
     "ask": []

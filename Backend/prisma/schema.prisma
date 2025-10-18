@@ -488,6 +488,7 @@ model UserProfile {
   budgetMax             Int      // Presupuesto máximo en ARS
   bio                   String?
   photos                String[] // Array de URLs de fotos
+  avatar_url            String?  @map("avatar_url") // Avatar del perfil (configurado desde /perfil)
   
   // Preferencias de convivencia
   age                   Int?
