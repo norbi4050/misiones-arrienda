@@ -9,6 +9,9 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 /**
  * Información de presencia de un usuario
@@ -168,39 +171,36 @@ export async function getUserPresence(userId: string): Promise<UserPresence | nu
   }
 
   try {
-    const supabase = createClient()
-
-    const { data, error } = await supabase
-      .from('User')
-      .select('is_online, last_seen, last_activity')
-      .eq('id', userId)
-      .single()
-
-    if (error) {
-      console.error('[activity-tracker] Error fetching user presence:', error)
-      return null
-    }
+    // Usar Prisma en lugar de Supabase para evitar errores con tabla 'User'
+    const data = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        isOnline: true,
+        lastSeen: true,
+        lastActivity: true
+      }
+    })
 
     if (!data) {
       console.warn('[activity-tracker] User not found:', userId)
       return null
     }
 
-    // ✅ VALIDACIÓN: Verificar antigüedad de last_activity
+    // ✅ VALIDACIÓN: Verificar antigüedad de lastActivity
     const STALE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutos
-    const lastActivityDate = data.last_activity ? new Date(data.last_activity) : null
+    const lastActivityDate = data.lastActivity ? new Date(data.lastActivity) : null
     const now = new Date()
-    
-    let isActuallyOnline = data.is_online ?? false
-    
+
+    let isActuallyOnline = data.isOnline ?? false
+
     // Si el usuario está marcado como online, verificar que su actividad sea reciente
     if (isActuallyOnline && lastActivityDate) {
       const timeSinceActivity = now.getTime() - lastActivityDate.getTime()
-      
+
       if (timeSinceActivity > STALE_THRESHOLD_MS) {
         // ⚠️ Datos obsoletos detectados - forzar offline
         isActuallyOnline = false
-        
+
         if (process.env.NODE_ENV === 'development') {
           console.warn(
             `[activity-tracker] ⚠️ User ${userId} marked as offline due to stale activity ` +
@@ -212,8 +212,8 @@ export async function getUserPresence(userId: string): Promise<UserPresence | nu
 
     return {
       isOnline: isActuallyOnline,
-      lastSeen: data.last_seen,
-      lastActivity: data.last_activity ?? now.toISOString()
+      lastSeen: data.lastSeen,
+      lastActivity: data.lastActivity ?? now.toISOString()
     }
   } catch (error) {
     console.error('[activity-tracker] Unexpected error in getUserPresence:', error)
