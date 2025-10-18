@@ -312,28 +312,19 @@ export async function GET(
     })
 
     // PROMPT D1 & D2: Información enriquecida del thread para el header
-    // NOTA: Priorizar user_profiles.avatar_url sobre User.avatar porque user_profiles es la fuente correcta
-    
-    // ✅ FIX CRÍTICO: Buscar avatar en user_profiles primero, independientemente del esquema
+    // NOTA: Priorizar User.avatar sobre user_profiles porque User es la tabla principal
+
+    // ✅ FIX: Obtener avatar del User (tabla principal)
     let finalAvatarUrl: string | null = null
-    
-    if (isPrismaSchema && otherProfile?.userId) {
-      // Para PRISMA: buscar en user_profiles usando el userId del UserProfile
-      const { data: userProfilesData } = await supabase
-        .from('user_profiles')
-        .select('avatar_url')
-        .eq('id', otherProfile.userId)
-        .single()
-      
-      console.log(`[AVATAR DEBUG] Buscando avatar en user_profiles para id: ${otherProfile.userId}`)
-      console.log(`[AVATAR DEBUG] Datos de user_profiles:`, userProfilesData)
-      
-      finalAvatarUrl = userProfilesData?.avatar_url || otherUserData?.avatar || null
-      
-      console.log(`[AVATAR DEBUG] Final avatarUrl: ${finalAvatarUrl}, from userProfilesData: ${userProfilesData?.avatar_url}, from User: ${otherUserData?.avatar}`)
+
+    if (isPrismaSchema) {
+      // Para PRISMA: Ya tenemos otherUserData del Prisma query
+      finalAvatarUrl = otherUserData?.avatar || null
+      console.log(`[AVATAR DEBUG] Avatar desde User (Prisma): ${finalAvatarUrl}`)
     } else {
-      // Para SUPABASE: usar directamente user_profiles
-      finalAvatarUrl = otherProfile?.avatar_url || null
+      // Para SUPABASE: Tenemos otherUserData de Supabase query
+      finalAvatarUrl = otherUserData?.avatar || otherProfile?.avatar_url || null
+      console.log(`[AVATAR DEBUG] Avatar desde User/user_profiles (Supabase): ${finalAvatarUrl}`)
     }
     
     // ONLINE STATUS: Obtener información de presencia del otro usuario
