@@ -125,14 +125,18 @@ export async function POST(req: NextRequest) {
     const url = pub.publicUrl
     const v = Math.floor(Date.now() / 1000)
 
-    // 5) FIX: Guardar avatar en ambas tablas para máxima compatibilidad
+    // 5) FIX CRÍTICO: Usar service role client para bypassear RLS
+    // Crear cliente con service role key para actualizaciones de DB
+    const supabaseAdmin = createServiceClient(supabaseUrl, supabaseServiceKey)
+
+    // 6) FIX: Guardar avatar en ambas tablas para máxima compatibilidad
     // Esto maneja 3 casos:
     // - Inquilinos: tienen user_profiles ✅
     // - Inmobiliarias nuevas: NO tienen user_profiles, usan users.avatar ✅
     // - Inmobiliarias migradas: tienen user_profiles, actualizar ambas ✅
 
-    // 5a) Intentar actualizar user_profiles.avatar_url (si existe)
-    const { error: profileUpdateErr } = await supabase
+    // 6a) Intentar actualizar user_profiles.avatar_url (si existe)
+    const { error: profileUpdateErr } = await supabaseAdmin
       .from('user_profiles')
       .update({ avatar_url: url, updated_at: new Date().toISOString() })
       .eq('userId', user.id)
@@ -140,9 +144,9 @@ export async function POST(req: NextRequest) {
     // Si la fila no existe (profileUpdateErr?.code === 'PGRST116'), NO crear user_profiles
     // Solo los inquilinos tienen user_profiles, las inmobiliarias nuevas NO deberían tenerlo
 
-    // 5b) SIEMPRE actualizar users.avatar como fallback
+    // 6b) SIEMPRE actualizar users.avatar como fallback
     // Esto garantiza que el avatar esté disponible para todos los usuarios
-    const { error: userUpdateErr } = await supabase
+    const { error: userUpdateErr } = await supabaseAdmin
       .from('users')
       .update({ avatar: url, updated_at: new Date().toISOString() })
       .eq('id', user.id)
