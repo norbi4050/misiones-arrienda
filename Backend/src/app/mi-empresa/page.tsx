@@ -64,7 +64,8 @@ async function getInmobiliariaProfile(userId: string) {
       tiktok: profile.tiktok || null,
       description: profile.description || null,
       license_number: profile.license_number || null,
-      logo_url: profile.logo_url || null,
+      avatar: profile.avatar || null,  // FIX: Avatar personal para mensajes/navbar
+      logo_url: profile.logo_url || null,  // Logo para perfil público
       verified: profile.verified || false,
       verified_at: profile.verified_at || null,
       business_hours: businessHours,
