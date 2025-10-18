@@ -143,21 +143,25 @@ export async function GET(
     let otherUserData: any = null
 
     if (isPrismaSchema) {
-      // ✅ FIX: Buscar UserProfile por ID (no por userId)
-      const { data: profile } = await supabase
-        .from('UserProfile')
-        .select('id, userId')
-        .eq('id', otherProfileId)
-        .single()
-      otherProfile = profile
+      // ✅ FIX: Ya tenemos UserProfile del include en Prisma query
+      // thread.a y thread.b contienen los UserProfile completos
+      otherProfile = thread.aId === userProfileId ? thread.b : thread.a
+      console.log('[GET Thread] UserProfile del otro usuario (desde Prisma include):', otherProfile)
 
-      if (profile?.userId) {
-        const { data: userData } = await supabase
-          .from('User')
-          .select('id, name, email, avatar, companyName')
-          .eq('id', profile.userId)
-          .single()
-        otherUserData = userData
+      if (otherProfile?.userId) {
+        // Buscar User usando Prisma (bypassa RLS)
+        const otherUser = await prisma.user.findUnique({
+          where: { id: otherProfile.userId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            companyName: true
+          }
+        })
+        otherUserData = otherUser
+        console.log('[GET Thread] ✅ User data del otro usuario (desde Prisma):', otherUserData)
       }
     } else {
       // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
