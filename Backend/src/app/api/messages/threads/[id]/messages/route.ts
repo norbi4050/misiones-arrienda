@@ -111,7 +111,7 @@ export async function POST(
     const userType = userData?.user_type?.toLowerCase()
     const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
 
-    // Obtener el perfil del usuario para el sender_id (solo si NO es inmobiliaria)
+    // Obtener el perfil del usuario para el sender_id
     let senderId: string
     let userProfileId: string | null = null
 
@@ -120,17 +120,14 @@ export async function POST(
       senderId = user.id
       console.log(`[Messages] Usuario inmobiliaria detectado, usando user.id como senderId: ${user.id}`)
     } else {
-      // Para inquilinos/busco, buscar en UserProfile
-      const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
-      const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
+      // Para inquilinos/busco, buscar UserProfile usando Prisma (bypassa RLS)
+      console.log(`[Messages] Buscando UserProfile con Prisma para user: ${user.id}`)
 
-      const { data: userProfile, error: profileError } = await supabase
-        .from(profileTable)
-        .select('id')
-        .eq(profileIdField, user.id)
-        .single()
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { userId: user.id }
+      })
 
-      if (profileError || !userProfile) {
+      if (!userProfile) {
         console.error('[Messages] ❌ Perfil no encontrado para usuario:', user.id)
         return NextResponse.json({
           error: 'Perfil de usuario no encontrado'
@@ -139,6 +136,7 @@ export async function POST(
 
       senderId = userProfile.id
       userProfileId = userProfile.id
+      console.log(`[Messages] ✅ UserProfile encontrado con Prisma: ${userProfile.id}`)
     }
 
     // Crear nuevo mensaje
