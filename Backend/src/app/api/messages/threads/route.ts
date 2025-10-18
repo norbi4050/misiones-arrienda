@@ -252,13 +252,13 @@ export async function GET(request: NextRequest) {
         // PROMPT D6: Check preventivo antes de responder
         let finalDisplayName = displayName
         if (!finalDisplayName || finalDisplayName.trim() === '' || isUUID(finalDisplayName)) {
-          console.warn(`[DisplayName] FALLBACK APPLIED for userId=${otherUserData?.id || otherProfile?.userId || otherUserId}`)
+          console.warn(`[DisplayName] FALLBACK APPLIED for userId=${otherUserData?.id || otherProfile?.userId}`)
           finalDisplayName = 'Usuario'
         }
 
         // PROMPT D6: Log de DATA GAP si faltan datos en DB (actualizado sin full_name)
         if (!otherUserData?.name && !otherUserData?.companyName) {
-          console.warn(`[DisplayName] DATA GAP userId=${otherUserData?.id || otherProfile?.userId || otherUserId} - no name/companyName in DB`)
+          console.warn(`[DisplayName] DATA GAP userId=${otherUserData?.id || otherProfile?.userId} - no name/companyName in DB`)
         }
 
         // Obtener último mensaje
@@ -318,7 +318,7 @@ export async function GET(request: NextRequest) {
         threads.push({
           conversationId: conv.id,
           otherUser: {
-            id: otherUserData?.id || otherProfile?.userId || otherUserId,
+            id: otherUserData?.id || otherProfile?.userId,
             displayName: finalDisplayName,  // PROMPT D2: garantizado no vacío, no UUID
             avatarUrl: finalAvatarUrl,
             __displayNameSource: source     // PROMPT D1: campo debug para ver fuente
