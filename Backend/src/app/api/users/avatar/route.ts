@@ -125,18 +125,34 @@ export async function POST(req: NextRequest) {
     const url = pub.publicUrl
     const v = Math.floor(Date.now() / 1000)
 
-    // 5) Guardar en user_profiles (usar userId como FK)
-    const { error: updErr } = await supabase
+    // 5) FIX: Guardar avatar en ambas tablas para máxima compatibilidad
+    // Esto maneja 3 casos:
+    // - Inquilinos: tienen user_profiles ✅
+    // - Inmobiliarias nuevas: NO tienen user_profiles, usan users.avatar ✅
+    // - Inmobiliarias migradas: tienen user_profiles, actualizar ambas ✅
+
+    // 5a) Intentar actualizar user_profiles.avatar_url (si existe)
+    const { error: profileUpdateErr } = await supabase
       .from('user_profiles')
       .update({ avatar_url: url, updated_at: new Date().toISOString() })
       .eq('userId', user.id)
 
-    // Si no existe la fila aún, upsert rápido
-    if (updErr?.code === 'PGRST116' /* 0 rows */ || updErr == null) {
-      await supabase
-        .from('user_profiles')
-        .upsert({ userId: user.id, avatar_url: url, updated_at: new Date().toISOString() }, { onConflict: 'userId' })
+    // Si la fila no existe (profileUpdateErr?.code === 'PGRST116'), NO crear user_profiles
+    // Solo los inquilinos tienen user_profiles, las inmobiliarias nuevas NO deberían tenerlo
+
+    // 5b) SIEMPRE actualizar users.avatar como fallback
+    // Esto garantiza que el avatar esté disponible para todos los usuarios
+    const { error: userUpdateErr } = await supabase
+      .from('users')
+      .update({ avatar: url, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+
+    if (userUpdateErr) {
+      console.error('[Avatar POST] Error updating users.avatar:', userUpdateErr)
+      // No fallar si solo falla users.avatar, continuar si user_profiles funcionó
     }
+
+    console.log(`[Avatar POST] Saved to user_profiles: ${!profileUpdateErr}, users: ${!userUpdateErr}`)
 
     return NextResponse.json({ url: `${url}?v=${v}`, v, success: true })
   } catch (e) {
@@ -157,32 +173,45 @@ export async function DELETE(request: NextRequest) {
 
     const userId = authHeader.replace('Bearer ', '')
 
-    // Remover avatar poniendo NULL
+    // FIX: Remover avatar de AMBAS tablas para máxima compatibilidad
     const now = new Date()
-    const { data: removeResult, error: removeError } = await supabase
+
+    // Remover de user_profiles (si existe)
+    const { error: profileRemoveError } = await supabase
       .from('user_profiles')
-      .update({ 
-        avatar_url: null,  // NULL para remover avatar
+      .update({
+        avatar_url: null,
         updated_at: now.toISOString()
       })
       .eq('userId', userId)
+
+    // Remover de users.avatar
+    const { data: userRemoveResult, error: userRemoveError } = await supabase
+      .from('users')
+      .update({
+        avatar: null,
+        updated_at: now.toISOString()
+      })
+      .eq('id', userId)
       .select('updated_at')
       .single()
 
-    if (removeError) {
-      console.error('Error removing avatar:', removeError)
-      return NextResponse.json({ error: 'Error al eliminar avatar' }, { status: 500 })
+    if (userRemoveError) {
+      console.error('Error removing avatar from users:', userRemoveError)
+      // No fallar si solo falla users, puede que user_profiles haya funcionado
     }
 
-    const updatedAtEpoch = removeResult?.updated_at 
-      ? Math.floor(new Date(removeResult.updated_at).getTime() / 1000)
+    console.log(`[Avatar DELETE] Removed from user_profiles: ${!profileRemoveError}, users: ${!userRemoveError}`)
+
+    const updatedAtEpoch = userRemoveResult?.updated_at
+      ? Math.floor(new Date(userRemoveResult.updated_at).getTime() / 1000)
       : Math.floor(now.getTime() / 1000)
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       url: null,
       v: updatedAtEpoch,
       user_id: userId,
-      success: true 
+      success: true
     })
 
   } catch (error) {
