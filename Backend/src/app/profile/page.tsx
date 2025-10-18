@@ -14,7 +14,8 @@ export default function ProfilePage() {
     name: '',
     email: '',
     phone: '',
-    bio: ''
+    bio: '',
+    avatarUrl: ''
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [message, setMessage] = useState('');
@@ -26,7 +27,8 @@ export default function ProfilePage() {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        bio: user.bio || ''
+        bio: user.bio || '',
+        avatarUrl: user.avatar || ''
       });
     }
   }, [user]);
@@ -125,6 +127,34 @@ export default function ProfilePage() {
                   onChange={handleChange}
                   placeholder="tu@email.com"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="avatarUrl">Avatar (URL de imagen)</Label>
+                <Input
+                  id="avatarUrl"
+                  name="avatarUrl"
+                  type="url"
+                  value={formData.avatarUrl}
+                  onChange={handleChange}
+                  placeholder="https://ejemplo.com/mi-foto.jpg"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Pega la URL de tu foto de perfil. Se mostrará en los mensajes.
+                </p>
+                {formData.avatarUrl && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-1">Vista previa:</p>
+                    <img
+                      src={formData.avatarUrl}
+                      alt="Avatar preview"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
