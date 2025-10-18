@@ -177,11 +177,21 @@ export async function PUT(req: NextRequest) {
 
   // FIX CRÍTICO: Usar service role client para bypassear RLS
   // Crear cliente con service role key para actualizaciones de DB
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[API /users/profile PUT] CRITICAL: SUPABASE_SERVICE_ROLE_KEY no está definida');
+    return NextResponse.json(
+      { error: "Server configuration error" },
+      { status: 500, headers: hdrs }
+    );
+  }
+
   const { createClient } = await import('@supabase/supabase-js')
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
+
+  console.log(`[API /users/profile PUT] Actualizando perfil para user ${user.id}`, userProfilesUpdate, usersUpdate);
 
   // FIX: Actualizar AMBAS tablas para máxima compatibilidad
   // Esto maneja todos los casos: inquilinos, inmobiliarias nuevas, inmobiliarias migradas
@@ -194,6 +204,12 @@ export async function PUT(req: NextRequest) {
     .select()
     .maybeSingle();
 
+  if (profileError) {
+    console.log(`[API /users/profile PUT] user_profiles update: ${profileError.message} (code: ${profileError.code})`);
+  } else {
+    console.log(`[API /users/profile PUT] user_profiles updated: ${profileData ? '1 row' : '0 rows'}`);
+  }
+
   // Actualizar users (SIEMPRE)
   const { data: userData, error: userError } = await supabaseAdmin
     .from('users')
@@ -204,6 +220,7 @@ export async function PUT(req: NextRequest) {
 
   if (userError) {
     console.error('[API /users/profile PUT] Error updating users:', userError);
+    console.error('[API /users/profile PUT] CRITICAL: Failed to update users table');
     // Si falla users pero profile funcionó, continuar con profile data
     if (!profileData) {
       return NextResponse.json(
@@ -211,9 +228,11 @@ export async function PUT(req: NextRequest) {
         { status: 500, headers: hdrs }
       );
     }
+  } else {
+    console.log(`[API /users/profile PUT] users updated: ${userData ? '1 row' : '0 rows'}`);
   }
 
-  console.log(`[API /users/profile PUT] Updated user_profiles: ${!!profileData}, users: ${!!userData}`);
+  console.log(`[API /users/profile PUT] Final: user_profiles=${!!profileData}, users=${!!userData}`);
 
   // Obtener datos combinados para respuesta
   const finalData = profileData ? { ...profileData, ...userData } : userData;

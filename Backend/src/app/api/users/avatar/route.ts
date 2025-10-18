@@ -127,7 +127,14 @@ export async function POST(req: NextRequest) {
 
     // 5) FIX CRÍTICO: Usar service role client para bypassear RLS
     // Crear cliente con service role key para actualizaciones de DB
+    if (!supabaseServiceKey) {
+      console.error('[Avatar POST] CRITICAL: SUPABASE_SERVICE_ROLE_KEY no está definida')
+      return NextResponse.json({ error: 'server configuration error' }, { status: 500 })
+    }
+
     const supabaseAdmin = createServiceClient(supabaseUrl, supabaseServiceKey)
+
+    console.log(`[Avatar POST] Guardando avatar para user ${user.id}: ${url}`)
 
     // 6) FIX: Guardar avatar en ambas tablas para máxima compatibilidad
     // Esto maneja 3 casos:
@@ -136,27 +143,41 @@ export async function POST(req: NextRequest) {
     // - Inmobiliarias migradas: tienen user_profiles, actualizar ambas ✅
 
     // 6a) Intentar actualizar user_profiles.avatar_url (si existe)
-    const { error: profileUpdateErr } = await supabaseAdmin
+    const { data: profileData, error: profileUpdateErr } = await supabaseAdmin
       .from('user_profiles')
       .update({ avatar_url: url, updated_at: new Date().toISOString() })
       .eq('userId', user.id)
+      .select()
 
-    // Si la fila no existe (profileUpdateErr?.code === 'PGRST116'), NO crear user_profiles
-    // Solo los inquilinos tienen user_profiles, las inmobiliarias nuevas NO deberían tenerlo
+    if (profileUpdateErr) {
+      console.log(`[Avatar POST] user_profiles update: ${profileUpdateErr.message} (code: ${profileUpdateErr.code})`)
+    } else {
+      console.log(`[Avatar POST] user_profiles updated: ${profileData ? profileData.length : 0} rows`)
+    }
 
     // 6b) SIEMPRE actualizar users.avatar como fallback
     // Esto garantiza que el avatar esté disponible para todos los usuarios
-    const { error: userUpdateErr } = await supabaseAdmin
+    const { data: userData, error: userUpdateErr } = await supabaseAdmin
       .from('users')
       .update({ avatar: url, updated_at: new Date().toISOString() })
       .eq('id', user.id)
+      .select()
 
     if (userUpdateErr) {
       console.error('[Avatar POST] Error updating users.avatar:', userUpdateErr)
-      // No fallar si solo falla users.avatar, continuar si user_profiles funcionó
+      console.error('[Avatar POST] CRITICAL: Failed to save avatar to database')
+      // Si ambas tablas fallan, es un error crítico
+      if (profileUpdateErr) {
+        return NextResponse.json({
+          error: 'failed to save avatar',
+          details: userUpdateErr.message
+        }, { status: 500 })
+      }
+    } else {
+      console.log(`[Avatar POST] users.avatar updated: ${userData ? userData.length : 0} rows`)
     }
 
-    console.log(`[Avatar POST] Saved to user_profiles: ${!profileUpdateErr}, users: ${!userUpdateErr}`)
+    console.log(`[Avatar POST] Final: user_profiles=${!profileUpdateErr}, users=${!userUpdateErr}`)
 
     return NextResponse.json({ url: `${url}?v=${v}`, v, success: true })
   } catch (e) {
