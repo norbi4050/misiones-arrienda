@@ -150,17 +150,15 @@ export async function GET(request: NextRequest) {
       
       console.log(`[PRISMA BRANCH] Using table: ${tableName}, snake_case: ${useSnakeCase}`)
 
-      // Obtener UserProfile del usuario actual
-      const { data: userProfile, error: profileError } = await supabase
-        .from('UserProfile')
-        .select('id')
-        .eq('userId', user.id)
-        .single()
+      // Obtener UserProfile del usuario actual usando Prisma (bypassa RLS)
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { userId: user.id }
+      })
 
-      if (profileError || !userProfile) {
+      if (!userProfile) {
         console.log('[PROFILE] ⚠️ No se encontró UserProfile para usuario:', user.id)
         console.log('[SCHEMA] 🔄 Usuario sin perfil, devolviendo lista vacía')
-        
+
         // PROMPT B: Devolver 200 con threads vacíos en lugar de 403
         const duration = Date.now() - startTime
         return NextResponse.json({
@@ -177,7 +175,7 @@ export async function GET(request: NextRequest) {
       }
 
       const profileId = userProfile.id
-      console.log(`[PROFILE] ✅ UserProfile: ${profileId}`)
+      console.log(`[PROFILE] ✅ UserProfile con Prisma: ${profileId}`)
 
       // Construir query según el naming de la tabla
       const aIdField = useSnakeCase ? 'a_id' : 'aId'
@@ -213,56 +211,38 @@ export async function GET(request: NextRequest) {
 
       // Formatear cada conversación
       for (const conv of conversations || []) {
-        const otherUserId = (conv as any)[aIdField] === profileId ? (conv as any)[bIdField] : (conv as any)[aIdField]
+        const otherProfileId = (conv as any)[aIdField] === profileId ? (conv as any)[bIdField] : (conv as any)[aIdField]
 
-        // PROMPT 1: Obtener datos completos del otro usuario
-        const { data: otherProfile } = await supabase
-          .from('UserProfile')
-          .select('id, userId')  // ✅ FIX: Eliminado full_name (columna no existe)
-          .eq('id', otherUserId)
-          .single()
+        // PROMPT 1: Obtener datos completos del otro usuario usando Prisma (bypassa RLS)
+        const otherProfile = await prisma.userProfile.findUnique({
+          where: { id: otherProfileId },
+          select: { id: true, userId: true }
+        })
 
-        // Obtener datos del User relacionado (CORRECCIÓN: companyName está en User)
+        // Obtener datos del User relacionado usando Prisma
         let otherUserData: any = null
         if (otherProfile?.userId) {
-          const { data: userData } = await supabase
-            .from('User')
-            .select('id, name, email, avatar, companyName')  // ✅ AGREGADO companyName
-            .eq('id', otherProfile.userId)
-            .single()
-          otherUserData = userData
-        }
-
-        // TAMBIÉN obtener de user_profiles por si el avatar está ahí
-        // NOTA: En user_profiles, el campo 'id' ES el user_id (no hay columna user_id separada)
-        let userProfilesData: any = null
-        if (otherProfile?.userId) {
-          console.log(`[AVATAR DEBUG] Buscando avatar en user_profiles para id: ${otherProfile.userId}`)
-          const { data: upData, error: upError } = await supabase
-            .from('user_profiles')
-            .select('id, avatar_url, display_name')
-            .eq('id', otherProfile.userId)
-            .single()
-          
-          if (upError) {
-            console.log(`[AVATAR DEBUG] Error al buscar en user_profiles:`, upError.message)
-          } else {
-            console.log(`[AVATAR DEBUG] Datos de user_profiles:`, upData)
-          }
-          userProfilesData = upData
-        } else {
-          console.log(`[AVATAR DEBUG] No hay otherProfile.userId, saltando búsqueda en user_profiles`)
+          otherUserData = await prisma.user.findUnique({
+            where: { id: otherProfile.userId },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+              companyName: true
+            }
+          })
+          console.log(`[User Data] ✅ Usuario encontrado con Prisma:`, otherUserData)
         }
 
         // PROMPT D1 & D2: Calcular displayName con source tracking
-        // ✅ FIX: No pasar UserProfile data porque full_name no existe
         const { displayName, source } = getDisplayNameWithSource(
-          otherUserData,  // Ahora incluye companyName
-          null  // ✅ FIX: UserProfile no tiene full_name, usar solo User data
+          otherUserData,  // Incluye name, email, avatar, companyName
+          null  // UserProfile no tiene full_name, usar solo User data
         )
 
         // PROMPT D1: Log detallado de displayName resolution
-        console.log(`[DISPLAYNAME] conversationId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserData?.id || otherProfile?.userId || otherUserId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
+        console.log(`[DISPLAYNAME] conversationId=${conv.id}, me.id=${user.id}, otherUser.id=${otherUserData?.id || otherProfile?.userId}, otherUser.displayName="${displayName}", sourceUsed=${source}`)
         
         // PROMPT D1: Warning si displayName está vacío o es UUID
         if (!displayName || displayName.trim() === '' || isUUID(displayName)) {
@@ -331,8 +311,9 @@ export async function GET(request: NextRequest) {
         const lastMessageCreatedAtRaw = lastMsg?.createdAt
         const lastMessageCreatedAtISO = lastMessageCreatedAtRaw ? new Date(lastMessageCreatedAtRaw).toISOString() : null
 
-        const finalAvatarUrl = userProfilesData?.avatar_url || otherUserData?.avatar || null
-        console.log(`[AVATAR DEBUG] Final avatarUrl: ${finalAvatarUrl}, from userProfilesData: ${userProfilesData?.avatar_url}, from User: ${otherUserData?.avatar}`)
+        // Avatar viene directamente de User (ya obtenido con Prisma)
+        const finalAvatarUrl = otherUserData?.avatar || null
+        console.log(`[AVATAR DEBUG] Final avatarUrl desde User (Prisma): ${finalAvatarUrl}`)
         
         threads.push({
           conversationId: conv.id,
