@@ -1,4 +1,4 @@
-// Force dynamic rendering for Vercel
+// Force dynamic rendering for Vercel - v2
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
