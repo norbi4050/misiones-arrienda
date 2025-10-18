@@ -55,21 +55,31 @@ export default function MessagesPage() {
   // PROMPT D4: Invalidar caché al cambiar de usuario o tab
   useEffect(() => {
     if (user) {
+      // GUARD: Si es inmobiliaria y está en tab 'community', redirigir a 'properties'
+      const isAgency = user.userType?.toLowerCase() === 'inmobiliaria' ||
+                       user.userType?.toLowerCase() === 'agency'
+
+      if (isAgency && activeTab === 'community') {
+        console.log('[MessagesPage] Inmobiliaria intentando acceder a Comunidad - redirigiendo a Propiedades')
+        router.push('/messages?tab=properties')
+        return
+      }
+
       fetchConversations()
-      
+
       // Detectar parámetros de la URL
       const userId = searchParams.get('userId')
       const threadId = searchParams.get('thread')
-      
+
       // Prioridad 1: Si hay userId (nuevo flujo desde comunidad)
       if (userId && !threadId) {
         handleCreateThread(userId)
-      } 
+      }
       // Prioridad 2: Si hay threadId (flujo existente)
       else if (threadId) {
         setSelectedConversationId(threadId)
       }
-      
+
       // Configurar suscripción real-time para actualizaciones de threads (solo para properties)
       if (activeTab === 'properties') {
         setupConversationsRealtime()
@@ -331,13 +341,17 @@ export default function MessagesPage() {
     return null
   }
 
+  // Determinar si el usuario es inmobiliaria
+  const isAgency = user?.userType?.toLowerCase() === 'inmobiliaria' ||
+                   user?.userType?.toLowerCase() === 'agency'
+
   const filteredConversations = conversations.filter((conversation: Conversation) => {
     if (!searchTerm) return true
-    
+
     const search = searchTerm.toLowerCase()
     const title = (conversation.property_title || '').toLowerCase()
     const userName = (conversation.other_user_name || '').toLowerCase()
-    
+
     return title.includes(search) || userName.includes(search)
   })
 
@@ -538,7 +552,7 @@ export default function MessagesPage() {
           </p>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - Solo mostrar "Comunidad" si NO es inmobiliaria */}
         <div className="mb-6 border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             <button
@@ -553,18 +567,21 @@ export default function MessagesPage() {
             >
               Propiedades
             </button>
-            <button
-              onClick={() => handleTabChange('community')}
-              className={`
-                py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                ${activeTab === 'community'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }
-              `}
-            >
-              Comunidad
-            </button>
+            {/* Solo mostrar tab de Comunidad si NO es inmobiliaria */}
+            {!isAgency && (
+              <button
+                onClick={() => handleTabChange('community')}
+                className={`
+                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${activeTab === 'community'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+              >
+                Comunidad
+              </button>
+            )}
           </nav>
         </div>
 
