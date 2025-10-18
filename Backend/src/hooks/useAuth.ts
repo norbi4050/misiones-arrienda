@@ -28,7 +28,8 @@ export interface User {
   neighborhood?: string;
   budgetMin?: number;
   budgetMax?: number;
-  
+  avatar_url?: string;
+
   // Timestamps
   created_at: string;
   updated_at: string;

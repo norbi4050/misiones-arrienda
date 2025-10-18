@@ -28,7 +28,7 @@ export default function ProfilePage() {
         email: user.email || '',
         phone: user.phone || '',
         bio: user.bio || '',
-        avatarUrl: user.avatar || ''
+        avatarUrl: user.avatar_url || ''
       });
     }
   }, [user]);
