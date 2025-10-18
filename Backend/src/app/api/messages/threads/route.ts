@@ -4,6 +4,9 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getDisplayName, getDisplayNameWithSource, isUUID } from '@/lib/messages/display-name-helper'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 /**
  * PROMPT 2: Detección automática de esquema y fallback
@@ -701,32 +704,28 @@ export async function POST(request: NextRequest) {
         existing = true
         console.log(`[CONVERSATION] ✅ Existente: ${conversationId}`)
       } else {
-        // Crear nueva conversación
-        const newId = crypto.randomUUID()
-        const { data: newConv, error: createError } = await supabase
-          .from('Conversation')
-          .insert({
-            id: newId,
-            aId: currentProfileId,
-            bId: targetProfileId,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          })
-          .select('id')
-          .single()
+        // Crear nueva conversación usando Prisma (bypassa RLS)
+        console.log(`[CONVERSATION] Creando con Prisma para bypassar RLS`)
 
-        if (createError) {
-          console.error('[DB] ❌ Error al crear conversación:', createError)
-          return NextResponse.json({ 
+        try {
+          const newConv = await prisma.conversation.create({
+            data: {
+              aId: currentProfileId,
+              bId: targetProfileId,
+              isActive: true
+            }
+          })
+
+          conversationId = newConv.id
+          existing = false
+          console.log(`[CONVERSATION] ✅ Nueva creada con Prisma: ${conversationId}`)
+        } catch (createError: any) {
+          console.error('[DB] ❌ Error al crear conversación con Prisma:', createError)
+          return NextResponse.json({
             error: 'DB_ERROR',
-            details: createError.message 
+            details: createError.message
           }, { status: 500 })
         }
-
-        conversationId = newConv.id
-        existing = false
-        console.log(`[CONVERSATION] ✅ Nueva: ${conversationId}`)
       }
     }
 
