@@ -175,11 +175,19 @@ export async function PUT(req: NextRequest) {
     usersUpdate.avatar = avatarUrl; // También actualizar users.avatar
   }
 
+  // FIX CRÍTICO: Usar service role client para bypassear RLS
+  // Crear cliente con service role key para actualizaciones de DB
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   // FIX: Actualizar AMBAS tablas para máxima compatibilidad
   // Esto maneja todos los casos: inquilinos, inmobiliarias nuevas, inmobiliarias migradas
 
   // Actualizar user_profiles (si existe)
-  const { data: profileData, error: profileError } = await supabase
+  const { data: profileData, error: profileError } = await supabaseAdmin
     .from('user_profiles')
     .update(userProfilesUpdate)
     .eq('userId', user.id)
@@ -187,7 +195,7 @@ export async function PUT(req: NextRequest) {
     .maybeSingle();
 
   // Actualizar users (SIEMPRE)
-  const { data: userData, error: userError } = await supabase
+  const { data: userData, error: userError } = await supabaseAdmin
     .from('users')
     .update(usersUpdate)
     .eq('id', user.id)
