@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getDisplayName, getDisplayNameWithSource, isUUID } from '@/lib/messages/display-name-helper'
+import { getAvatarUrl } from '@/lib/messages/avatar-helper'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -311,9 +312,13 @@ export async function GET(request: NextRequest) {
         const lastMessageCreatedAtRaw = lastMsg?.createdAt
         const lastMessageCreatedAtISO = lastMessageCreatedAtRaw ? new Date(lastMessageCreatedAtRaw).toISOString() : null
 
-        // Avatar viene directamente de User (ya obtenido con Prisma)
-        const finalAvatarUrl = otherUserData?.avatar || null
-        console.log(`[AVATAR DEBUG] Final avatarUrl desde User (Prisma): ${finalAvatarUrl}`)
+        // Generar avatar automático si el usuario no tiene uno
+        const finalAvatarUrl = getAvatarUrl(
+          otherUserData?.name || null,
+          otherUserData?.email || 'unknown@example.com',
+          otherUserData?.avatar || null
+        )
+        console.log(`[AVATAR DEBUG] Final avatarUrl: ${finalAvatarUrl} (auto-generated: ${!otherUserData?.avatar})`)
         
         threads.push({
           conversationId: conv.id,

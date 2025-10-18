@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getDisplayName, getDisplayNameWithSource, isUUID } from '@/lib/messages/display-name-helper'
 import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
 import { getUserPresence } from '@/lib/presence/activity-tracker'
+import { getAvatarUrl } from '@/lib/messages/avatar-helper'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -312,20 +313,14 @@ export async function GET(
     })
 
     // PROMPT D1 & D2: Información enriquecida del thread para el header
-    // NOTA: Priorizar User.avatar sobre user_profiles porque User es la tabla principal
+    // Generar avatar automático si el usuario no tiene uno
+    const finalAvatarUrl = getAvatarUrl(
+      otherUserData?.name || null,
+      otherUserData?.email || 'unknown@example.com',
+      otherUserData?.avatar || null
+    )
 
-    // ✅ FIX: Obtener avatar del User (tabla principal)
-    let finalAvatarUrl: string | null = null
-
-    if (isPrismaSchema) {
-      // Para PRISMA: Ya tenemos otherUserData del Prisma query
-      finalAvatarUrl = otherUserData?.avatar || null
-      console.log(`[AVATAR DEBUG] Avatar desde User (Prisma): ${finalAvatarUrl}`)
-    } else {
-      // Para SUPABASE: Tenemos otherUserData de Supabase query
-      finalAvatarUrl = otherUserData?.avatar || otherProfile?.avatar_url || null
-      console.log(`[AVATAR DEBUG] Avatar desde User/user_profiles (Supabase): ${finalAvatarUrl}`)
-    }
+    console.log(`[AVATAR DEBUG] Avatar final: ${finalAvatarUrl} (auto-generated: ${!otherUserData?.avatar})`)
     
     // ONLINE STATUS: Obtener información de presencia del otro usuario
     const presence = await getUserPresence(finalOtherUserId)
