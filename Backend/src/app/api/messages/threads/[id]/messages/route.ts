@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 // Marcar esta ruta como dinámica para evitar errores de build
 export const dynamic = 'force-dynamic'
@@ -36,32 +39,35 @@ export async function POST(
 
     console.log('[Messages] Creating message with attachments:', attachmentIds)
 
-    // Intentar primero con tabla Conversation (PRISMA schema)
+    // Intentar primero con tabla Conversation usando Prisma (bypassa RLS)
     let thread: any = null
     let isPrismaSchema = false
-    
-    const { data: prismaThread, error: prismaError } = await supabase
-      .from('Conversation')
-      .select('id, aId, bId, isActive')
-      .eq('id', conversationId)
-      .eq('isActive', true)
-      .single()
 
-    if (!prismaError && prismaThread) {
-      // Obtener UserProfile del usuario actual
-      const { data: userProfile } = await supabase
-        .from('UserProfile')
-        .select('id')
-        .eq('userId', user.id)
-        .single()
+    try {
+      const prismaThread = await prisma.conversation.findFirst({
+        where: {
+          id: conversationId,
+          isActive: true
+        },
+        include: {
+          a: true,
+          b: true
+        }
+      })
 
-      if (userProfile) {
-        // Verificar que el usuario es participante
-        if (prismaThread.aId === userProfile.id || prismaThread.bId === userProfile.id) {
+      if (prismaThread) {
+        // Verificar que el usuario es participante (via UserProfile)
+        const userProfile = await prisma.userProfile.findUnique({
+          where: { userId: user.id }
+        })
+
+        if (userProfile && (prismaThread.aId === userProfile.id || prismaThread.bId === userProfile.id)) {
           thread = prismaThread
           isPrismaSchema = true
         }
       }
+    } catch (prismaError) {
+      console.error('[Messages] Error buscando con Prisma:', prismaError)
     }
 
     // Si no se encontró en Conversation, intentar con conversations (SUPABASE schema)
