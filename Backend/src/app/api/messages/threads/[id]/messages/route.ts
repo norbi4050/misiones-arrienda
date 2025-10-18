@@ -101,42 +101,27 @@ export async function POST(
 
     console.log(`[Messages] ✅ Hilo encontrado usando schema: ${isPrismaSchema ? 'PRISMA' : 'SUPABASE'}`)
 
-    // FIX: Verificar user_type antes de requerir UserProfile
-    const { data: userData } = await supabase
-      .from('users')
-      .select('user_type')
-      .eq('id', user.id)
-      .single()
+    // FIX CRÍTICO: Primero intentar obtener UserProfile (independiente de userType)
+    // Esto maneja el caso de inmobiliarias que tienen UserProfile (ej: cambiaron de inquilino a inmobiliaria)
+    console.log(`[Messages] Buscando UserProfile con Prisma para user: ${user.id}`)
 
-    const userType = userData?.user_type?.toLowerCase()
-    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId: user.id }
+    })
 
-    // Obtener el perfil del usuario para el sender_id
     let senderId: string
     let userProfileId: string | null = null
 
-    if (isInmobiliaria) {
-      // Para inmobiliarias, usar directamente user.id
-      senderId = user.id
-      console.log(`[Messages] Usuario inmobiliaria detectado, usando user.id como senderId: ${user.id}`)
-    } else {
-      // Para inquilinos/busco, buscar UserProfile usando Prisma (bypassa RLS)
-      console.log(`[Messages] Buscando UserProfile con Prisma para user: ${user.id}`)
-
-      const userProfile = await prisma.userProfile.findUnique({
-        where: { userId: user.id }
-      })
-
-      if (!userProfile) {
-        console.error('[Messages] ❌ Perfil no encontrado para usuario:', user.id)
-        return NextResponse.json({
-          error: 'Perfil de usuario no encontrado'
-        }, { status: 403 })
-      }
-
+    if (userProfile) {
+      // CASO 1: Usuario tiene UserProfile (inquilino, busco, o inmobiliaria que migró de inquilino)
       senderId = userProfile.id
       userProfileId = userProfile.id
       console.log(`[Messages] ✅ UserProfile encontrado con Prisma: ${userProfile.id}`)
+    } else {
+      // CASO 2: Usuario NO tiene UserProfile (típicamente inmobiliaria nueva)
+      // Usar user.id directamente
+      senderId = user.id
+      console.log(`[Messages] ℹ️  UserProfile NO encontrado - usando user.id como senderId: ${user.id}`)
     }
 
     // Crear nuevo mensaje

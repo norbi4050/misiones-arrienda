@@ -91,40 +91,27 @@ export async function GET(
 
     console.log(`[GET Thread] ✅ Schema: ${isPrismaSchema ? 'PRISMA' : 'SUPABASE'}`)
 
-    // FIX: Verificar user_type antes de requerir UserProfile
-    const { data: userData } = await supabase
-      .from('users')
-      .select('user_type')
-      .eq('id', user.id)
-      .single()
+    // FIX CRÍTICO: Primero intentar obtener UserProfile (independiente de userType)
+    // Esto maneja el caso de inmobiliarias que tienen UserProfile (ej: cambiaron de inquilino a inmobiliaria)
+    console.log(`[GET Thread] Buscando UserProfile con Prisma para user: ${user.id}`)
 
-    const userType = userData?.user_type?.toLowerCase()
-    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
+    const profile = await prisma.userProfile.findUnique({
+      where: { userId: user.id }
+    })
 
-    // Obtener perfil del usuario actual (solo si NO es inmobiliaria)
     let userProfile: any = null
     let userProfileId: string
 
-    if (isInmobiliaria) {
-      // Para inmobiliarias, usar directamente user.id
-      userProfileId = user.id
-      console.log(`[GET Thread] Usuario inmobiliaria detectado, usando user.id: ${user.id}`)
-    } else {
-      // Para inquilinos/busco, buscar UserProfile con Prisma (bypassa RLS)
-      console.log(`[GET Thread] Buscando UserProfile con Prisma para user: ${user.id}`)
-
-      const profile = await prisma.userProfile.findUnique({
-        where: { userId: user.id }
-      })
-
-      if (!profile) {
-        console.error('[GET Thread] ❌ Perfil no encontrado para usuario:', user.id)
-        return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
-      }
-
+    if (profile) {
+      // CASO 1: Usuario tiene UserProfile (inquilino, busco, o inmobiliaria que migró de inquilino)
       userProfile = profile
       userProfileId = profile.id
       console.log(`[GET Thread] ✅ UserProfile encontrado con Prisma: ${profile.id}`)
+    } else {
+      // CASO 2: Usuario NO tiene UserProfile (típicamente inmobiliaria nueva)
+      // Usar user.id directamente
+      userProfileId = user.id
+      console.log(`[GET Thread] ℹ️  UserProfile NO encontrado - usando user.id: ${user.id}`)
     }
 
     // PROMPT 1: Determinar el otro usuario (PROFILE ID, no USER ID)
@@ -403,38 +390,25 @@ export async function PATCH(
     const senderIdField = isPrismaSchema ? 'senderId' : 'sender_id'
     const isReadField = isPrismaSchema ? 'isRead' : 'is_read'
 
-    // FIX: Verificar user_type antes de requerir UserProfile
-    const { data: userData } = await supabase
-      .from('users')
-      .select('user_type')
-      .eq('id', user.id)
-      .single()
+    // FIX CRÍTICO: Primero intentar obtener UserProfile (independiente de userType)
+    // Esto maneja el caso de inmobiliarias que tienen UserProfile (ej: cambiaron de inquilino a inmobiliaria)
+    console.log(`[PATCH Thread] Buscando UserProfile con Prisma para user: ${user.id}`)
 
-    const userType = userData?.user_type?.toLowerCase()
-    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId: user.id }
+    })
 
-    // Obtener perfil del usuario (solo si NO es inmobiliaria)
     let userProfileId: string
 
-    if (isInmobiliaria) {
-      // Para inmobiliarias, usar directamente user.id
-      userProfileId = user.id
-      console.log(`[PATCH Thread] Usuario inmobiliaria detectado, usando user.id: ${user.id}`)
-    } else {
-      // Para inquilinos/busco, buscar UserProfile con Prisma (bypassa RLS)
-      console.log(`[PATCH Thread] Buscando UserProfile con Prisma para user: ${user.id}`)
-
-      const userProfile = await prisma.userProfile.findUnique({
-        where: { userId: user.id }
-      })
-
-      if (!userProfile) {
-        console.error('[PATCH Thread] ❌ Perfil no encontrado para usuario:', user.id)
-        return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
-      }
-
+    if (userProfile) {
+      // CASO 1: Usuario tiene UserProfile (inquilino, busco, o inmobiliaria que migró de inquilino)
       userProfileId = userProfile.id
       console.log(`[PATCH Thread] ✅ UserProfile encontrado con Prisma: ${userProfile.id}`)
+    } else {
+      // CASO 2: Usuario NO tiene UserProfile (típicamente inmobiliaria nueva)
+      // Usar user.id directamente
+      userProfileId = user.id
+      console.log(`[PATCH Thread] ℹ️  UserProfile NO encontrado - usando user.id: ${user.id}`)
     }
 
     const updateData: any = { [isReadField]: true }
