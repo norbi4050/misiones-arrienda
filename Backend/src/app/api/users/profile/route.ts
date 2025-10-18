@@ -160,8 +160,9 @@ export async function PUT(req: NextRequest) {
   }
 
   // Mapear campos del body a columnas de user_profiles y users
-  const userProfilesUpdate: any = { updated_at: new Date().toISOString() };
-  const usersUpdate: any = { updated_at: new Date().toISOString() };
+  // NOTA: NO incluir updated_at - esa columna no existe en Supabase REST API para user_profiles
+  const userProfilesUpdate: any = {};
+  const usersUpdate: any = { updated_at: new Date().toISOString() }; // users SÍ tiene updated_at
 
   if (body.displayName !== undefined || body.display_name !== undefined) {
     const displayName = body.displayName || body.display_name;

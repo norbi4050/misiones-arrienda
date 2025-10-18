@@ -143,9 +143,10 @@ export async function POST(req: NextRequest) {
     // - Inmobiliarias migradas: tienen user_profiles, actualizar ambas ✅
 
     // 6a) Intentar actualizar user_profiles.avatar_url (si existe)
+    // NOTA: NO actualizar updated_at manualmente - esa columna no existe en Supabase REST API
     const { data: profileData, error: profileUpdateErr } = await supabaseAdmin
       .from('user_profiles')
-      .update({ avatar_url: url, updated_at: new Date().toISOString() })
+      .update({ avatar_url: url })
       .eq('userId', user.id)
       .select()
 
