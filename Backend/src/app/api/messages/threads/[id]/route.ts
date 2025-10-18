@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/server'
 import { getDisplayName, getDisplayNameWithSource, isUUID } from '@/lib/messages/display-name-helper'
 import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
 import { getUserPresence } from '@/lib/presence/activity-tracker'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 // GET /api/messages/threads/[id] → mensajes paginados del hilo con cursor
 export async function GET(
@@ -25,29 +28,36 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    // Detectar esquema: intentar primero PRISMA
+    // Detectar esquema: intentar primero PRISMA usando Prisma (bypassa RLS)
     let thread: any = null
     let isPrismaSchema = false
 
-    // Intentar con Conversation (PRISMA)
-    const { data: prismaThread } = await supabase
-      .from('Conversation')
-      .select('id, aId, bId, isActive')
-      .eq('id', conversationId)
-      .eq('isActive', true)
-      .single()
+    // Intentar con Conversation (PRISMA) usando Prisma Client
+    try {
+      const prismaThread = await prisma.conversation.findFirst({
+        where: {
+          id: conversationId,
+          isActive: true
+        },
+        include: {
+          a: true,
+          b: true
+        }
+      })
 
-    if (prismaThread) {
-      const { data: userProfile } = await supabase
-        .from('UserProfile')
-        .select('id')
-        .eq('userId', user.id)
-        .single()
+      if (prismaThread) {
+        const userProfile = await prisma.userProfile.findUnique({
+          where: { userId: user.id }
+        })
 
-      if (userProfile && (prismaThread.aId === userProfile.id || prismaThread.bId === userProfile.id)) {
-        thread = prismaThread
-        isPrismaSchema = true
+        if (userProfile && (prismaThread.aId === userProfile.id || prismaThread.bId === userProfile.id)) {
+          thread = prismaThread
+          isPrismaSchema = true
+          console.log('[GET Thread] ✅ Conversation encontrada con Prisma')
+        }
       }
+    } catch (prismaError) {
+      console.log('[GET Thread] Prisma query failed, trying Supabase schema')
     }
 
     // Si no se encontró, intentar con conversations (SUPABASE)
@@ -99,22 +109,21 @@ export async function GET(
       userProfileId = user.id
       console.log(`[GET Thread] Usuario inmobiliaria detectado, usando user.id: ${user.id}`)
     } else {
-      // Para inquilinos/busco, buscar en UserProfile
-      const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
-      const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
+      // Para inquilinos/busco, buscar UserProfile con Prisma (bypassa RLS)
+      console.log(`[GET Thread] Buscando UserProfile con Prisma para user: ${user.id}`)
 
-      const { data: profile } = await supabase
-        .from(profileTable)
-        .select('id')
-        .eq(profileIdField, user.id)
-        .single()
+      const profile = await prisma.userProfile.findUnique({
+        where: { userId: user.id }
+      })
 
       if (!profile) {
+        console.error('[GET Thread] ❌ Perfil no encontrado para usuario:', user.id)
         return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
       }
 
       userProfile = profile
       userProfileId = profile.id
+      console.log(`[GET Thread] ✅ UserProfile encontrado con Prisma: ${profile.id}`)
     }
 
     // PROMPT 1: Determinar el otro usuario (PROFILE ID, no USER ID)
@@ -420,21 +429,20 @@ export async function PATCH(
       userProfileId = user.id
       console.log(`[PATCH Thread] Usuario inmobiliaria detectado, usando user.id: ${user.id}`)
     } else {
-      // Para inquilinos/busco, buscar en UserProfile
-      const profileTable = isPrismaSchema ? 'UserProfile' : 'user_profiles'
-      const profileIdField = isPrismaSchema ? 'userId' : 'user_id'
+      // Para inquilinos/busco, buscar UserProfile con Prisma (bypassa RLS)
+      console.log(`[PATCH Thread] Buscando UserProfile con Prisma para user: ${user.id}`)
 
-      const { data: userProfile } = await supabase
-        .from(profileTable)
-        .select('id')
-        .eq(profileIdField, user.id)
-        .single()
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { userId: user.id }
+      })
 
       if (!userProfile) {
+        console.error('[PATCH Thread] ❌ Perfil no encontrado para usuario:', user.id)
         return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 })
       }
 
       userProfileId = userProfile.id
+      console.log(`[PATCH Thread] ✅ UserProfile encontrado con Prisma: ${userProfile.id}`)
     }
 
     const updateData: any = { [isReadField]: true }
