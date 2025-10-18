@@ -1,16 +1,16 @@
 /**
  * Helper para generar avatares automáticos cuando el usuario no tiene uno
- * Usa ui-avatars.com para generar avatares con iniciales
+ * Genera SVG inline como Data URI para evitar problemas de CORS
  */
 
 /**
  * Genera una URL de avatar automático basado en el nombre del usuario
- * Si el usuario no tiene avatar, genera uno con sus iniciales
+ * Si el usuario no tiene avatar, genera un SVG con sus iniciales como Data URI
  *
  * @param name - Nombre del usuario (ej: "Cesar", "Carlos Gonzalez")
  * @param email - Email del usuario (fallback si no hay nombre)
  * @param existingAvatar - Avatar existente (URL), si existe
- * @returns URL del avatar (existente o generado)
+ * @returns URL del avatar (existente o Data URI con SVG generado)
  */
 export function getAvatarUrl(
   name: string | null,
@@ -31,18 +31,24 @@ export function getAvatarUrl(
   // Generar color consistente basado en el nombre
   const backgroundColor = getConsistentColor(displayName)
 
-  // Generar URL usando ui-avatars.com
-  // Formato: https://ui-avatars.com/api/?name=John+Doe&background=random&size=128
-  const params = new URLSearchParams({
-    name: initials,
-    background: backgroundColor,
-    color: 'ffffff', // Texto blanco
-    size: '128',
-    bold: 'true',
-    format: 'svg'
-  })
+  // Generar SVG inline como Data URI (evita problemas de CORS)
+  const svg = generateAvatarSVG(initials, backgroundColor)
+  const dataUri = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
 
-  return `https://ui-avatars.com/api/?${params.toString()}`
+  return dataUri
+}
+
+/**
+ * Genera un SVG de avatar con iniciales
+ * @param initials - Iniciales del usuario (ej: "C", "CG")
+ * @param bgColor - Color de fondo en hex sin # (ej: "F39C12")
+ * @returns String con el SVG completo
+ */
+function generateAvatarSVG(initials: string, bgColor: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" fill="#${bgColor}" rx="64"/>
+  <text x="50%" y="50%" text-anchor="middle" dy="0.35em" fill="#ffffff" font-family="Arial, sans-serif" font-size="48" font-weight="bold">${initials}</text>
+</svg>`
 }
 
 /**
