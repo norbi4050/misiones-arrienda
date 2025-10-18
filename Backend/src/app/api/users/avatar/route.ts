@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
     // Obtener datos de user_profiles y users para construir avatar_url único
     // NOTA: user_profiles usa 'userId' como FK, no 'id'
     const [{ data: userData }, { data: profile }] = await Promise.all([
-      supabase.from('users').select('id,name,profile_image,avatar,logo_url').eq('id', userId).maybeSingle(),
-      supabase.from('user_profiles').select('avatar_url,updated_at').eq('userId', userId).maybeSingle(),
+      supabase.from('users').select('id,name,profile_image,avatar,logo_url,updated_at').eq('id', userId).maybeSingle(),
+      supabase.from('user_profiles').select('avatar_url,updatedAt').eq('userId', userId).maybeSingle(),
     ])
 
     if (!userData) {
@@ -70,9 +70,11 @@ export async function GET(request: NextRequest) {
       deprecatedUrl ??
       `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff&size=200`;
 
-    const v = primaryUrl && profile?.updated_at
-      ? Math.floor(new Date(profile.updated_at).getTime() / 1000)
-      : 0;
+    // FIX: Calcular versión usando updatedAt de user_profiles (Prisma) o updated_at de users (Supabase)
+    // Esto fuerza al navegador a recargar la imagen cuando cambia
+    const v = profile?.updatedAt
+      ? Math.floor(new Date(profile.updatedAt).getTime() / 1000)
+      : (userData?.updated_at ? Math.floor(new Date(userData.updated_at).getTime() / 1000) : 0);
 
     // Devolver URL cruda sin ?v= - el frontend se encarga del cache-busting
     return NextResponse.json({
