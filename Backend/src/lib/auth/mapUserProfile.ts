@@ -129,7 +129,7 @@ export function mapUserProfile(db: any): CurrentUser | null {
     // Campos comunes (priorizar nombres más específicos)
     name: db.name ?? db.full_name ?? null,
     phone: db.phone ?? null,
-    avatar: db.avatar ?? db.profile_image ?? null,
+    avatar: db.avatar_url ?? db.avatar ?? db.profile_image ?? null,
     bio: db.bio ?? null,
     location: db.location ?? null,
     
