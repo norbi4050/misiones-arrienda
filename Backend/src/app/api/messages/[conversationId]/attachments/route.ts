@@ -45,45 +45,59 @@ export async function GET(
       );
     }
 
-    // 2. Intentar primero con esquema PRISMA (tabla Message)
+    // 2. Intentar primero con esquema PRISMA (tabla MessageAttachment)
     let attachments: any[] | null = null
     let schema = 'UNKNOWN'
 
-    try {
-      const { data: messageAttachments, error: prismaError } = await supabase
-        .from('MessageAttachment')
-        .select('*')
-        .eq('messageId', messageId)
-        .order('createdAt', { ascending: true });
+    const { data: prismaAttachments, error: prismaError } = await supabase
+      .from('MessageAttachment')
+      .select('*')
+      .eq('messageId', messageId)
+      .order('createdAt', { ascending: true });
 
-      if (!prismaError && messageAttachments) {
-        attachments = messageAttachments
-        schema = 'PRISMA'
-        console.log('[ATTACHMENTS] Found in PRISMA schema:', messageAttachments.length)
-      }
-    } catch (e) {
-      console.log('[ATTACHMENTS] PRISMA schema not available, trying SUPABASE schema')
+    console.log('[ATTACHMENTS] PRISMA query result:', {
+      hasData: !!prismaAttachments,
+      dataLength: prismaAttachments?.length || 0,
+      hasError: !!prismaError,
+      errorCode: prismaError?.code,
+      errorMessage: prismaError?.message
+    });
+
+    if (!prismaError && prismaAttachments && prismaAttachments.length > 0) {
+      attachments = prismaAttachments
+      schema = 'PRISMA'
+      console.log('[ATTACHMENTS] ✅ Found in PRISMA schema:', prismaAttachments.length)
     }
 
-    // 3. Si no se encontró en PRISMA, intentar con esquema SUPABASE (tabla messages)
-    if (!attachments) {
-      const { data: messageAttachments, error: supabaseError } = await supabase
+    // 3. Si no se encontró en PRISMA, intentar con esquema SUPABASE (tabla message_attachments)
+    if (!attachments || attachments.length === 0) {
+      console.log('[ATTACHMENTS] Trying SUPABASE schema (message_attachments)...')
+
+      const { data: supabaseAttachments, error: supabaseError } = await supabase
         .from('message_attachments')
         .select('*')
         .eq('message_id', messageId)
         .order('created_at', { ascending: true });
 
+      console.log('[ATTACHMENTS] SUPABASE query result:', {
+        hasData: !!supabaseAttachments,
+        dataLength: supabaseAttachments?.length || 0,
+        hasError: !!supabaseError,
+        errorCode: supabaseError?.code,
+        errorMessage: supabaseError?.message
+      });
+
       if (supabaseError) {
-        console.error('[ATTACHMENTS] Error fetching from SUPABASE schema:', supabaseError);
+        console.error('[ATTACHMENTS] ❌ Error fetching from SUPABASE schema:', supabaseError);
         return NextResponse.json(
-          { error: 'Error al obtener adjuntos', code: 'DB_ERROR' },
+          { error: 'Error al obtener adjuntos', code: 'DB_ERROR', details: supabaseError.message },
           { status: 500 }
         );
       }
 
-      attachments = messageAttachments || []
+      attachments = supabaseAttachments || []
       schema = 'SUPABASE'
-      console.log('[ATTACHMENTS] Found in SUPABASE schema:', attachments.length)
+      console.log('[ATTACHMENTS] ✅ Found in SUPABASE schema:', attachments.length)
     }
 
     // 4. Generar URLs firmadas para cada adjunto
