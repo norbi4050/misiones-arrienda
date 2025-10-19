@@ -558,29 +558,29 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
                         {message.attachments && message.attachments.length > 0 && (
                           <div className="mb-2 space-y-2">
                             {message.attachments.map((att: any) => {
-                              const isImage = att.mime?.startsWith('image/')
-                              const isPdf = att.mime === 'application/pdf'
-                              
+                              const isImage = att.mimeType?.startsWith('image/')
+                              const isPdf = att.mimeType === 'application/pdf'
+
                               const handleDownload = (e: React.MouseEvent) => {
                                 e.preventDefault()
                                 e.stopPropagation()
-                                
-                                if (!att.url) {
+
+                                if (!att.storageUrl) {
                                   toast.error('URL de descarga no disponible')
                                   console.error('[Download] No URL available for attachment:', att.id)
                                   return
                                 }
-                                
+
                                 console.log('[Download] Iniciando descarga:', {
                                   id: att.id,
                                   fileName: att.fileName,
-                                  url: att.url,
-                                  hasDownloadParam: att.url.includes('download=')
+                                  url: att.storageUrl,
+                                  hasDownloadParam: att.storageUrl.includes('download=')
                                 })
-                                
+
                                 // La URL ya viene con el parámetro download desde el backend
                                 // Solo necesitamos abrir la URL y el navegador la descargará automáticamente
-                                window.location.href = att.url
+                                window.location.href = att.storageUrl
                                 toast.success('Descargando archivo...')
                               }
                               
