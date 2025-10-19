@@ -292,6 +292,11 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
           const msg = payload.new as any
           rtLog('Nuevo mensaje recibido', { id: msg?.id, senderId: msg?.senderId })
 
+          // Esperar 300ms para que la vinculación de adjuntos se complete en el servidor
+          // El mensaje llega vía Realtime inmediatamente después de INSERT,
+          // pero la vinculación de adjuntos ocurre después en una transacción separada
+          await new Promise(resolve => setTimeout(resolve, 300))
+
           // Cargar adjuntos del mensaje nuevo si existen
           let attachments: any[] = []
           if (msg?.id) {
