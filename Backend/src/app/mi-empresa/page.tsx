@@ -29,15 +29,15 @@ async function getInmobiliariaProfile(userId: string) {
       throw profileError
     }
 
-    // Fetch equipo (si existe tabla inmobiliaria_team)
+    // Fetch equipo desde agency_team_members
     const { data: team, error: teamError } = await supabase
-      .from('inmobiliaria_team')
+      .from('agency_team_members')
       .select('*')
-      .eq('user_id', userId)  // Changed from inmobiliaria_id to user_id
+      .eq('agency_id', userId)
       .order('display_order', { ascending: true })
 
     if (teamError) {
-      console.log('[Server] No team data found (table may not exist):', teamError.message)
+      console.log('[Server] No team data found:', teamError.message)
     }
 
     // Parsear business_hours desde JSONB

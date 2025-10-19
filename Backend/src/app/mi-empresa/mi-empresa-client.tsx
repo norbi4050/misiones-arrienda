@@ -244,11 +244,14 @@ export default function MiEmpresaClient({
 
               console.log('[Geocode] Coordenadas obtenidas:', lat, lng)
 
-              // Actualizar coordenadas en BD
+              // Actualizar coordenadas en BD (enviar campos requeridos para pasar validación)
               const updateCoordsResponse = await fetch('/api/inmobiliarias/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                  company_name: profile.company_name,
+                  phone: profile.phone,
+                  address: profile.address,
                   latitude: lat,
                   longitude: lng
                 })
