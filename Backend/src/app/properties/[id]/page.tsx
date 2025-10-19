@@ -387,7 +387,29 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                 </div>
               )}
 
-              <div className="flex items-center space-x-4 mb-6">
+              <div className="flex items-center flex-wrap gap-2 mb-6">
+                {/* Badge de Tipo de Operación - NUEVO */}
+                {property.operation_type === 'alquiler' && (
+                  <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                    🏠 Alquiler
+                  </Badge>
+                )}
+                {property.operation_type === 'venta' && (
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                    💰 Venta
+                  </Badge>
+                )}
+                {property.operation_type === 'ambos' && (
+                  <>
+                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                      🏠 Alquiler
+                    </Badge>
+                    <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                      💰 Venta
+                    </Badge>
+                  </>
+                )}
+                
                 <Badge variant="secondary">
                   {getPropertyTypeLabel(property.property_type)}
                 </Badge>

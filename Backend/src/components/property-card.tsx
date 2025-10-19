@@ -22,6 +22,7 @@ interface PropertyCardProps {
   cover_url?: string  // Nueva prop del API
   userId?: string
   featured?: boolean
+  operation_type?: string  // NUEVO: tipo de operación (alquiler/venta/ambos)
   // FASE 6: Owner info para link a perfil de inmobiliaria
   owner_id?: string
   owner_type?: string
@@ -43,6 +44,7 @@ export function PropertyCard({
   cover_url,
   userId,
   featured = false,
+  operation_type,
   owner_id,
   owner_type,
   owner_company_name
@@ -67,11 +69,32 @@ export function PropertyCard({
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-110"
           />
-          {featured && (
-            <Badge className="absolute top-2 left-2 bg-red-500 text-white z-10">
-              Destacado
-            </Badge>
-          )}
+          
+          {/* Badges en la imagen */}
+          <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+            {featured && (
+              <Badge className="bg-red-500 text-white">
+                Destacado
+              </Badge>
+            )}
+            {/* Badge de tipo de operación */}
+            {operation_type === 'alquiler' && (
+              <Badge className="bg-blue-500 text-white text-xs">
+                🏠 Alquiler
+              </Badge>
+            )}
+            {operation_type === 'venta' && (
+              <Badge className="bg-green-500 text-white text-xs">
+                💰 Venta
+              </Badge>
+            )}
+            {operation_type === 'ambos' && (
+              <Badge className="bg-purple-500 text-white text-xs">
+                🔄 Alquiler/Venta
+              </Badge>
+            )}
+          </div>
+          
           <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
             <FavoriteButton propertyId={id} />
           </div>

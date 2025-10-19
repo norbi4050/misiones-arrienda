@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { toPublicUrl, normalizeImages } from '@/lib/images'
 import { CitySelect } from '@/components/forms/city-select'
@@ -91,15 +92,19 @@ export default function EditPropertyClient({ initialProperty }: { initialPropert
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de operación</label>
-            <select
+            <Select
               value={form.operation_type || 'alquiler'}
-              onChange={e => update('operation_type', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onValueChange={(value) => update('operation_type', value)}
             >
-              <option value="alquiler">Alquiler</option>
-              <option value="venta">Venta</option>
-              <option value="ambos">Alquiler y Venta</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alquiler">🏠 Alquiler</SelectItem>
+                <SelectItem value="venta">💰 Venta</SelectItem>
+                <SelectItem value="ambos">🔄 Alquiler y Venta</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Precio</label>

@@ -69,7 +69,9 @@ export function FilterSection({
     Object.entries(newFilters).forEach(([key, value]) => {
       if (value !== 'all') {
         // Map internal keys to URL-friendly keys
-        const urlKey = key === 'location' ? 'city' : key
+        const urlKey = key === 'location' ? 'city' 
+                     : key === 'listingType' ? 'operation_type'
+                     : key
         params.set(urlKey, value)
       }
     })
