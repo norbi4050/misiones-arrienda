@@ -80,6 +80,8 @@ interface CompanyProfile {
   verified: boolean
   verified_at: string | null
   business_hours: BusinessHours
+  latitude: number | null  // Coordenadas para mapa
+  longitude: number | null  // Coordenadas para mapa
   show_team_public: boolean
   show_hours_public: boolean
   show_map_public: boolean
