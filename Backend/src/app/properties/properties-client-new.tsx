@@ -44,6 +44,12 @@ export function PropertiesPageClient() {
     loadProperties(1, false)
   }, [bbox])
 
+  // Reload properties when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+    loadProperties(1, false)
+  }, [currentFilters])
+
   const loadProperties = async (page: number = 1, append: boolean = false) => {
     try {
       setLoading(true)
@@ -65,6 +71,7 @@ export function PropertiesPageClient() {
       // Agregar otros filtros
       if (currentFilters.city) params.set('city', currentFilters.city)
       if (currentFilters.propertyType) params.set('type', currentFilters.propertyType)
+      if (currentFilters.operationType) params.set('operation_type', currentFilters.operationType)
       if (currentFilters.minPrice) params.set('minPrice', currentFilters.minPrice.toString())
       if (currentFilters.maxPrice) params.set('maxPrice', currentFilters.maxPrice.toString())
       if (currentFilters.minBedrooms) params.set('bedrooms', currentFilters.minBedrooms.toString())
@@ -182,8 +189,7 @@ export function PropertiesPageClient() {
 
   const handleFilterChange = (filters: PropertyFilters) => {
     setCurrentFilters(filters)
-    setCurrentPage(1)
-    loadProperties(1, false)  // Nueva búsqueda, replace
+    // El useEffect se encargará de recargar las propiedades cuando currentFilters cambie
   }
 
   // ✅ AGREGAR: Handler para "Cargar más"
