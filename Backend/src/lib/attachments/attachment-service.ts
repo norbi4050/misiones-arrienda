@@ -292,7 +292,7 @@ export async function createMessageAttachments(
         fileName: attachment.fileName,
         fileSize: attachment.fileSize,
         mimeType: attachment.mimeType,
-        storageUrl: attachment.storageUrl,
+        storageUrl: url,  // url viene de uploadToStorage (línea 268)
         width: attachment.width || undefined,
         height: attachment.height || undefined
       })
