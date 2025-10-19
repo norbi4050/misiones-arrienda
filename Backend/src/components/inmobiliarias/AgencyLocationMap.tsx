@@ -59,6 +59,26 @@ export default function AgencyLocationMap({
           alt={`Ubicación de ${agencyName}`}
           className="w-full h-full object-cover"
           loading="lazy"
+          onError={(e) => {
+            // Ocultar imagen que falló
+            e.currentTarget.style.display = 'none';
+
+            // Mostrar mensaje de error en el contenedor padre
+            const parent = e.currentTarget.parentElement;
+            if (parent && !parent.querySelector('.map-error-message')) {
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'map-error-message flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 px-4';
+              errorDiv.innerHTML = `
+                <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p class="text-sm font-medium mb-1">No se pudo cargar el mapa</p>
+                <p class="text-xs text-center">La dirección se encuentra a continuación</p>
+              `;
+              parent.appendChild(errorDiv);
+            }
+          }}
         />
       </div>
 

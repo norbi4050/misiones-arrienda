@@ -213,9 +213,71 @@ export default function MiEmpresaClient({
       }
       
       toast.success('Perfil actualizado correctamente')
+
+      // FASE 5: Geocodificación automática si el mapa está activado
+      if (profile.show_map_public && profile.address?.trim()) {
+        try {
+          console.log('[Geocode] Obteniendo coordenadas para:', profile.address)
+
+          // Intentar extraer ciudad de la dirección (formato: "Calle, Ciudad")
+          const addressParts = profile.address.split(',').map(p => p.trim())
+          const city = addressParts.length > 1 ? addressParts[addressParts.length - 1] : 'Posadas'
+
+          const geocodeResponse = await fetch('/api/geocode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              address: profile.address,
+              city: city,
+              province: 'Misiones',
+              country: 'Argentina'
+            })
+          })
+
+          if (geocodeResponse.ok) {
+            const geocodeData = await geocodeResponse.json()
+
+            if (geocodeData.success && geocodeData.coordinates) {
+              const { lat, lng } = geocodeData.coordinates
+
+              console.log('[Geocode] Coordenadas obtenidas:', lat, lng)
+
+              // Actualizar coordenadas en BD
+              const updateCoordsResponse = await fetch('/api/inmobiliarias/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  latitude: lat,
+                  longitude: lng
+                })
+              })
+
+              if (updateCoordsResponse.ok) {
+                console.log('[Geocode] Coordenadas guardadas en BD')
+                toast.success('📍 Ubicación geocodificada correctamente')
+
+                // Actualizar estado local
+                setProfile({ ...profile, latitude: lat, longitude: lng })
+              } else {
+                console.warn('[Geocode] Error guardando coordenadas en BD')
+              }
+            }
+          } else {
+            const errorData = await geocodeResponse.json()
+            console.warn('[Geocode] No se pudo geocodificar:', errorData.error)
+
+            // No mostrar error al usuario, es opcional
+            // Solo log para debugging
+          }
+        } catch (geocodeError) {
+          console.warn('[Geocode] Error en geocodificación automática:', geocodeError)
+          // No bloquear la UX, solo advertir en consola
+        }
+      }
+
       setIsEditing(false)
       router.refresh() // PERF: Revalidar datos del servidor
-      
+
     } catch (error) {
       console.error('Error guardando perfil:', error)
       toast.error(error instanceof Error ? error.message : 'Error al guardar el perfil')
@@ -648,9 +710,23 @@ export default function MiEmpresaClient({
                   disabled={!isEditing}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5"
                 />
-                <span className="text-sm text-gray-700">
-                  Mostrar mapa de ubicación
-                </span>
+                <div className="flex-1 flex items-center justify-between">
+                  <span className="text-sm text-gray-700">
+                    Mostrar mapa de ubicación
+                  </span>
+                  {profile.show_map_public && profile.latitude && profile.longitude && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Geocodificado
+                    </span>
+                  )}
+                  {profile.show_map_public && (!profile.latitude || !profile.longitude) && (
+                    <span className="text-xs text-amber-600 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Se geocodificará al guardar
+                    </span>
+                  )}
+                </div>
               </label>
               
               <label className="flex items-center gap-3 cursor-pointer">
