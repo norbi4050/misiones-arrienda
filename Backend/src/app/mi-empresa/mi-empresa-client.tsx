@@ -75,7 +75,8 @@ interface CompanyProfile {
   tiktok: string | null
   description: string | null
   license_number: string | null
-  logo_url: string | null
+  avatar: string | null  // Avatar personal para mensajes/navbar
+  logo_url: string | null  // Logo para perfil público
   verified: boolean
   verified_at: string | null
   business_hours: BusinessHours

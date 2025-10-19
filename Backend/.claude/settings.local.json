@@ -29,7 +29,8 @@
       "Bash(node -e:*)",
       "Bash(node check-avatar-data.js:*)",
       "Bash(node:*)",
-      "Bash(npx prisma generate:*)"
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma migrate dev:*)"
     ],
     "deny": [],
     "ask": []

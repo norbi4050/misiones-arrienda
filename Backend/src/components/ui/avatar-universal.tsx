@@ -127,7 +127,7 @@ export default function AvatarUniversal({
       const uploadData = await uploadResponse.json()
 
       if (uploadData.success && uploadData.url) {
-        // FIX: Agregar timestamp a la URL para forzar refresh del navegador
+        // FIX: Usar timestamp actual para forzar refresh inmediato del navegador
         const urlWithVersion = uploadData.v
           ? withVersion(uploadData.url, uploadData.v)
           : `${uploadData.url}?t=${Date.now()}`
@@ -135,10 +135,8 @@ export default function AvatarUniversal({
         setAvatarUrl(urlWithVersion)
         onAvatarChange?.(uploadData.url)
 
-        // Recargar avatar después de un delay pequeño para asegurar que el servidor tiene la nueva versión
-        setTimeout(async () => {
-          await loadAvatar()
-        }, 500)
+        // OPTIMIZACIÓN: No recargar desde servidor, confiar en el cache-busting
+        // El navegador cargará la nueva imagen inmediatamente gracias al ?v= o ?t=
       }
 
     } catch (err) {
