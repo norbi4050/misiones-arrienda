@@ -56,6 +56,7 @@ const TeamEditor = dynamic(
 )
 
 import AvatarUniversal from "@/components/ui/avatar-universal"
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete"
 import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye, User, Shield } from "lucide-react"
 import { toast } from "sonner"
 import { validateCUIT, autoFormatCUIT } from "@/lib/validations/cuit"
@@ -444,20 +445,24 @@ export default function MiEmpresaClient({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Dirección *
               </label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <Input
-                  value={profile.address}
-                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                  disabled={!isEditing}
-                  className={`pl-10 ${errors.address ? 'border-red-500' : ''}`}
-                  data-error={!!errors.address}
-                  placeholder="Av. Corrientes 1234, Posadas"
-                />
-              </div>
+              <AddressAutocomplete
+                value={profile.address}
+                onChange={(value) => setProfile({ ...profile, address: value })}
+                onSelect={(suggestion) => {
+                  console.log('[AddressAutocomplete] Dirección seleccionada:', suggestion.display_name)
+                  // La dirección ya se actualiza con onChange
+                  // Las coordenadas se geocodificarán al guardar
+                }}
+                placeholder="Ej: Av. Corrientes 1234, Posadas"
+                disabled={!isEditing}
+                error={!!errors.address}
+              />
               {errors.address && (
                 <p className="text-sm text-red-600 mt-1">{errors.address}</p>
               )}
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Comienza a escribir para ver sugerencias de direcciones
+              </p>
             </div>
           </div>
           
