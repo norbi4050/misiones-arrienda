@@ -119,10 +119,13 @@ export async function GET(req: NextRequest) {
   if (!profile) {
     console.error('[API /users/profile GET] mapUserProfile returned null');
     return NextResponse.json(
-      { error: "Failed to map profile data" }, 
+      { error: "Failed to map profile data" },
       { status: 500, headers: hdrs }
     );
   }
+
+  // DEBUG: Log para verificar que avatar está en el perfil
+  console.log('[API /users/profile GET] Profile avatar:', profile.avatar);
 
   return NextResponse.json({ profile }, { headers: hdrs });
 }
