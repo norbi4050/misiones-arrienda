@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { MetadataRoute } from 'next'
 import { getProperties } from '@/lib/api'
 import { createClient } from '@/lib/supabase/server'
+import { Property } from '@/types/property'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://misionesarrienda.com.ar'
@@ -92,8 +93,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   
   try {
     const response = await getProperties({ limit: 1000 }) // Obtener todas las propiedades
-    
-    propertyPages = response.properties.map((property) => ({
+
+    propertyPages = response.properties.map((property: Property) => ({
       url: `${baseUrl}/properties/${property.id}`,
       lastModified: new Date(property.updatedAt || property.createdAt || new Date()),
       changeFrequency: 'weekly' as const,
