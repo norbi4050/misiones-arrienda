@@ -98,15 +98,15 @@ export async function GET(
       (attachments || []).map(async (att) => {
         const { data: signedUrlData } = await supabase.storage
           .from('message-attachments')
-          .createSignedUrl(att.path, 3600); // 1 hora
+          .createSignedUrl(att.storage_path, 3600); // 1 hora
 
-        const fileName = att.path.split('/').pop() || 'archivo';
+        const fileName = att.storage_path.split('/').pop() || 'archivo';
 
         return {
           id: att.id,
           storageUrl: signedUrlData?.signedUrl || '',
-          mimeType: att.mime,
-          fileSize: att.size_bytes,
+          mimeType: att.mime_type,
+          fileSize: att.file_size,
           width: att.width,
           height: att.height,
           fileName,
