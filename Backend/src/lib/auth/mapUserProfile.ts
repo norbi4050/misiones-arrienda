@@ -164,8 +164,9 @@ export function mapUserProfile(db: any): CurrentUser | null {
     email: profile.email,
     userType: profile.userType,
     isCompany: profile.isCompany,
+    avatar: profile.avatar, // DEBUG: Verificar si avatar se está mapeando
   })
-  
+
   return profile
 }
 
