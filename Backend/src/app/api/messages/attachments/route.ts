@@ -253,22 +253,34 @@ export async function POST(request: NextRequest) {
       fullPath: uploadData.fullPath
     });
 
-    // 7. Generar UUID para el adjunto (NO crear mensaje aún)
+    // 7. Generar UUID para el adjunto
     const attachmentUuid = crypto.randomUUID();
-    
-    // 8. Crear registro en DB usando tabla message_attachments (snake_case)
-    // NOTA: message_id será NULL hasta que el usuario envíe el mensaje
-    // IMPORTANTE: user_id debe ser userProfileId
+
+    // 8. Generar URL firmada ANTES del INSERT (necesaria para storage_url)
+    const { data: signedUrlData, error: urlError } = await supabase.storage
+      .from('message-attachments')
+      .createSignedUrl(storagePath, 3600);
+
+    if (urlError) {
+      console.error('[ATTACHMENTS] Signed URL error:', urlError);
+    }
+
+    const signedUrl = signedUrlData?.signedUrl || '';
+
+    // 9. Crear registro en DB - IMPORTANTE: usar nombres EXACTOS del schema
+    // PROBLEMA: message_id es NOT NULL en schema pero necesitamos permitir NULL
+    // SOLUCIÓN TEMPORAL: Usar string vacío o un ID temporal
     const { data: attachment, error: dbError } = await supabase
       .from('message_attachments')
       .insert({
         id: attachmentUuid,
-        message_id: messageId || null,  // NULL si no hay mensaje aún
-        user_id: userProfileId,  // ← FIX: usar userProfileId
-        path: storagePath,
-        mime: file.type,
-        size_bytes: file.size,
-        file_name: file.name  // ← FIX: Agregar file_name para que aparezca en el chat
+        message_id: messageId || attachmentUuid,  // Usar attachmentUuid como temporal si no hay messageId
+        uploaded_by: userProfileId,     // ✅ Schema: uploaded_by
+        storage_path: storagePath,      // ✅ Schema: storage_path
+        mime_type: file.type,           // ✅ Schema: mime_type
+        file_size: file.size,           // ✅ Schema: file_size
+        file_name: file.name,           // ✅ Schema: file_name
+        storage_url: signedUrl          // ✅ Schema: storage_url (NOT NULL)
       })
       .select()
       .single();
@@ -285,17 +297,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    // 9. Generar URL firmada (1 hora de validez)
-    const { data: signedUrlData, error: urlError } = await supabase.storage
-      .from('message-attachments')
-      .createSignedUrl(storagePath, 3600);
-
-    if (urlError) {
-      console.error('[ATTACHMENTS] Signed URL error:', urlError);
-    }
-
-    const signedUrl = signedUrlData?.signedUrl || '';
 
     console.log('[ATTACHMENTS] SUCCESS - File uploaded, waiting for message send', {
       authUserId: user.id,
@@ -326,9 +327,9 @@ export async function POST(request: NextRequest) {
         id: attachment.id,
         url: signedUrl,
         mime: file.type,
-        sizeBytes: attachment.size_bytes,  // snake_case desde Supabase
+        sizeBytes: attachment.file_size,  // Schema real: file_size
         fileName: file.name,
-        createdAt: attachment.created_at  // snake_case desde Supabase
+        createdAt: attachment.created_at  // Schema real: created_at
       },
       messageId: messageId || null  // NULL si no hay mensaje aún
     });

@@ -280,7 +280,7 @@ export async function createMessageAttachments(
           fileSize: file.size,
           mimeType: file.type,
           storagePath: path,
-          // storageUrl eliminado - no existe en schema real
+          storageUrl: url,  // ✅ Ahora existe en schema
           width: metadata.width,
           height: metadata.height,
           uploadedBy: userId
