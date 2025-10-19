@@ -69,6 +69,8 @@ async function getInmobiliariaProfile(userId: string) {
       verified: profile.verified || false,
       verified_at: profile.verified_at || null,
       business_hours: businessHours,
+      latitude: profile.latitude || null,  // Coordenadas para mapa
+      longitude: profile.longitude || null,  // Coordenadas para mapa
       show_team_public: profile.show_team_public ?? true,
       show_hours_public: profile.show_hours_public ?? true,
       show_map_public: profile.show_map_public ?? true,
