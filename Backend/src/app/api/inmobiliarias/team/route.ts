@@ -143,8 +143,14 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creando miembro del equipo:', insertError);
+
+      // Mejorar mensaje de error si es por límite de BD
+      const errorMessage = insertError.message?.includes('P0001') || insertError.message?.includes('máximo')
+        ? `Ya tienes el máximo de ${AGENCY_LIMITS.MAX_TEAM_MEMBERS} miembros activos permitidos`
+        : 'Error al crear miembro del equipo';
+
       return NextResponse.json(
-        { error: 'Error al crear miembro del equipo', details: insertError.message },
+        { error: errorMessage, details: insertError.message },
         { status: 500 }
       );
     }
@@ -224,7 +230,7 @@ export async function PUT(request: NextRequest) {
     const activeMembers = team.filter(m => m.is_active);
     if (activeMembers.length > AGENCY_LIMITS.MAX_TEAM_MEMBERS) {
       return NextResponse.json(
-        { 
+        {
           error: `Solo puedes tener máximo ${AGENCY_LIMITS.MAX_TEAM_MEMBERS} miembros activos`,
           current_count: activeMembers.length,
           max_allowed: AGENCY_LIMITS.MAX_TEAM_MEMBERS,
@@ -233,60 +239,102 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Procesar cada miembro (INSERT o UPDATE)
-    const results = [];
-    
-    for (const member of team) {
-      const isNewMember = member.id.startsWith('temp-');
-      
-      if (isNewMember) {
-        // INSERT: Nuevo miembro
-        const { data: newMember, error: insertError } = await supabase
-          .from('agency_team_members')
-          .insert({
-            agency_id: user.id,
-            name: member.name.trim(),
-            photo_url: member.photo_url || null,
-            display_order: member.display_order ?? 0,
-            is_active: member.is_active ?? true,
-          })
-          .select()
-          .single();
+    // FIX: Verificar cuántos miembros activos NO-temporales ya existen en BD
+    const newMembers = team.filter(m => m.id.startsWith('temp-') && m.is_active);
 
-        if (insertError) {
-          console.error('Error insertando miembro:', insertError);
-          return NextResponse.json(
-            { error: 'Error al crear miembro del equipo', details: insertError.message },
-            { status: 500 }
-          );
-        }
+    if (newMembers.length > 0) {
+      // Consultar cuántos miembros activos YA existen en BD (excluir temporales)
+      const { count: existingActiveCount } = await supabase
+        .from('agency_team_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('agency_id', user.id)
+        .eq('is_active', true);
 
-        results.push(newMember);
-      } else {
-        // UPDATE: Miembro existente
-        const { data: updatedMember, error: updateError } = await supabase
-          .from('agency_team_members')
-          .update({
-            name: member.name.trim(),
-            photo_url: member.photo_url,
-            display_order: member.display_order,
-            is_active: member.is_active,
-          })
-          .eq('id', member.id)
-          .eq('agency_id', user.id)
-          .select()
-          .single();
+      // FIX MEJORADO: Contar cuántos miembros existentes se van a desactivar
+      const existingMembersBeingDeactivated = team.filter(
+        m => !m.id.startsWith('temp-') && !m.is_active
+      );
 
-        if (updateError) {
-          console.error('Error actualizando miembro:', updateError);
-          return NextResponse.json(
-            { error: 'Error al actualizar miembro del equipo', details: updateError.message },
-            { status: 500 }
-          );
-        }
+      // Calcular el resultado final: (activos actuales - los que se desactivan + los nuevos)
+      const finalActiveCount = (existingActiveCount || 0) - existingMembersBeingDeactivated.length + newMembers.length;
 
-        results.push(updatedMember);
+      if (finalActiveCount > AGENCY_LIMITS.MAX_TEAM_MEMBERS) {
+        return NextResponse.json(
+          {
+            error: `La operación resultaría en ${finalActiveCount} miembro(s) activo(s). Solo puedes tener máximo ${AGENCY_LIMITS.MAX_TEAM_MEMBERS} miembros activos`,
+            existing_count: existingActiveCount,
+            being_deactivated: existingMembersBeingDeactivated.length,
+            attempting_to_add: newMembers.length,
+            max_allowed: AGENCY_LIMITS.MAX_TEAM_MEMBERS,
+          },
+          { status: 400 }
+        );
       }
+    }
+
+    // Procesar cada miembro (INSERT o UPDATE)
+    // MEJORA: Procesar UPDATEs primero, luego INSERTs para evitar conflictos con límite
+    const results = [];
+    const existingMembers = team.filter(m => !m.id.startsWith('temp-'));
+    const newMembersToInsert = team.filter(m => m.id.startsWith('temp-'));
+
+    // 1. Procesar primero UPDATEs (miembros existentes)
+    for (const member of existingMembers) {
+      // UPDATE: Miembro existente
+      const { data: updatedMember, error: updateError } = await supabase
+        .from('agency_team_members')
+        .update({
+          name: member.name.trim(),
+          photo_url: member.photo_url,
+          display_order: member.display_order,
+          is_active: member.is_active,
+        })
+        .eq('id', member.id)
+        .eq('agency_id', user.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error actualizando miembro:', updateError);
+        return NextResponse.json(
+          { error: 'Error al actualizar miembro del equipo', details: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      results.push(updatedMember);
+    }
+
+    // 2. Luego procesar INSERTs (nuevos miembros)
+    for (const member of newMembersToInsert) {
+      // INSERT: Nuevo miembro
+      const { data: newMember, error: insertError } = await supabase
+        .from('agency_team_members')
+        .insert({
+          agency_id: user.id,
+          name: member.name.trim(),
+          photo_url: member.photo_url || null,
+          display_order: member.display_order ?? 0,
+          is_active: member.is_active ?? true,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error insertando miembro:', insertError);
+
+        // Mejorar mensaje de error si es por límite de BD
+        const errorMessage = insertError.message?.includes('P0001') || insertError.message?.includes('máximo')
+          ? `Ya tienes el máximo de ${AGENCY_LIMITS.MAX_TEAM_MEMBERS} miembros activos permitidos`
+          : 'Error al crear miembro del equipo';
+
+        return NextResponse.json(
+          { error: errorMessage, details: insertError.message },
+          { status: 500 }
+        );
+      }
+
+      results.push(newMember);
     }
 
     return NextResponse.json({
