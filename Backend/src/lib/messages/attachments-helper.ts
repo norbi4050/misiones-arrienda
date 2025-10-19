@@ -4,7 +4,11 @@
 // =====================================================
 
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import type { Attachment } from '@/types/messages';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 /**
  * Obtiene los adjuntos de un mensaje con URLs firmadas
@@ -84,7 +88,11 @@ export async function getMessagesAttachments(
       return new Map();
     }
 
-    const supabase = createClient();
+    // FIX: Usar service role client para bypassear RLS
+    // Las políticas RLS pueden bloquear la lectura de adjuntos
+    const supabase = createServiceClient(supabaseUrl, supabaseServiceKey);
+
+    console.log('[Attachments Helper BATCH] Buscando adjuntos para messageIds:', messageIds.length);
 
     // Obtener todos los adjuntos de una vez - usar nombre correcto de tabla PostgreSQL
     const { data: attachments, error } = await supabase
@@ -92,6 +100,12 @@ export async function getMessagesAttachments(
       .select('*')
       .in('message_id', messageIds)
       .order('created_at', { ascending: true});
+
+    console.log('[Attachments Helper BATCH] Query result:', {
+      found: attachments?.length || 0,
+      error: error?.message,
+      errorCode: error?.code
+    });
 
     if (error || !attachments) {
       console.warn('[Attachments Helper] Batch - No se pudieron cargar adjuntos (404 esperado si no existen):', error);
