@@ -178,8 +178,8 @@ export async function POST(
       // PASO 1: Validar que los adjuntos existen y pertenecen al usuario
       console.log('[Messages] 🔍 Validando propiedad de adjuntos...')
       const { data: attachmentsToLink, error: validateError } = await supabaseAdmin
-        .from('MessageAttachment')
-        .select('id, userId, path, fileName')
+        .from('message_attachments')
+        .select('id, uploaded_by, storage_path, file_name')
         .in('id', attachmentIds)
       
       if (validateError) {
@@ -204,9 +204,9 @@ export async function POST(
         }, { status: 400 })
       }
       
-      // Verificar ownership (userId puede ser user.id O userProfileId si existe)
+      // Verificar ownership (uploaded_by puede ser user.id O userProfileId si existe)
       const invalidAttachments = attachmentsToLink.filter(
-        att => att.userId !== user.id && (!userProfileId || att.userId !== userProfileId)
+        att => att.uploaded_by !== user.id && (!userProfileId || att.uploaded_by !== userProfileId)
       )
       
       if (invalidAttachments.length > 0) {
@@ -226,11 +226,11 @@ export async function POST(
       // PASO 2: Esperar 100ms para que la transacción del INSERT se confirme
       await new Promise(resolve => setTimeout(resolve, 100))
       
-      // PASO 3: Vincular adjuntos (SIN filtro userId - ya validado arriba)
+      // PASO 3: Vincular adjuntos (SIN filtro uploaded_by - ya validado arriba)
       console.log('[Messages] 🔗 Vinculando adjuntos al mensaje...')
       const { data: updated, error: linkError } = await supabaseAdmin
-        .from('MessageAttachment')
-        .update({ messageId: newMessage.id })
+        .from('message_attachments')
+        .update({ message_id: newMessage.id })
         .in('id', attachmentIds)
         .select()
       
@@ -252,10 +252,10 @@ export async function POST(
         console.error('[Messages] ⏳ Reintentando en 500ms...')
         
         await new Promise(resolve => setTimeout(resolve, 500))
-        
+
         const { data: retryUpdated, error: retryError } = await supabaseAdmin
-          .from('MessageAttachment')
-          .update({ messageId: newMessage.id })
+          .from('message_attachments')
+          .update({ message_id: newMessage.id })
           .in('id', attachmentIds)
           .select()
         

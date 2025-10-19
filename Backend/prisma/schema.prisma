@@ -638,9 +638,9 @@ model Message {
 model MessageAttachment {
   id                    String   @id @default(cuid())
 
-  // Relación con mensaje (REQUERIDO en DB - NOT NULL)
-  messageId             String   @map("message_id")
-  message               Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  // Relación con mensaje (OPCIONAL - nullable para permitir upload antes de enviar mensaje)
+  messageId             String?  @map("message_id")
+  message               Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   // Información del archivo
   fileName              String   @map("file_name")

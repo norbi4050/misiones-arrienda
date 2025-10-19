@@ -100,7 +100,7 @@ export async function validateAttachmentUpload(
     const { count, error: countError } = await supabase
       .from('message_attachments')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
+      .eq('uploaded_by', userId)
       .gte('created_at', today.toISOString());
 
     if (countError) {
@@ -166,7 +166,7 @@ export async function getAttachmentLimitsInfo(userId: string) {
     const { count: dailyCount } = await supabase
       .from('message_attachments')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
+      .eq('uploaded_by', userId)
       .gte('created_at', today.toISOString());
 
     return {

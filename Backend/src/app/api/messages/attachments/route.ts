@@ -268,13 +268,12 @@ export async function POST(request: NextRequest) {
     const signedUrl = signedUrlData?.signedUrl || '';
 
     // 9. Crear registro en DB - IMPORTANTE: usar nombres EXACTOS del schema
-    // PROBLEMA: message_id es NOT NULL en schema pero necesitamos permitir NULL
-    // SOLUCIÓN TEMPORAL: Usar string vacío o un ID temporal
+    // FIX: message_id ahora es nullable - usar NULL cuando no hay messageId
     const { data: attachment, error: dbError } = await supabase
       .from('message_attachments')
       .insert({
         id: attachmentUuid,
-        message_id: messageId || attachmentUuid,  // Usar attachmentUuid como temporal si no hay messageId
+        message_id: messageId || null,  // ✅ NULL permitido ahora (schema actualizado)
         uploaded_by: userProfileId,     // ✅ Schema: uploaded_by
         storage_path: storagePath,      // ✅ Schema: storage_path
         mime_type: file.type,           // ✅ Schema: mime_type
