@@ -288,27 +288,44 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
           table: 'Message',
           filter: `conversationId=eq.${conversationId}`
         },
-        (payload: any) => {
+        async (payload: any) => {
           const msg = payload.new as any
           rtLog('Nuevo mensaje recibido', { id: msg?.id, senderId: msg?.senderId })
+
+          // Cargar adjuntos del mensaje nuevo si existen
+          let attachments: any[] = []
+          if (msg?.id) {
+            try {
+              const attachmentsResponse = await fetch(`/api/messages/${conversationId}/attachments?messageId=${msg.id}`, {
+                credentials: 'include'
+              })
+              if (attachmentsResponse.ok) {
+                const attachmentsData = await attachmentsResponse.json()
+                attachments = attachmentsData.attachments || []
+                rtLog('Adjuntos cargados para mensaje nuevo:', attachments.length)
+              }
+            } catch (error) {
+              console.error('[RT] Error cargando adjuntos:', error)
+            }
+          }
 
           setMessages((prev: Message[]) => {
             if (!msg?.id) return prev
             if (prev.some((m) => m.id === msg.id)) return prev
-            
+
             const formattedMessage: Message = {
               id: msg.id,
               content: msg.content || '',
               createdAt: msg.createdAt || new Date().toISOString(),
               senderId: msg.senderId || '',
               isMine: msg.senderId === userId,
-              attachments: msg.attachments || []
+              attachments: attachments
             }
-            
+
             setTimeout(() => scrollToBottom(), 100)
             markAsRead()
             onThreadUpdate()
-            
+
             return [...prev, formattedMessage]
           })
         }

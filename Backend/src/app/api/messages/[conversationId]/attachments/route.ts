@@ -3,34 +3,21 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import type { Attachment } from '@/types/messages';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
 /**
- * GET /api/messages/[conversationId]/attachments
- * Lista todos los adjuntos de un mensaje
+ * GET /api/messages/[conversationId]/attachments?messageId=xxx
+ * Lista todos los adjuntos de un mensaje específico o de toda la conversación
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: { conversationId: string } }
 ) {
   try {
-    // 1. Autenticación
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'No autorizado', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const token = authHeader.replace('Bearer ', '');
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // 1. Autenticación usando cookies (mismo patrón que otros endpoints)
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
@@ -39,85 +26,99 @@ export async function GET(
       );
     }
 
-    const messageId = params.conversationId;
+    const conversationId = params.conversationId;
+    const { searchParams } = new URL(request.url);
+    const messageId = searchParams.get('messageId');
 
     console.log('[ATTACHMENTS] List request:', {
       userId: user.id,
+      conversationId,
       messageId
     });
 
-    // 2. Verificar que el mensaje existe y el usuario tiene acceso
-    const { data: message, error: messageError } = await supabase
-      .from('messages')
-      .select(`
-        id,
-        conversation_id,
-        conversations!inner (
-          participant_1,
-          participant_2
-        )
-      `)
-      .eq('id', messageId)
-      .single();
-
-    if (messageError || !message) {
-      console.log('[ATTACHMENTS] Message not found:', messageId);
+    // Si se proporciona messageId, buscar adjuntos de ese mensaje específico
+    // Si no, buscar todos los adjuntos de la conversación
+    if (!messageId) {
       return NextResponse.json(
-        { error: 'Mensaje no encontrado', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: 'Se requiere messageId', code: 'BAD_REQUEST' },
+        { status: 400 }
       );
     }
 
-    // 3. Verificar acceso (RLS se encargará, pero validamos explícitamente)
-    const conversation = message.conversations as any;
-    if (conversation.participant_1 !== user.id && conversation.participant_2 !== user.id) {
-      console.log('[ATTACHMENTS] User not participant:', user.id);
-      return NextResponse.json(
-        { error: 'No tienes acceso a este mensaje', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+    // 2. Intentar primero con esquema PRISMA (tabla Message)
+    let attachments: any[] | null = null
+    let schema = 'UNKNOWN'
+
+    try {
+      const { data: messageAttachments, error: prismaError } = await supabase
+        .from('MessageAttachment')
+        .select('*')
+        .eq('messageId', messageId)
+        .order('createdAt', { ascending: true });
+
+      if (!prismaError && messageAttachments) {
+        attachments = messageAttachments
+        schema = 'PRISMA'
+        console.log('[ATTACHMENTS] Found in PRISMA schema:', messageAttachments.length)
+      }
+    } catch (e) {
+      console.log('[ATTACHMENTS] PRISMA schema not available, trying SUPABASE schema')
     }
 
-    // 4. Obtener adjuntos (RLS se encarga de la seguridad)
-    const { data: attachments, error: attachmentsError } = await supabase
-      .from('message_attachments')
-      .select('*')
-      .eq('message_id', messageId)
-      .order('created_at', { ascending: true });
+    // 3. Si no se encontró en PRISMA, intentar con esquema SUPABASE (tabla messages)
+    if (!attachments) {
+      const { data: messageAttachments, error: supabaseError } = await supabase
+        .from('message_attachments')
+        .select('*')
+        .eq('message_id', messageId)
+        .order('created_at', { ascending: true });
 
-    if (attachmentsError) {
-      console.error('[ATTACHMENTS] List error:', attachmentsError);
-      return NextResponse.json(
-        { error: 'Error al obtener adjuntos', code: 'DB_ERROR' },
-        { status: 500 }
-      );
+      if (supabaseError) {
+        console.error('[ATTACHMENTS] Error fetching from SUPABASE schema:', supabaseError);
+        return NextResponse.json(
+          { error: 'Error al obtener adjuntos', code: 'DB_ERROR' },
+          { status: 500 }
+        );
+      }
+
+      attachments = messageAttachments || []
+      schema = 'SUPABASE'
+      console.log('[ATTACHMENTS] Found in SUPABASE schema:', attachments.length)
     }
 
-    // 5. Generar URLs firmadas para cada adjunto
+    // 4. Generar URLs firmadas para cada adjunto
     const attachmentsWithUrls: Attachment[] = await Promise.all(
       (attachments || []).map(async (att) => {
+        // Determinar campos según esquema
+        const storagePath = schema === 'PRISMA' ? att.storagePath : att.storage_path
+        const mimeType = schema === 'PRISMA' ? att.mimeType : att.mime_type
+        const fileSize = schema === 'PRISMA' ? att.fileSize : att.file_size
+        const createdAt = schema === 'PRISMA' ? att.createdAt : att.created_at
+
         const { data: signedUrlData } = await supabase.storage
           .from('message-attachments')
-          .createSignedUrl(att.storage_path, 3600); // 1 hora
+          .createSignedUrl(storagePath, 3600); // 1 hora
 
-        const fileName = att.storage_path.split('/').pop() || 'archivo';
+        const fileName = storagePath.split('/').pop() || 'archivo';
 
         return {
           id: att.id,
           storageUrl: signedUrlData?.signedUrl || '',
-          mimeType: att.mime_type,
-          fileSize: att.file_size,
+          mimeType: mimeType,
+          fileSize: fileSize,
           width: att.width,
           height: att.height,
           fileName,
-          createdAt: att.created_at
+          createdAt: createdAt
         };
       })
     );
 
     console.log('[ATTACHMENTS] List success:', {
       userId: user.id,
+      conversationId,
       messageId,
+      schema,
       count: attachmentsWithUrls.length
     });
 
