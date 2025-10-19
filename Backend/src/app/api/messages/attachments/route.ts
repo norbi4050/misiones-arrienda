@@ -9,9 +9,11 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { sanitizeFileName as sanitizeFileNameNew, validateFilePath, scanAttachment } from '@/lib/file-sanitizer';
 import { getUserPlanLimits } from '@/lib/plan-guards';
 import { analytics } from '@/lib/analytics/track';
+import { PrismaClient } from '@prisma/client';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const prisma = new PrismaClient();
 
 /**
  * POST /api/messages/attachments
@@ -123,41 +125,25 @@ export async function POST(request: NextRequest) {
     });
 
     // 3. Validar participación en thread
-    // FIX: Verificar user_type antes de requerir UserProfile
+    // FIX CRÍTICO: SIEMPRE intentar obtener UserProfile primero (independiente de userType)
+    // Esto maneja el caso de inmobiliarias que tienen UserProfile (ej: cambiaron de inquilino a inmobiliaria)
+    console.log(`[ATTACHMENTS] Buscando UserProfile con Prisma para user: ${user.id}`)
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('user_type')
-      .eq('id', user.id)
-      .single();
+    const userProfile = await prisma.userProfile.findUnique({
+      where: { userId: user.id }
+    })
 
-    const userType = userData?.user_type?.toLowerCase()
-    const isInmobiliaria = userType === 'inmobiliaria' || userType === 'agency'
-
-    // Obtener perfil del usuario (solo si NO es inmobiliaria)
     let userProfileId: string
 
-    if (isInmobiliaria) {
-      // Para inmobiliarias, usar directamente user.id
-      userProfileId = user.id
-      console.log('[ATTACHMENTS] Usuario inmobiliaria detectado, usando user.id:', user.id)
-    } else {
-      // Para inquilinos/busco, buscar en UserProfile
-      const { data: userProfile } = await supabase
-        .from('UserProfile')
-        .select('id')
-        .eq('userId', user.id)
-        .single();
-
-      if (!userProfile) {
-        console.log('[ATTACHMENTS] UserProfile not found for user:', user.id);
-        return NextResponse.json(
-          { error: 'Perfil no encontrado', code: 'NOT_FOUND' },
-          { status: 404 }
-        );
-      }
-
+    if (userProfile) {
+      // CASO 1: Usuario tiene UserProfile (inquilino, busco, o inmobiliaria que migró de inquilino)
       userProfileId = userProfile.id
+      console.log(`[ATTACHMENTS] ✅ UserProfile encontrado con Prisma: ${userProfile.id}`)
+    } else {
+      // CASO 2: Usuario NO tiene UserProfile (típicamente inmobiliaria nueva)
+      // Usar user.id directamente
+      userProfileId = user.id
+      console.log(`[ATTACHMENTS] ℹ️  UserProfile NO encontrado - usando user.id: ${user.id}`)
     }
 
     // Buscar conversación en tabla PRISMA
