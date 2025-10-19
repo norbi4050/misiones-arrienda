@@ -256,19 +256,19 @@ export async function POST(request: NextRequest) {
     // 7. Generar UUID para el adjunto (NO crear mensaje aún)
     const attachmentUuid = crypto.randomUUID();
     
-    // 8. Crear registro en DB usando tabla PRISMA MessageAttachment
-    // NOTA: messageId será NULL hasta que el usuario envíe el mensaje
-    // IMPORTANTE: userId debe ser userProfileId
+    // 8. Crear registro en DB usando tabla message_attachments (snake_case)
+    // NOTA: message_id será NULL hasta que el usuario envíe el mensaje
+    // IMPORTANTE: user_id debe ser userProfileId
     const { data: attachment, error: dbError } = await supabase
-      .from('MessageAttachment')
+      .from('message_attachments')
       .insert({
         id: attachmentUuid,
-        messageId: messageId || null,  // NULL si no hay mensaje aún
-        userId: userProfileId,  // ← FIX: usar userProfileId
+        message_id: messageId || null,  // NULL si no hay mensaje aún
+        user_id: userProfileId,  // ← FIX: usar userProfileId
         path: storagePath,
         mime: file.type,
-        sizeBytes: file.size,
-        fileName: file.name  // ← FIX: Agregar fileName para que aparezca en el chat
+        size_bytes: file.size,
+        file_name: file.name  // ← FIX: Agregar file_name para que aparezca en el chat
       })
       .select()
       .single();

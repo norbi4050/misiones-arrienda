@@ -92,10 +92,16 @@ export async function validateAttachmentUpload(
 
     // 5. Validar cuota diaria
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: dailyCount, error: countError } = await supabase.rpc(
-      'count_user_daily_attachments',
-      { user_uuid: userId }
-    );
+
+    // Contar adjuntos creados hoy por el usuario
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { count, error: countError } = await supabase
+      .from('message_attachments')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', today.toISOString());
 
     if (countError) {
       console.error('[Attachment Guards] Error al contar adjuntos diarios:', countError);
@@ -103,7 +109,7 @@ export async function validateAttachmentUpload(
       return { allowed: true };
     }
 
-    const currentCount = dailyCount || 0;
+    const currentCount = count || 0;
     
     if (currentCount >= planLimits.dailyCount) {
       console.log('[Attachment Guards] Cuota diaria excedida:', currentCount, '>=', planLimits.dailyCount);
@@ -152,10 +158,16 @@ export async function getAttachmentLimitsInfo(userId: string) {
     
     // Contar adjuntos del día
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { data: dailyCount } = await supabase.rpc(
-      'count_user_daily_attachments',
-      { user_uuid: userId }
-    );
+
+    // Contar adjuntos creados hoy
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { count: dailyCount } = await supabase
+      .from('message_attachments')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', today.toISOString());
 
     return {
       planTier: limits.plan_tier,
