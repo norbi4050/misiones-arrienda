@@ -326,9 +326,9 @@ export async function POST(request: NextRequest) {
         id: attachment.id,
         url: signedUrl,
         mime: file.type,
-        sizeBytes: attachment.sizeBytes,
+        sizeBytes: attachment.size_bytes,  // snake_case desde Supabase
         fileName: file.name,
-        createdAt: attachment.createdAt
+        createdAt: attachment.created_at  // snake_case desde Supabase
       },
       messageId: messageId || null  // NULL si no hay mensaje aún
     });
