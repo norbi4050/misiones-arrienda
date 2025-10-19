@@ -1,79 +1,91 @@
 import { Property, PropertyFilters, PropertyStatus } from '@/types/property';
 
-// Array vacío - Sin propiedades de ejemplo para usuarios reales
-const sampleProperties: Property[] = [];
-
-// Función principal para obtener propiedades con filtros
+// Función principal para obtener propiedades con filtros - LLAMA AL API REAL
 export async function getProperties(filters: PropertyFilters & { page?: number; limit?: number } = {}) {
-  // Simular delay de API
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
-  let filtered = [...sampleProperties];
-
-  // Aplicar filtros
-  if (filters.city) {
-    filtered = filtered.filter(p => 
-      p.city.toLowerCase().includes(filters.city!.toLowerCase())
-    );
-  }
-
-  if (filters.province) {
-    filtered = filtered.filter(p => 
-      p.province.toLowerCase().includes(filters.province!.toLowerCase())
-    );
-  }
-
-  if (filters.minPrice) {
-    filtered = filtered.filter(p => p.price >= filters.minPrice!);
-  }
-
-  if (filters.maxPrice) {
-    filtered = filtered.filter(p => p.price <= filters.maxPrice!);
-  }
-
-  if (filters.minBedrooms) {
-    filtered = filtered.filter(p => p.bedrooms >= filters.minBedrooms!);
-  }
-
-  if (filters.maxBedrooms) {
-    filtered = filtered.filter(p => p.bedrooms <= filters.maxBedrooms!);
-  }
-
-  if (filters.minBathrooms) {
-    filtered = filtered.filter(p => p.bathrooms >= filters.minBathrooms!);
-  }
-
-  if (filters.propertyType) {
-    filtered = filtered.filter(p => p.propertyType === filters.propertyType);
-  }
-
-  if (filters.featured) {
-    filtered = filtered.filter(p => p.featured === true);
-  }
-
-  // Paginación
-  const page = filters.page || 1;
-  const limit = filters.limit || 12;
-  const total = filtered.length;
-  const pages = Math.ceil(total / limit);
-  const skip = (page - 1) * limit;
-  const paginatedProperties = filtered.slice(skip, skip + limit);
-
-  return {
-    properties: paginatedProperties,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages
+  try {
+    // Construir query params para el API
+    const params = new URLSearchParams();
+    
+    // Paginación
+    if (filters.page) params.set('page', filters.page.toString());
+    if (filters.limit) params.set('limit', filters.limit.toString());
+    
+    // Filtros de propiedad
+    if (filters.city) params.set('city', filters.city);
+    if (filters.province) params.set('province', filters.province);
+    if (filters.propertyType) params.set('type', filters.propertyType);
+    
+    // Filtros de precio
+    if (filters.minPrice) params.set('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice.toString());
+    
+    // Filtros de habitaciones
+    if (filters.minBedrooms) params.set('bedrooms', filters.minBedrooms.toString());
+    if (filters.minBathrooms) params.set('bathrooms', filters.minBathrooms.toString());
+    
+    // Filtro de tipo de operación - FIX CRÍTICO
+    if (filters.operationType) params.set('operation_type', filters.operationType);
+    
+    // Filtro de destacadas
+    if (filters.featured !== undefined) params.set('featured', filters.featured.toString());
+    
+    // Llamar al API real
+    const url = `/api/properties?${params.toString()}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
-  };
+    
+    const data = await response.json();
+    
+    return {
+      properties: data.properties || [],
+      pagination: data.pagination || {
+        page: filters.page || 1,
+        limit: filters.limit || 12,
+        total: 0,
+        totalPages: 0
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    // Fallback en caso de error
+    return {
+      properties: [],
+      pagination: {
+        page: filters.page || 1,
+        limit: filters.limit || 12,
+        total: 0,
+        totalPages: 0
+      }
+    };
+  }
 }
 
-// Función para obtener una propiedad por ID
+// Función para obtener una propiedad por ID - Llama al API real
 export async function getPropertyById(id: string): Promise<Property | null> {
-  await new Promise(resolve => setTimeout(resolve, 100));
-  return sampleProperties.find(p => p.id === id) || null;
+  try {
+    const response = await fetch(`/api/properties/${id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    return data.ok ? data.property : null;
+  } catch (error) {
+    console.error('Error fetching property by ID:', error);
+    return null;
+  }
 }
 
 // Función legacy para compatibilidad

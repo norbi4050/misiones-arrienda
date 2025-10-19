@@ -120,7 +120,8 @@ export function PropertyGrid({ initialProperties = [] }: PropertyGridProps) {
               image={cover}
               imageUrls={imgs}
               coverUrl={(property as any).coverUrl}
-              cover_url={(property as any).cover_url}  // ✅ AGREGAR: Pasar cover_url del API
+              cover_url={(property as any).cover_url}
+              operation_type={(property as any).operation_type}  // ✅ NUEVO: Pasar operation_type
               featured={property.featured}
             />
           );
