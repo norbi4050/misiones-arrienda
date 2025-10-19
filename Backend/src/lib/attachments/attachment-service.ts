@@ -345,15 +345,24 @@ export async function getMessageAttachments(messageId: string): Promise<CreateAt
     orderBy: { createdAt: 'asc' }
   })
 
-  return attachments.map(att => ({
-    id: att.id,
-    fileName: att.fileName,
-    fileSize: att.fileSize,
-    mimeType: att.mimeType,
-    storageUrl: att.storageUrl,
-    width: att.width || undefined,
-    height: att.height || undefined
+  // Generar URLs firmadas para cada adjunto
+  const results = await Promise.all(attachments.map(async (att) => {
+    const { data } = await supabase.storage
+      .from('message-attachments')
+      .createSignedUrl(att.storagePath, 3600)
+
+    return {
+      id: att.id,
+      fileName: att.fileName,
+      fileSize: att.fileSize,
+      mimeType: att.mimeType,
+      storageUrl: data?.signedUrl || '',
+      width: att.width || undefined,
+      height: att.height || undefined
+    }
   }))
+
+  return results
 }
 
 /**
@@ -376,12 +385,7 @@ export async function regenerateSignedUrl(attachmentId: string): Promise<string>
     throw new Error('Error al generar URL firmada')
   }
 
-  // Actualizar URL en DB
-  await prisma.messageAttachment.update({
-    where: { id: attachmentId },
-    data: { storageUrl: data.signedUrl }
-  })
-
+  // No guardamos storageUrl en DB - se genera on-demand
   return data.signedUrl
 }
 
