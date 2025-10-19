@@ -29,11 +29,21 @@ export async function POST(
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { content, attachmentIds } = await request.json()
+    const body = await request.json()
+    const { content, attachmentIds } = body
+
+    console.log('[Messages] 🔍 Request body received:', {
+      content: content?.substring(0, 50),
+      attachmentIds,
+      attachmentIdsType: typeof attachmentIds,
+      isArray: Array.isArray(attachmentIds),
+      length: attachmentIds?.length,
+      fullBody: body
+    })
 
     if (!content || !content.trim()) {
-      return NextResponse.json({ 
-        error: 'Contenido del mensaje requerido' 
+      return NextResponse.json({
+        error: 'Contenido del mensaje requerido'
       }, { status: 400 })
     }
 
