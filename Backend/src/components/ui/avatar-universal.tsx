@@ -95,9 +95,20 @@ export default function AvatarUniversal({
     const file = event.target.files?.[0]
     if (!file || !targetUserId) return
 
+    // Validar tamaño del archivo (2MB = 2 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+    if (file.size > MAX_FILE_SIZE) {
+      const errorMsg = `Archivo muy grande. Máximo: 2MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(2)}MB`
+      setError(errorMsg)
+      // Limpiar error después de 5 segundos
+      setTimeout(() => setError(null), 5000)
+      return
+    }
+
     try {
       setLoading(true)
-      
+      setError(null) // Limpiar errores previos
+
       // Crear FormData para subir archivo
       const formData = new FormData()
       formData.append('file', file)
@@ -114,12 +125,20 @@ export default function AvatarUniversal({
       }
 
       const uploadData = await uploadResponse.json()
-      
+
       if (uploadData.success && uploadData.url) {
-        setAvatarUrl(uploadData.url)
+        // FIX: Agregar timestamp a la URL para forzar refresh del navegador
+        const urlWithVersion = uploadData.v
+          ? withVersion(uploadData.url, uploadData.v)
+          : `${uploadData.url}?t=${Date.now()}`
+
+        setAvatarUrl(urlWithVersion)
         onAvatarChange?.(uploadData.url)
-        // Recargar avatar para obtener nueva versión
-        await loadAvatar()
+
+        // Recargar avatar después de un delay pequeño para asegurar que el servidor tiene la nueva versión
+        setTimeout(async () => {
+          await loadAvatar()
+        }, 500)
       }
 
     } catch (err) {
@@ -191,7 +210,14 @@ export default function AvatarUniversal({
         </div>
       )}
 
-      {/* ✅ FIX: No mostrar errores de avatar - usar fallback silenciosamente */}
+      {/* Mostrar errores de validación o upload */}
+      {error && (
+        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+          <p className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200">
+            {error}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
