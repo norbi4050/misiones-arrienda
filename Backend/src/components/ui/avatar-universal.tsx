@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { withVersion } from '@/lib/url'
+import { ProfilePersistence } from '@/lib/profile-persistence'
 
 interface AvatarUniversalProps {
   userId?: string
@@ -135,8 +136,11 @@ export default function AvatarUniversal({
         setAvatarUrl(urlWithVersion)
         onAvatarChange?.(uploadData.url)
 
-        // OPTIMIZACIÓN: No recargar desde servidor, confiar en el cache-busting
-        // El navegador cargará la nueva imagen inmediatamente gracias al ?v= o ?t=
+        // FIX: Sincronizar perfil con servidor para actualizar cache de localStorage
+        // Esto asegura que el navbar y otros componentes vean el nuevo avatar inmediatamente
+        if (targetUserId) {
+          await ProfilePersistence.syncProfile(targetUserId)
+        }
       }
 
     } catch (err) {
