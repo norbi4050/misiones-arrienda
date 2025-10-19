@@ -632,34 +632,34 @@ model Message {
 
 // =============================================================================
 // SISTEMA DE ADJUNTOS V2.0 - NUEVO (Enero 2025)
+// FIX: Schema actualizado para coincidir con tabla real en Supabase
 // =============================================================================
 
 model MessageAttachment {
   id                    String   @id @default(cuid())
-  
-  // Relación con mensaje (REQUERIDO - No más adjuntos huérfanos)
-  messageId             String   @map("message_id")
-  message               Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  
+
+  // Relación con mensaje (OPCIONAL - permite adjuntos sin mensaje aún)
+  messageId             String?  @map("message_id")
+  message               Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
   // Información del archivo
   fileName              String   @map("file_name")
-  fileSize              Int      @map("file_size")      // Bytes
-  mimeType              String   @map("mime_type")
-  
+  fileSize              Int      @map("size_bytes")      // Bytes - mapea a size_bytes en DB
+  mimeType              String   @map("mime")            // mapea a mime en DB
+
   // Storage en Supabase
-  storagePath           String   @map("storage_path")   // Ruta en bucket: {conversationId}/{messageId}/{filename}
-  storageUrl            String   @map("storage_url")    // URL firmada (se regenera según necesidad)
-  
+  storagePath           String   @map("path")            // Ruta en bucket - mapea a path en DB
+
   // Metadata para imágenes (opcional)
   width                 Int?
   height                Int?
-  
+
   // Auditoría y seguridad
-  uploadedBy            String   @map("uploaded_by")    // userId que subió el archivo
+  uploadedBy            String   @map("user_id")         // userId que subió el archivo - mapea a user_id en DB
   createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  
-  @@map("message_attachments")
+
+  @@map("MessageAttachment")  // PascalCase en Supabase (no snake_case)
   @@index([messageId])
   @@index([uploadedBy])
   @@index([createdAt])
