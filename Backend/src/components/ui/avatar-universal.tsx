@@ -140,6 +140,11 @@ export default function AvatarUniversal({
         // Esto asegura que el navbar y otros componentes vean el nuevo avatar inmediatamente
         if (targetUserId) {
           await ProfilePersistence.syncProfile(targetUserId)
+
+          // FIX: Emitir evento personalizado para que otros componentes se actualicen
+          window.dispatchEvent(new CustomEvent('profile-updated', {
+            detail: { userId: targetUserId, timestamp: Date.now() }
+          }))
         }
       }
 

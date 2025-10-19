@@ -188,9 +188,25 @@ export function useCurrentUser(): UseCurrentUserReturn {
       }
     )
 
+    // FIX: Escuchar evento de perfil actualizado (ej: después de subir avatar)
+    const handleProfileUpdate = async () => {
+      if (!mounted) return
+      console.log('[AuthBridge] Profile update event received, refreshing...')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id)
+        if (mounted) {
+          setUser(profile)
+        }
+      }
+    }
+
+    window.addEventListener('profile-updated', handleProfileUpdate)
+
     return () => {
       mounted = false
       subscription.unsubscribe()
+      window.removeEventListener('profile-updated', handleProfileUpdate)
     }
   }, [supabase.auth, fetchUserProfile])
 
