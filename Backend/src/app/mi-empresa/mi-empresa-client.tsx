@@ -215,6 +215,8 @@ export default function MiEmpresaClient({
           tiktok: profile.tiktok?.trim() || null,
           description: profile.description?.trim() || null,
           license_number: profile.license_number?.trim() || null,
+          latitude: profile.latitude,
+          longitude: profile.longitude,
           show_team_public: profile.show_team_public,
           show_hours_public: profile.show_hours_public,
           show_map_public: profile.show_map_public,
@@ -230,8 +232,8 @@ export default function MiEmpresaClient({
       
       toast.success('Perfil actualizado correctamente')
 
-      // FASE 5: Geocodificación automática si el mapa está activado
-      if (profile.show_map_public && profile.address?.trim()) {
+      // FASE 5: Geocodificación automática si el mapa está activado Y no hay coordenadas manuales
+      if (profile.show_map_public && profile.address?.trim() && !profile.latitude && !profile.longitude) {
         try {
           console.log('[Geocode] Obteniendo coordenadas para:', profile.address)
 
