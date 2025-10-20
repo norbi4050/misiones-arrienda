@@ -32,10 +32,12 @@ export default function AgencyLocationMap({
 
   // Construir URL del mapa estático
   // Usando Google Maps Static API (requiere API key en .env)
-  const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${location.latitude},${location.longitude}&zoom=16&size=600x400&markers=color:red%7C${location.latitude},${location.longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}`;
+  // Zoom 17 = aproximadamente 3 manzanas a la redonda
+  const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${location.latitude},${location.longitude}&zoom=17&size=600x300&markers=color:red%7C${location.latitude},${location.longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}`;
 
   // Alternativa con Mapbox Static (si no hay Google Maps API key)
-  const mapboxUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-building+3b82f6(${location.longitude},${location.latitude})/${location.longitude},${location.latitude},15,0/600x400@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''}`;
+  // Zoom 17 = aproximadamente 3 manzanas a la redonda
+  const mapboxUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l-building+3b82f6(${location.longitude},${location.latitude})/${location.longitude},${location.latitude},17,0/600x300@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''}`;
 
   // Usar Google Maps si hay API key, sino Mapbox
   const finalMapUrl = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? mapUrl : mapboxUrl;
