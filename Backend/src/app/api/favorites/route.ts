@@ -91,9 +91,10 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ 
-      ok: true, 
+    return NextResponse.json({
+      ok: true,
       properties: properties,
+      propertyIds: properties.map((p: any) => p.id), // FIX: Add propertyIds array for FavoriteButton
       count: properties.length
     });
   } catch (error) {

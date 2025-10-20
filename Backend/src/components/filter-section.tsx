@@ -41,16 +41,29 @@ export function FilterSection({
   useEffect(() => {
     if (!enableUrlPersistence) return
 
+    // Get operation_type from URL and convert to internal listingType
+    const operationType = searchParams.get('operation_type')
+    let listingType = 'all'
+
+    // Map URL values to internal values
+    if (operationType === 'alquiler' || operationType === 'rent') {
+      listingType = 'rent'
+    } else if (operationType === 'venta' || operationType === 'sale') {
+      listingType = 'sale'
+    } else if (operationType === 'ambos' || operationType === 'both') {
+      listingType = 'both'
+    }
+
     const urlFilters = {
       type: searchParams.get('type') || 'all',
-      listingType: searchParams.get('listingType') || 'all',
+      listingType: listingType,
       price: searchParams.get('price') || 'all',
       location: searchParams.get('city') || 'all',
       bedrooms: searchParams.get('bedrooms') || 'all',
       bathrooms: searchParams.get('bathrooms') || 'all',
       featured: searchParams.get('featured') || 'all'
     }
-    
+
     setFilters(urlFilters)
   }, [searchParams, enableUrlPersistence])
 
@@ -65,14 +78,24 @@ export function FilterSection({
     if (!enableUrlPersistence) return
 
     const params = new URLSearchParams()
-    
+
     Object.entries(newFilters).forEach(([key, value]) => {
       if (value !== 'all') {
         // Map internal keys to URL-friendly keys
-        const urlKey = key === 'location' ? 'city' 
-                     : key === 'listingType' ? 'operation_type'
-                     : key
-        params.set(urlKey, value)
+        let urlKey = key
+        let urlValue = value
+
+        if (key === 'location') {
+          urlKey = 'city'
+        } else if (key === 'listingType') {
+          urlKey = 'operation_type'
+          // Convert internal values to Spanish API values for URL
+          if (value === 'rent') urlValue = 'alquiler'
+          else if (value === 'sale') urlValue = 'venta'
+          else if (value === 'both') urlValue = 'ambos'
+        }
+
+        params.set(urlKey, urlValue)
       }
     })
 
