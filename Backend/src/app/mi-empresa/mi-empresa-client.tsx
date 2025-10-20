@@ -222,26 +222,22 @@ export default function MiEmpresaClient({
         try {
           console.log('[Geocode] Obteniendo coordenadas para:', profile.address)
 
-          // Intentar extraer ciudad de la dirección (formato: "Calle, Ciudad")
-          const addressParts = profile.address.split(',').map(p => p.trim())
-          const city = addressParts.length > 1 ? addressParts[addressParts.length - 1] : 'Posadas'
+          // Llamar directamente a Nominatim (sin endpoint intermediario)
+          const encodedAddress = encodeURIComponent(profile.address)
+          const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=ar`
 
-          const geocodeResponse = await fetch('/api/geocode', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              address: profile.address,
-              city: city,
-              province: 'Misiones',
-              country: 'Argentina'
-            })
+          const geocodeResponse = await fetch(nominatimUrl, {
+            headers: {
+              'User-Agent': 'MisionesArrienda/1.0 (contact@misiones-arrienda.com)'
+            }
           })
 
           if (geocodeResponse.ok) {
-            const geocodeData = await geocodeResponse.json()
+            const results = await geocodeResponse.json()
 
-            if (geocodeData.success && geocodeData.coordinates) {
-              const { lat, lng } = geocodeData.coordinates
+            if (results && results.length > 0) {
+              const lat = parseFloat(results[0].lat)
+              const lng = parseFloat(results[0].lon)
 
               console.log('[Geocode] Coordenadas obtenidas:', lat, lng)
 
@@ -267,13 +263,11 @@ export default function MiEmpresaClient({
               } else {
                 console.warn('[Geocode] Error guardando coordenadas en BD')
               }
+            } else {
+              console.warn('[Geocode] No se encontraron resultados para:', profile.address)
             }
           } else {
-            const errorData = await geocodeResponse.json()
-            console.warn('[Geocode] No se pudo geocodificar:', errorData.error)
-
-            // No mostrar error al usuario, es opcional
-            // Solo log para debugging
+            console.warn('[Geocode] Error en llamada a Nominatim:', geocodeResponse.status)
           }
         } catch (geocodeError) {
           console.warn('[Geocode] Error en geocodificación automática:', geocodeError)
