@@ -54,8 +54,22 @@ export function FilterSection({
       listingType = 'both'
     }
 
+    // Get property_type from URL and convert to internal type
+    const propertyType = searchParams.get('property_type')
+    let type = 'all'
+
+    if (propertyType === 'HOUSE' || propertyType === 'house') {
+      type = 'house'
+    } else if (propertyType === 'APARTMENT' || propertyType === 'apartment') {
+      type = 'apartment'
+    } else if (propertyType === 'COMMERCIAL' || propertyType === 'commercial') {
+      type = 'commercial'
+    } else if (propertyType === 'LAND' || propertyType === 'land') {
+      type = 'land'
+    }
+
     const urlFilters = {
-      type: searchParams.get('type') || 'all',
+      type: type,
       listingType: listingType,
       price: searchParams.get('price') || 'all',
       location: searchParams.get('city') || 'all',
@@ -93,13 +107,22 @@ export function FilterSection({
           if (value === 'rent') urlValue = 'alquiler'
           else if (value === 'sale') urlValue = 'venta'
           else if (value === 'both') urlValue = 'ambos'
+        } else if (key === 'type') {
+          urlKey = 'property_type'
+          // Convert to uppercase for API
+          if (value === 'house') urlValue = 'HOUSE'
+          else if (value === 'apartment') urlValue = 'APARTMENT'
+          else if (value === 'commercial') urlValue = 'COMMERCIAL'
+          else if (value === 'land') urlValue = 'LAND'
         }
 
         params.set(urlKey, urlValue)
       }
     })
 
-    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname
+    // Construir URL completa con pathname
+    const pathname = window.location.pathname
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
     router.push(newUrl, { scroll: false })
   }
 
