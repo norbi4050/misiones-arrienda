@@ -45,17 +45,17 @@ export default function AgencyLocationMap({
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm ${className}`}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
             Ubicación
           </h3>
         </div>
       </div>
 
       {/* Mapa estático */}
-      <div className="relative w-full h-64 bg-gray-100 dark:bg-gray-700">
+      <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-700">
         <img
           src={finalMapUrl}
           alt={`Ubicación de ${agencyName}`}
@@ -84,9 +84,9 @@ export default function AgencyLocationMap({
         />
       </div>
 
-      {/* Dirección */}
-      {location.address && (
-        <div className="p-4">
+      {/* Dirección - solo mostrar si tiene más de 5 caracteres */}
+      {location.address && location.address.trim().length > 5 && (
+        <div className="p-3">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {location.address}
           </p>
