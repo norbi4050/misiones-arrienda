@@ -41,7 +41,7 @@ const BusinessHoursEditor = dynamic(
 
 const TeamEditor = dynamic(
   () => import('@/components/inmobiliarias/TeamEditor'),
-  { 
+  {
     loading: () => (
       <div className="animate-pulse bg-gray-100 rounded-lg p-6 h-48">
         <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
@@ -49,6 +49,19 @@ const TeamEditor = dynamic(
           <div className="h-3 bg-gray-200 rounded"></div>
           <div className="h-3 bg-gray-200 rounded w-5/6"></div>
         </div>
+      </div>
+    ),
+    ssr: false
+  }
+)
+
+const MapPickerClient = dynamic(
+  () => import('@/components/property/MapPickerClient'),
+  {
+    loading: () => (
+      <div className="animate-pulse bg-gray-100 rounded-lg p-4 h-64">
+        <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
+        <div className="h-full bg-gray-200 rounded"></div>
       </div>
     ),
     ssr: false
@@ -458,6 +471,33 @@ export default function MiEmpresaClient({
                 💡 Comienza a escribir para ver sugerencias de direcciones
               </p>
             </div>
+
+            {/* Mapa para ubicación exacta */}
+            {isEditing && profile.address && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  📍 Ubicación Exacta en el Mapa
+                </label>
+                <p className="text-xs text-gray-600 mb-3">
+                  Arrastra el pin o haz clic en el mapa para ajustar la ubicación exacta de tu empresa
+                </p>
+                <div className="h-64 rounded-lg overflow-hidden border border-gray-300">
+                  <MapPickerClient
+                    value={profile.latitude && profile.longitude ? { lat: profile.latitude, lng: profile.longitude } : null}
+                    onChange={(coords) => {
+                      console.log('[MapPicker] Coordenadas seleccionadas:', coords)
+                      setProfile({ ...profile, latitude: coords.lat, longitude: coords.lng })
+                    }}
+                  />
+                </div>
+                {profile.latitude && profile.longitude && (
+                  <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Coordenadas: {profile.latitude.toFixed(6)}, {profile.longitude.toFixed(6)}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           
           {/* Información Adicional */}
