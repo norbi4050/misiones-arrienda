@@ -114,9 +114,8 @@ export async function DELETE(
     // Soft delete (archivar) para no perder datos
     const { error: deleteError } = await supabase
       .from('community_posts')
-      .update({ 
+      .update({
         is_active: false,
-        status: 'ARCHIVED',
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
