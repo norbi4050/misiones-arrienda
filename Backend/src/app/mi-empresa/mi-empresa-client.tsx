@@ -168,7 +168,7 @@ export default function MiEmpresaClient({
     const newErrors: Record<string, string> = {}
     if (!profile.company_name?.trim()) newErrors.companyName = 'Campo requerido'
     if (!profile.phone?.trim()) newErrors.phone = 'Campo requerido'
-    if (!profile.address?.trim()) newErrors.address = 'Campo requerido'
+    // Dirección ya NO es requerida - se puede configurar solo con el mapa
     
     // Validar CUIT si se proporciona
     if (profile.cuit?.trim()) {
@@ -231,64 +231,6 @@ export default function MiEmpresaClient({
       }
       
       toast.success('Perfil actualizado correctamente')
-
-      // FASE 5: Geocodificación automática si el mapa está activado Y no hay coordenadas manuales
-      if (profile.show_map_public && profile.address?.trim() && !profile.latitude && !profile.longitude) {
-        try {
-          console.log('[Geocode] Obteniendo coordenadas para:', profile.address)
-
-          // Llamar directamente a Nominatim (sin endpoint intermediario)
-          const encodedAddress = encodeURIComponent(profile.address)
-          const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=ar`
-
-          const geocodeResponse = await fetch(nominatimUrl, {
-            headers: {
-              'User-Agent': 'MisionesArrienda/1.0 (contact@misiones-arrienda.com)'
-            }
-          })
-
-          if (geocodeResponse.ok) {
-            const results = await geocodeResponse.json()
-
-            if (results && results.length > 0) {
-              const lat = parseFloat(results[0].lat)
-              const lng = parseFloat(results[0].lon)
-
-              console.log('[Geocode] Coordenadas obtenidas:', lat, lng)
-
-              // Actualizar coordenadas en BD (enviar campos requeridos para pasar validación)
-              const updateCoordsResponse = await fetch('/api/inmobiliarias/profile', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  company_name: profile.company_name,
-                  phone: profile.phone,
-                  address: profile.address,
-                  latitude: lat,
-                  longitude: lng
-                })
-              })
-
-              if (updateCoordsResponse.ok) {
-                console.log('[Geocode] Coordenadas guardadas en BD')
-                toast.success('📍 Ubicación geocodificada correctamente')
-
-                // Actualizar estado local
-                setProfile({ ...profile, latitude: lat, longitude: lng })
-              } else {
-                console.warn('[Geocode] Error guardando coordenadas en BD')
-              }
-            } else {
-              console.warn('[Geocode] No se encontraron resultados para:', profile.address)
-            }
-          } else {
-            console.warn('[Geocode] Error en llamada a Nominatim:', geocodeResponse.status)
-          }
-        } catch (geocodeError) {
-          console.warn('[Geocode] Error en geocodificación automática:', geocodeError)
-          // No bloquear la UX, solo advertir en consola
-        }
-      }
 
       setIsEditing(false)
       router.refresh() // PERF: Revalidar datos del servidor
@@ -450,50 +392,27 @@ export default function MiEmpresaClient({
               </div>
             </div>
             
-            {/* Campo de dirección - solo visible cuando NO hay dirección o NO está editando */}
-            {(!isEditing || !profile.address) && (
+            {/* Dirección (opcional) - solo texto */}
+            {!isEditing && profile.address && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dirección *
+                  Dirección
                 </label>
-                <AddressAutocomplete
-                  value={profile.address}
-                  onChange={(value) => setProfile({ ...profile, address: value })}
-                  onSelect={(suggestion) => {
-                    console.log('[AddressAutocomplete] Dirección seleccionada:', suggestion.display_name)
-                    // La dirección ya se actualiza con onChange
-                    // Las coordenadas se geocodificarán al guardar
-                  }}
-                  placeholder="Ej: Av. Corrientes 1234, Posadas"
-                  disabled={!isEditing}
-                  error={!!errors.address}
-                />
-                {errors.address && (
-                  <p className="text-sm text-red-600 mt-1">{errors.address}</p>
-                )}
+                <div className="flex items-center gap-2 text-gray-700">
+                  <MapPin className="h-4 w-4 text-gray-400" />
+                  <span>{profile.address}</span>
+                </div>
               </div>
             )}
 
-            {/* Mapa para ubicación exacta - reemplaza el campo de dirección en modo edición */}
-            {isEditing && profile.address && (
+            {/* Mapa para ubicación - SIEMPRE visible en modo edición */}
+            {isEditing && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-900">
-                    📍 Ubicación de tu Empresa
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setProfile({ ...profile, address: '', latitude: null, longitude: null })}
-                    className="text-xs text-red-600 hover:text-red-700"
-                  >
-                    Cambiar dirección
-                  </button>
-                </div>
-                <p className="text-xs text-gray-700 mb-1 font-medium">
-                  {profile.address}
-                </p>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  📍 Ubicación de tu Empresa
+                </label>
                 <p className="text-xs text-gray-600 mb-3">
-                  Arrastra el pin o haz clic en el mapa para ajustar la ubicación exacta
+                  Arrastra el pin o haz clic en el mapa para marcar la ubicación exacta de tu empresa
                 </p>
                 <div className="h-64 rounded-lg overflow-hidden border border-gray-300">
                   <MapPickerClient

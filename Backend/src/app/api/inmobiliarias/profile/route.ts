@@ -8,7 +8,7 @@ import { validateCUIT } from "@/lib/validations/cuit"
 const InmobiliariaProfileSchema = z.object({
   company_name: z.string().min(1, "Nombre de empresa requerido"),
   phone: z.string().min(1, "Teléfono requerido"),
-  address: z.string().min(1, "Dirección requerida"),
+  address: z.string().optional().nullable(), // Dirección es opcional - se usa el mapa
   cuit: z.string().optional().nullable(),
   website: z.string().url().optional().nullable().or(z.literal('')),
   facebook: z.string().optional().nullable(),
