@@ -5,7 +5,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getShortLinkMapping, incrementShortLinkClicks } from '@/lib/share/shortlinks';
 
-export const runtime = 'edge';
+// NOTA: Cambiado de 'edge' a 'nodejs' porque Supabase no es compatible con Edge Runtime
+// export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Helper para trackear en edge runtime (sin usar track.ts que es client-side)
 async function trackShortLinkResolveEdge(payload: {

@@ -7,7 +7,9 @@ import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
 
-export const runtime = 'edge';
+// NOTA: Cambiado de 'edge' a 'nodejs' porque Supabase no es compatible con Edge Runtime
+// export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 /**
  * Genera imagen fallback genérica
