@@ -367,7 +367,8 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
       }
       initRef.current = null
     }
-  }, [conversationId, userId, loadThread, scrollToBottom, markAsRead, onThreadUpdate])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, userId])
 
   useEffect(() => {
     if (conversationId && userId) {
@@ -375,13 +376,15 @@ function ChatInterface({ conversationId, onThreadUpdate }: ChatInterfaceProps) {
       loadThread()
       markAsRead()
     }
-  }, [conversationId, userId, loadThread, markAsRead])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, userId])
 
   useEffect(() => {
     if (!loading && !loadingMore) {
       scrollToBottom()
     }
-  }, [messages.length, loading, loadingMore, scrollToBottom])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, loading, loadingMore])
 
   // PROMPT 2 & 6: Helper para agrupar mensajes consecutivos del mismo autor
   const groupMessages = useCallback((messages: Message[]) => {
