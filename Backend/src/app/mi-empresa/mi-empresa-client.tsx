@@ -448,35 +448,50 @@ export default function MiEmpresaClient({
               </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Dirección *
-              </label>
-              <AddressAutocomplete
-                value={profile.address}
-                onChange={(value) => setProfile({ ...profile, address: value })}
-                onSelect={(suggestion) => {
-                  console.log('[AddressAutocomplete] Dirección seleccionada:', suggestion.display_name)
-                  // La dirección ya se actualiza con onChange
-                  // Las coordenadas se geocodificarán al guardar
-                }}
-                placeholder="Ej: Av. Corrientes 1234, Posadas"
-                disabled={!isEditing}
-                error={!!errors.address}
-              />
-              {errors.address && (
-                <p className="text-sm text-red-600 mt-1">{errors.address}</p>
-              )}
-            </div>
+            {/* Campo de dirección - solo visible cuando NO hay dirección o NO está editando */}
+            {(!isEditing || !profile.address) && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dirección *
+                </label>
+                <AddressAutocomplete
+                  value={profile.address}
+                  onChange={(value) => setProfile({ ...profile, address: value })}
+                  onSelect={(suggestion) => {
+                    console.log('[AddressAutocomplete] Dirección seleccionada:', suggestion.display_name)
+                    // La dirección ya se actualiza con onChange
+                    // Las coordenadas se geocodificarán al guardar
+                  }}
+                  placeholder="Ej: Av. Corrientes 1234, Posadas"
+                  disabled={!isEditing}
+                  error={!!errors.address}
+                />
+                {errors.address && (
+                  <p className="text-sm text-red-600 mt-1">{errors.address}</p>
+                )}
+              </div>
+            )}
 
-            {/* Mapa para ubicación exacta */}
+            {/* Mapa para ubicación exacta - reemplaza el campo de dirección en modo edición */}
             {isEditing && profile.address && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  📍 Ubicación Exacta en el Mapa
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-900">
+                    📍 Ubicación de tu Empresa
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setProfile({ ...profile, address: '', latitude: null, longitude: null })}
+                    className="text-xs text-red-600 hover:text-red-700"
+                  >
+                    Cambiar dirección
+                  </button>
+                </div>
+                <p className="text-xs text-gray-700 mb-1 font-medium">
+                  {profile.address}
+                </p>
                 <p className="text-xs text-gray-600 mb-3">
-                  Arrastra el pin o haz clic en el mapa para ajustar la ubicación exacta de tu empresa
+                  Arrastra el pin o haz clic en el mapa para ajustar la ubicación exacta
                 </p>
                 <div className="h-64 rounded-lg overflow-hidden border border-gray-300">
                   <MapPickerClient
