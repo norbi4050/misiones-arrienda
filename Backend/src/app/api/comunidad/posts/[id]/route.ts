@@ -298,10 +298,24 @@ export async function PATCH(
 
   } catch (error) {
     console.error('Error in PATCH /api/comunidad/posts/[id]:', error)
-    
+
     if (error instanceof Error && error.name === 'ZodError') {
+      // Parsear el error de Zod para obtener detalles específicos
+      const zodError = error as any
+      const issues = zodError.issues || []
+      const detailedErrors = issues.map((issue: any) => ({
+        field: issue.path.join('.'),
+        message: issue.message
+      }))
+
+      console.error('Zod validation errors:', detailedErrors)
+
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.message },
+        {
+          error: 'Datos inválidos',
+          details: error.message,
+          validationErrors: detailedErrors
+        },
         { status: 400 }
       )
     }
