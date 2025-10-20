@@ -549,9 +549,18 @@ export async function POST(request: NextRequest) {
     console.log(`[THREADS POST] Usuario: ${user.id}, toUserId: ${toUserId}, propertyId: ${propertyId}`)
 
     if (!toUserId) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'VALIDATION_ERROR',
         issues: [{ path: 'toUserId', message: 'toUserId is required' }]
+      }, { status: 400 })
+    }
+
+    // Validar que el usuario no intente enviarse mensajes a sí mismo
+    if (toUserId === user.id) {
+      console.log(`[THREADS POST] ❌ Usuario intenta enviarse mensaje a sí mismo: ${user.id}`)
+      return NextResponse.json({
+        error: 'SELF_MESSAGE_NOT_ALLOWED',
+        message: 'No puedes enviarte mensajes a ti mismo'
       }, { status: 400 })
     }
 

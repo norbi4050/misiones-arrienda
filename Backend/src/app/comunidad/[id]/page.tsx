@@ -3,10 +3,11 @@ import { notFound } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MessageCircle, MapPin, DollarSign, Calendar, Users, ArrowLeft } from 'lucide-react'
+import { MapPin, DollarSign, Calendar, Users, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import AvatarUniversal from '@/components/ui/avatar-universal'
 import CommunityPostActions from './community-post-actions'
+import MessageButtonClient from './message-button-client'
 import { CommunityPostGallery } from '@/components/comunidad/CommunityPostGallery'
 import { createClient } from '@/lib/supabase/server'
 import type { CommunityPost } from '@/types/community'
@@ -272,18 +273,10 @@ export default async function CommunityPostDetailPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                {!isOwnPost ? (
-                  <Link href={`/messages?userId=${post.user_id}`}>
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Enviar mensaje
-                    </Button>
-                  </Link>
-                ) : (
-                  <div className="text-sm text-gray-600 italic text-center py-2">
-                    Este es tu anuncio
-                  </div>
-                )}
+                <MessageButtonClient
+                  userId={post.user_id}
+                  isOwnPost={isOwnPost}
+                />
               </CardContent>
             </Card>
 
