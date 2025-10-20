@@ -467,9 +467,6 @@ export default function MiEmpresaClient({
               {errors.address && (
                 <p className="text-sm text-red-600 mt-1">{errors.address}</p>
               )}
-              <p className="text-xs text-gray-500 mt-1">
-                💡 Comienza a escribir para ver sugerencias de direcciones
-              </p>
             </div>
 
             {/* Mapa para ubicación exacta */}
