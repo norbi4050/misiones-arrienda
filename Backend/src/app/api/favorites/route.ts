@@ -5,9 +5,9 @@ export async function GET() {
   try {
     const supabase = createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "No autorizado - debe iniciar sesión" }, { status: 401 });
     }
 
     // Obtener favoritos con datos completos de propiedades
@@ -99,7 +99,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Unexpected error in GET /api/favorites:', error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
 
@@ -110,20 +110,20 @@ export async function POST(req: Request) {
     
     // Validar que propertyId esté presente
     if (!propertyId) {
-      return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
+      return NextResponse.json({ error: "Se requiere el ID de la propiedad" }, { status: 400 });
     }
 
     // Validar formato UUID
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(propertyId)) {
-      return NextResponse.json({ error: "propertyId must be a valid UUID" }, { status: 400 });
+      return NextResponse.json({ error: "El ID de la propiedad debe ser un UUID válido" }, { status: 400 });
     }
 
     const supabase = createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "No autorizado - debe iniciar sesión" }, { status: 401 });
     }
 
     // Verificar que la propiedad existe y está activa
@@ -134,17 +134,17 @@ export async function POST(req: Request) {
       .single();
 
     if (propertyError || !property) {
-      return NextResponse.json({ error: "Property not found" }, { status: 404 });
+      return NextResponse.json({ error: "Propiedad no encontrada" }, { status: 404 });
     }
 
     // Verificar que la propiedad esté activa/disponible
     if (!['PUBLISHED', 'AVAILABLE'].includes(property.status)) {
-      return NextResponse.json({ error: "Property is not available for favorites" }, { status: 400 });
+      return NextResponse.json({ error: "Esta propiedad no está disponible para agregar a favoritos" }, { status: 400 });
     }
 
     // Verificar que el usuario no sea el propietario
     if (property.user_id === user.id) {
-      return NextResponse.json({ error: "Cannot favorite your own property" }, { status: 400 });
+      return NextResponse.json({ error: "No podés agregar tus propias publicaciones a favoritos" }, { status: 400 });
     }
 
     // Intentar insertar el favorito
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
     // Manejar error de clave duplicada (ya está en favoritos)
     if (error && /duplicate key value/.test(error.message)) {
       // Ya existe, esto está bien - devolver éxito (idempotente)
-      return NextResponse.json({ ok: true, message: "Property already in favorites" });
+      return NextResponse.json({ ok: true, message: "La propiedad ya está en favoritos" });
     }
 
     if (error) {
@@ -165,15 +165,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, message: "Property added to favorites" });
+    return NextResponse.json({ ok: true, message: "Propiedad agregada a favoritos" });
   } catch (error) {
     console.error('Unexpected error in POST /api/favorites:', error);
-    
+
     // Manejar error de JSON malformado
     if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+      return NextResponse.json({ error: "JSON inválido en el cuerpo de la solicitud" }, { status: 400 });
     }
-    
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
