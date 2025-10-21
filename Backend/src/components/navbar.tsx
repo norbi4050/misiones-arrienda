@@ -120,7 +120,7 @@ export function Navbar() {
                     </Link>
 
                     {/* Notification Dropdown */}
-                    <NotificationDropdown />
+                    {isAuthenticated && <NotificationDropdown />}
 
                     {/* Profile Dropdown */}
                     <ProfileDropdown user={user} onSignOut={signOut} />
