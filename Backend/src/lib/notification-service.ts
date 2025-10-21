@@ -378,7 +378,7 @@ class NotificationService {
     const { data, error } = await supabase
       .from('notification_preferences')
       .select('*')
-      .eq('userId', userId)
+      .eq('user_id', userId)
       .single()
 
     if (error || !data) {
@@ -401,7 +401,7 @@ class NotificationService {
     const { error } = await supabase
       .from('notification_preferences')
       .update(preferences)
-      .eq('userId', userId)
+      .eq('user_id', userId)
 
     if (error) {
       console.error('[NotificationService] Error updating preferences:', error)
@@ -443,8 +443,8 @@ class NotificationService {
     let query = supabase
       .from('notifications')
       .select('*')
-      .eq('userId', userId)
-      .order('createdAt', { ascending: false })
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
 
     if (options?.unreadOnly) {
       query = query.eq('read', false)
@@ -477,7 +477,7 @@ class NotificationService {
     const { count, error } = await supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
-      .eq('userId', userId)
+      .eq('user_id', userId)
       .eq('read', false)
 
     if (error) {

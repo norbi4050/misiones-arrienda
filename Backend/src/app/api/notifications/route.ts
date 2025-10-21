@@ -47,12 +47,41 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Parsear JSON de metadata y channels
-    const notifications = result.data?.map(notification => ({
-      ...notification,
-      metadata: notification.metadata ? JSON.parse(notification.metadata) : null,
-      channels: notification.channels ? JSON.parse(notification.channels) : [],
-    })) || []
+    // Parsear JSON de metadata y channels de forma segura
+    const notifications = result.data?.map(notification => {
+      let metadata = null
+      let channels = []
+
+      // Parse metadata de forma segura
+      if (notification.metadata) {
+        try {
+          metadata = typeof notification.metadata === 'string'
+            ? JSON.parse(notification.metadata)
+            : notification.metadata
+        } catch (err) {
+          console.error('[Notifications API] Error parsing metadata:', err)
+          metadata = null
+        }
+      }
+
+      // Parse channels de forma segura
+      if (notification.channels) {
+        try {
+          channels = typeof notification.channels === 'string'
+            ? JSON.parse(notification.channels)
+            : notification.channels
+        } catch (err) {
+          console.error('[Notifications API] Error parsing channels:', err)
+          channels = []
+        }
+      }
+
+      return {
+        ...notification,
+        metadata,
+        channels,
+      }
+    }) || []
 
     return NextResponse.json({
       success: true,
