@@ -15,7 +15,7 @@ export async function GET(
 ) {
   try {
     const { id } = params
-    
+
     if (!id) {
       return NextResponse.json(
         { error: 'ID del post es requerido' },
@@ -25,8 +25,11 @@ export async function GET(
 
     const supabase = createClient()
 
-    // Obtener post desde la view con datos del autor
-    const { data, error } = await supabase
+    // Verificar si hay usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Primero intentar obtener post activo desde la view pública
+    let { data, error } = await supabase
       .from('community_posts_public')
       .select('*')
       .eq('id', id)
@@ -34,16 +37,34 @@ export async function GET(
       .or('expires_at.is.null,expires_at.gt.now()')
       .single()
 
+    // Si no se encontró y hay usuario autenticado, intentar obtener sin filtro de is_active
+    // para permitir que el usuario vea sus propios posts inactivos/archivados
+    if (error?.code === 'PGRST116' && user) {
+      const { data: ownPostData, error: ownPostError } = await supabase
+        .from('community_posts_public')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single()
+
+      if (ownPostData) {
+        data = ownPostData
+        error = null
+      } else {
+        error = ownPostError
+      }
+    }
+
     if (error) {
       console.error('Error fetching community post:', error)
-      
+
       if (error.code === 'PGRST116') {
         return NextResponse.json(
           { error: 'Post no encontrado' },
           { status: 404 }
         )
       }
-      
+
       return NextResponse.json(
         { error: 'Error al obtener el post' },
         { status: 500 }
@@ -63,7 +84,7 @@ export async function GET(
 
   } catch (error) {
     console.error('Error in GET /api/comunidad/posts/[id]:', error)
-    
+
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }
