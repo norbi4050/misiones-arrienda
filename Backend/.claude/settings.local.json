@@ -1,37 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git checkout:*)",
-      "Bash(npm run build:*)",
-      "Bash(Start-Sleep -Seconds 10)",
-      "Bash(curl http://localhost:3000/api/debug-credentials -Method POST -ContentType \"application/json\" -Body '{}')",
-      "Bash(Invoke-WebRequest -Uri \"http://localhost:3000/api/debug-credentials\" -Method POST -ContentType \"application/json\" -Body '{}' -UseBasicParsing)",
-      "Bash(Select-Object -First 5)",
-      "Bash(npm test:*)",
-      "Bash(git add:*)",
-      "Bash(node scripts/audit-sync-usuarios.js:*)",
-      "Bash(node scripts/impact-analysis.js:*)",
-      "Bash(curl:*)",
-      "Bash(node scripts/verify-table-name.js:*)",
-      "Bash(node check-auth-users.js:*)",
-      "Bash(node test-middleware-cookies.js)",
-      "Bash(npm run dev:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(git log:*)",
-      "Bash(git branch:*)",
-      "Bash(cat:*)",
-      "Bash(node test-login-flow.js:*)",
-      "Bash(node check-user-role.js:*)",
-      "Bash(netstat:*)",
-      "Bash(findstr:*)",
-      "Bash(Select-Object -First 100)",
-      "Bash(node -e:*)",
-      "Bash(node check-avatar-data.js:*)",
-      "Bash(node:*)",
-      "Bash(npx prisma generate:*)",
-      "Bash(npx prisma migrate dev:*)",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-String \"api/payments/feature\" -Context 0,3)"
     ],
     "deny": [],
     "ask": []

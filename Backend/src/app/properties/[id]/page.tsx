@@ -23,7 +23,6 @@ import ContactButton from '@/components/ui/ContactButton';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { PropertyShareBar } from '@/components/share';
 import OwnerActions from '@/components/ui/OwnerActions';
-import { FeaturePaymentButton } from '@/components/ui/feature-payment-button';
 import { PropertyViewTracker } from '@/components/property/PropertyViewTracker';
 import { 
   MapPin, 
@@ -192,6 +191,20 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
   const supabase = createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   const isOwner = user?.id === property.user_id;
+
+  // Obtener información del plan del usuario si es el dueño
+  let userPlanInfo = null;
+  if (isOwner && user) {
+    const { data: planLimits } = await supabase
+      .rpc('get_user_plan_limits', { user_uuid: user.id });
+
+    if (planLimits && planLimits.length > 0) {
+      userPlanInfo = {
+        planTier: planLimits[0].plan_tier,
+        allowFeatured: planLimits[0].allow_featured
+      };
+    }
+  }
 
   // Obtener imágenes finales usando bucket-first
   const realImages = await getImagesFinal(property);
@@ -650,18 +663,9 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
             {isOwner && (
               <OwnerActions
                 propertyId={property.id}
-                highlightPrice="999 ARS"
-                className="mb-6"
-              />
-            )}
-
-            {/* Feature Payment Button (solo para dueños) */}
-            {isOwner && (
-              <FeaturePaymentButton
-                propertyId={property.id}
-                isOwner={isOwner}
                 featured={property.featured || false}
-                featuredExpires={property.featured_expires}
+                userPlanTier={userPlanInfo?.planTier || 'free'}
+                allowFeatured={userPlanInfo?.allowFeatured || false}
                 className="mb-6"
               />
             )}

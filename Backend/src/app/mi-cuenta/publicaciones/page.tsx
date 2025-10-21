@@ -49,7 +49,7 @@ export default async function Page() {
   const { data, error } = await supabase
     .from('properties')
     .select(
-      'id,title,price,status,is_active,expires_at,created_at,updated_at,city,province,images,cover_path'
+      'id,title,price,status,is_active,expires_at,created_at,updated_at,city,province,images,cover_path,featured'
     )
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
