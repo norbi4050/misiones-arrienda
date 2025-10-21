@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
 import { PrismaClient } from '@prisma/client'
+import { sendNotification } from '@/lib/notification-service'
 
 const prisma = new PrismaClient()
 
@@ -347,6 +348,68 @@ export async function POST(
         attachmentsCount: attachments.length,
         schema: isPrismaSchema ? 'PRISMA' : 'SUPABASE'
       })
+    }
+
+    // Enviar notificación al destinatario
+    try {
+      // Determinar el destinatario (el otro participante del thread)
+      let recipientId: string
+      if (isPrismaSchema) {
+        recipientId = thread.aId === senderId ? thread.bId : thread.aId
+      } else {
+        // Para Supabase schema, verificar qué campo corresponde
+        const aId = thread.a_id || thread.participant_1
+        const bId = thread.b_id || thread.participant_2
+        recipientId = aId === senderId ? bId : aId
+      }
+
+      // Verificar si hay mensajes no leídos previos del remitente en esta conversación
+      // Si ya hay mensajes no leídos, solo enviar notificación in-app (no email)
+      const messageTable = isPrismaSchema ? 'Message' : 'messages'
+      const { count: unreadCount } = await supabase
+        .from(messageTable)
+        .select('*', { count: 'exact', head: true })
+        .eq(isPrismaSchema ? 'conversationId' : 'conversation_id', conversationId)
+        .eq(isPrismaSchema ? 'senderId' : 'sender_id', senderId)
+        .eq(isPrismaSchema ? 'isRead' : 'is_read', false)
+
+      // Determinar canales: solo email si es el primer mensaje no leído
+      const shouldSendEmail = (unreadCount || 0) === 0
+      const channels = shouldSendEmail ? ['in_app', 'email'] : ['in_app']
+
+      // Obtener información del remitente para el mensaje de notificación
+      const { data: senderData } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', user.id)
+        .single()
+
+      const senderName = senderData?.name || 'Un usuario'
+
+      // Enviar notificación (async, no bloqueante)
+      sendNotification({
+        userId: recipientId,
+        type: 'NEW_MESSAGE',
+        title: `Nuevo mensaje de ${senderName}`,
+        message: content.length > 100 ? content.substring(0, 100) + '...' : content,
+        channels: channels,
+        metadata: {
+          ctaUrl: `https://www.misionesarrienda.com.ar/messages?conversation=${conversationId}`,
+          ctaText: 'Ver mensaje',
+          senderName: senderName,
+          conversationId: conversationId
+        },
+        relatedId: newMessage.id,
+        relatedType: 'message'
+      }).catch(err => {
+        console.error('[Messages] ⚠️ Error sending notification:', err)
+        // No fallar el envío del mensaje si falla la notificación
+      })
+
+      console.log(`[Messages] 📧 Notificación enviada a ${recipientId} (canales: ${channels.join(', ')})`)
+    } catch (notifError) {
+      console.error('[Messages] ⚠️ Error preparando notificación:', notifError)
+      // No fallar el envío del mensaje si falla la notificación
     }
 
     return NextResponse.json({
