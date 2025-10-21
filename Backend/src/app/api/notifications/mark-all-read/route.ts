@@ -28,9 +28,9 @@ export async function PUT(request: NextRequest) {
       .from('notifications')
       .update({
         read: true,
-        readAt: new Date().toISOString(),
+        read_at: new Date().toISOString(),
       })
-      .eq('userId', user.id)
+      .eq('user_id', user.id)
       .eq('read', false)
 
     if (updateError) {

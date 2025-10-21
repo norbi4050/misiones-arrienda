@@ -32,7 +32,7 @@ export async function PUT(
     // Verificar que la notificación pertenece al usuario
     const { data: notification } = await supabase
       .from('notifications')
-      .select('userId')
+      .select('user_id')
       .eq('id', notificationId)
       .single()
 
@@ -43,7 +43,7 @@ export async function PUT(
       )
     }
 
-    if (notification.userId !== user.id) {
+    if (notification.user_id !== user.id) {
       return NextResponse.json(
         { error: 'No autorizado para modificar esta notificación' },
         { status: 403 }
