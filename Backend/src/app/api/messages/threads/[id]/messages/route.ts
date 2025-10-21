@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { getMessagesAttachments } from '@/lib/messages/attachments-helper'
 import { PrismaClient } from '@prisma/client'
-import { sendNotification } from '@/lib/notification-service'
+import { sendNotification, type NotificationChannel } from '@/lib/notification-service'
 
 const prisma = new PrismaClient()
 
@@ -375,7 +375,7 @@ export async function POST(
 
       // Determinar canales: solo email si es el primer mensaje no leído
       const shouldSendEmail = (unreadCount || 0) === 0
-      const channels = shouldSendEmail ? ['in_app', 'email'] : ['in_app']
+      const channels: NotificationChannel[] = shouldSendEmail ? ['in_app', 'email'] : ['in_app']
 
       // Obtener información del remitente para el mensaje de notificación
       const { data: senderData } = await supabase
