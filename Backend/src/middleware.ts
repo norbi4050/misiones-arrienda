@@ -134,9 +134,14 @@ export async function middleware(req: NextRequest) {
           console.log(`[MIDDLEWARE] Plan expired for user ${user.id}, auto-expiring...`);
 
           // Llamar a la función PostgreSQL para expirar el plan
-          await supabase.rpc('expire_user_plan', { user_uuid: user.id }).catch(err => {
+          try {
+            const { error } = await supabase.rpc('expire_user_plan', { user_uuid: user.id });
+            if (error) {
+              console.error('[MIDDLEWARE] Failed to expire plan:', error);
+            }
+          } catch (err) {
             console.error('[MIDDLEWARE] Failed to expire plan:', err);
-          });
+          }
         }
       }
     } catch (error) {
