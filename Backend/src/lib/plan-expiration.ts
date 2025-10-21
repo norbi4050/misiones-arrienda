@@ -28,7 +28,7 @@ export async function checkAndExpirePlan(userId: string): Promise<PlanExpiration
     // Llamar a la función PostgreSQL que maneja toda la lógica
     const { data, error } = await supabase
       .rpc('expire_user_plan', { user_uuid: userId })
-      .single()
+      .single<PlanExpirationResult>()
 
     if (error) {
       console.error('[Plan Expiration] Error calling expire_user_plan:', error)
