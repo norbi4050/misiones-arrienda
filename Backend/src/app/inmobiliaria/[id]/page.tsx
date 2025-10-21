@@ -328,6 +328,7 @@ export default async function InmobiliariaPublicPage({
     show_hours_public: inmobiliaria.show_hours_public || false,
     show_map_public: inmobiliaria.show_map_public || false,
     show_stats_public: inmobiliaria.show_stats_public || false,
+    is_founder: inmobiliaria.is_founder || false,
     created_at: inmobiliaria.created_at,
   };
 
