@@ -27,7 +27,7 @@ async function detectSchema(supabase: any, userId: string): Promise<{
     const { data: userProfile, error } = await supabase
       .from('UserProfile')
       .select('id')
-      .eq('userId', userId)
+      .eq('user_id', userId)
       .single()
     
     hasUserProfile = !error && !!userProfile
@@ -585,7 +585,7 @@ export async function POST(request: NextRequest) {
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('id')
-        .eq('userId', user.id)
+        .eq('user_id', user.id)
         .maybeSingle()
 
       hasUserProfile = !!userProfile
@@ -612,7 +612,7 @@ export async function POST(request: NextRequest) {
       const { data: currentProfile, error: currentProfileError } = await supabase
         .from('user_profiles')
         .select('id')
-        .eq('userId', user.id)
+        .eq('user_id', user.id)
         .maybeSingle()
 
       if (currentProfileError || !currentProfile) {
@@ -652,7 +652,7 @@ export async function POST(request: NextRequest) {
       const { data: targetProfile, error: targetProfileError } = await supabase
         .from('user_profiles')
         .select('id')
-        .eq('userId', toUserId)
+        .eq('user_id', toUserId)
         .maybeSingle()
 
       if (targetProfileError || !targetProfile) {
@@ -822,7 +822,7 @@ export async function POST(request: NextRequest) {
           const { data: existingProfile } = await supabase
             .from('user_profiles')
             .select('id')
-            .eq('userId', user.id)
+            .eq('user_id', user.id)
             .single()
 
           currentUserProfileId = existingProfile!.id
@@ -832,7 +832,7 @@ export async function POST(request: NextRequest) {
         const { data: targetProfile } = await supabase
           .from('user_profiles')
           .select('id')
-          .eq('userId', toUserId)
+          .eq('user_id', toUserId)
           .maybeSingle()
 
         if (!targetProfile) {

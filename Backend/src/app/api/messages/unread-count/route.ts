@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
           const { data: userProfile, error: profileError } = await supabase
             .from('UserProfile')
             .select('id')
-            .eq('userId', user.id)
+            .eq('user_id', user.id)
             .single()
 
           if (!profileError && userProfile) {
@@ -139,7 +139,7 @@ async function detectSchema(supabase: any, userId: string): Promise<{
     const { data: userProfile, error } = await supabase
       .from('UserProfile')
       .select('id')
-      .eq('userId', userId)
+      .eq('user_id', userId)
       .single()
 
     hasUserProfile = !error && !!userProfile
