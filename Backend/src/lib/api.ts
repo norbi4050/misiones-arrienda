@@ -32,7 +32,9 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
     // Llamar al API real
     // En servidor necesitamos URL absoluta, en cliente funciona la relativa
     const baseUrl = typeof window === 'undefined'
-      ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      ? (process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : 'http://localhost:3000')
       : '';
     const url = `${baseUrl}/api/properties?${params.toString()}`;
     const response = await fetch(url, {
@@ -78,7 +80,9 @@ export async function getPropertyById(id: string): Promise<Property | null> {
   try {
     // En servidor necesitamos URL absoluta
     const baseUrl = typeof window === 'undefined'
-      ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      ? (process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : 'http://localhost:3000')
       : '';
     const response = await fetch(`${baseUrl}/api/properties/${id}`, {
       method: 'GET',
