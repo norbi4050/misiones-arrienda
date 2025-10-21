@@ -353,14 +353,31 @@ export async function POST(
     // Enviar notificación al destinatario
     try {
       // Determinar el destinatario (el otro participante del thread)
-      let recipientId: string
+      let recipientProfileId: string
       if (isPrismaSchema) {
-        recipientId = thread.aId === senderId ? thread.bId : thread.aId
+        recipientProfileId = thread.aId === senderId ? thread.bId : thread.aId
       } else {
         // Para Supabase schema, verificar qué campo corresponde
         const aId = thread.a_id || thread.participant_1
         const bId = thread.b_id || thread.participant_2
-        recipientId = aId === senderId ? bId : aId
+        recipientProfileId = aId === senderId ? bId : aId
+      }
+
+      // Obtener el userId real desde UserProfile (necesario para notificaciones)
+      let recipientUserId: string
+      if (recipientProfileId.startsWith('up_')) {
+        // Es un UserProfile ID, necesitamos obtener el userId
+        const recipientProfile = await prisma.userProfile.findUnique({
+          where: { id: recipientProfileId }
+        })
+        if (!recipientProfile) {
+          console.error('[Messages] ⚠️ Recipient UserProfile not found:', recipientProfileId)
+          throw new Error('Recipient profile not found')
+        }
+        recipientUserId = recipientProfile.userId
+      } else {
+        // Ya es un userId de Supabase Auth
+        recipientUserId = recipientProfileId
       }
 
       // Verificar si hay mensajes no leídos previos del remitente en esta conversación
@@ -388,7 +405,7 @@ export async function POST(
 
       // Enviar notificación (async, no bloqueante)
       sendNotification({
-        userId: recipientId,
+        userId: recipientUserId,
         type: 'NEW_MESSAGE',
         title: `Nuevo mensaje de ${senderName}`,
         message: content.length > 100 ? content.substring(0, 100) + '...' : content,
@@ -406,7 +423,7 @@ export async function POST(
         // No fallar el envío del mensaje si falla la notificación
       })
 
-      console.log(`[Messages] 📧 Notificación enviada a ${recipientId} (canales: ${channels.join(', ')})`)
+      console.log(`[Messages] 📧 Notificación enviada a ${recipientUserId} (canales: ${channels.join(', ')})`)
     } catch (notifError) {
       console.error('[Messages] ⚠️ Error preparando notificación:', notifError)
       // No fallar el envío del mensaje si falla la notificación
