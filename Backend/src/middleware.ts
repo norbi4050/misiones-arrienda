@@ -109,6 +109,43 @@ export async function middleware(req: NextRequest) {
   }
 
   // ========================================
+  // PLAN EXPIRATION CHECK
+  // ========================================
+  // Verificar y expirar plan si corresponde (solo para inmobiliarias)
+  if (user) {
+    try {
+      // Verificar si es inmobiliaria
+      const { data: userData } = await supabase
+        .from('users')
+        .select('user_type, plan_tier, plan_end_date')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const isAgency = userData?.user_type?.toUpperCase() === 'INMOBILIARIA' ||
+                      userData?.user_type?.toUpperCase() === 'AGENCY';
+
+      // Solo verificar expiración para inmobiliarias con plan
+      if (isAgency && userData?.plan_tier && userData?.plan_end_date) {
+        const planEndDate = new Date(userData.plan_end_date);
+        const now = new Date();
+
+        // Si el plan expiró, llamar a la función de expiración
+        if (planEndDate < now) {
+          console.log(`[MIDDLEWARE] Plan expired for user ${user.id}, auto-expiring...`);
+
+          // Llamar a la función PostgreSQL para expirar el plan
+          await supabase.rpc('expire_user_plan', { user_uuid: user.id }).catch(err => {
+            console.error('[MIDDLEWARE] Failed to expire plan:', err);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('[MIDDLEWARE] Error checking plan expiration:', error);
+      // No bloquear, solo log el error
+    }
+  }
+
+  // ========================================
   // PROTECTED ROUTES CHECK
   // ========================================
   const protectedRoutes = ['/profile', '/publicar', '/favorites', '/messages', '/mi-cuenta'];
