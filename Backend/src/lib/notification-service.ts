@@ -353,8 +353,11 @@ class NotificationService {
                 Recibiste este email porque estás registrado en Misiones Arrienda.
               </p>
               <p style="color: #999999; font-size: 12px; margin: 0;">
-                <a href="https://misionesarrienda.com.ar/settings/notifications" style="color: #667eea; text-decoration: none;">
+                <a href="https://www.misionesarrienda.com.ar/notificaciones/preferencias" style="color: #667eea; text-decoration: none;">
                   Gestionar preferencias de notificaciones
+                </a> |
+                <a href="https://www.misionesarrienda.com.ar/notificaciones/preferencias" style="color: #999999; text-decoration: none;">
+                  Dejar de recibir estos emails
                 </a>
               </p>
             </td>
