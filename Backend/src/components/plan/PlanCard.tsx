@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 interface PlanInfo {
-  plan_tier: 'free' | 'pro' | 'business';
+  plan_tier: 'free' | 'pro' | 'professional' | 'business' | 'premium';
   max_active_properties: number | null;
   current_active_properties: number;
   allow_attachments: boolean;
@@ -13,6 +13,10 @@ interface PlanInfo {
   is_expired: boolean;
   description: string;
   price_monthly: number;
+  is_founder?: boolean;
+  founder_discount?: number | null;
+  plan_start_date?: string | null;
+  plan_end_date?: string | null;
 }
 
 export function PlanCard() {
@@ -47,7 +51,9 @@ export function PlanCard() {
   const tierConfig = {
     free: { color: 'bg-gray-100 text-gray-800 border-gray-300', label: 'GRATIS' },
     pro: { color: 'bg-blue-100 text-blue-800 border-blue-300', label: 'PRO' },
-    business: { color: 'bg-purple-100 text-purple-800 border-purple-300', label: 'BUSINESS' }
+    professional: { color: 'bg-blue-100 text-blue-800 border-blue-300', label: 'PROFESIONAL' },
+    business: { color: 'bg-purple-100 text-purple-800 border-purple-300', label: 'BUSINESS' },
+    premium: { color: 'bg-purple-100 text-purple-800 border-purple-300', label: 'PREMIUM' }
   };
 
   const config = tierConfig[planInfo.plan_tier];
@@ -61,11 +67,34 @@ export function PlanCard() {
       <div className="p-6 border-b">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-semibold">Mi Plan</h3>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium border ${config.color}`}>
-            {config.label}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${config.color}`}>
+              {config.label}
+            </span>
+            {planInfo.is_founder && (
+              <span className="px-3 py-1 rounded-full text-sm font-medium border bg-amber-100 text-amber-800 border-amber-300">
+                👑 FUNDADOR
+              </span>
+            )}
+          </div>
         </div>
         <p className="text-sm text-gray-600">{planInfo.description}</p>
+
+        {/* Mensaje especial para fundadores */}
+        {planInfo.is_founder && planInfo.plan_end_date && (
+          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-xs text-amber-900">
+              <strong>Plan fundador:</strong> {(() => {
+                const daysRemaining = Math.ceil(
+                  (new Date(planInfo.plan_end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                );
+                return daysRemaining > 0
+                  ? `Te quedan ${daysRemaining} días gratis. Luego $13,750/mes (50% off)`
+                  : `$13,750/mes con tu descuento permanente del 50%`;
+              })()}
+            </p>
+          </div>
+        )}
       </div>
       
       {/* Content */}
@@ -125,12 +154,22 @@ export function PlanCard() {
         )}
 
         {/* CTA Mejorar Plan */}
-        {(planInfo.plan_tier === 'free' || planInfo.is_expired) && (
-          <button 
+        {!planInfo.is_founder && (planInfo.plan_tier === 'free' || planInfo.is_expired) && (
+          <button
             className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            onClick={() => window.location.href = '/pricing'}
+            onClick={() => window.location.href = '/mi-empresa/planes'}
           >
             {planInfo.is_expired ? 'Renovar Plan' : 'Mejorar Plan'}
+          </button>
+        )}
+
+        {/* CTA Ver Planes para fundadores */}
+        {planInfo.is_founder && (
+          <button
+            className="w-full mt-4 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+            onClick={() => window.location.href = '/mi-empresa/planes'}
+          >
+            Ver Detalles del Plan
           </button>
         )}
       </div>
