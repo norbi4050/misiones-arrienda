@@ -3,17 +3,18 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  Building2, 
-  MapPin, 
-  Phone, 
-  Globe, 
-  Facebook, 
-  Instagram, 
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Globe,
+  Facebook,
+  Instagram,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Mail
+  Mail,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,6 +52,7 @@ interface InmobiliariaProfile {
   show_hours_public: boolean;
   show_map_public: boolean;
   show_stats_public: boolean;
+  is_founder: boolean;
   created_at: string;
 }
 
@@ -210,6 +212,12 @@ export default function InmobiliariaProfileClient({
                   <Badge variant="default" className="flex items-center gap-1">
                     <CheckCircle2 className="w-4 h-4" />
                     Verificado
+                  </Badge>
+                )}
+                {profile.is_founder && (
+                  <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0">
+                    <Crown className="w-4 h-4" />
+                    Miembro Fundador
                   </Badge>
                 )}
               </div>

@@ -270,6 +270,16 @@ export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
                   </div>
                 )}
 
+                {/* Coming Soon Badge */}
+                {plan.id === 'premium' && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg flex items-center gap-1">
+                      <Sparkles className="w-4 h-4" />
+                      PRÓXIMAMENTE
+                    </span>
+                  </div>
+                )}
+
                 {/* Current Plan Badge */}
                 {isCurrentPlan && (
                   <div className="absolute top-4 right-4">
@@ -347,16 +357,18 @@ export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
                   className={cn(
                     'w-full font-semibold',
                     getButtonColor(plan.color),
-                    isCurrentPlan && 'opacity-50 cursor-not-allowed'
+                    (isCurrentPlan || plan.id === 'premium') && 'opacity-50 cursor-not-allowed'
                   )}
-                  disabled={isCurrentPlan}
+                  disabled={isCurrentPlan || plan.id === 'premium'}
                   onClick={() => {
                     if (plan.id === 'professional') {
                       window.location.href = 'mailto:contacto@misionesarrienda.com.ar?subject=Quiero ser Miembro Fundador'
                     }
                   }}
                 >
-                  {isCurrentPlan
+                  {plan.id === 'premium'
+                    ? 'Próximamente'
+                    : isCurrentPlan
                     ? 'Plan Actual'
                     : plan.id === 'professional' && !userPlanInfo.is_founder
                     ? 'Solicitar lugar de Fundador'

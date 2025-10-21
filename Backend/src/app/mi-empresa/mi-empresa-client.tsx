@@ -70,10 +70,11 @@ const MapPickerClient = dynamic(
 
 import AvatarUniversal from "@/components/ui/avatar-universal"
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete"
-import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye, User, Shield } from "lucide-react"
+import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye, User, Shield, Crown } from "lucide-react"
 import { toast } from "sonner"
 import { validateCUIT, autoFormatCUIT } from "@/lib/validations/cuit"
 import { BusinessHours, TeamMember, DEFAULT_BUSINESS_HOURS } from "@/types/inmobiliaria"
+import FounderWelcomeBanner from "@/components/founder/FounderWelcomeBanner"
 
 interface CompanyProfile {
   id: string
@@ -93,6 +94,8 @@ interface CompanyProfile {
   logo_url: string | null  // Logo para perfil público
   verified: boolean
   verified_at: string | null
+  is_founder: boolean
+  plan_end_date?: string | null
   business_hours: BusinessHours
   latitude: number | null  // Coordenadas para mapa
   longitude: number | null  // Coordenadas para mapa
@@ -279,6 +282,12 @@ export default function MiEmpresaClient({
                       Sin verificar
                     </span>
                   )}
+                  {profile.is_founder && (
+                    <span className="flex items-center text-sm bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-2 py-0.5 rounded-full font-medium">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Fundador
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -315,6 +324,14 @@ export default function MiEmpresaClient({
             </div>
           )}
         </div>
+
+        {/* Founder Welcome Banner */}
+        {profile.is_founder && (
+          <FounderWelcomeBanner
+            companyName={profile.company_name || 'Tu Empresa'}
+            planEndDate={profile.plan_end_date}
+          />
+        )}
 
         {/* Mi Plan */}
         <div className="mb-6">

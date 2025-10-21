@@ -30,6 +30,7 @@ interface InmobiliariaProfile {
   show_hours_public: boolean;
   show_map_public: boolean;
   show_stats_public: boolean;
+  is_founder: boolean;
   created_at: string;
 }
 
@@ -181,16 +182,16 @@ export default async function InmobiliariaPublicPage({
     .from('users')
     .select(`
       id,
-      company_name, 
-      phone, 
-      address, 
-      website, 
-      facebook, 
-      instagram, 
-      tiktok, 
-      description, 
-      logo_url, 
-      verified, 
+      company_name,
+      phone,
+      address,
+      website,
+      facebook,
+      instagram,
+      tiktok,
+      description,
+      logo_url,
+      verified,
       user_type,
       commercial_phone,
       business_hours,
@@ -203,6 +204,7 @@ export default async function InmobiliariaPublicPage({
       show_stats_public,
       show_phone_public,
       show_address_public,
+      is_founder,
       created_at
     `)
     .eq('id', id)
@@ -238,6 +240,7 @@ export default async function InmobiliariaPublicPage({
     show_hours_public: inmobiliariaData.show_hours_public || false,
     show_map_public: inmobiliariaData.show_map_public || false,
     show_stats_public: inmobiliariaData.show_stats_public || false,
+    is_founder: inmobiliariaData.is_founder || false,
     created_at: inmobiliariaData.created_at,
   };
 
