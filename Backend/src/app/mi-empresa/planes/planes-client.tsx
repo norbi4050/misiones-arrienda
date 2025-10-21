@@ -46,16 +46,17 @@ export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
       color: 'gray',
       features: [
         'Hasta 5 propiedades activas',
-        'Sitio web básico propio',
+        'Hasta 10 imágenes por propiedad',
+        'Perfil público básico',
         'Publicación en marketplace',
         'Mensajería con clientes',
         'Panel de control',
       ],
       notIncluded: [
-        'Sin estadísticas avanzadas',
+        'Sin tracking de visitas',
         'Sin propiedades destacadas',
-        'Sin prioridad en búsquedas',
-        'Sin soporte prioritario',
+        'Sin adjuntos en mensajes',
+        'Soporte estándar',
       ]
     },
     {
@@ -69,13 +70,13 @@ export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
       recommended: true,
       features: [
         'Hasta 20 propiedades activas',
-        'Sitio web personalizado',
-        '3 destacados por mes',
-        'Estadísticas avanzadas',
-        'Soporte prioritario',
-        'Posicionamiento +30%',
-        'Acceso a nuevas funciones',
-        'Analytics detallado',
+        'Página web personalizada (/inmobiliaria/tu-empresa)',
+        'Destacar propiedades ilimitado',
+        'Hasta 30 imágenes por propiedad',
+        'Tracking de visitas en tiempo real',
+        'Adjuntar archivos en mensajes',
+        'Soporte prioritario por email',
+        'Acceso anticipado a nuevas funciones',
       ],
       founderOffer: {
         months: 12,
@@ -398,9 +399,9 @@ export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
             </div>
 
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">¿Qué incluye el sitio web propio?</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">¿Qué incluye la página web personalizada?</h3>
               <p className="text-gray-600 text-sm">
-                Cada inmobiliaria tiene su subdominio (tuempresa.misionesarrienda.com.ar) personalizable con logo, colores y equipo.
+                Cada inmobiliaria tiene su propia página pública (misionesarrienda.com.ar/inmobiliaria/tu-empresa) con logo, descripción, equipo y todas tus propiedades.
               </p>
             </div>
 

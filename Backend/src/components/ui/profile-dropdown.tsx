@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell, Building2, FileText, Crown } from 'lucide-react';
+import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell, Building2, FileText, Crown, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import AvatarUniversal from '@/components/ui/avatar-universal';
@@ -151,6 +151,16 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 >
                   <FileText className="w-4 h-4 mr-3 text-gray-400" />
                   Mis Publicaciones
+                </Link>
+
+                {/* Analytics */}
+                <Link
+                  href="/mi-cuenta/analytics"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <BarChart3 className="w-4 h-4 mr-3 text-gray-400" />
+                  Analytics
                 </Link>
 
                 {/* Favoritos */}
