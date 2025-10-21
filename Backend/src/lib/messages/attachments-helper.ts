@@ -47,7 +47,9 @@ export async function getMessageAttachments(messageId: string): Promise<Attachme
 
         if (urlError) {
           // Solo loguear errores que NO sean 404 (archivos faltantes son esperados)
-          if (urlError.statusCode !== '404') {
+          // StorageError tiene status: number y statusCode: string
+          const isNotFound = urlError.status === 400 && urlError.statusCode === '404';
+          if (!isNotFound) {
             console.error('[Attachments Helper] Error creating signed URL:', urlError);
           }
         }
@@ -130,7 +132,9 @@ export async function getMessagesAttachments(
 
       if (urlError) {
         // Solo loguear errores que NO sean 404 (archivos faltantes son esperados)
-        if (urlError.statusCode !== '404') {
+        // StorageError tiene status: number y statusCode: string
+        const isNotFound = urlError.status === 400 && urlError.statusCode === '404';
+        if (!isNotFound) {
           console.error('[Attachments Helper BATCH] Error creating signed URL:', urlError);
         }
       }
