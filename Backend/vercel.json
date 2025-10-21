@@ -162,6 +162,10 @@
     {
       "path": "/api/properties/expire-cleanup",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/check-expiring-plans",
+      "schedule": "0 9 * * *"
     }
   ]
 }
