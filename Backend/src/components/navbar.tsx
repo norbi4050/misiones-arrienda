@@ -10,7 +10,7 @@ import { ProfileDropdown } from "@/components/ui/profile-dropdown"
 import { useCurrentUser } from "@/lib/auth/useCurrentUser"
 import AvatarUniversal from "@/components/ui/avatar-universal"
 import { useMessagesUnread } from "@/hooks/useMessagesUnread"
-// import { NotificationDropdown } from "@/components/notifications/NotificationDropdown"
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -118,8 +118,8 @@ export function Navbar() {
                       </Button>
                     </Link>
 
-                    {/* Notification Dropdown - TEMPORALMENTE DESACTIVADO */}
-                    {/* {isAuthenticated && <NotificationDropdown />} */}
+                    {/* Notification Dropdown */}
+                    <NotificationDropdown />
 
                     {/* Profile Dropdown */}
                     <ProfileDropdown user={user} onSignOut={signOut} />

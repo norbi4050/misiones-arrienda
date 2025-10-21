@@ -19,7 +19,23 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ onClick, className }: NotificationBellProps) {
-  const { count, isLoading } = useUnreadCount()
+  const { count, isLoading, error } = useUnreadCount()
+
+  // Si hay error, mostrar campana sin contador
+  if (error) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className={cn('relative', className)}
+        onClick={onClick}
+        title="Notificaciones"
+        aria-label="Notificaciones"
+      >
+        <Bell className="h-5 w-5" />
+      </Button>
+    )
+  }
 
   return (
     <Button

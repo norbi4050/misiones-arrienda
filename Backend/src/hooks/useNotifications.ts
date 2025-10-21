@@ -64,6 +64,14 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const { data, error, mutate, isLoading } = useSWR(url, fetcher, {
     refreshInterval: 30000, // Refrescar cada 30 segundos
     revalidateOnFocus: true,
+    shouldRetryOnError: false, // No reintentar en caso de error
+    onError: (err) => {
+      // Silenciar errores de autenticación
+      if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
+        return
+      }
+      console.error('[useNotifications] Error:', err)
+    }
   })
 
   /**
@@ -140,6 +148,14 @@ export function useUnreadCount() {
   const { data, error, mutate, isLoading } = useSWR(url, fetcher, {
     refreshInterval: 30000, // Refrescar cada 30 segundos
     revalidateOnFocus: true,
+    shouldRetryOnError: false, // No reintentar en caso de error
+    onError: (err) => {
+      // Silenciar errores de autenticación
+      if (err.message?.includes('401') || err.message?.includes('unauthorized')) {
+        return
+      }
+      console.error('[useUnreadCount] Error:', err)
+    }
   })
 
   return {
