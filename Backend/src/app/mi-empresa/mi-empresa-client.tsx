@@ -233,7 +233,9 @@ export default function MiEmpresaClient({
       toast.success('Perfil actualizado correctamente')
 
       setIsEditing(false)
-      router.refresh() // PERF: Revalidar datos del servidor
+
+      // Forzar recarga completa para actualizar isProfileComplete
+      window.location.reload()
 
     } catch (error) {
       console.error('Error guardando perfil:', error)
