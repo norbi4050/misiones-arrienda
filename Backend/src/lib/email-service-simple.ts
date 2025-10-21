@@ -6,7 +6,7 @@ const createTransporter = () => {
   const emailHost = process.env.EMAIL_HOST || 'smtp.gmail.com'
   const emailPort = parseInt(process.env.EMAIL_PORT || '587')
   const emailUser = process.env.EMAIL_USER
-  const emailPass = process.env.EMAIL_PASS
+  const emailPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS // Soportar ambos nombres
   const emailFrom = process.env.EMAIL_FROM || 'noreply@misionesarrienda.com'
 
   console.log('📧 Configuración de email:', {
