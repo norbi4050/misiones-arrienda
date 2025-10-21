@@ -232,8 +232,6 @@ export default function MiEmpresaClient({
 
       toast.success('Perfil actualizado correctamente')
 
-      // Actualizar el perfil inicial con los datos guardados
-      setInitialProfile(profile)
       setIsEditing(false)
       router.refresh() // PERF: Revalidar datos del servidor
 
