@@ -114,17 +114,50 @@ export const sendVerificationEmail = async (
 export const checkEmailConfiguration = (): { configured: boolean; message: string } => {
   const emailUser = process.env.EMAIL_USER
   const emailPass = process.env.EMAIL_PASS
-  
+
   if (!emailUser || !emailPass) {
     return {
       configured: false,
       message: 'Variables EMAIL_USER y EMAIL_PASS no configuradas'
     }
   }
-  
+
   return {
     configured: true,
     message: 'Configuración de email disponible'
+  }
+}
+
+// Función genérica para enviar emails
+export const sendEmail = async (options: {
+  to: string
+  subject: string
+  html: string
+}): Promise<boolean> => {
+  try {
+    console.log(`📧 Enviando email a: ${options.to}`)
+
+    const transporter = createTransporter()
+
+    if (!transporter) {
+      console.warn('⚠️ No se pudo crear el transportador de email')
+      return false
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || 'noreply@misionesarrienda.com',
+      to: options.to,
+      subject: options.subject,
+      html: options.html
+    }
+
+    const result = await transporter.sendMail(mailOptions)
+    console.log('✅ Email enviado exitosamente:', result.messageId)
+    return true
+
+  } catch (error) {
+    console.error('❌ Error enviando email:', error)
+    return false
   }
 }
 

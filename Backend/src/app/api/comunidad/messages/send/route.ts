@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { sendNotification } from '@/lib/notification-service';
 
 const sendMessageSchema = z.object({
   propertyId: z.string().min(1, 'Property ID requerido'),
@@ -85,10 +86,42 @@ export async function POST(request: NextRequest) {
         property_id: propertyId
       }, { onConflict: 'id' });
 
-    return NextResponse.json({ 
-      success: true, 
+    // Obtener nombre del remitente para la notificación
+    const { data: senderData } = await supabase
+      .from('users')
+      .select('name, email')
+      .eq('id', user.id)
+      .single();
+
+    const senderName = senderData?.name || senderData?.email?.split('@')[0] || 'Un usuario';
+
+    // Enviar notificación al destinatario (no esperar para no bloquear)
+    sendNotification({
+      userId: toUserId,
+      type: 'NEW_MESSAGE',
+      title: `Nuevo mensaje de ${senderName}`,
+      message: `${senderName} te ha enviado un mensaje sobre "${property.title}".`,
+      channels: ['email', 'in_app'],
+      metadata: {
+        messageId: newMessage.id,
+        conversationId: conversationId,
+        propertyId: propertyId,
+        propertyTitle: property.title,
+        senderName: senderName,
+        messagePreview: message.substring(0, 100),
+        ctaUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/comunidad/mensajes?conversation=${conversationId}`,
+        ctaText: 'Ver mensaje'
+      },
+      relatedId: newMessage.id,
+      relatedType: 'message'
+    }).catch(err => {
+      console.error('[Messages API] Error sending notification:', err);
+    });
+
+    return NextResponse.json({
+      success: true,
       message: 'Mensaje enviado correctamente',
-      messageId: newMessage.id 
+      messageId: newMessage.id
     });
 
   } catch (error) {

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Select-String \"api/payments/feature\" -Context 0,3)",
       "Bash(psql:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

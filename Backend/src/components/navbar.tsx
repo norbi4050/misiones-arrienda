@@ -10,6 +10,7 @@ import { ProfileDropdown } from "@/components/ui/profile-dropdown"
 import { useCurrentUser } from "@/lib/auth/useCurrentUser"
 import AvatarUniversal from "@/components/ui/avatar-universal"
 import { useMessagesUnread } from "@/hooks/useMessagesUnread"
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -102,9 +103,9 @@ export function Navbar() {
                       </Button>
                     </Link>
                     <Link href={isAgency ? "/messages" : "/comunidad/mensajes"}>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         title="Mensajes"
                         className="relative"
                         aria-label={unreadCount > 0 ? `Tienes ${unreadCount} mensajes sin leer` : 'Mensajes'}
@@ -117,7 +118,10 @@ export function Navbar() {
                         )}
                       </Button>
                     </Link>
-                    
+
+                    {/* Notification Dropdown */}
+                    <NotificationDropdown />
+
                     {/* Profile Dropdown */}
                     <ProfileDropdown user={user} onSignOut={signOut} />
                   </>

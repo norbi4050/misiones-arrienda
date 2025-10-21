@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { enforcePlanLimit } from '@/lib/plan-guards';
+import { sendNotification } from '@/lib/notification-service';
 
 // Marcar esta ruta como dinámica para evitar errores de build
 export const dynamic = 'force-dynamic'
@@ -53,7 +54,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
     const { error: e3 } = await supabase
       .from("properties")
-      .update({ 
+      .update({
         status: "PUBLISHED",
         is_active: true,
         published_at: new Date().toISOString(),
@@ -63,6 +64,49 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
       .eq("id", params.id)
       .eq("user_id", user.id);
     if (e3) return NextResponse.json({ error: e3.message }, { status: 500 });
+
+    // Obtener información completa de la propiedad para las notificaciones
+    const { data: publishedProperty } = await supabase
+      .from("properties")
+      .select("id, title, property_type, operation_type, price")
+      .eq("id", params.id)
+      .single();
+
+    if (publishedProperty) {
+      // Obtener usuarios que tienen esta propiedad en favoritos
+      const { data: favorites } = await supabase
+        .from("favorites")
+        .select("user_id")
+        .eq("property_id", params.id);
+
+      // Enviar notificación a cada usuario que tiene la propiedad en favoritos
+      if (favorites && favorites.length > 0) {
+        const operationType = publishedProperty.operation_type === 'sale' ? 'venta' : 'alquiler';
+
+        for (const favorite of favorites) {
+          sendNotification({
+            userId: favorite.user_id,
+            type: 'FAVORITE_PROPERTY_UPDATED',
+            title: 'Propiedad favorita actualizada',
+            message: `La propiedad "${publishedProperty.title}" que guardaste en favoritos ha sido publicada y está disponible para ${operationType}.`,
+            channels: ['in_app', 'email'],
+            metadata: {
+              propertyId: publishedProperty.id,
+              propertyTitle: publishedProperty.title,
+              propertyType: publishedProperty.property_type,
+              operationType: publishedProperty.operation_type,
+              price: publishedProperty.price,
+              ctaUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/propiedades/${publishedProperty.id}`,
+              ctaText: 'Ver propiedad'
+            },
+            relatedId: publishedProperty.id,
+            relatedType: 'property'
+          }).catch(err => {
+            console.error('[Publish] Error sending favorite notification:', err);
+          });
+        }
+      }
+    }
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {

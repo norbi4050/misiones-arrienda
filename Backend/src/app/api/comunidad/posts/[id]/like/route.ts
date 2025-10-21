@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { sendNotification } from '@/lib/notification-service'
 
 // Marcar esta ruta como dinámica para evitar errores de build
 export const dynamic = 'force-dynamic'
@@ -83,6 +84,47 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         { error: 'Error al dar like' },
         { status: 500 }
       )
+    }
+
+    // Obtener información del usuario que dio like para la notificación
+    const { data: likerData } = await supabase
+      .from('users')
+      .select('name, email')
+      .eq('id', user.id)
+      .single()
+
+    const likerName = likerData?.name || likerData?.email?.split('@')[0] || 'Alguien'
+
+    // Obtener información del post para la notificación
+    const { data: postData } = await supabase
+      .from('community_posts_public')
+      .select('id, content, images')
+      .eq('id', postId)
+      .single()
+
+    // Enviar notificación al autor del post
+    if (postData) {
+      const contentPreview = postData.content?.substring(0, 50) || 'tu post'
+
+      sendNotification({
+        userId: post.user_id,
+        type: 'LIKE_RECEIVED',
+        title: `A ${likerName} le gustó tu post`,
+        message: `${likerName} dio like a tu post: "${contentPreview}${postData.content && postData.content.length > 50 ? '...' : ''}"`,
+        channels: ['in_app'],
+        metadata: {
+          postId: postData.id,
+          likerId: user.id,
+          likerName: likerName,
+          postContent: postData.content,
+          ctaUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/comunidad/posts/${postData.id}`,
+          ctaText: 'Ver post'
+        },
+        relatedId: postId,
+        relatedType: 'community_post_like'
+      }).catch(err => {
+        console.error('[Like] Error sending notification:', err);
+      });
     }
 
     // Verificar si hay like recíproco (el autor del post dio like a algún post del usuario actual)

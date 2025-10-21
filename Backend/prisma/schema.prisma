@@ -173,6 +173,10 @@ model User {
   // Relación con perfil de comunidad
   communityProfile UserProfile?
 
+  // Sistema de notificaciones
+  notifications           Notification[]
+  notificationPreferences NotificationPreferences?
+
   @@index([isOnline, lastSeen])
 }
 
@@ -698,4 +702,136 @@ model Report {
 
   @@index([targetId, status])
   @@index([status, createdAt])
+}
+
+// ========================================
+// SISTEMA DE NOTIFICACIONES
+// ========================================
+
+model Notification {
+  id String @id @default(cuid())
+
+  // Usuario que recibe la notificación (funciona para: inquilino, dueno_directo, inmobiliaria)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Tipo de notificación
+  type String // NEW_MESSAGE, INQUIRY_RECEIVED, PROPERTY_STATUS_CHANGED, PAYMENT_COMPLETED, LIKE_RECEIVED, PLAN_EXPIRING, NEW_FOUNDER, etc.
+
+  // Contenido
+  title   String // Título corto de la notificación
+  message String // Mensaje descriptivo
+
+  // Metadata adicional (JSON)
+  metadata String? // JSON con datos extra: { propertyId, messageId, amount, etc. }
+
+  // Referencia opcional al objeto relacionado
+  relatedId   String? @map("related_id") // ID del objeto relacionado (mensaje, propiedad, pago, etc.)
+  relatedType String? @map("related_type") // Tipo de objeto: 'message', 'property', 'payment', 'inquiry', etc.
+
+  // Canal de envío
+  channels String // JSON array: ["email", "in_app", "push"]
+
+  // Estado
+  read   Boolean   @default(false)
+  sentAt DateTime? @map("sent_at") // Cuando se envió (null si aún no se procesó)
+  readAt DateTime? @map("read_at") // Cuando se marcó como leída
+
+  // Auditoría
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, read])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model NotificationPreferences {
+  id String @id @default(cuid())
+
+  // Usuario dueño de las preferencias (inquilino, dueno_directo, inmobiliaria)
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // ========================================
+  // CANALES GLOBALES
+  // ========================================
+  emailEnabled Boolean @default(true) @map("email_enabled") // Recibir emails
+  inAppEnabled Boolean @default(true) @map("in_app_enabled") // Notificaciones in-app
+  pushEnabled  Boolean @default(false) @map("push_enabled") // Push notifications (futuro)
+
+  // ========================================
+  // POR TIPO DE EVENTO - TODOS LOS USUARIOS
+  // ========================================
+
+  // Mensajería (inquilinos, dueños directos, inmobiliarias)
+  newMessages    Boolean @default(true) @map("new_messages") // Nuevos mensajes en comunidad
+  messageReplies Boolean @default(true) @map("message_replies") // Respuestas a tus mensajes
+
+  // Propiedades (dueños directos, inmobiliarias)
+  propertyInquiries    Boolean @default(true) @map("property_inquiries") // Consultas sobre tus propiedades
+  inquiryReplies       Boolean @default(true) @map("inquiry_replies") // Respuestas a tus consultas
+  propertyStatusChanges Boolean @default(true) @map("property_status_changes") // Cambios de estado en tus propiedades
+  propertyExpiring     Boolean @default(true) @map("property_expiring") // Tu propiedad está por expirar
+
+  // Favoritos (inquilinos principalmente)
+  favoritePropertyUpdates Boolean @default(true) @map("favorite_property_updates") // Actualizaciones en propiedades favoritas
+  newPropertiesInArea     Boolean @default(false) @map("new_properties_in_area") // Nuevas propiedades en tu zona de interés
+
+  // Social (todos)
+  likesReceived Boolean @default(true) @map("likes_received") // Alguien le dio like a tu contenido
+  newFollowers  Boolean @default(false) @map("new_followers") // Nuevos seguidores (futuro)
+
+  // Pagos y Suscripciones (inmobiliarias principalmente)
+  paymentsCompleted Boolean @default(true) @map("payments_completed") // Pago procesado exitosamente
+  planExpiring      Boolean @default(true) @map("plan_expiring") // Tu plan está por expirar
+  planExpired       Boolean @default(true) @map("plan_expired") // Tu plan expiró
+  invoicesReady     Boolean @default(true) @map("invoices_ready") // Nueva factura disponible
+
+  // Sistema (todos)
+  systemAnnouncements Boolean @default(true) @map("system_announcements") // Anuncios importantes del sistema
+  securityAlerts      Boolean @default(true) @map("security_alerts") // Alertas de seguridad
+
+  // Marketing (todos, opt-in)
+  promotionalEmails Boolean @default(false) @map("promotional_emails") // Ofertas y promociones
+  newsletter        Boolean @default(false) // Newsletter mensual
+
+  // Auditoría
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("notification_preferences")
+}
+
+// Log de emails enviados (para auditoría y debugging)
+model EmailLog {
+  id String @id @default(cuid())
+
+  // Destinatario
+  recipientId    String? @map("recipient_id") // Puede ser null si es email a no-usuario
+  recipientEmail String  @map("recipient_email")
+
+  // Tipo y contenido
+  type    String // Mismo que Notification.type
+  subject String
+  body    String // HTML del email
+
+  // Metadata
+  templateUsed String? @map("template_used") // Nombre del template usado
+  metadata     String? // JSON con datos adicionales
+
+  // Estado del envío
+  status       String    @default("PENDING") // PENDING, SENT, FAILED, BOUNCED
+  sentAt       DateTime? @map("sent_at")
+  errorMessage String?   @map("error_message")
+  provider     String? // nodemailer, resend, sendgrid
+
+  // Auditoría
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([recipientId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([type, createdAt(sort: Desc)])
+  @@map("email_logs")
 }
