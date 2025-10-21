@@ -225,13 +225,15 @@ export default function MiEmpresaClient({
       })
       
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.error || data.details || 'Error al guardar')
       }
-      
+
       toast.success('Perfil actualizado correctamente')
 
+      // Actualizar el perfil inicial con los datos guardados
+      setInitialProfile(profile)
       setIsEditing(false)
       router.refresh() // PERF: Revalidar datos del servidor
 
