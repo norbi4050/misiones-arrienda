@@ -30,6 +30,7 @@ export function NotificationDropdown() {
   const [open, setOpen] = useState(false)
   const { notifications, isLoading, markAsRead, markAllAsRead } = useNotifications({
     limit: 5,
+    unreadOnly: true, // Solo mostrar notificaciones no leídas
     enabled: open, // Solo cargar cuando está abierto
   })
 

@@ -127,14 +127,14 @@ export function Navbar() {
                 ) : (
                   <>
                     {/* Login/Register buttons for non-authenticated users */}
-                    <Link href="/login">
+                    <Link href="/login" prefetch={false}>
                       <Button variant="ghost" size="sm">
                         Iniciar Sesión
                       </Button>
                     </Link>
-                    <Link href="/register">
-                      <Button 
-                        variant="default" 
+                    <Link href="/register" prefetch={false}>
+                      <Button
+                        variant="default"
                         size="sm"
                         className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md"
                       >
@@ -246,6 +246,7 @@ export function Navbar() {
                   <div className="space-y-2">
                     <Link
                       href="/login"
+                      prefetch={false}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md text-center"
                       onClick={() => setIsOpen(false)}
                     >
@@ -253,6 +254,7 @@ export function Navbar() {
                     </Link>
                     <Link
                       href="/register"
+                      prefetch={false}
                       className="block px-3 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md text-center font-semibold shadow-md"
                       onClick={() => setIsOpen(false)}
                     >
