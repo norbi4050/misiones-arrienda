@@ -91,10 +91,9 @@ export function Navbar() {
 
           {/* Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Authentication Section */}
-            {!loading && (
-              <>
-                {isAuthenticated && user ? (
+            {/* Authentication Section - FIX: Removido !loading para siempre mostrar */}
+            <>
+              {isAuthenticated && user ? (
                   <>
                     {/* Quick Actions for authenticated users */}
                     <Link href="/favorites">
@@ -144,8 +143,7 @@ export function Navbar() {
                     </Link>
                   </>
                 )}
-              </>
-            )}
+            </>
           </div>
 
           {/* Mobile menu button */}
@@ -186,9 +184,8 @@ export function Navbar() {
               </Link>
             ))}
 
-            {/* Mobile Authentication Section */}
-            {!loading && (
-              <div className="px-3 py-2 border-t border-gray-200">
+            {/* Mobile Authentication Section - FIX: Removido !loading para siempre mostrar */}
+            <div className="px-3 py-2 border-t border-gray-200">
                 {isAuthenticated && user ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 py-2">
@@ -263,8 +260,7 @@ export function Navbar() {
                     </Link>
                   </div>
                 )}
-              </div>
-            )}
+            </div>
           </div>
         </div>
       )}
