@@ -24,6 +24,13 @@ export interface CurrentUser {
   licenseNumber?: string | null
   isCompany?: boolean
   verified?: boolean
+
+  // Campos de sistema de fundadores
+  isFounder?: boolean
+  founderDiscount?: number | null
+  planTier?: string | null
+  planStartDate?: string | null
+  planEndDate?: string | null
   
   // Campos específicos de inquilino/busco
   occupation?: string | null
@@ -138,6 +145,13 @@ export function mapUserProfile(db: any): CurrentUser | null {
     licenseNumber: db.license_number ?? null,
     isCompany: db.is_company ?? false,
     verified: db.verified ?? db.is_verified ?? false,
+
+    // Campos de fundadores
+    isFounder: db.is_founder ?? false,
+    founderDiscount: db.founder_discount ?? null,
+    planTier: db.plan_tier ?? 'free',
+    planStartDate: db.plan_start_date ?? null,
+    planEndDate: db.plan_end_date ?? null,
     
     // Campos de inquilino/busco
     occupation: db.occupation ?? null,

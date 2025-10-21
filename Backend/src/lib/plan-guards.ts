@@ -252,20 +252,27 @@ export async function enforcePlanLimit(
  */
 export async function getPlanInfo(userId: string) {
   const limits = await getUserPlanLimits(userId);
-  
+
   if (!limits) {
     return null;
   }
-  
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  
+
+  // Obtener información de fundador desde users
+  const { data: userData } = await supabase
+    .from('users')
+    .select('is_founder, founder_discount, plan_tier, plan_start_date, plan_end_date')
+    .eq('id', userId)
+    .single();
+
   // Contar propiedades activas
   const { count: activeCount } = await supabase
     .from('properties')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
     .in('status', ['AVAILABLE', 'PUBLISHED', 'RESERVED']);
-  
+
   return {
     plan_tier: limits.plan_tier,
     max_active_properties: limits.max_active_properties,
@@ -278,6 +285,12 @@ export async function getPlanInfo(userId: string) {
     plan_expires_at: limits.plan_expires_at,
     is_expired: limits.is_expired,
     description: limits.description,
-    price_monthly: limits.price_monthly
+    price_monthly: limits.price_monthly,
+
+    // Información de fundador
+    is_founder: userData?.is_founder ?? false,
+    founder_discount: userData?.founder_discount ?? null,
+    plan_start_date: userData?.plan_start_date ?? null,
+    plan_end_date: userData?.plan_end_date ?? null
   };
 }

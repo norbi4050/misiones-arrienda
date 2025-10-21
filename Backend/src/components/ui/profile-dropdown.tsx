@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell, Building2, FileText } from 'lucide-react';
+import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell, Building2, FileText, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import AvatarUniversal from '@/components/ui/avatar-universal';
@@ -100,9 +100,17 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 fallbackText={displayName}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {displayName}
-                </p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {displayName}
+                  </p>
+                  {user.isFounder && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                      <Crown className="w-3 h-3" />
+                      Fundador
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 truncate">
                   {user.email}
                 </p>
@@ -123,6 +131,16 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 >
                   <Building2 className="w-4 h-4 mr-3 text-gray-400" />
                   Mi Empresa
+                </Link>
+
+                {/* Planes - Solo para Inmobiliarias */}
+                <Link
+                  href="/mi-empresa/planes"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <Crown className="w-4 h-4 mr-3 text-gray-400" />
+                  Planes
                 </Link>
 
                 {/* Mis Publicaciones */}

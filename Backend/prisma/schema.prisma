@@ -137,11 +137,18 @@ model User {
   companyName String?  // Solo para inmobiliarias
   licenseNumber String? // Solo para inmobiliarias
   propertyCount String? // Solo para dueños directos
-  
+
   // Campos de presencia/estado online (NUEVO - 2025)
   isOnline      Boolean   @default(false)
   lastSeen      DateTime? @db.Timestamptz(6)
   lastActivity  DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Campos para sistema de fundadores (Lanzamiento 2025)
+  isFounder         Boolean   @default(false)  // Marca si es miembro fundador
+  founderDiscount   Float?    @default(50)     // Porcentaje de descuento permanente (50%)
+  planTier          String?   @default("free") // free, professional, premium
+  planStartDate     DateTime? @db.Timestamptz(6) // Fecha inicio del plan actual
+  planEndDate       DateTime? @db.Timestamptz(6) // Fecha fin del plan (null = gratis permanente)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
