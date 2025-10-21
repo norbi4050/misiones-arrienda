@@ -21,25 +21,47 @@ interface PageProps {
 // Función para obtener el post del servidor
 async function getCommunityPost(id: string): Promise<CommunityPost | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/comunidad/posts/${id}`, {
-      cache: 'no-store'
-    })
-    
-    if (!response.ok) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Primero intentar obtener post activo desde la view pública
+    let { data, error } = await supabase
+      .from('community_posts_public')
+      .select('*')
+      .eq('id', id)
+      .eq('is_active', true)
+      .or('expires_at.is.null,expires_at.gt.now()')
+      .single()
+
+    // Si no se encontró y hay usuario autenticado, intentar obtener sin filtro de is_active
+    // para permitir que el usuario vea sus propios posts inactivos/archivados
+    if (error?.code === 'PGRST116' && user) {
+      const { data: ownPostData, error: ownPostError } = await supabase
+        .from('community_posts_public')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single()
+
+      if (ownPostData) {
+        data = ownPostData
+        error = null
+      }
+    }
+
+    if (error || !data) {
+      console.error('Error fetching community post:', error)
       return null
     }
-    
-    const post = await response.json()
-    
+
+    const post: CommunityPost = data
+
     // Incrementar views_count (no bloquear renderización si falla)
     try {
-      const supabase = createClient()
       await supabase.rpc('community_post_inc_view', { post_id: id })
     } catch (viewError) {
       // Fallback: incrementar directamente si RPC no existe
       try {
-        const supabase = createClient()
         await supabase
           .from('community_posts')
           .update({ views_count: (post.views_count || 0) + 1 })
@@ -49,7 +71,7 @@ async function getCommunityPost(id: string): Promise<CommunityPost | null> {
         // No bloquear renderización
       }
     }
-    
+
     return post
   } catch (error) {
     console.error('Error fetching community post:', error)
