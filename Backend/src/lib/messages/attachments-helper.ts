@@ -46,7 +46,10 @@ export async function getMessageAttachments(messageId: string): Promise<Attachme
           });
 
         if (urlError) {
-          console.error('[Attachments Helper] Error creating signed URL:', urlError);
+          // Solo loguear errores que NO sean 404 (archivos faltantes son esperados)
+          if (urlError.statusCode !== '404') {
+            console.error('[Attachments Helper] Error creating signed URL:', urlError);
+          }
         }
 
         console.log('[Attachments Helper] Signed URL result:', {
@@ -126,16 +129,11 @@ export async function getMessagesAttachments(
         });
 
       if (urlError) {
-        console.error('[Attachments Helper BATCH] Error creating signed URL:', urlError);
+        // Solo loguear errores que NO sean 404 (archivos faltantes son esperados)
+        if (urlError.statusCode !== '404') {
+          console.error('[Attachments Helper BATCH] Error creating signed URL:', urlError);
+        }
       }
-
-      console.log('[Attachments Helper BATCH] Signed URL result:', {
-        path: att.storage_path,
-        fileName,
-        signedUrl: signedUrlData?.signedUrl,
-        hasDownloadParam: signedUrlData?.signedUrl?.includes('download='),
-        error: urlError
-      });
 
       const attachment: Attachment = {
         id: att.id,

@@ -30,7 +30,11 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
     if (filters.featured !== undefined) params.set('featured', filters.featured.toString());
     
     // Llamar al API real
-    const url = `/api/properties?${params.toString()}`;
+    // En servidor necesitamos URL absoluta, en cliente funciona la relativa
+    const baseUrl = typeof window === 'undefined'
+      ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      : '';
+    const url = `${baseUrl}/api/properties?${params.toString()}`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -72,7 +76,11 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
 // Función para obtener una propiedad por ID - Llama al API real
 export async function getPropertyById(id: string): Promise<Property | null> {
   try {
-    const response = await fetch(`/api/properties/${id}`, {
+    // En servidor necesitamos URL absoluta
+    const baseUrl = typeof window === 'undefined'
+      ? process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      : '';
+    const response = await fetch(`${baseUrl}/api/properties/${id}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       cache: 'no-store'
