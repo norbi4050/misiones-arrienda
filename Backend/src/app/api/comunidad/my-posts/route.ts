@@ -35,8 +35,10 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_active', true)
     } else if (statusFilter === 'archived') {
       query = query.eq('is_active', false)
+    } else {
+      // Si es 'all', mostrar solo activos (los inactivos son considerados borrados/archivados)
+      query = query.eq('is_active', true)
     }
-    // Si es 'all', mostrar todos (activos e inactivos)
 
     // Ordenar y paginar
     const offset = (page - 1) * limit
