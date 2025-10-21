@@ -22,7 +22,11 @@
     "smoke:win": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests.ps1",
     "smoke:sprint-d": "powershell -ExecutionPolicy Bypass -File scripts/smoke-tests-sprint-d.ps1",
     "test:avatar": "powershell -ExecutionPolicy Bypass -File scripts/test-avatar-flow.ps1",
-    "test:avatar-fase2": "powershell -ExecutionPolicy Bypass -File scripts/test-avatar-flow-enhanced.ps1"
+    "test:avatar-fase2": "powershell -ExecutionPolicy Bypass -File scripts/test-avatar-flow-enhanced.ps1",
+    "test:expire:1": "node scripts/test-expiration-1-create-properties.js",
+    "test:expire:2": "node scripts/test-expiration-2-expire-plan.js",
+    "test:expire:3": "node scripts/test-expiration-3-reactivate.js",
+    "test:expire:4": "node scripts/test-expiration-4-cleanup.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -39,6 +43,7 @@
     "client-only": "^0.0.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",

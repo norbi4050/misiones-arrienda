@@ -25,6 +25,11 @@ interface PlanesClientProps {
 export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(userPlanInfo.plan_tier || 'free')
 
+  // Contador de lugares fundadores (hardcoded - actualizar manualmente)
+  const FOUNDER_SPOTS_TOTAL = 15
+  const FOUNDER_SPOTS_TAKEN = 3 // Actualizar manualmente cuando se sumen fundadores
+  const FOUNDER_SPOTS_REMAINING = FOUNDER_SPOTS_TOTAL - FOUNDER_SPOTS_TAKEN
+
   // Calcular si el plan está activo o expirado
   const isPlanActive = userPlanInfo.plan_end_date
     ? new Date(userPlanInfo.plan_end_date) > new Date()
@@ -191,9 +196,31 @@ export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
                 </div>
               </div>
 
-              <p className="text-sm text-blue-100 mt-4">
-                ⏰ Solo quedan <span className="font-bold text-white">12 lugares</span> disponibles
-              </p>
+              <div className="mt-6 flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="bg-white/20 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-white h-full transition-all duration-500"
+                      style={{ width: `${(FOUNDER_SPOTS_TAKEN / FOUNDER_SPOTS_TOTAL) * 100}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-sm text-blue-100 mt-2">
+                    {FOUNDER_SPOTS_TAKEN} de {FOUNDER_SPOTS_TOTAL} lugares ocupados
+                  </p>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3 border-2 border-white/30">
+                  <p className="text-xs uppercase tracking-wider mb-1">Quedan</p>
+                  <p className="text-4xl font-bold">{FOUNDER_SPOTS_REMAINING}</p>
+                  <p className="text-xs">lugares</p>
+                </div>
+              </div>
+
+              <Button
+                className="mt-6 bg-white text-blue-600 hover:bg-blue-50 font-bold text-lg py-6 px-8 shadow-xl"
+                onClick={() => window.location.href = 'mailto:contacto@misionesarrienda.com.ar?subject=Quiero ser Miembro Fundador'}
+              >
+                🎁 Quiero ser Fundador
+              </Button>
             </div>
           </div>
         )}
@@ -390,6 +417,66 @@ export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
             )
           })}
         </div>
+
+        {/* Beneficios de ser Fundador */}
+        {!userPlanInfo.is_founder && (
+          <div className="mb-12 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-2xl border-2 border-amber-200 p-8">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-full mb-4">
+                <Crown className="w-5 h-5" />
+                <span className="font-bold">BENEFICIOS DE SER FUNDADOR</span>
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                ¿Por qué ser uno de los 15 fundadores?
+              </h2>
+              <p className="text-gray-600">
+                Beneficios exclusivos que te acompañan para siempre
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-200">
+                <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                  <Check className="w-6 h-6 text-green-600" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">12 meses gratis</h3>
+                <p className="text-sm text-gray-600">
+                  Plan Profesional completo sin costo durante todo el primer año (valor: $330,000)
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-200">
+                <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                  <Award className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Badge permanente</h3>
+                <p className="text-sm text-gray-600">
+                  Insignia "Miembro Fundador" visible en tu perfil público para siempre
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-200">
+                <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                  <Sparkles className="w-6 h-6 text-purple-600" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">50% descuento de por vida</h3>
+                <p className="text-sm text-gray-600">
+                  Después del año gratis, pagás solo $13,750/mes en lugar de $27,500 (para siempre)
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-200">
+                <div className="bg-amber-100 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                  <Star className="w-6 h-6 text-amber-600" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Voz en desarrollo</h3>
+                <p className="text-sm text-gray-600">
+                  Participás en decisiones sobre nuevas funcionalidades de la plataforma
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* FAQ Section */}
         <div className="bg-white rounded-xl border border-gray-200 p-8">

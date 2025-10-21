@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(Select-String \"api/payments/feature\" -Context 0,3)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

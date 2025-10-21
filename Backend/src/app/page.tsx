@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { MessageCircle, Search, Sparkles, Home, MapPin, Users } from 'lucide-react'
+import { MessageCircle, Search, Sparkles, Home, MapPin, Users, Crown, Check } from 'lucide-react'
 
 // Configuración para páginas dinámicas con searchParams
 export const dynamic = 'force-dynamic'
@@ -71,6 +71,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   // Obtener propiedades destacadas para renderizado inicial
   const initialProperties = await getInitialProperties()
+
+  // Obtener información del usuario si está logueado
+  let userData = null
+  if (user) {
+    const { data } = await supabase
+      .from('users')
+      .select('user_type, is_founder')
+      .eq('id', user.id)
+      .single()
+    userData = data
+  }
 
   // Landing pública (sin sesión)
   if (!user) {
@@ -195,13 +206,77 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   // Feed real (usuario logueado)
+  const isAgency = userData?.user_type?.toUpperCase() === 'INMOBILIARIA' || userData?.user_type?.toUpperCase() === 'AGENCY'
+  const isFounder = userData?.is_founder === true
+
   return (
     <main className="min-h-screen">
       <PageTracker eventName="visit_home" />
       <HeroSection />
+
+      {/* Banner Oferta Fundadores - Solo para inmobiliarias NO fundadoras */}
+      {isAgency && !isFounder && (
+        <section className="py-8 bg-gradient-to-r from-amber-50 to-yellow-50">
+          <div className="container mx-auto px-4">
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 rounded-2xl p-8 text-white shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 h-32 w-32 rounded-full bg-white opacity-10"></div>
+              <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-40 w-40 rounded-full bg-white opacity-10"></div>
+
+              <div className="relative z-10 max-w-5xl mx-auto">
+                <div className="flex items-center gap-2 mb-4">
+                  <Crown className="w-6 h-6" />
+                  <span className="text-sm font-semibold uppercase tracking-wider">Oferta Exclusiva para Inmobiliarias</span>
+                </div>
+
+                <h2 className="text-3xl font-bold mb-4">Sé uno de los 15 Miembros Fundadores</h2>
+
+                <div className="grid md:grid-cols-3 gap-6 mb-6">
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold">12 meses GRATIS</p>
+                      <p className="text-blue-100 text-sm">Plan Profesional completo (valor: $330,000)</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold">50% descuento permanente</p>
+                      <p className="text-blue-100 text-sm">$13,750/mes después del año gratis</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-1 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold">Badge "Fundador"</p>
+                      <p className="text-blue-100 text-sm">Permanente en tu perfil público</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 justify-between flex-wrap">
+                  <div>
+                    <p className="text-sm text-blue-100">
+                      ⏰ Solo quedan <span className="font-bold text-white text-xl">12 lugares</span> disponibles
+                    </p>
+                  </div>
+                  <Link href="/mi-empresa/planes">
+                    <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 font-bold shadow-xl">
+                      Ver Planes y Beneficios
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section id="propiedades">
-        <PropertyGridServer 
-          initialProperties={initialProperties} 
+        <PropertyGridServer
+          initialProperties={initialProperties}
           searchParams={searchParams}
         />
       </section>

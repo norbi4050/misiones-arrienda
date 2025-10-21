@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Building2, Mail, Phone, MapPin, Globe, FileText, Star, Users, Zap, Lock, AlertCircle } from "lucide-react"
+import { Building2, Mail, Phone, MapPin, Globe, FileText, Star, Users, Zap, Lock, AlertCircle, Crown } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -23,6 +23,7 @@ export default function InmobiliariaRegisterPage() {
     description: "",
     license: "",
     acceptTerms: false,
+    wantsFounder: false,   // Checkbox para oferta fundadores
     planType: "PROFESSIONAL"
   })
 
@@ -473,6 +474,33 @@ export default function InmobiliariaRegisterPage() {
                   />
                 </div>
 
+                {/* Oferta Fundadores */}
+                <div className="p-6 border-2 border-amber-300 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50">
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      name="wantsFounder"
+                      checked={formData.wantsFounder}
+                      onChange={handleInputChange}
+                      className="mt-1 h-5 w-5 text-amber-600 focus:ring-amber-500 border-amber-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Crown className="w-5 h-5 text-amber-600" />
+                        <label className="text-base font-bold text-gray-900">
+                          Quiero ser Miembro Fundador
+                        </label>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2">
+                        Accede a <span className="font-semibold">12 meses GRATIS</span> del Plan Profesional (valor: $330,000) + <span className="font-semibold">50% de descuento permanente</span> después
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-amber-700 font-medium">
+                        <span className="bg-amber-200 px-2 py-1 rounded">⏰ Solo 12 lugares disponibles</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Términos y Condiciones */}
                 <div className={`p-4 border rounded-md ${errors.acceptTerms ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50'}`} data-error={!!errors.acceptTerms}>
                   <div className="flex items-start space-x-3">
@@ -486,17 +514,17 @@ export default function InmobiliariaRegisterPage() {
                     />
                     <label className="text-sm text-gray-700 flex-1">
                       Acepto los{" "}
-                      <Link 
-                        href="/legal/terms" 
-                        className="text-blue-600 hover:underline font-medium" 
+                      <Link
+                        href="/legal/terms"
+                        className="text-blue-600 hover:underline font-medium"
                         target="_blank"
                       >
                         términos y condiciones
                       </Link>
                       {" "}y la{" "}
-                      <Link 
-                        href="/legal/privacy" 
-                        className="text-blue-600 hover:underline font-medium" 
+                      <Link
+                        href="/legal/privacy"
+                        className="text-blue-600 hover:underline font-medium"
                         target="_blank"
                       >
                         política de privacidad
