@@ -46,9 +46,11 @@ export async function DELETE(
 
     const threadId = params.id;
 
-    // 2. Validar UUID
+    // 2. Validar formato de ID (UUID o CUID)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(threadId)) {
+    const cuidRegex = /^c[a-z0-9]{24,}$/i;
+
+    if (!uuidRegex.test(threadId) && !cuidRegex.test(threadId)) {
       console.debug('[DELETE/thread] invalid-id', { threadId });
       return NextResponse.json(
         { ok: false, reason: 'invalid-id' },
