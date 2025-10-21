@@ -168,8 +168,8 @@ export default function MiEmpresaClient({
     const newErrors: Record<string, string> = {}
     if (!profile.company_name?.trim()) newErrors.companyName = 'Campo requerido'
     if (!profile.phone?.trim()) newErrors.phone = 'Campo requerido'
-    // Dirección ya NO es requerida - se puede configurar solo con el mapa
-    
+    if (!profile.address?.trim()) newErrors.address = 'Campo requerido'
+
     // Validar CUIT si se proporciona
     if (profile.cuit?.trim()) {
       const cuitValidation = validateCUIT(profile.cuit)
@@ -370,7 +370,7 @@ export default function MiEmpresaClient({
                   Teléfono principal de contacto
                 </p>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Teléfono Comercial
@@ -391,19 +391,30 @@ export default function MiEmpresaClient({
                 </p>
               </div>
             </div>
-            
-            {/* Dirección (opcional) - solo texto */}
-            {!isEditing && profile.address && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dirección
-                </label>
-                <div className="flex items-center gap-2 text-gray-700">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  <span>{profile.address}</span>
-                </div>
+
+            {/* Dirección - campo de texto obligatorio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dirección *
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  value={profile.address || ''}
+                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                  disabled={!isEditing}
+                  className={`pl-10 ${errors.address ? 'border-red-500' : ''}`}
+                  data-error={!!errors.address}
+                  placeholder="Ej: Av. Mitre 1234, Posadas, Misiones"
+                />
               </div>
-            )}
+              {errors.address && (
+                <p className="text-sm text-red-600 mt-1">{errors.address}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Dirección de tu oficina o empresa
+              </p>
+            </div>
 
             {/* Mapa para ubicación - SIEMPRE visible en modo edición */}
             {isEditing && (
