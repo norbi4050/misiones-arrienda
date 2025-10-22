@@ -79,6 +79,9 @@ model Property {
   payments      Payment[]
   subscriptions Subscription[]
 
+  // Relación con reportes de esta propiedad
+  reports PropertyReport[]
+
   @@index([city, province])
   @@index([price])
   @@index([propertyType])
@@ -176,6 +179,9 @@ model User {
   // Sistema de notificaciones
   notifications           Notification[]
   notificationPreferences NotificationPreferences?
+
+  // Reportes de propiedades realizados por el usuario
+  propertyReports PropertyReport[]
 
   @@index([isOnline, lastSeen])
 }
@@ -702,6 +708,46 @@ model Report {
 
   @@index([targetId, status])
   @@index([status, createdAt])
+}
+
+// ========================================
+// REPORTES DE PROPIEDADES
+// ========================================
+
+model PropertyReport {
+  id String @id @default(cuid())
+
+  // Relación con la propiedad reportada
+  propertyId String   @map("property_id")
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  // Usuario que realiza el reporte
+  reporterId String @map("reporter_id")
+  reporter   User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  // Información del reporte
+  reason  String // "scam", "fake_images", "unrealistic_price", "wrong_location", "not_available", "false_info", "duplicate", "other"
+  details String // Descripción detallada (10-500 caracteres)
+
+  // Estado del reporte
+  status String @default("PENDING") // PENDING, UNDER_REVIEW, RESOLVED, DISMISSED
+
+  // Revisión por admin
+  reviewedById String?   @map("reviewed_by_id") // ID del admin que revisó
+  reviewedAt   DateTime? @map("reviewed_at")
+  adminNotes   String?   @map("admin_notes") // Notas del admin
+  actionTaken  String?   @map("action_taken") // "approved", "property_removed", "user_warned", "dismissed"
+
+  // Auditoría
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Constraint: Un usuario solo puede reportar una propiedad una vez
+  @@unique([reporterId, propertyId])
+  @@index([propertyId, status])
+  @@index([reporterId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("property_reports")
 }
 
 // ========================================

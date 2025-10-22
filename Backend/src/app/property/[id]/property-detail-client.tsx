@@ -4,11 +4,12 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { MapPin, Bed, Bath, Square, Car, Heart, Phone, Mail, Calendar, Share2, Eye, Clock, CheckCircle, Star, MessageCircle } from "lucide-react"
+import { MapPin, Bed, Bath, Square, Car, Heart, Phone, Mail, Calendar, Share2, Eye, Clock, CheckCircle, Star, MessageCircle, Flag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { WhatsAppPropertyButton } from "@/components/whatsapp-button"
 import { SimilarProperties } from "@/components/similar-properties"
+import { ReportModal } from "@/components/property/ReportModal"
 import toast from 'react-hot-toast'
 import { Property } from '@/types/property'
 
@@ -20,6 +21,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
   const [viewCount] = useState(Math.floor(Math.random() * 50) + 10)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [inquiryForm, setInquiryForm] = useState({
     name: "",
     email: "",
@@ -150,6 +152,15 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
                     className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
                   >
                     <Share2 className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
+                    title="Reportar propiedad"
+                  >
+                    <Flag className="h-5 w-5 text-gray-600" />
                   </Button>
                 </div>
 
@@ -458,6 +469,14 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
           <SimilarProperties currentProperty={property} />
         </div>
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        propertyId={property.id}
+        propertyTitle={property.title}
+      />
     </div>
   )
 }
