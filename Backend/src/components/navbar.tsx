@@ -48,10 +48,9 @@ export function Navbar() {
     
     baseNav.push({ name: 'Publicar', href: '/publicar' })
 
-    // Agregar "Mi Empresa" y "Planes" si es inmobiliaria
+    // Agregar "Mi Empresa" si es inmobiliaria
     if (isAgency) {
       baseNav.push({ name: 'Mi Empresa', href: '/mi-empresa' })
-      baseNav.push({ name: 'Planes', href: '/mi-empresa/planes' })
     }
 
     return baseNav
