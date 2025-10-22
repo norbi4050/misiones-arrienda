@@ -27,6 +27,7 @@ import BusinessHours from '@/components/inmobiliarias/BusinessHours';
 import TeamMemberCard from '@/components/inmobiliarias/TeamMemberCard';
 import AgencyLocationMap from '@/components/inmobiliarias/AgencyLocationMap';
 import { parseBusinessHours } from '@/types/inmobiliaria';
+import { normalizeFacebookUrl, normalizeInstagramUrl, normalizeTikTokUrl } from '@/lib/social-urls';
 
 // Tipos
 interface InmobiliariaProfile {
@@ -292,9 +293,9 @@ export default function InmobiliariaProfileClient({
               {/* Redes sociales */}
               {(profile.facebook || profile.instagram || profile.tiktok) && (
                 <div className="flex gap-3 mt-4">
-                  {profile.facebook && (
+                  {profile.facebook && normalizeFacebookUrl(profile.facebook) && (
                     <a
-                      href={profile.facebook}
+                      href={normalizeFacebookUrl(profile.facebook)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-gray-600 hover:text-blue-600 transition"
@@ -303,9 +304,9 @@ export default function InmobiliariaProfileClient({
                       <Facebook className="w-5 h-5" />
                     </a>
                   )}
-                  {profile.instagram && (
+                  {profile.instagram && normalizeInstagramUrl(profile.instagram) && (
                     <a
-                      href={profile.instagram}
+                      href={normalizeInstagramUrl(profile.instagram)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-gray-600 hover:text-pink-600 transition"
