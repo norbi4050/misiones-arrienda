@@ -13,6 +13,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email-service-simple'
+import {
+  getWelcomeEmailTemplate,
+  getNewMessageEmailTemplate,
+  getInquiryReceivedEmailTemplate,
+  getPropertyStatusChangedEmailTemplate,
+  getLikeReceivedEmailTemplate,
+  getGenericEmailTemplate
+} from '@/lib/email-templates'
 
 // ========================================
 // TIPOS Y CONSTANTES
@@ -299,77 +307,30 @@ class NotificationService {
       metadata?: Record<string, any>
     }
   ): Promise<string> {
-    // Template básico (mejoraremos esto con templates específicos)
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${data.title}</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+    // Usar templates específicos según el tipo de notificación
+    switch (type) {
+      case 'WELCOME':
+        return getWelcomeEmailTemplate(data)
 
-          <!-- Header -->
-          <tr>
-            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Misiones Arrienda</h1>
-            </td>
-          </tr>
+      case 'NEW_MESSAGE':
+      case 'MESSAGE_REPLY':
+        return getNewMessageEmailTemplate(data)
 
-          <!-- Body -->
-          <tr>
-            <td style="padding: 40px 30px;">
-              <h2 style="color: #333333; margin: 0 0 10px 0;">${data.title}</h2>
-              <p style="color: #666666; line-height: 1.6; margin: 0 0 20px 0;">
-                Hola ${data.name},
-              </p>
-              <p style="color: #666666; line-height: 1.6; margin: 0 0 20px 0;">
-                ${data.message}
-              </p>
+      case 'INQUIRY_RECEIVED':
+      case 'INQUIRY_REPLY':
+        return getInquiryReceivedEmailTemplate(data)
 
-              ${data.metadata?.ctaUrl ? `
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center" style="padding: 20px 0;">
-                    <a href="${data.metadata.ctaUrl}" style="background-color: #667eea; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
-                      ${data.metadata.ctaText || 'Ver más'}
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-            </td>
-          </tr>
+      case 'PROPERTY_STATUS_CHANGED':
+      case 'PROPERTY_EXPIRING':
+        return getPropertyStatusChangedEmailTemplate(data)
 
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
-              <p style="color: #999999; font-size: 12px; margin: 0 0 10px 0;">
-                Recibiste este email porque estás registrado en Misiones Arrienda.
-              </p>
-              <p style="color: #999999; font-size: 12px; margin: 0;">
-                <a href="https://www.misionesarrienda.com.ar/notificaciones/preferencias" style="color: #667eea; text-decoration: none;">
-                  Gestionar preferencias de notificaciones
-                </a> |
-                <a href="https://www.misionesarrienda.com.ar/notificaciones/preferencias" style="color: #999999; text-decoration: none;">
-                  Dejar de recibir estos emails
-                </a>
-              </p>
-            </td>
-          </tr>
+      case 'LIKE_RECEIVED':
+        return getLikeReceivedEmailTemplate(data)
 
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-    `.trim()
+      // Para todos los demás tipos, usar template genérico
+      default:
+        return getGenericEmailTemplate(data)
+    }
   }
 
   /**
