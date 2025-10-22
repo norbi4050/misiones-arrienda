@@ -56,14 +56,20 @@ export default async function PropertiesPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Landing pública (sin sesión)
-  if (!user) {
+  // ========================================
+  // FEATURE: Public Property Listing
+  // Verificar si el listado público está habilitado
+  // ========================================
+  const publicListingEnabled = process.env.NEXT_PUBLIC_ENABLE_PUBLIC_LISTING === 'true'
+
+  // Landing pública (sin sesión) - SOLO SI FEATURE FLAG ESTÁ OFF
+  if (!user && !publicListingEnabled) {
     const demoProperties = await getDemoProperties()
 
     return (
       <main className="min-h-screen" data-testid="public-landing">
         <PageTracker eventName="visit_properties_public" />
-        
+
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
           <div className="container mx-auto px-4 text-center">
@@ -170,10 +176,11 @@ export default async function PropertiesPage() {
     )
   }
 
-  // Feed real (usuario logueado)
+  // Feed real (usuario logueado O feature flag activado)
+  // Con feature flag activado, pasamos isAuthenticated al cliente
   return (
     <>
-      <PageTracker eventName="visit_properties" />
+      <PageTracker eventName={user ? "visit_properties" : "visit_properties_public"} />
       <Suspense fallback={
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -182,7 +189,10 @@ export default async function PropertiesPage() {
           </div>
         </div>
       }>
-        <PropertiesPageClient />
+        <PropertiesPageClient
+          isAuthenticated={!!user}
+          userId={user?.id}
+        />
       </Suspense>
     </>
   )
