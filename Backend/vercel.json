@@ -160,8 +160,16 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/check-expired-plans",
+      "schedule": "0 1 * * *"
+    },
+    {
       "path": "/api/properties/expire-cleanup",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/notify-expiring-properties",
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/check-expiring-plans",
