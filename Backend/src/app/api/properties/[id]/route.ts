@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { sendNotification } from '@/lib/notification-service'
 
 // Evitar caching agresivo durante desarrollo
 export const dynamic = 'force-dynamic'
@@ -108,11 +109,18 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const supabase = createClient()
     const payload = await req.json()
 
+    // Obtener estado actual antes de actualizar (para detectar cambios de status)
+    const { data: currentProperty } = await supabase
+      .from('properties')
+      .select('status, title, user_id')
+      .eq('id', params.id)
+      .single()
+
     // Campos permitidos (evitamos tocar user_id/status/created_at, etc.)
     const allowed = [
       'title','description','price','operation_type','property_type',
       'bedrooms','bathrooms','area','city','province','address',
-      'latitude','longitude','images','featured'
+      'latitude','longitude','images','featured','status'
     ]
     const updateData: Record<string, any> = {}
     for (const k of allowed) if (k in payload) updateData[k] = payload[k]
@@ -149,21 +157,55 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     if (error) {
       console.error('Error updating property:', error)
-      return NextResponse.json({ 
-        ok: false, 
-        error: error.message 
+      return NextResponse.json({
+        ok: false,
+        error: error.message
       }, { status: 400 })
     }
 
-    return NextResponse.json({ 
-      ok: true, 
-      property: data 
+    // Enviar notificación si cambió el status
+    if (currentProperty && 'status' in updateData && updateData.status !== currentProperty.status) {
+      const statusLabels: Record<string, string> = {
+        'PUBLISHED': 'publicada',
+        'DRAFT': 'en borrador',
+        'ARCHIVED': 'archivada',
+        'SOLD': 'vendida',
+        'RENTED': 'alquilada',
+        'PENDING': 'pendiente'
+      }
+
+      const newStatusLabel = statusLabels[updateData.status] || updateData.status
+
+      try {
+        await sendNotification({
+          userId: currentProperty.user_id,
+          type: 'PROPERTY_STATUS_CHANGED',
+          title: `Estado de tu propiedad actualizado`,
+          message: `Tu propiedad "${currentProperty.title}" ahora está ${newStatusLabel}.`,
+          channels: ['in_app'],
+          metadata: {
+            propertyId: params.id,
+            propertyTitle: currentProperty.title,
+            oldStatus: currentProperty.status,
+            newStatus: updateData.status,
+            ctaUrl: `/mi-cuenta/publicaciones/${params.id}`,
+            ctaText: 'Ver propiedad'
+          }
+        })
+      } catch (notifError) {
+        console.error('Error enviando notificación de cambio de status:', notifError)
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      property: data
     })
 
   } catch (error) {
     console.error('Error in PATCH /api/properties/[id]:', error)
-    return NextResponse.json({ 
-      error: 'Internal server error' 
+    return NextResponse.json({
+      error: 'Internal server error'
     }, { status: 500 })
   }
 }

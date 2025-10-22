@@ -1,6 +1,7 @@
 
 // PROMPT D1: Importar guardas de displayName
 import { applyDisplayNameGuards, logGuardApplication } from '@/lib/displayname-guards';
+import { sendNotification } from '@/lib/notification-service';
 
 // Manejo mejorado de errores
 const handleApiError = (error: any, context: string) => {
@@ -502,11 +503,41 @@ export async function POST(request: NextRequest) {
     
     console.log(`🎉 [REGISTRO] Registro completado exitosamente en ${processingTime}ms`);
     console.log(`[REGISTER] USER TYPE: ${userType}`);
-    
+
     // Determinar ruta de redirección según userType
     const nextRoute = userType === 'inmobiliaria' ? '/mi-empresa' : '/';
     console.log(`[REGISTER] NEXT ROUTE: ${nextRoute}`);
-    
+
+    // ========================================
+    // 11. ENVIAR NOTIFICACIÓN DE BIENVENIDA
+    // ========================================
+    console.log('📧 [REGISTRO] Enviando notificación de bienvenida...');
+
+    try {
+      await sendNotification({
+        userId: profileData.id,
+        type: 'WELCOME',
+        title: `¡Bienvenido a Misiones Arrienda, ${guardResult.name}!`,
+        message: `Gracias por registrarte. Estamos encantados de tenerte en nuestra plataforma. ${
+          userType === 'inmobiliaria'
+            ? 'Comienza a publicar tus propiedades y gestiona tu cartera.'
+            : userType === 'dueno_directo'
+            ? 'Publica tu propiedad y encuentra inquilinos de forma rápida y segura.'
+            : 'Explora las mejores propiedades en Misiones y encuentra tu hogar ideal.'
+        }`,
+        channels: ['email', 'in_app'],
+        metadata: {
+          userType: profileData.user_type,
+          ctaUrl: nextRoute === '/mi-empresa' ? '/mi-empresa' : '/properties',
+          ctaText: userType === 'inmobiliaria' ? 'Ir a mi empresa' : userType === 'dueno_directo' ? 'Publicar propiedad' : 'Explorar propiedades'
+        }
+      });
+      console.log('✅ [REGISTRO] Notificación de bienvenida enviada');
+    } catch (notifError) {
+      // No bloqueamos el registro si falla la notificación
+      console.error('⚠️ [REGISTRO] Error enviando notificación de bienvenida:', notifError);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Usuario registrado exitosamente.',
