@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, Bed, Bath, Square, Building2, ExternalLink } from "lucide-react"
+import { MapPin, Bed, Bath, Square, Building2, ExternalLink, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/ui/FavoriteButton"
@@ -27,6 +27,9 @@ interface PropertyCardProps {
   owner_id?: string
   owner_type?: string
   owner_company_name?: string
+  // PUBLIC LISTING: Flags de autenticación requerida
+  requires_auth_for_contact?: boolean
+  requires_auth_for_full_images?: boolean
 }
 
 export function PropertyCard({
@@ -47,7 +50,9 @@ export function PropertyCard({
   operation_type,
   owner_id,
   owner_type,
-  owner_company_name
+  owner_company_name,
+  requires_auth_for_contact = false,
+  requires_auth_for_full_images = false
 }: PropertyCardProps) {
   // Paso 4: Usar cover_url en TODAS las cards, priorizando la nueva prop
   const src = cover_url ?? coverUrl ?? image ?? imageUrls?.[0] ?? '/placeholder-apartment-1.jpg';
@@ -149,7 +154,22 @@ export function PropertyCard({
               <ExternalLink className="w-3 h-3" />
             </Link>
           )}
-          
+
+          {/* PUBLIC LISTING: Badge indicando que requiere login */}
+          {requires_auth_for_contact && (
+            <div className="flex items-center gap-1 text-xs text-gray-500 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Lock className="h-3 w-3" />
+              <span>Inicia sesión para contactar</span>
+            </div>
+          )}
+
+          {requires_auth_for_full_images && (
+            <div className="flex items-center gap-1 text-xs text-blue-600 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Lock className="h-3 w-3" />
+              <span>+{/* Calculado dinámicamente */} fotos más</span>
+            </div>
+          )}
+
           <Button 
             className="w-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0" 
             variant="default"

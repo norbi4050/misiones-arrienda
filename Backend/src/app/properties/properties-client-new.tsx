@@ -25,7 +25,15 @@ const PropertiesMap = dynamic(
   }
 )
 
-export function PropertiesPageClient() {
+interface PropertiesPageClientProps {
+  isAuthenticated?: boolean
+  userId?: string
+}
+
+export function PropertiesPageClient({
+  isAuthenticated = false,
+  userId
+}: PropertiesPageClientProps = {}) {
   const [properties, setProperties] = useState<Property[]>([])
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
