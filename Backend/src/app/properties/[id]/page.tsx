@@ -24,6 +24,7 @@ import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { PropertyShareBar } from '@/components/share';
 import OwnerActions from '@/components/ui/OwnerActions';
 import { PropertyViewTracker } from '@/components/property/PropertyViewTracker';
+import { ReportButton } from '@/components/property/ReportButton';
 import { 
   MapPin, 
   Bed, 
@@ -367,6 +368,10 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                 {!isOwner && (
                   <div className="flex items-center space-x-2">
                     <FavoriteButton propertyId={property.id} />
+                    <ReportButton
+                      propertyId={property.id}
+                      propertyTitle={property.title}
+                    />
                   </div>
                 )}
               </div>
