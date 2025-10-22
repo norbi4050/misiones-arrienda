@@ -2,11 +2,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell, Building2, FileText, Crown, BarChart3 } from 'lucide-react';
+import { User, Settings, LogOut, ChevronDown, Heart, MessageCircle, Bell, Building2, FileText, Crown, BarChart3, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import AvatarUniversal from '@/components/ui/avatar-universal';
 import type { CurrentUser } from '@/lib/auth/mapUserProfile';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 interface ProfileDropdownProps {
   user: CurrentUser | null;
@@ -21,6 +22,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isAdmin } = useIsAdmin();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -249,6 +251,18 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
             {/* Divider */}
             <div className="border-t border-gray-100 my-1"></div>
+
+            {/* Admin Panel - Solo visible para administradores */}
+            {isAdmin && (
+              <Link
+                href="/admin/dashboard"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 transition-colors duration-150"
+              >
+                <Shield className="w-4 h-4 mr-3 text-blue-500" />
+                Panel de Admin
+              </Link>
+            )}
 
             {/* Configuración */}
             <Link
