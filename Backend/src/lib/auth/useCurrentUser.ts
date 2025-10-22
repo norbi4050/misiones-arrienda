@@ -41,22 +41,29 @@ export function useCurrentUser(): UseCurrentUserReturn {
   const fetchUserProfile = useCallback(async (userId: string): Promise<CurrentUser | null> => {
     try {
       console.log('[AuthBridge] Fetching profile for user:', userId)
-      
+
+      // Agregar timeout de 10 segundos para evitar que se quede esperando indefinidamente
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000)
+
       const response = await fetch('/api/users/profile', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error('[AuthBridge] Profile fetch failed:', errorData)
+        console.error('[AuthBridge] Profile fetch failed:', response.status, errorData)
         return null
       }
 
       const { profile } = await response.json()
-      
+
       if (!profile) {
         console.warn('[AuthBridge] No profile data returned from API')
         return null
@@ -71,10 +78,14 @@ export function useCurrentUser(): UseCurrentUserReturn {
         isCompany: profile.isCompany,
         isAgency: isAgency(profile),
       })
-      
+
       return profile as CurrentUser
     } catch (error) {
-      console.error('[AuthBridge] Error fetching profile:', error)
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('[AuthBridge] Profile fetch timed out after 10s')
+      } else {
+        console.error('[AuthBridge] Error fetching profile:', error)
+      }
       return null
     }
   }, [])
