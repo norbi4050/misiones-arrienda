@@ -509,11 +509,12 @@ export async function POST(request: NextRequest) {
     console.log(`[REGISTER] NEXT ROUTE: ${nextRoute}`);
 
     // ========================================
-    // 11. ENVIAR NOTIFICACIÓN DE BIENVENIDA
+    // 11. ENVIAR NOTIFICACIONES
     // ========================================
-    console.log('📧 [REGISTRO] Enviando notificación de bienvenida...');
+    console.log('📧 [REGISTRO] Enviando notificaciones...');
 
     try {
+      // Notificación de bienvenida
       await sendNotification({
         userId: profileData.id,
         type: 'WELCOME',
@@ -533,9 +534,23 @@ export async function POST(request: NextRequest) {
         }
       });
       console.log('✅ [REGISTRO] Notificación de bienvenida enviada');
+
+      // Notificación de email verificado (ya que se auto-confirma)
+      await sendNotification({
+        userId: profileData.id,
+        type: 'EMAIL_VERIFIED',
+        title: '✅ Tu email ha sido verificado',
+        message: `Tu cuenta con el email ${email} ha sido verificada exitosamente. Ya podés usar todas las funcionalidades de la plataforma.`,
+        channels: ['in_app'], // Solo in-app, no saturar con email
+        metadata: {
+          email: profileData.email,
+          verifiedAt: new Date().toISOString()
+        }
+      });
+      console.log('✅ [REGISTRO] Notificación de email verificado enviada');
     } catch (notifError) {
       // No bloqueamos el registro si falla la notificación
-      console.error('⚠️ [REGISTRO] Error enviando notificación de bienvenida:', notifError);
+      console.error('⚠️ [REGISTRO] Error enviando notificaciones:', notifError);
     }
 
     return NextResponse.json({

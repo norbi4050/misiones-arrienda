@@ -73,13 +73,19 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
       .single();
 
     if (publishedProperty) {
-      // Obtener usuarios que tienen esta propiedad en favoritos
+      // Obtener ciudad y provincia de la propiedad
+      const { data: propertyDetails } = await supabase
+        .from("properties")
+        .select("city, province")
+        .eq("id", params.id)
+        .single();
+
+      // 1. Notificar usuarios que tienen esta propiedad en favoritos
       const { data: favorites } = await supabase
         .from("favorites")
         .select("user_id")
         .eq("property_id", params.id);
 
-      // Enviar notificación a cada usuario que tiene la propiedad en favoritos
       if (favorites && favorites.length > 0) {
         const operationType = publishedProperty.operation_type === 'sale' ? 'venta' : 'alquiler';
 
@@ -104,6 +110,59 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
           }).catch(err => {
             console.error('[Publish] Error sending favorite notification:', err);
           });
+        }
+      }
+
+      // 2. Notificar usuarios que buscaron en esta zona (NEW_PROPERTY_IN_AREA)
+      if (propertyDetails) {
+        // Buscar usuarios que han buscado propiedades en esta ciudad recientemente
+        // Usamos la tabla search_history si existe, o podemos usar otra estrategia
+        const { data: recentSearches } = await supabase
+          .from("search_history")
+          .select("user_id")
+          .eq("city", propertyDetails.city)
+          .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Últimos 30 días
+          .limit(100); // Límite para no saturar
+
+        if (recentSearches && recentSearches.length > 0) {
+          // Eliminar duplicados y el propio dueño
+          const uniqueUsers = [...new Set(recentSearches.map(s => s.user_id))].filter(
+            userId => userId !== user.id
+          );
+
+          const operationType = publishedProperty.operation_type === 'sale' ? 'venta' : 'alquiler';
+          const propertyTypeLabels: Record<string, string> = {
+            'house': 'casa',
+            'apartment': 'departamento',
+            'land': 'terreno',
+            'commercial': 'local comercial'
+          };
+          const propertyTypeLabel = propertyTypeLabels[publishedProperty.property_type] || publishedProperty.property_type;
+
+          for (const userId of uniqueUsers.slice(0, 50)) { // Máximo 50 notificaciones
+            sendNotification({
+              userId,
+              type: 'NEW_PROPERTY_IN_AREA',
+              title: `Nueva propiedad en ${propertyDetails.city}`,
+              message: `Se publicó un ${propertyTypeLabel} en ${operationType} en ${propertyDetails.city}, una zona que te interesa.`,
+              channels: ['in_app'], // Solo in-app para no saturar con emails
+              metadata: {
+                propertyId: publishedProperty.id,
+                propertyTitle: publishedProperty.title,
+                propertyType: publishedProperty.property_type,
+                operationType: publishedProperty.operation_type,
+                price: publishedProperty.price,
+                city: propertyDetails.city,
+                province: propertyDetails.province,
+                ctaUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/propiedades/${publishedProperty.id}`,
+                ctaText: 'Ver propiedad'
+              },
+              relatedId: publishedProperty.id,
+              relatedType: 'property'
+            }).catch(err => {
+              console.error('[Publish] Error sending new property in area notification:', err);
+            });
+          }
         }
       }
     }

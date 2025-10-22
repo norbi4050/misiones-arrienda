@@ -400,6 +400,62 @@ export const getPaymentCompletedEmailTemplate = (data: EmailTemplateData): strin
 }
 
 /**
+ * Template para NUEVA PROPIEDAD EN TU ÁREA
+ */
+export const getNewPropertyInAreaEmailTemplate = (data: EmailTemplateData): string => {
+  const city = data.metadata?.city || 'tu zona'
+  const propertyTitle = data.metadata?.propertyTitle || 'una propiedad'
+  const price = data.metadata?.price || 0
+  const operationType = data.metadata?.operationType === 'sale' ? 'venta' : 'alquiler'
+
+  const content = `
+    <div class="header">
+      <h1>🏠 Nueva Propiedad en ${city}</h1>
+      <p>Encontramos algo que te puede interesar</p>
+    </div>
+    <div class="content">
+      <p class="greeting">Hola <strong>${data.name}</strong>,</p>
+      <p class="message">
+        ${data.message}
+      </p>
+      <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 25px; margin: 25px 0; border-radius: 8px;">
+        <h3 style="color: #1e40af; margin: 0 0 15px 0; font-size: 18px;">📍 ${propertyTitle}</h3>
+        <div style="margin-bottom: 10px;">
+          <strong style="color: #1e3a8a;">Ciudad:</strong>
+          <span style="color: #1e40af;"> ${city}</span>
+        </div>
+        <div style="margin-bottom: 10px;">
+          <strong style="color: #1e3a8a;">Precio:</strong>
+          <span style="color: #1e40af; font-size: 20px; font-weight: 600;"> $${price.toLocaleString('es-AR')}</span>
+        </div>
+        <div>
+          <strong style="color: #1e3a8a;">Operación:</strong>
+          <span style="color: #1e40af;"> ${operationType}</span>
+        </div>
+      </div>
+      ${data.metadata?.ctaUrl ? `
+      <div class="cta-container">
+        <a href="${data.metadata.ctaUrl}" class="cta-button">
+          ${data.metadata.ctaText || 'Ver propiedad'}
+        </a>
+      </div>
+      ` : ''}
+      <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+        💡 Esta notificación se envió porque buscaste propiedades en ${city} recientemente.
+      </p>
+    </div>
+    <div class="footer">
+      <p>
+        <a href="${process.env.NEXT_PUBLIC_SITE_URL}/properties?city=${encodeURIComponent(city)}">Ver más propiedades en ${city}</a> |
+        <a href="${process.env.NEXT_PUBLIC_SITE_URL}/notificaciones/preferencias">Gestionar preferencias</a>
+      </p>
+    </div>
+  `
+
+  return getBaseTemplate(content, `Nueva propiedad en ${city} - ${operationType}`)
+}
+
+/**
  * Template genérico para otros tipos de notificaciones
  */
 export const getGenericEmailTemplate = (data: EmailTemplateData): string => {

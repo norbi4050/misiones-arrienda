@@ -20,6 +20,7 @@ import {
   getPropertyStatusChangedEmailTemplate,
   getLikeReceivedEmailTemplate,
   getPaymentCompletedEmailTemplate,
+  getNewPropertyInAreaEmailTemplate,
   getGenericEmailTemplate
 } from '@/lib/email-templates'
 
@@ -333,6 +334,10 @@ class NotificationService {
       case 'PLAN_EXPIRING':
       case 'INVOICE_READY':
         return getPaymentCompletedEmailTemplate(data)
+
+      case 'NEW_PROPERTY_IN_AREA':
+      case 'FAVORITE_PROPERTY_UPDATED':
+        return getNewPropertyInAreaEmailTemplate(data)
 
       // Para todos los demás tipos, usar template genérico
       default:
