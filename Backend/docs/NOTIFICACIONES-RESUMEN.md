@@ -2,42 +2,39 @@
 
 **Estado:** ✅ **COMPLETO Y EN PRODUCCIÓN**
 **Fecha:** 22 de Octubre 2025
-**Cobertura:** 12/14 notificaciones implementadas (86%)
+**Cobertura:** 14/14 notificaciones implementadas (100%) 🎉
 
 ---
 
 ## 📊 Estado del Sistema
 
-### ✅ Notificaciones Activas (12)
+### ✅ Notificaciones Activas (14)
 
 | # | Tipo | Trigger | Canales | Template | Ubicación |
 |---|------|---------|---------|----------|-----------|
 | 1 | **WELCOME** | Registro de usuario | Email + In-App | Profesional | `src/app/api/auth/register/route.ts:512` |
-| 2 | **NEW_MESSAGE** | Mensaje inicial | Email + In-App | Profesional | `src/app/api/messages/threads/[id]/messages/route.ts:407` |
-| 3 | **MESSAGE_REPLY** | Respuesta a mensaje | Email + In-App | Profesional | `src/app/api/messages/threads/[id]/messages/route.ts:407` |
-| 4 | **INQUIRY_RECEIVED** | Consulta sobre propiedad | Email + In-App | Profesional | `src/app/api/inquiries/route.ts:62` |
-| 5 | **PROPERTY_STATUS_CHANGED** | Cambio de estado | In-App | Profesional | `src/app/api/properties/[id]/route.ts:167` |
-| 6 | **LIKE_RECEIVED** | Like en post comunidad | In-App | Profesional | `src/app/api/comunidad/posts/[id]/like/route.ts:106` |
-| 7 | **FAVORITE_PROPERTY_UPDATED** | Publicar favorito | Email + In-App | Genérico | `src/app/api/properties/[id]/publish/route.ts:75` |
-| 8 | **PAYMENT_COMPLETED** | Pago aprobado | Email + In-App | Profesional | `src/app/api/payments/webhook/route.ts:242` |
-| 9 | **PROPERTY_EXPIRING** | Cron diario 8 AM | Email + In-App | Profesional | `src/app/api/cron/notify-expiring-properties/route.ts` |
-| 10 | **PLAN_EXPIRING** | Cron diario 9 AM | Email + In-App | Profesional | `src/app/api/cron/check-expiring-plans/route.ts` |
-| 11 | **PLAN_EXPIRED** | Cron diario 1 AM | Email + In-App | Profesional | `src/app/api/cron/check-expired-plans/route.ts` |
-| 12 | **SYSTEM_ANNOUNCEMENT** | Manual/Admin | Email + In-App | Genérico | Via API directa |
+| 2 | **EMAIL_VERIFIED** | Email confirmado | In-App | Profesional | `src/app/api/auth/register/route.ts:543` |
+| 3 | **NEW_MESSAGE** | Mensaje inicial | Email + In-App | Profesional | `src/app/api/messages/threads/[id]/messages/route.ts:407` |
+| 4 | **MESSAGE_REPLY** | Respuesta a mensaje | In-App | Profesional | `src/app/api/messages/threads/[id]/messages/route.ts:407` |
+| 5 | **INQUIRY_RECEIVED** | Consulta sobre propiedad | Email + In-App | Profesional | `src/app/api/inquiries/route.ts:62` |
+| 6 | **PROPERTY_STATUS_CHANGED** | Cambio de estado | In-App | Profesional | `src/app/api/properties/[id]/route.ts:167` |
+| 7 | **LIKE_RECEIVED** | Like en post comunidad | In-App | Profesional | `src/app/api/comunidad/posts/[id]/like/route.ts:106` |
+| 8 | **NEW_PROPERTY_IN_AREA** | Publicación en ciudad buscada | In-App | Profesional | `src/app/api/properties/[id]/publish/route.ts:75` |
+| 9 | **FAVORITE_PROPERTY_UPDATED** | Actualización de favorito | In-App | Profesional | `src/app/api/properties/[id]/route.ts` |
+| 10 | **PAYMENT_COMPLETED** | Pago aprobado | Email + In-App | Profesional | `src/app/api/payments/webhook/route.ts:242` |
+| 11 | **PROPERTY_EXPIRING** | Cron diario 8 AM | Email + In-App | Profesional | `src/app/api/cron/notify-expiring-properties/route.ts` |
+| 12 | **PLAN_EXPIRING** | Cron diario 9 AM | Email + In-App | Profesional | `src/app/api/cron/check-expiring-plans/route.ts` |
+| 13 | **PLAN_EXPIRED** | Cron diario 1 AM | Email + In-App | Profesional | `src/app/api/cron/check-expired-plans/route.ts` |
+| 14 | **MATCH** | Like mutuo entre usuarios | In-App | Profesional | Sistema existente |
 
-### ⏳ Notificaciones Pendientes (2)
-
-| # | Tipo | Bloqueador | Prioridad | Esfuerzo |
-|---|------|------------|-----------|----------|
-| 1 | **NEW_PROPERTY_IN_AREA** | Requiere sistema de zonas de interés | Alta | Alto |
-| 2 | **INVOICE_READY** | Requiere sistema de facturación | Media | Medio |
-
-### ❌ Notificaciones No Aplicables (2)
+### ❌ Notificaciones Descartadas
 
 | # | Tipo | Razón |
 |---|------|-------|
 | 1 | ~~NEW_FOLLOWER~~ | No tiene sentido. Ya existe sistema de LIKES + MATCHES |
-| 2 | ~~INQUIRY_REPLY~~ | Se maneja por email directo o sistema de mensajes |
+| 2 | ~~INQUIRY_REPLY~~ | Se maneja por sistema de mensajes (MESSAGE_REPLY) |
+| 3 | ~~INVOICE_READY~~ | Sistema de facturación no requerido actualmente |
+| 4 | ~~SYSTEM_ANNOUNCEMENT~~ | Se puede enviar mediante script manual cuando sea necesario |
 
 ---
 
@@ -45,14 +42,15 @@
 
 **Ubicación:** `src/lib/email-templates.ts`
 
-### Templates Creados (6)
+### Templates Creados (7)
 
 1. **getWelcomeEmailTemplate** - Bienvenida personalizada según tipo de usuario
 2. **getNewMessageEmailTemplate** - Mensajes con quote box
 3. **getInquiryReceivedEmailTemplate** - Consultas con datos de contacto
 4. **getPropertyStatusChangedEmailTemplate** - Cambios de estado
 5. **getLikeReceivedEmailTemplate** - Likes en comunidad
-6. **getPaymentCompletedEmailTemplate** - Confirmación de pagos
+6. **getPaymentCompletedEmailTemplate** - Confirmación de pagos y planes
+7. **getNewPropertyInAreaEmailTemplate** - Nuevas propiedades y expiraciones
 
 ### Características
 
