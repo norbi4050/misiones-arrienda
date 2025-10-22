@@ -43,7 +43,7 @@ const ConversationCard = memo(function ConversationCard({
   currentUserId
 }: ConversationCardProps) {
   const router = useRouter()
-  const { profile, isLoading } = useProfile(conversation.otherParticipant)
+  const { profile, loading } = useProfile(conversation.otherParticipant)
 
   const handleClick = () => {
     router.push(`/comunidad/mensajes/${conversation.id}`)
@@ -54,7 +54,7 @@ const ConversationCard = memo(function ConversationCard({
   const avatarUrl = profile?.avatar_url
 
   // Mostrar skeleton mientras carga
-  if (isLoading) {
+  if (loading) {
     return (
       <Card className="w-full">
         <CardContent className="p-4">
@@ -157,6 +157,6 @@ const ConversationCard = memo(function ConversationCard({
       </CardContent>
     </Card>
   )
-}
+})
 
 export default ConversationCard

@@ -39,188 +39,239 @@ async function generateAllPreviews() {
 
   // 1. WELCOME - Inmobiliaria
   const welcomeInmo = getWelcomeEmailTemplate({
-    userName: 'Inmobiliaria Del Centro',
-    userType: 'inmobiliaria',
-    ctaUrl: 'https://misionesarrienda.com/mi-empresa',
-    ctaText: 'Ir a mi empresa'
+    name: 'Inmobiliaria Del Centro',
+    title: 'Bienvenido a Misiones Arrienda',
+    message: '',
+    metadata: {
+      userType: 'inmobiliaria',
+      ctaUrl: 'https://misionesarrienda.com/mi-empresa',
+      ctaText: 'Ir a mi empresa'
+    }
   })
   saveTemplate('01-welcome-inmobiliaria.html', welcomeInmo)
 
   // 2. WELCOME - Dueño directo
   const welcomeOwner = getWelcomeEmailTemplate({
-    userName: 'Juan Pérez',
-    userType: 'dueno_directo',
-    ctaUrl: 'https://misionesarrienda.com/properties',
-    ctaText: 'Explorar propiedades'
+    name: 'Juan Pérez',
+    title: 'Bienvenido a Misiones Arrienda',
+    message: '',
+    metadata: {
+      userType: 'dueno_directo',
+      ctaUrl: 'https://misionesarrienda.com/properties',
+      ctaText: 'Explorar propiedades'
+    }
   })
   saveTemplate('02-welcome-dueno-directo.html', welcomeOwner)
 
   // 3. WELCOME - Inquilino
   const welcomeTenant = getWelcomeEmailTemplate({
-    userName: 'María García',
-    userType: 'inquilino',
-    ctaUrl: 'https://misionesarrienda.com/properties',
-    ctaText: 'Explorar propiedades'
+    name: 'María García',
+    title: 'Bienvenido a Misiones Arrienda',
+    message: '',
+    metadata: {
+      userType: 'inquilino',
+      ctaUrl: 'https://misionesarrienda.com/properties',
+      ctaText: 'Explorar propiedades'
+    }
   })
   saveTemplate('03-welcome-inquilino.html', welcomeTenant)
 
   // 4. NEW_MESSAGE
   const newMessage = getNewMessageEmailTemplate({
-    recipientName: 'Juan Pérez',
-    senderName: 'Laura Martínez',
-    senderAvatar: 'https://avatar.vercel.sh/laura',
-    messagePreview: 'Hola Juan, vi tu propiedad en Posadas Centro y me gustaría coordinar una visita. ¿Tienes disponibilidad esta semana?',
-    propertyTitle: 'Casa 3 dormitorios en Posadas Centro',
-    ctaUrl: 'https://misionesarrienda.com/messages/conv123',
-    ctaText: 'Responder mensaje'
+    name: 'Juan Pérez',
+    title: 'Nuevo Mensaje',
+    message: 'Hola Juan, vi tu propiedad en Posadas Centro y me gustaría coordinar una visita. ¿Tienes disponibilidad esta semana?',
+    metadata: {
+      senderName: 'Laura Martínez',
+      senderAvatar: 'https://avatar.vercel.sh/laura',
+      messagePreview: 'Hola Juan, vi tu propiedad en Posadas Centro y me gustaría coordinar una visita. ¿Tienes disponibilidad esta semana?',
+      propertyTitle: 'Casa 3 dormitorios en Posadas Centro',
+      ctaUrl: 'https://misionesarrienda.com/messages/conv123',
+      ctaText: 'Responder mensaje'
+    }
   })
   saveTemplate('04-new-message.html', newMessage)
 
   // 5. MESSAGE_REPLY
   const messageReply = getNewMessageEmailTemplate({
-    recipientName: 'Laura Martínez',
-    senderName: 'Juan Pérez',
-    senderAvatar: 'https://avatar.vercel.sh/juan',
-    messagePreview: 'Hola Laura, claro que sí. ¿Te viene bien el sábado a las 10 AM? La propiedad está en excelente estado.',
-    propertyTitle: 'Casa 3 dormitorios en Posadas Centro',
-    ctaUrl: 'https://misionesarrienda.com/messages/conv123',
-    ctaText: 'Ver conversación',
-    isReply: true
+    name: 'Laura Martínez',
+    title: 'Respuesta de Mensaje',
+    message: 'Hola Laura, claro que sí. ¿Te viene bien el sábado a las 10 AM? La propiedad está en excelente estado.',
+    metadata: {
+      senderName: 'Juan Pérez',
+      senderAvatar: 'https://avatar.vercel.sh/juan',
+      messagePreview: 'Hola Laura, claro que sí. ¿Te viene bien el sábado a las 10 AM? La propiedad está en excelente estado.',
+      propertyTitle: 'Casa 3 dormitorios en Posadas Centro',
+      ctaUrl: 'https://misionesarrienda.com/messages/conv123',
+      ctaText: 'Ver conversación',
+      isReply: true
+    }
   })
   saveTemplate('05-message-reply.html', messageReply)
 
   // 6. INQUIRY_RECEIVED
   const inquiryReceived = getInquiryReceivedEmailTemplate({
-    recipientName: 'Pedro López',
-    inquirerName: 'Carolina Rodríguez',
-    inquirerEmail: 'carolina@example.com',
-    inquirerPhone: '+54 3764 456789',
-    propertyTitle: 'Departamento 2 ambientes en Centro',
-    inquiryMessage: '¿La propiedad cuenta con cochera? ¿Cuál es el costo de las expensas mensuales? ¿Acepta mascotas?',
-    ctaUrl: 'https://misionesarrienda.com/mi-cuenta/consultas/prop456',
-    ctaText: 'Ver consulta completa'
+    name: 'Pedro López',
+    title: 'Consulta Recibida',
+    message: '¿La propiedad cuenta con cochera? ¿Cuál es el costo de las expensas mensuales? ¿Acepta mascotas?',
+    metadata: {
+      inquirerName: 'Carolina Rodríguez',
+      inquirerEmail: 'carolina@example.com',
+      inquirerPhone: '+54 3764 456789',
+      propertyTitle: 'Departamento 2 ambientes en Centro',
+      ctaUrl: 'https://misionesarrienda.com/mi-cuenta/consultas/prop456',
+      ctaText: 'Ver consulta completa'
+    }
   })
   saveTemplate('06-inquiry-received.html', inquiryReceived)
 
   // 7. PROPERTY_STATUS_CHANGED - Publicada
   const propertyPublished = getPropertyStatusChangedEmailTemplate({
-    recipientName: 'Ana González',
-    propertyTitle: 'Casa 4 dormitorios con piscina',
-    oldStatus: 'DRAFT',
-    newStatus: 'PUBLISHED',
-    ctaUrl: 'https://misionesarrienda.com/mi-cuenta/publicaciones/prop789',
-    ctaText: 'Ver propiedad'
+    name: 'Ana González',
+    title: 'Estado de Propiedad Cambiado',
+    message: 'Tu propiedad ha sido publicada',
+    metadata: {
+      propertyTitle: 'Casa 4 dormitorios con piscina',
+      oldStatus: 'DRAFT',
+      newStatus: 'PUBLISHED',
+      ctaUrl: 'https://misionesarrienda.com/mi-cuenta/publicaciones/prop789',
+      ctaText: 'Ver propiedad'
+    }
   })
   saveTemplate('07-property-published.html', propertyPublished)
 
   // 8. PROPERTY_STATUS_CHANGED - Vendida
   const propertySold = getPropertyStatusChangedEmailTemplate({
-    recipientName: 'Roberto Martínez',
-    propertyTitle: 'Terreno 500m² en Avenida Principal',
-    oldStatus: 'PUBLISHED',
-    newStatus: 'SOLD',
-    ctaUrl: 'https://misionesarrienda.com/mi-cuenta/publicaciones/prop101',
-    ctaText: 'Ver detalles'
+    name: 'Roberto Martínez',
+    title: 'Estado de Propiedad Cambiado',
+    message: 'Tu propiedad ha sido marcada como vendida',
+    metadata: {
+      propertyTitle: 'Terreno 500m² en Avenida Principal',
+      oldStatus: 'PUBLISHED',
+      newStatus: 'SOLD',
+      ctaUrl: 'https://misionesarrienda.com/mi-cuenta/publicaciones/prop101',
+      ctaText: 'Ver detalles'
+    }
   })
   saveTemplate('08-property-sold.html', propertySold)
 
   // 9. LIKE_RECEIVED
   const likeReceived = getLikeReceivedEmailTemplate({
-    recipientName: 'Mónica Ruiz',
-    likerName: 'Diego Fernández',
-    likerAvatar: 'https://avatar.vercel.sh/diego',
-    postTitle: 'Busco departamento 2 ambientes en zona céntrica',
-    ctaUrl: 'https://misionesarrienda.com/comunidad/publicaciones/post555',
-    ctaText: 'Ver publicación'
+    name: 'Mónica Ruiz',
+    title: 'Like Recibido',
+    message: 'Diego Fernández le gustó tu publicación',
+    metadata: {
+      likerName: 'Diego Fernández',
+      likerAvatar: 'https://avatar.vercel.sh/diego',
+      postTitle: 'Busco departamento 2 ambientes en zona céntrica',
+      ctaUrl: 'https://misionesarrienda.com/comunidad/publicaciones/post555',
+      ctaText: 'Ver publicación'
+    }
   })
   saveTemplate('09-like-received.html', likeReceived)
 
   // 10. PAYMENT_COMPLETED - Destacar propiedad
   const paymentFeature = getPaymentCompletedEmailTemplate({
-    recipientName: 'Inmobiliaria Premium',
-    amount: 5000,
-    currency: 'ARS',
-    paymentMethod: 'Tarjeta de crédito',
-    paymentId: 'MP-12345678',
-    paymentType: 'feature',
-    propertyTitle: 'Oficina comercial 80m² en Centro',
-    featureExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    ctaUrl: 'https://misionesarrienda.com/mi-cuenta/publicaciones',
-    ctaText: 'Ver mis publicaciones'
+    name: 'Inmobiliaria Premium',
+    title: 'Pago Completado',
+    message: 'Tu pago para destacar la propiedad fue procesado exitosamente',
+    metadata: {
+      amount: 5000,
+      currency: 'ARS',
+      paymentMethod: 'Tarjeta de crédito',
+      paymentId: 'MP-12345678',
+      paymentType: 'feature',
+      propertyTitle: 'Oficina comercial 80m² en Centro',
+      featureExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      ctaUrl: 'https://misionesarrienda.com/mi-cuenta/publicaciones',
+      ctaText: 'Ver mis publicaciones'
+    }
   })
   saveTemplate('10-payment-feature.html', paymentFeature)
 
   // 11. PAYMENT_COMPLETED - Suscripción Premium
   const paymentSubscription = getPaymentCompletedEmailTemplate({
-    recipientName: 'Inmobiliaria Del Norte',
-    amount: 15000,
-    currency: 'ARS',
-    paymentMethod: 'Tarjeta de débito',
-    paymentId: 'MP-87654321',
-    paymentType: 'subscription',
-    plan: 'premium',
-    nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    ctaUrl: 'https://misionesarrienda.com/mi-empresa/planes',
-    ctaText: 'Ver mi plan'
+    name: 'Inmobiliaria Del Norte',
+    title: 'Pago Completado',
+    message: 'Tu suscripción Premium fue procesada exitosamente',
+    metadata: {
+      amount: 15000,
+      currency: 'ARS',
+      paymentMethod: 'Tarjeta de débito',
+      paymentId: 'MP-87654321',
+      paymentType: 'subscription',
+      plan: 'premium',
+      nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      ctaUrl: 'https://misionesarrienda.com/mi-empresa/planes',
+      ctaText: 'Ver mi plan'
+    }
   })
   saveTemplate('11-payment-subscription.html', paymentSubscription)
 
   // 12. PROPERTY_EXPIRING
   const propertyExpiring = getNewPropertyInAreaEmailTemplate({
-    recipientName: 'Silvana Torres',
+    name: 'Silvana Torres',
     title: 'Tu propiedad expira pronto',
     message: 'Tu publicación "Local comercial en Avenida Uruguay" expirará en 7 días.',
-    propertyTitle: 'Local comercial en Avenida Uruguay',
-    city: 'Posadas',
-    operationType: 'ALQUILER',
-    price: 120000,
-    propertyType: 'local',
-    ctaUrl: 'https://misionesarrienda.com/mi-cuenta/publicaciones/prop202',
-    ctaText: 'Renovar publicación',
-    isExpiring: true
+    metadata: {
+      propertyTitle: 'Local comercial en Avenida Uruguay',
+      city: 'Posadas',
+      operationType: 'ALQUILER',
+      price: 120000,
+      propertyType: 'local',
+      ctaUrl: 'https://misionesarrienda.com/mi-cuenta/publicaciones/prop202',
+      ctaText: 'Renovar publicación',
+      isExpiring: true
+    }
   })
   saveTemplate('12-property-expiring.html', propertyExpiring)
 
   // 13. NEW_PROPERTY_IN_AREA
   const newPropertyInArea = getNewPropertyInAreaEmailTemplate({
-    recipientName: 'Carlos Benítez',
+    name: 'Carlos Benítez',
     title: 'Nueva propiedad en Posadas',
     message: 'Se publicó un departamento en ALQUILER en Posadas que puede interesarte.',
-    propertyTitle: 'Departamento 3 ambientes con balcón',
-    city: 'Posadas',
-    operationType: 'ALQUILER',
-    price: 95000,
-    propertyType: 'departamento',
-    ctaUrl: 'https://misionesarrienda.com/propiedades/prop303',
-    ctaText: 'Ver propiedad'
+    metadata: {
+      propertyTitle: 'Departamento 3 ambientes con balcón',
+      city: 'Posadas',
+      operationType: 'ALQUILER',
+      price: 95000,
+      propertyType: 'departamento',
+      ctaUrl: 'https://misionesarrienda.com/propiedades/prop303',
+      ctaText: 'Ver propiedad'
+    }
   })
   saveTemplate('13-new-property-in-area.html', newPropertyInArea)
 
   // 14. PLAN_EXPIRING
   const planExpiring = getPaymentCompletedEmailTemplate({
-    recipientName: 'Inmobiliaria Central',
+    name: 'Inmobiliaria Central',
     title: 'Tu plan expira pronto',
     message: 'Tu plan Premium expirará en 3 días. Renueva ahora para mantener tus beneficios.',
-    plan: 'premium',
-    expirationDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    daysRemaining: 3,
-    ctaUrl: 'https://misionesarrienda.com/planes',
-    ctaText: 'Renovar Plan',
-    isExpiring: true
+    metadata: {
+      plan: 'premium',
+      expirationDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      daysRemaining: 3,
+      ctaUrl: 'https://misionesarrienda.com/planes',
+      ctaText: 'Renovar Plan',
+      isExpiring: true
+    }
   })
   saveTemplate('14-plan-expiring.html', planExpiring)
 
   // 15. PLAN_EXPIRED
   const planExpired = getPaymentCompletedEmailTemplate({
-    recipientName: 'Inmobiliaria Sur',
+    name: 'Inmobiliaria Sur',
     title: 'Tu plan ha expirado',
     message: 'Tu plan Premium expiró el 22/10/2025. Has sido cambiado al plan gratuito.',
-    plan: 'premium',
-    newPlan: 'free',
-    expirationDate: new Date().toISOString(),
-    ctaUrl: 'https://misionesarrienda.com/mi-empresa/planes',
-    ctaText: 'Ver Planes',
-    isExpired: true
+    metadata: {
+      plan: 'premium',
+      newPlan: 'free',
+      expirationDate: new Date().toISOString(),
+      ctaUrl: 'https://misionesarrienda.com/mi-empresa/planes',
+      ctaText: 'Ver Planes',
+      isExpired: true
+    }
   })
   saveTemplate('15-plan-expired.html', planExpired)
 

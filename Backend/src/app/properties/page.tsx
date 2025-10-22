@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
+import Image from 'next/image'
 import { PropertiesPageClient } from './properties-client-new'
 import { PageTracker } from '@/components/analytics/page-tracker'
 import { createClient } from '@/lib/supabase/server'
@@ -133,10 +134,13 @@ export default async function PropertiesPage() {
                 <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="aspect-video bg-gray-200 relative">
                     {property.images?.[0] && (
-                      <img 
-                        src={property.images[0]} 
+                      <Image
+                        src={property.images[0]}
                         alt={property.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover"
+                        loading="lazy"
                       />
                     )}
                   </div>

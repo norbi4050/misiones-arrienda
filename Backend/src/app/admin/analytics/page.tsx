@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { Button } from '@/components/ui/button';
@@ -46,13 +46,7 @@ export default function AdminAnalyticsPage() {
   // Verificar si es admin (simplificado - en producción usar roles)
   const isAdmin = user?.email?.includes('admin') || user?.email?.includes('norbe');
 
-  useEffect(() => {
-    if (user && isAdmin) {
-      fetchAnalyticsData();
-    }
-  }, [user, isAdmin, timeRange]);
-
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -113,7 +107,13 @@ export default function AdminAnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange]); // Dependencias: timeRange
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      fetchAnalyticsData();
+    }
+  }, [user, isAdmin, fetchAnalyticsData]);
 
   // Loading state
   if (isLoading) {

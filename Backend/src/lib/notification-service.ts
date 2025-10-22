@@ -44,6 +44,7 @@ export type NotificationType =
   // Social
   | 'LIKE_RECEIVED'
   | 'NEW_FOLLOWER'
+  | 'MATCH'  // Match mutuo entre usuarios
 
   // Pagos y Planes (Inmobiliarias)
   | 'PAYMENT_COMPLETED'
@@ -111,6 +112,7 @@ const NOTIFICATION_TYPE_TO_PREFERENCE: Record<NotificationType, keyof Notificati
   'NEW_PROPERTY_IN_AREA': 'newPropertiesInArea',
   'LIKE_RECEIVED': 'likesReceived',
   'NEW_FOLLOWER': 'newFollowers',
+  'MATCH': 'newFollowers',  // Match usa la misma preferencia que new followers
   'PAYMENT_COMPLETED': 'paymentCompleted',
   'PLAN_EXPIRING': 'planExpiring',
   'PLAN_EXPIRED': 'planExpiring',

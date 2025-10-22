@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -17,9 +17,9 @@ export function MyCommunityPostsClient() {
   const [hasMore, setHasMore] = useState(false)
   const [total, setTotal] = useState(0)
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     setLoading(true)
-    
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -31,7 +31,7 @@ export function MyCommunityPostsClient() {
       const response = await fetch(`/api/comunidad/my-posts?${params}`, {
         cache: 'no-store' // Forzar no-cache
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         setPosts(data.posts)
@@ -45,11 +45,11 @@ export function MyCommunityPostsClient() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, statusFilter])
 
   useEffect(() => {
     fetchPosts()
-  }, [page, statusFilter])
+  }, [fetchPosts])
 
   return (
     <>
