@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getPaymentInfo, validateWebhookSignature, processPaymentEffects } from '@/lib/mercadopago/helpers';
 import { MP_CONFIG } from '@/lib/mercadopago/client';
+import { sendNotification } from '@/lib/notification-service';
 
 // Marcar esta ruta como dinámica para evitar errores de build
 export const dynamic = 'force-dynamic'
@@ -218,12 +219,12 @@ export async function POST(request: NextRequest) {
     // Procesar efectos si el pago fue aprobado
     if (newStatus === 'APPROVED') {
       console.log('✅ Pago aprobado, procesando efectos...');
-      
+
       try {
         if (recordType === 'payment' && record.type === 'FEATURE') {
           // Destacar anuncio por 30 días
           const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-          
+
           const { error: featureError } = await supabase
             .from('properties')
             .update({
@@ -238,9 +239,63 @@ export async function POST(request: NextRequest) {
             console.log('⭐ Propiedad destacada hasta:', expiresAt);
           }
 
+          // Enviar notificación de pago completado
+          try {
+            await sendNotification({
+              userId: record.user_id,
+              type: 'PAYMENT_COMPLETED',
+              title: '¡Pago confirmado!',
+              message: `Tu pago de $${paymentInfo.transaction_amount} ha sido procesado exitosamente. Tu propiedad ahora está destacada por 30 días.`,
+              channels: ['email', 'in_app'],
+              metadata: {
+                paymentId: paymentInfo.id,
+                amount: paymentInfo.transaction_amount,
+                currency: paymentInfo.currency_id,
+                paymentMethod: paymentInfo.payment_method_id,
+                propertyId: record.property_id,
+                featureExpiresAt: expiresAt.toISOString(),
+                ctaUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/mi-cuenta/publicaciones`,
+                ctaText: 'Ver mis propiedades'
+              }
+            });
+            console.log('📧 Notificación de pago enviada');
+          } catch (notifError) {
+            console.error('❌ Error enviando notificación de pago:', notifError);
+          }
+
         } else if (recordType === 'subscription') {
           // La suscripción ya se activó arriba
           console.log('🏢 Suscripción activada:', record.plan);
+
+          // Enviar notificación de suscripción activada
+          try {
+            const planNames: Record<string, string> = {
+              'BASIC': 'Plan Básico',
+              'PROFESSIONAL': 'Plan Profesional',
+              'ENTERPRISE': 'Plan Empresarial'
+            };
+
+            await sendNotification({
+              userId: record.user_id,
+              type: 'PAYMENT_COMPLETED',
+              title: '¡Suscripción activada!',
+              message: `Tu pago de $${paymentInfo.transaction_amount} ha sido procesado. Tu suscripción al ${planNames[record.plan] || record.plan} está activa.`,
+              channels: ['email', 'in_app'],
+              metadata: {
+                paymentId: paymentInfo.id,
+                amount: paymentInfo.transaction_amount,
+                currency: paymentInfo.currency_id,
+                subscriptionId: record.id,
+                plan: record.plan,
+                planName: planNames[record.plan] || record.plan,
+                ctaUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/mi-empresa/planes`,
+                ctaText: 'Ver detalles del plan'
+              }
+            });
+            console.log('📧 Notificación de suscripción enviada');
+          } catch (notifError) {
+            console.error('❌ Error enviando notificación de suscripción:', notifError);
+          }
         }
 
       } catch (effectError) {

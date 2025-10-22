@@ -380,15 +380,24 @@ export async function POST(
         recipientUserId = recipientProfileId
       }
 
-      // Verificar si hay mensajes no leídos previos del remitente en esta conversación
-      // Si ya hay mensajes no leídos, solo enviar notificación in-app (no email)
+      // Verificar si hay mensajes previos en esta conversación (para determinar si es respuesta)
       const messageTable = isPrismaSchema ? 'Message' : 'messages'
+      const { count: totalMessagesCount } = await supabase
+        .from(messageTable)
+        .select('*', { count: 'exact', head: true })
+        .eq(isPrismaSchema ? 'conversationId' : 'conversation_id', conversationId)
+
+      // Verificar si hay mensajes no leídos previos del remitente
       const { count: unreadCount } = await supabase
         .from(messageTable)
         .select('*', { count: 'exact', head: true })
         .eq(isPrismaSchema ? 'conversationId' : 'conversation_id', conversationId)
         .eq(isPrismaSchema ? 'senderId' : 'sender_id', senderId)
         .eq(isPrismaSchema ? 'isRead' : 'is_read', false)
+
+      // Determinar tipo de notificación
+      const isReply = (totalMessagesCount || 0) > 1
+      const notificationType = isReply ? 'MESSAGE_REPLY' : 'NEW_MESSAGE'
 
       // Determinar canales: solo email si es el primer mensaje no leído
       const shouldSendEmail = (unreadCount || 0) === 0
@@ -406,15 +415,18 @@ export async function POST(
       // Enviar notificación (async, no bloqueante)
       sendNotification({
         userId: recipientUserId,
-        type: 'NEW_MESSAGE',
-        title: `Nuevo mensaje de ${senderName}`,
+        type: notificationType,
+        title: isReply
+          ? `${senderName} respondió a tu mensaje`
+          : `Nuevo mensaje de ${senderName}`,
         message: content.length > 100 ? content.substring(0, 100) + '...' : content,
         channels: channels,
         metadata: {
           ctaUrl: `https://www.misionesarrienda.com.ar/messages?conversation=${conversationId}`,
           ctaText: 'Ver mensaje',
           senderName: senderName,
-          conversationId: conversationId
+          conversationId: conversationId,
+          messagePreview: content.substring(0, 100)
         },
         relatedId: newMessage.id,
         relatedType: 'message'

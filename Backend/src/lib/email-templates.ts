@@ -327,6 +327,79 @@ export const getLikeReceivedEmailTemplate = (data: EmailTemplateData): string =>
 }
 
 /**
+ * Template para PAGO COMPLETADO
+ */
+export const getPaymentCompletedEmailTemplate = (data: EmailTemplateData): string => {
+  const amount = data.metadata?.amount || 0
+  const currency = data.metadata?.currency || 'ARS'
+  const paymentMethod = data.metadata?.paymentMethod || 'tarjeta'
+  const planName = data.metadata?.planName
+  const isSubscription = !!data.metadata?.subscriptionId
+
+  const content = `
+    <div class="header">
+      <h1>💳 ¡Pago Confirmado!</h1>
+      <p>Tu pago ha sido procesado exitosamente</p>
+    </div>
+    <div class="content">
+      <p class="greeting">Hola <strong>${data.name}</strong>,</p>
+      <p class="message">
+        ${data.message}
+      </p>
+      <div style="background-color: #ecfdf5; border: 2px solid #10b981; padding: 25px; margin: 30px 0; border-radius: 8px; text-align: center;">
+        <div style="font-size: 14px; color: #065f46; margin-bottom: 10px;">Monto pagado</div>
+        <div style="font-size: 36px; font-weight: 700; color: #047857; margin-bottom: 5px;">
+          ${currency} $${amount.toLocaleString('es-AR')}
+        </div>
+        <div style="font-size: 13px; color: #059669; margin-top: 10px;">
+          Método de pago: ${paymentMethod}
+        </div>
+      </div>
+      ${isSubscription ? `
+      <div style="background-color: #f0f9ff; border-left: 4px solid #0284c7; padding: 20px; margin: 20px 0; border-radius: 4px;">
+        <h3 style="color: #0c4a6e; margin: 0 0 10px 0; font-size: 18px;">📋 Detalles de tu suscripción</h3>
+        <p style="color: #075985; margin: 5px 0;"><strong>Plan:</strong> ${planName}</p>
+        <p style="color: #075985; margin: 5px 0;"><strong>Estado:</strong> <span class="highlight">Activa</span></p>
+        <p style="color: #0369a1; margin: 15px 0 0 0; font-size: 14px;">
+          ✨ Ya podés disfrutar de todos los beneficios de tu plan.
+        </p>
+      </div>
+      ` : `
+      <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0; border-radius: 4px;">
+        <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 18px;">⭐ Tu propiedad está destacada</h3>
+        <p style="color: #78350f; margin: 5px 0;">
+          Tu publicación aparecerá en las primeras posiciones durante <strong>30 días</strong>.
+        </p>
+        <p style="color: #92400e; margin: 15px 0 0 0; font-size: 14px;">
+          💡 Las propiedades destacadas reciben hasta <strong>5x más visitas</strong>.
+        </p>
+      </div>
+      `}
+      ${data.metadata?.ctaUrl ? `
+      <div class="cta-container">
+        <a href="${data.metadata.ctaUrl}" class="cta-button">
+          ${data.metadata.ctaText || 'Ver detalles'}
+        </a>
+      </div>
+      ` : ''}
+      <div class="divider"></div>
+      <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+        <strong>ID de transacción:</strong> ${data.metadata?.paymentId || 'N/A'}<br>
+        Si tenés alguna pregunta sobre este pago, guardá este ID para referencia.
+      </p>
+    </div>
+    <div class="footer">
+      <p>
+        <a href="${process.env.NEXT_PUBLIC_SITE_URL}/mi-cuenta/facturacion">Ver historial de pagos</a> |
+        <a href="${process.env.NEXT_PUBLIC_SITE_URL}/ayuda/facturacion">Ayuda con facturación</a>
+      </p>
+    </div>
+  `
+
+  return getBaseTemplate(content, `Pago confirmado - $${amount} ${currency}`)
+}
+
+/**
  * Template genérico para otros tipos de notificaciones
  */
 export const getGenericEmailTemplate = (data: EmailTemplateData): string => {
