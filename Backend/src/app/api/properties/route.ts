@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { propertySchema } from '@/lib/validations/property';
+import { detectAuth, isPublicListingEnabled } from '@/lib/auth-detector';
+import { maskPhone, limitArray, parseArrayField } from '@/lib/data-masking';
 
 // Marcar esta ruta como dinámica para evitar errores de build
 export const dynamic = 'force-dynamic'
@@ -342,6 +344,49 @@ export async function GET(request: NextRequest) {
       // Si Supabase falla y no hay flag de mock, devolver vacío
       properties = [];
       totalCount = 0;
+    }
+
+    // ========================================
+    // FEATURE: Public Property Listing
+    // Adaptar response según estado de autenticación
+    // ========================================
+    const publicListingEnabled = isPublicListingEnabled();
+
+    if (publicListingEnabled) {
+      // Detectar si el usuario está autenticado
+      const authContext = await detectAuth(request);
+
+      // Si NO está autenticado, enmascarar datos sensibles
+      if (!authContext.isAuthenticated) {
+        properties = properties.map((property: any) => {
+          // Parsear imágenes
+          const images = parseArrayField(property.images);
+          const totalImages = images.length;
+
+          return {
+            ...property,
+            // Enmascarar contacto
+            contact_phone: maskPhone(property.contact_phone),
+            contact_email: null, // Ocultar completamente
+            contact_name: null,  // Ocultar completamente
+
+            // Limitar imágenes a 3
+            images: limitArray(images, 3),
+            imagesCount: totalImages, // Mantener count real
+
+            // Flags para el frontend
+            requires_auth_for_contact: true,
+            requires_auth_for_full_images: totalImages > 3
+          };
+        });
+      } else {
+        // Usuario autenticado: agregar flags en false
+        properties = properties.map((property: any) => ({
+          ...property,
+          requires_auth_for_contact: false,
+          requires_auth_for_full_images: false
+        }));
+      }
     }
 
     return NextResponse.json({

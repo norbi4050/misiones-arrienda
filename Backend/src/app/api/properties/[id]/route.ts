@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendNotification } from '@/lib/notification-service'
+import { detectAuth, isPublicListingEnabled } from '@/lib/auth-detector'
+import { maskPhone, limitArray, parseArrayField } from '@/lib/data-masking'
 
 // Evitar caching agresivo durante desarrollo
 export const dynamic = 'force-dynamic'
@@ -82,18 +84,62 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     }
 
     // FASE 6: Aplanar owner info antes de responder
-    const enrichedProperty = {
+    let enrichedProperty = {
       ...property,
       owner_id: ownerData?.id || null,
       owner_type: ownerData?.user_type || null,
       owner_company_name: ownerData?.company_name || null,
     };
 
+    // ========================================
+    // FEATURE: Public Property Listing
+    // Adaptar response según estado de autenticación
+    // ========================================
+    const publicListingEnabled = isPublicListingEnabled();
+    let auth_required_for_full_details = false;
+
+    if (publicListingEnabled) {
+      // Detectar si el usuario está autenticado
+      const authContext = await detectAuth(_ as any);
+
+      // Si NO está autenticado, limitar datos sensibles
+      if (!authContext.isAuthenticated) {
+        const images = parseArrayField(enrichedProperty.images);
+        const totalImages = images.length;
+
+        enrichedProperty = {
+          ...enrichedProperty,
+          // Enmascarar contacto
+          contact_phone: maskPhone(enrichedProperty.contact_phone),
+          contact_email: null,
+          contact_name: null,
+
+          // Limitar imágenes a 3
+          images: limitArray(images, 3),
+
+          // Flags
+          requires_auth_for_contact: true,
+          requires_auth_for_full_images: totalImages > 3,
+          total_images_count: totalImages
+        };
+
+        auth_required_for_full_details = true;
+      } else {
+        // Usuario autenticado: agregar flags en false
+        enrichedProperty = {
+          ...enrichedProperty,
+          requires_auth_for_contact: false,
+          requires_auth_for_full_images: false
+        };
+      }
+    }
+
     // Responder SIEMPRE objeto
-    return NextResponse.json({ 
-      ok: true, 
-      property: enrichedProperty, 
-      agent 
+    return NextResponse.json({
+      ok: true,
+      property: enrichedProperty,
+      agent,
+      auth_required_for_full_details
     })
 
   } catch (error) {
