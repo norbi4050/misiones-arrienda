@@ -4,7 +4,9 @@
       "Bash(Select-String \"api/payments/feature\" -Context 0,3)",
       "Bash(psql:*)",
       "Bash(npm install:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
