@@ -1,17 +1,18 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Star, 
-  MapPin, 
-  Bed, 
-  Bath, 
+import {
+  Edit,
+  Trash2,
+  Eye,
+  Star,
+  MapPin,
+  Bed,
+  Bath,
   Car,
   Square,
   Calendar,
@@ -176,10 +177,13 @@ export function PropertyCard({
 
       {/* Property Image */}
       <div className="relative h-48 bg-gray-200">
-        <img
+        <Image
           src={mainImage}
           alt={property.title}
-          className="w-full h-full object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover"
+          loading="lazy"
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/placeholder-apartment-1.jpg';
           }}

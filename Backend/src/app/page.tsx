@@ -5,6 +5,7 @@ import { PageTracker } from '@/components/analytics/page-tracker'
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { MessageCircle, Search, Sparkles, Home, MapPin, Users, Crown, Check } from 'lucide-react'
@@ -159,10 +160,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 <Card key={property.id} className="overflow-hidden">
                   <div className="aspect-video bg-gray-200 relative">
                     {property.images?.[0] && (
-                      <img 
-                        src={property.images[0]} 
+                      <Image
+                        src={property.images[0]}
                         alt={property.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover"
+                        loading="lazy"
                       />
                     )}
                   </div>

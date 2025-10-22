@@ -3,7 +3,13 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { LayoutClientWrapper } from './layout-client-wrapper'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  preload: true,
+  fallback: ['system-ui', 'arial']
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.misionesarrienda.com.ar'),

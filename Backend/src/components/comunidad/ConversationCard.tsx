@@ -1,10 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MessageCircle, Clock } from 'lucide-react'
 import { useProfile } from '@/hooks/useProfile'
+import { memo } from 'react'
 
 // Función simple para formatear tiempo relativo
 const formatTimeAgo = (date: string) => {
@@ -35,12 +37,13 @@ interface ConversationCardProps {
   currentUserId: string
 }
 
-export default function ConversationCard({ 
-  conversation, 
+// Memoize el componente para evitar re-renders innecesarios
+const ConversationCard = memo(function ConversationCard({
+  conversation,
   currentUserId
 }: ConversationCardProps) {
   const router = useRouter()
-  const { profile } = useProfile(conversation.otherParticipant)
+  const { profile, isLoading } = useProfile(conversation.otherParticipant)
 
   const handleClick = () => {
     router.push(`/comunidad/mensajes/${conversation.id}`)
@@ -49,6 +52,23 @@ export default function ConversationCard({
   const name = profile?.display_name ?? 'Usuario'
   const initial = (name[0] ?? 'U').toUpperCase()
   const avatarUrl = profile?.avatar_url
+
+  // Mostrar skeleton mientras carga
+  if (isLoading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+              <div className="h-3 bg-gray-200 rounded animate-pulse w-full" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card 
@@ -61,12 +81,15 @@ export default function ConversationCard({
             {/* Header con avatar */}
             <div className="flex items-center gap-3 mb-2">
               {/* Avatar */}
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 relative w-10 h-10">
                 {avatarUrl ? (
-                  <img 
-                    src={avatarUrl} 
+                  <Image
+                    src={avatarUrl}
                     alt={name}
-                    className="w-10 h-10 rounded-full object-cover"
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -135,3 +158,5 @@ export default function ConversationCard({
     </Card>
   )
 }
+
+export default ConversationCard

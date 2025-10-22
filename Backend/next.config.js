@@ -6,7 +6,16 @@ const nextConfig = {
     // PERF: Optimiza imports de paquetes pesados para reducir bundle size
     optimizePackageImports: ['lucide-react', 'date-fns', 'lodash', '@headlessui/react'],
   },
+  // PERF: Compression
+  compress: true,
+  // PERF: Power by header removal
+  poweredByHeader: false,
+  // PERF: Optimize images
   images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
     remotePatterns: [
       {
         protocol: 'https',
