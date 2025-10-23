@@ -44,10 +44,12 @@ export const metadata: Metadata = {
 async function getPublicProperties() {
   try {
     // Traer TODAS las propiedades disponibles, no solo destacadas
+    console.log('[getPublicProperties] Fetching properties...')
     const properties = await fetchRealProperties({ limit: 50 })
+    console.log('[getPublicProperties] Got properties:', properties.length)
     return properties
   } catch (error) {
-    // Error ya logueado en api.ts
+    console.error('[getPublicProperties] Error:', error)
     return []
   }
 }
