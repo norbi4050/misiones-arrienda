@@ -138,6 +138,17 @@ export async function GET(request: NextRequest) {
         city, type, operationType, featured, limit, page
       });
 
+      // Test simple primero: ¿Puede leer ALGUNA propiedad?
+      const { data: testData, error: testError, count: testCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact' });
+
+      console.log('[API /properties] TEST - Raw count without filters:', {
+        testCount,
+        testDataLength: testData?.length,
+        testError: testError?.message
+      });
+
       let query = supabase
         .from('properties')
         .select('*', { count: 'exact' })
