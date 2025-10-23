@@ -21,6 +21,22 @@ export function CommunityDebugInfo({ postsCount, total, searchParams }: Communit
     console.log('Posts Count:', postsCount)
     console.log('Total:', total)
     console.log('Has Posts:', postsCount > 0)
+
+    // Test: Make direct API call to see what it returns
+    const testApiCall = async () => {
+      try {
+        const response = await fetch('/api/comunidad/posts?sort=recent')
+        const data = await response.json()
+        console.log('🔍 [DIRECT API CALL] /api/comunidad/posts?sort=recent')
+        console.log('Response:', data)
+        console.log('Has posts in direct call?', data.posts?.length > 0)
+      } catch (error) {
+        console.error('❌ [DIRECT API CALL] Error:', error)
+      }
+    }
+
+    testApiCall()
+
     console.log('='.repeat(50))
   }, [postsCount, total, searchParams])
 
