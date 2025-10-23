@@ -235,34 +235,20 @@ export async function PATCH(request: NextRequest) {
         console.log('[API /admin/community-posts PATCH] Deleting post:', postId)
 
         // Primero eliminar dependencias relacionadas para evitar errores de FK
-        // Eliminar likes si existen
+        // Eliminar likes de posts (community_post_likes)
         try {
-          await supabaseAdmin
-            .from('community_likes')
+          const { error: likesError } = await supabaseAdmin
+            .from('community_post_likes')
             .delete()
             .eq('post_id', postId)
-        } catch (err) {
-          console.warn('[API /admin/community-posts PATCH] No likes to delete or table does not exist:', err)
-        }
 
-        // Eliminar matches si existen
-        try {
-          await supabaseAdmin
-            .from('community_matches')
-            .delete()
-            .or(`user1_post_id.eq.${postId},user2_post_id.eq.${postId}`)
+          if (likesError) {
+            console.warn('[API /admin/community-posts PATCH] Error deleting post likes:', likesError)
+          } else {
+            console.log('[API /admin/community-posts PATCH] Post likes deleted successfully')
+          }
         } catch (err) {
-          console.warn('[API /admin/community-posts PATCH] No matches to delete or table does not exist:', err)
-        }
-
-        // Eliminar reportes si existen
-        try {
-          await supabaseAdmin
-            .from('community_post_report')
-            .delete()
-            .eq('post_id', postId)
-        } catch (err) {
-          console.warn('[API /admin/community-posts PATCH] No reports to delete or table does not exist:', err)
+          console.warn('[API /admin/community-posts PATCH] Exception deleting post likes:', err)
         }
 
         // Ahora eliminar la publicación
