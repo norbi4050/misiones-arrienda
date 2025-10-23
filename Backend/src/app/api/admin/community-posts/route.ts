@@ -66,12 +66,17 @@ export async function GET(request: NextRequest) {
       query = query.eq('city', cityFilter)
     }
 
-    // Filtro de estado: 'all' muestra solo activos, 'suspended' muestra inactivos
-    // Los posts eliminados (soft delete con is_active=false) no deberían aparecer en 'all'
-    if (statusFilter === 'active' || statusFilter === 'all') {
+    // Filtro de estado
+    if (statusFilter === 'active') {
       query = query.eq('is_active', true)
     } else if (statusFilter === 'suspended') {
       query = query.eq('is_active', false)
+      // Excluir posts eliminados (marcados con [DELETED])
+      query = query.not('title', 'like', '[DELETED]%')
+    } else if (statusFilter === 'all') {
+      // 'all' muestra activos Y suspendidos, pero NO eliminados
+      // Excluir posts con [DELETED] en el título
+      query = query.not('title', 'like', '[DELETED]%')
     }
 
     // Ordenamiento
@@ -249,10 +254,18 @@ export async function PATCH(request: NextRequest) {
             // Si falla por FK constraints, hacemos soft delete
             console.warn('[API /admin/community-posts PATCH] Hard delete failed, trying soft delete:', deleteError)
 
+            // Obtener el post actual para modificar su título
+            const { data: currentPost } = await supabaseAdmin
+              .from('community_posts')
+              .select('title')
+              .eq('id', postId)
+              .single()
+
             const { error: softDeleteError } = await supabaseAdmin
               .from('community_posts')
               .update({
                 is_active: false,
+                title: `[DELETED] ${currentPost?.title || 'Post eliminado'}`,
                 updated_at: new Date().toISOString()
               })
               .eq('id', postId)
