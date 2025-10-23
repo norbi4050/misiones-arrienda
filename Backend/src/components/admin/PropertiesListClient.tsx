@@ -411,7 +411,7 @@ export function PropertiesListClient() {
               </div>
 
               <div className="flex gap-2 pt-2 border-t">
-                <Link href={`/propiedad/${property.id}`} target="_blank" className="flex-1">
+                <Link href={`/property/${property.id}`} target="_blank" className="flex-1">
                   <Button variant="outline" size="sm" className="w-full">
                     <Eye className="h-4 w-4 mr-1" />
                     Ver
