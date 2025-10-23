@@ -47,12 +47,12 @@ interface PropertyReport {
     province: string
     status: string
     user_id: string
-  }
+  } | null
   reporter: {
     id: string
     name: string
     email: string
-  }
+  } | null
 }
 
 interface ReportsResponse {
@@ -278,17 +278,25 @@ export function ReportsListClient() {
                       <TableCell>{getStatusBadge(report.status)}</TableCell>
                       <TableCell>
                         <div className="max-w-xs">
-                          <Link
-                            href={`/properties/${report.property.id}`}
-                            className="font-medium text-blue-600 hover:underline line-clamp-1"
-                            target="_blank"
-                          >
-                            {report.property.title}
-                          </Link>
-                          <p className="text-sm text-gray-500">
-                            {formatCurrency(report.property.price, report.property.currency)} •{' '}
-                            {report.property.city}, {report.property.province}
-                          </p>
+                          {report.property ? (
+                            <>
+                              <Link
+                                href={`/properties/${report.property.id}`}
+                                className="font-medium text-blue-600 hover:underline line-clamp-1"
+                                target="_blank"
+                              >
+                                {report.property.title}
+                              </Link>
+                              <p className="text-sm text-gray-500">
+                                {formatCurrency(report.property.price, report.property.currency)} •{' '}
+                                {report.property.city}, {report.property.province}
+                              </p>
+                            </>
+                          ) : (
+                            <div className="text-sm text-red-500 italic">
+                              Propiedad eliminada
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -296,8 +304,16 @@ export function ReportsListClient() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="text-sm font-medium">{report.reporter.name}</p>
-                          <p className="text-xs text-gray-500">{report.reporter.email}</p>
+                          {report.reporter ? (
+                            <>
+                              <p className="text-sm font-medium">{report.reporter.name}</p>
+                              <p className="text-xs text-gray-500">{report.reporter.email}</p>
+                            </>
+                          ) : (
+                            <div className="text-sm text-red-500 italic">
+                              Usuario eliminado
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-gray-500">

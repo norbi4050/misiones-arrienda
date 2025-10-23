@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = createClient()
 
-    // Query base
+    // Query base - usando LEFT JOIN (sin !) para manejar reportes huérfanos
     let query = supabase
       .from('property_reports')
       .select(`
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
         action_taken,
         created_at,
         updated_at,
-        property:Property!property_id(
+        property:Property(
           id,
           title,
           price,
@@ -69,12 +69,12 @@ export async function GET(request: NextRequest) {
           status,
           user_id
         ),
-        reporter:User!reporter_id(
+        reporter:User(
           id,
           name,
           email
         )
-      `)
+      `, { count: 'exact' })
       .order('created_at', { ascending: false })
 
     // Filtrar por status si se especifica

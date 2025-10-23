@@ -47,12 +47,12 @@ interface PropertyReport {
     province: string
     status: string
     user_id: string
-  }
+  } | null
   reporter: {
     id: string
     name: string
     email: string
-  }
+  } | null
 }
 
 interface ReportDetailModalProps {
@@ -221,16 +221,22 @@ export function ReportDetailModal({ report, isOpen, onClose, onReportUpdated }: 
               <User className="h-4 w-4" />
               Información del Reportante
             </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs text-gray-500">Nombre</Label>
-                <p className="text-sm font-medium">{report.reporter.name}</p>
+            {report.reporter ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-gray-500">Nombre</Label>
+                  <p className="text-sm font-medium">{report.reporter.name}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500">Email</Label>
+                  <p className="text-sm font-medium">{report.reporter.email}</p>
+                </div>
               </div>
-              <div>
-                <Label className="text-xs text-gray-500">Email</Label>
-                <p className="text-sm font-medium">{report.reporter.email}</p>
+            ) : (
+              <div className="text-sm text-red-500 italic">
+                Usuario eliminado
               </div>
-            </div>
+            )}
           </div>
 
           {/* Property Info */}
@@ -239,36 +245,42 @@ export function ReportDetailModal({ report, isOpen, onClose, onReportUpdated }: 
               <Home className="h-4 w-4" />
               Información de la Propiedad
             </h3>
-            <div className="space-y-3">
-              <div>
-                <Label className="text-xs text-gray-500">Título</Label>
-                <Link
-                  href={`/properties/${report.property.id}`}
-                  className="text-sm font-medium text-blue-600 hover:underline block"
-                  target="_blank"
-                >
-                  {report.property.title}
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            {report.property ? (
+              <div className="space-y-3">
                 <div>
-                  <Label className="text-xs text-gray-500">Precio</Label>
-                  <p className="text-sm font-medium">
-                    {formatCurrency(report.property.price, report.property.currency)}
-                  </p>
+                  <Label className="text-xs text-gray-500">Título</Label>
+                  <Link
+                    href={`/properties/${report.property.id}`}
+                    className="text-sm font-medium text-blue-600 hover:underline block"
+                    target="_blank"
+                  >
+                    {report.property.title}
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-gray-500">Precio</Label>
+                    <p className="text-sm font-medium">
+                      {formatCurrency(report.property.price, report.property.currency)}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500">Ubicación</Label>
+                    <p className="text-sm font-medium">
+                      {report.property.city}, {report.property.province}
+                    </p>
+                  </div>
                 </div>
                 <div>
-                  <Label className="text-xs text-gray-500">Ubicación</Label>
-                  <p className="text-sm font-medium">
-                    {report.property.city}, {report.property.province}
-                  </p>
+                  <Label className="text-xs text-gray-500">Estado de la Propiedad</Label>
+                  <Badge variant="outline">{report.property.status}</Badge>
                 </div>
               </div>
-              <div>
-                <Label className="text-xs text-gray-500">Estado de la Propiedad</Label>
-                <Badge variant="outline">{report.property.status}</Badge>
+            ) : (
+              <div className="text-sm text-red-500 italic">
+                Propiedad eliminada
               </div>
-            </div>
+            )}
           </div>
 
           {/* Report Details */}
