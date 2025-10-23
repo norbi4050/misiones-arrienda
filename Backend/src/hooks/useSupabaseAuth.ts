@@ -58,7 +58,7 @@ export function useSupabaseAuth() {
         .select(`
           id, name, email, phone, avatar, bio, occupation, age, userType,
           companyName, licenseNumber, propertyCount,
-          searchType, budgetRange, preferredAreas, familySize,
+          budgetRange, preferredAreas, familySize,
           petFriendly, moveInDate, employmentStatus, monthlyIncome,
           verified, emailVerified, rating, reviewCount, createdAt, updatedAt
         `)
@@ -74,35 +74,32 @@ export function useSupabaseAuth() {
         return null
       }
 
-      // Convertir snake_case a camelCase para el frontend
+      // Mapear campos de la tabla User
       const userProfile: AuthUser = {
         id: data.id,
-        name: data.name || data.full_name || 'Usuario',
+        name: data.name || 'Usuario',
         email: data.email,
         phone: data.phone,
-        location: data.location,
-        searchType: data.search_type,
-        budgetRange: data.budget_range,
+        budgetRange: data.budgetRange,
         bio: data.bio,
-        profileImage: data.profile_image || data.avatar,
-        preferredAreas: data.preferred_areas,
-        familySize: data.family_size?.toString(),
-        petFriendly: data.pet_friendly?.toString(),
-        moveInDate: data.move_in_date,
-        employmentStatus: data.employment_status,
-        monthlyIncome: data.monthly_income?.toString(),
-        userType: data.user_type,
-        companyName: data.company_name,
-        licenseNumber: data.license_number,
+        profileImage: data.avatar,
+        preferredAreas: data.preferredAreas,
+        familySize: data.familySize?.toString(),
+        petFriendly: data.petFriendly?.toString(),
+        moveInDate: data.moveInDate,
+        employmentStatus: data.employmentStatus,
+        monthlyIncome: data.monthlyIncome?.toString(),
+        userType: data.userType,
+        companyName: data.companyName,
+        licenseNumber: data.licenseNumber,
         avatar: data.avatar,
         occupation: data.occupation,
         age: data.age,
         verified: data.verified,
         rating: data.rating,
-        reviewCount: data.review_count,
-        fullName: data.full_name,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
+        reviewCount: data.reviewCount,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt
       }
 
       return userProfile
