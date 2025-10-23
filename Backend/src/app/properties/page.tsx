@@ -75,10 +75,13 @@ export default async function PropertiesPage() {
         <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-5xl font-bold mb-4">
-              Encontrá tu hogar ideal en Misiones
+              Alquilá o vendé sin comisiones
             </h1>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Miles de propiedades en alquiler y venta. Casas, departamentos, locales y terrenos en toda la provincia.
+              {publicProperties.length > 0
+                ? `${publicProperties.length} propiedades disponibles en Misiones. Casas, departamentos, locales y terrenos.`
+                : 'Casas, departamentos, locales y terrenos en toda la provincia de Misiones.'
+              }
             </p>
             <Link href="/register" prefetch={false}>
               <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6">
