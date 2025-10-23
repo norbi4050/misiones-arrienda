@@ -50,7 +50,10 @@ async function getCommunityPost(id: string): Promise<CommunityPost | null> {
     }
 
     if (error || !data) {
-      console.error('Error fetching community post:', error)
+      // Solo loguear si NO es PGRST116 (post no encontrado es esperado)
+      if (error?.code !== 'PGRST116') {
+        console.error('Error fetching community post:', error)
+      }
       return null
     }
 

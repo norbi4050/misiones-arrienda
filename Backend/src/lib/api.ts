@@ -37,15 +37,35 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
           : 'http://localhost:3000')
       : '';
     const url = `${baseUrl}/api/properties?${params.toString()}`;
+
+    // En SSR, incluir las cookies de la request original
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    // Solo en server-side, incluir las cookies
+    if (typeof window === 'undefined') {
+      const { cookies } = await import('next/headers');
+      const cookieStore = cookies();
+      const cookieHeader = cookieStore.getAll()
+        .map(cookie => `${cookie.name}=${cookie.value}`)
+        .join('; ');
+      if (cookieHeader) {
+        headers['Cookie'] = cookieHeader;
+      }
+    }
+
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       cache: 'no-store'
     });
-    
+
     if (!response.ok) {
+      // Solo loguear error si NO es 401 (no autenticado es esperado para usuarios anónimos)
+      if (response.status !== 401) {
+        console.error(`API error: ${response.status}`);
+      }
       throw new Error(`API error: ${response.status}`);
     }
     
@@ -84,14 +104,32 @@ export async function getPropertyById(id: string): Promise<Property | null> {
           ? `https://${process.env.VERCEL_URL}`
           : 'http://localhost:3000')
       : '';
+
+    // En SSR, incluir las cookies de la request original
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    // Solo en server-side, incluir las cookies
+    if (typeof window === 'undefined') {
+      const { cookies } = await import('next/headers');
+      const cookieStore = cookies();
+      const cookieHeader = cookieStore.getAll()
+        .map(cookie => `${cookie.name}=${cookie.value}`)
+        .join('; ');
+      if (cookieHeader) {
+        headers['Cookie'] = cookieHeader;
+      }
+    }
+
     const response = await fetch(`${baseUrl}/api/properties/${id}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       cache: 'no-store'
     });
-    
+
     if (!response.ok) return null;
-    
+
     const data = await response.json();
     return data.ok ? data.property : null;
   } catch (error) {
