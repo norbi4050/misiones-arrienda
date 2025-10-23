@@ -201,10 +201,8 @@ export async function GET(request: NextRequest) {
           .lte('lat', bboxCoords.maxLat);
       }
 
-      // Orden optimizado: published_at DESC primario, updated_at como fallback
-      query = query
-        .order('published_at', { ascending: false, nullsFirst: false })
-        .order('updated_at', { ascending: false });
+      // Orden por fecha de creación (usar created_at que siempre existe)
+      query = query.order('created_at', { ascending: false });
 
       // Aplicar paginación
       const startIndex = (page - 1) * limit;
