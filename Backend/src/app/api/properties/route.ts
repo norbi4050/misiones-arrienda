@@ -153,21 +153,22 @@ export async function GET(request: NextRequest) {
       let query = supabase
         .from('Property')
         .select('*', { count: 'exact' })
-        .eq('status', 'AVAILABLE')
-        .or(`expiresAt.is.null,expiresAt.gte.${nowIso}`);
+        .eq('status', 'published')
+        .eq('is_active', true)
+        .or(`expires_at.is.null,expires_at.gte.${nowIso}`);
 
       // Aplicar filtros avanzados
       if (city) {
         query = query.ilike('city', `%${city}%`);
       }
-      
+
       if (type) {
-        query = query.eq('propertyType', type);
+        query = query.eq('propertyType', type); // camelCase en DB
       }
 
-      // Filtro por tipo de operación (RENT, SALE, BOTH - en inglés según schema)
+      // Filtro por tipo de operación (RENT, SALE, BOTH)
       if (operationType && operationType !== 'BOTH') {
-        query = query.eq('operationType', operationType);
+        query = query.eq('operationType', operationType); // camelCase en DB
       }
       
       if (minPrice) {
