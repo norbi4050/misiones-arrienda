@@ -38,6 +38,8 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
       : '';
     const url = `${baseUrl}/api/properties?${params.toString()}`;
 
+    console.log('[getProperties] Fetching from URL:', url);
+
     // En SSR, incluir las cookies de la request original
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -61,9 +63,12 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
       cache: 'no-store'
     });
 
+    console.log('[getProperties] Response status:', response.status);
+
     if (!response.ok) {
       // Para errores 401, retornar vacío silenciosamente (usuarios anónimos)
       if (response.status === 401) {
+        console.log('[getProperties] 401 error, returning empty');
         return {
           properties: [],
           pagination: {
@@ -75,11 +80,15 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
         };
       }
       // Para otros errores, loguear y lanzar
-      console.error(`API error: ${response.status}`);
+      console.error(`[getProperties] API error: ${response.status}`);
       throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('[getProperties] Got data:', {
+      propertiesLength: data.properties?.length,
+      paginationTotal: data.pagination?.total
+    });
 
     return {
       properties: data.properties || [],
@@ -153,6 +162,11 @@ export async function getPropertyById(id: string): Promise<Property | null> {
 
 // Función legacy para compatibilidad
 export async function fetchRealProperties(params: any): Promise<Property[]> {
+  console.log('[fetchRealProperties] Called with params:', params);
   const result = await getProperties(params);
+  console.log('[fetchRealProperties] Result:', {
+    propertiesLength: result.properties.length,
+    total: result.pagination.total
+  });
   return result.properties;
 }
