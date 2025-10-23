@@ -353,6 +353,21 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
               </Link>
             )}
 
+            {/* Disclaimer de intermediario */}
+            <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-gray-800">
+                  <p className="font-medium text-blue-900 mb-1">Información Importante</p>
+                  <p>
+                    Misiones Arrienda es una plataforma de clasificados. <strong>NO intermediamos en transacciones</strong> ni
+                    garantizamos la información publicada. Recomendamos verificar personalmente todos los datos y, de ser necesario,
+                    contratar profesionales matriculados para asesoramiento legal e inmobiliario.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Property Info */}
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
               <div className="flex justify-between items-start mb-4">

@@ -62,15 +62,25 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
     });
 
     if (!response.ok) {
-      // Solo loguear error si NO es 401 (no autenticado es esperado para usuarios anónimos)
-      if (response.status !== 401) {
-        console.error(`API error: ${response.status}`);
+      // Para errores 401, retornar vacío silenciosamente (usuarios anónimos)
+      if (response.status === 401) {
+        return {
+          properties: [],
+          pagination: {
+            page: filters.page || 1,
+            limit: filters.limit || 12,
+            total: 0,
+            totalPages: 0
+          }
+        };
       }
+      // Para otros errores, loguear y lanzar
+      console.error(`API error: ${response.status}`);
       throw new Error(`API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     return {
       properties: data.properties || [],
       pagination: data.pagination || {
@@ -81,7 +91,10 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
       }
     };
   } catch (error) {
-    console.error('Error fetching properties:', error);
+    // Solo loguear si NO es un error de 401 que ya manejamos
+    if (!(error instanceof Error && error.message.includes('401'))) {
+      console.error('Error fetching properties:', error);
+    }
     // Fallback en caso de error
     return {
       properties: [],

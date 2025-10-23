@@ -46,7 +46,7 @@ async function getDemoProperties() {
     const properties = await fetchRealProperties({ limit: 6, featured: true })
     return properties
   } catch (error) {
-    console.error('Error fetching demo properties:', error)
+    // Error ya logueado en api.ts
     return []
   }
 }

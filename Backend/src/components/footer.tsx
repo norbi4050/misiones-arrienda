@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Mail, Phone, Shield, FileText, Lock, HelpCircle } from 'lucide-react'
+import { Mail, Phone, Shield, FileText, Lock, HelpCircle, Cookie } from 'lucide-react'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -55,6 +55,15 @@ export function Footer() {
                   <span className="text-sm">Política de Privacidad</span>
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/legal/cookies"
+                  className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
+                >
+                  <Cookie className="w-4 h-4 mr-2" />
+                  <span className="text-sm">Política de Cookies</span>
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -95,9 +104,12 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-sm text-gray-400">
+        {/* Disclaimer y Copyright */}
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <p className="text-xs text-gray-400 text-center mb-3">
+            Misiones Arrienda es una plataforma de clasificados inmobiliarios. No somos una inmobiliaria ni intermediamos en transacciones.
+          </p>
+          <p className="text-sm text-gray-400 text-center">
             © {currentYear} Misiones Arrienda. Todos los derechos reservados.
           </p>
         </div>

@@ -30,7 +30,15 @@ const MessagesProvider = dynamic(
 
 const PresenceTracker = dynamic(
   () => import('@/components/presence/PresenceTracker').then(m => ({ default: m.PresenceTracker })),
-  { 
+  {
+    ssr: false,
+    loading: () => null
+  }
+)
+
+const CookieBanner = dynamic(
+  () => import('@/components/CookieBanner'),
+  {
     ssr: false,
     loading: () => null
   }
@@ -106,6 +114,9 @@ function LayoutContent({
 
       {/* PERF: Condicional por auth - PresenceTracker (~8 KB) solo si usuario logueado */}
       {user && <PresenceTracker />}
+
+      {/* Cookie Consent Banner */}
+      <CookieBanner />
     </ThemeProvider>
   )
 }

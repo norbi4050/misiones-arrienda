@@ -93,8 +93,80 @@ export default function PrivacyPage() {
                   2. Información que Recopilamos
                 </h2>
                 <p className="text-gray-700 mb-4">
-                  Recopilamos diferentes tipos de información personal según el uso que haga de nuestros servicios.
+                  Recopilamos diferentes tipos de información personal según el uso que haga de nuestros servicios:
                 </p>
+
+                <div className="space-y-6">
+                  {/* Datos de Registro */}
+                  <div className="bg-green-50 rounded-lg p-6 border-l-4 border-green-600">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">a) Datos de Registro y Cuenta</h3>
+                    <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                      <li><strong>Nombre completo</strong> - Para identificación y comunicación</li>
+                      <li><strong>Dirección de correo electrónico</strong> - Para acceso a la cuenta y notificaciones</li>
+                      <li><strong>Número de teléfono</strong> - Para contacto directo entre usuarios</li>
+                      <li><strong>Contraseña</strong> - Almacenada de forma encriptada con bcrypt (nunca almacenamos contraseñas en texto plano)</li>
+                      <li><strong>Tipo de usuario</strong> - Particular, inmobiliaria, propietario</li>
+                    </ul>
+                  </div>
+
+                  {/* Datos de Publicación */}
+                  <div className="bg-blue-50 rounded-lg p-6 border-l-4 border-blue-600">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">b) Datos de Publicación de Propiedades</h3>
+                    <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                      <li><strong>Direcciones de propiedades</strong> - Ubicación, ciudad, provincia, código postal</li>
+                      <li><strong>Fotografías de inmuebles</strong> - Imágenes cargadas por los usuarios</li>
+                      <li><strong>Descripciones y características</strong> - Detalles de la propiedad (metros, habitaciones, servicios)</li>
+                      <li><strong>Precios y condiciones</strong> - Valor de alquiler/venta, gastos, requisitos</li>
+                      <li><strong>Información de contacto del publicante</strong> - Para facilitar comunicación con interesados</li>
+                    </ul>
+                  </div>
+
+                  {/* Datos Técnicos */}
+                  <div className="bg-purple-50 rounded-lg p-6 border-l-4 border-purple-600">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">c) Datos Técnicos y de Navegación</h3>
+                    <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                      <li><strong>Dirección IP</strong> - Para seguridad, prevención de fraudes y estadísticas geográficas</li>
+                      <li><strong>Información del navegador</strong> - Tipo, versión, idioma preferido</li>
+                      <li><strong>Sistema operativo y dispositivo</strong> - Para optimizar la experiencia de usuario</li>
+                      <li><strong>Cookies técnicas</strong> - Para funcionamiento del sitio (sesión, autenticación)</li>
+                      <li><strong>Fecha y hora de acceso</strong> - Para auditoría y seguridad</li>
+                    </ul>
+                  </div>
+
+                  {/* Datos de Uso */}
+                  <div className="bg-yellow-50 rounded-lg p-6 border-l-4 border-yellow-600">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">d) Datos de Uso y Comportamiento</h3>
+                    <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                      <li><strong>Páginas visitadas</strong> - Para mejorar la navegación y experiencia</li>
+                      <li><strong>Búsquedas realizadas</strong> - Filtros, criterios, palabras clave</li>
+                      <li><strong>Propiedades favoritas</strong> - Anuncios guardados por el usuario</li>
+                      <li><strong>Mensajes enviados</strong> - Comunicaciones entre usuarios (contenido y metadatos)</li>
+                      <li><strong>Interacciones con anuncios</strong> - Clics, vistas, tiempo de permanencia</li>
+                      <li><strong>Reportes realizados</strong> - Denuncias de propiedades sospechosas</li>
+                    </ul>
+                  </div>
+
+                  {/* Datos de Pago */}
+                  <div className="bg-orange-50 rounded-lg p-6 border-l-4 border-orange-600">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">e) Datos de Pagos (para servicios premium)</h3>
+                    <p className="text-gray-700 mb-3">
+                      Los pagos se procesan a través de <strong>MercadoPago</strong>. NO almacenamos datos de tarjetas de crédito/débito en nuestros servidores.
+                    </p>
+                    <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                      <li><strong>Historial de transacciones</strong> - Fecha, monto, concepto</li>
+                      <li><strong>Estado de suscripciones</strong> - Planes activos, renovaciones</li>
+                      <li><strong>Datos de facturación</strong> - CUIT/CUIL (si se solicita factura)</li>
+                    </ul>
+                  </div>
+
+                  {/* Importante */}
+                  <div className="bg-gray-100 rounded-lg p-5 border-l-4 border-gray-600">
+                    <p className="text-sm text-gray-800">
+                      <strong>Importante:</strong> Solo recopilamos datos necesarios para el funcionamiento de la plataforma.
+                      Nunca vendemos, alquilamos ni compartimos sus datos personales con terceros para fines comerciales o publicitarios.
+                    </p>
+                  </div>
+                </div>
               </section>
 
               <section className="mb-10">
