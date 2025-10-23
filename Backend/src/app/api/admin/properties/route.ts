@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit
 
-    // Construir query base
+    // Construir query base - usando solo columnas que sabemos que existen
     let query = supabase
       .from('Property')
       .select(`
@@ -53,8 +53,6 @@ export async function GET(request: NextRequest) {
         description,
         price,
         currency,
-        propertyType,
-        transactionType,
         status,
         rooms,
         bathrooms,
@@ -62,10 +60,6 @@ export async function GET(request: NextRequest) {
         address,
         city,
         province,
-        country,
-        latitude,
-        longitude,
-        features,
         images,
         userId,
         createdAt,
