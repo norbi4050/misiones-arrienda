@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { z } from 'zod'
+
+// Cliente admin con Service Role Key para operaciones administrativas
+const supabaseAdmin = createServiceClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+// Umbral de reportes para auto-suspensión
+const AUTO_SUSPEND_THRESHOLD = 2
 
 // Marcar esta ruta como dinámica
 export const dynamic = 'force-dynamic'
@@ -142,10 +152,32 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    // 8. TODO: Enviar notificación al dueño de la propiedad (opcional)
-    // 9. TODO: Enviar notificación a admins si hay múltiples reportes (3+)
+    // 8. Verificar conteo total de reportes y auto-suspender si es necesario
+    const { count: totalReports } = await supabaseAdmin
+      .from('property_reports')
+      .select('*', { count: 'exact', head: true })
+      .eq('property_id', propertyId)
 
-    // 10. Obtener información del usuario para el log
+    let autoSuspended = false
+    if (totalReports && totalReports >= AUTO_SUSPEND_THRESHOLD) {
+      // Auto-suspender la propiedad
+      const { error: suspendError } = await supabaseAdmin
+        .from('Property')
+        .update({
+          status: 'suspended',
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', propertyId)
+
+      if (!suspendError) {
+        autoSuspended = true
+        console.log(`[PropertyReport] Auto-suspended property ${propertyId} (${totalReports} reports)`)
+      } else {
+        console.error('[PropertyReport] Error auto-suspending property:', suspendError)
+      }
+    }
+
+    // 9. Obtener información del usuario para el log
     const { data: reporterProfile } = await supabase
       .from('User')
       .select('name, email')
@@ -159,6 +191,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       reporterId: user.id,
       reporterName: reporterProfile?.name,
       reason: REASON_LABELS[reason],
+      totalReports,
+      autoSuspended,
       timestamp: new Date().toISOString()
     })
 
@@ -172,7 +206,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         status: 'PENDING',
         createdAt: newReport.created_at
       },
-      message: 'Reporte enviado correctamente. Nuestro equipo lo revisará en breve.'
+      autoSuspended,
+      totalReports,
+      message: autoSuspended
+        ? 'Reporte enviado. La propiedad ha sido suspendida automáticamente por múltiples reportes.'
+        : 'Reporte enviado correctamente. Nuestro equipo lo revisará en breve.'
     }, { status: 201 })
 
   } catch (error) {
