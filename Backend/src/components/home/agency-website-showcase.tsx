@@ -105,7 +105,7 @@ export function AgencyWebsiteShowcase() {
                   {showFounderOffer ? 'Ver Planes Fundadores →' : 'Ver Planes →'}
                 </Button>
               </Link>
-              <Link href="/inmobiliaria/register" className="flex-1" prefetch={false}>
+              <Link href="/register?type=inmobiliaria" className="flex-1" prefetch={false}>
                 <Button
                   size="lg"
                   variant="outline"

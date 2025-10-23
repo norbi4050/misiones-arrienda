@@ -1,31 +1,40 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { User, Building2, Search } from "lucide-react";
 import { ProfileImageUpload } from "@/components/ui/image-upload";
 import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox";
 import { logConsent, CURRENT_POLICY_VERSION } from "@/lib/consent/logConsent";
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+
+  // Obtener tipo de usuario del URL (?type=inmobiliaria o ?type=dueno_directo)
+  const typeFromUrl = searchParams.get('type');
+  const initialUserType =
+    typeFromUrl === 'inmobiliaria' ? 'inmobiliaria' :
+    typeFromUrl === 'dueno_directo' ? 'inquilino' : // Dueño directo usa tipo "inquilino" por ahora
+    'inquilino';
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "inquilino" as "inquilino" | "dueno_directo" | "inmobiliaria",
+    userType: initialUserType as "inquilino" | "dueno_directo" | "inmobiliaria",
     companyName: "",
     licenseNumber: "",
     profileImage: ""
   });
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   // Estado para consentimiento
   const [checkedTerms, setCheckedTerms] = useState(false);
   const [checkedPrivacy, setCheckedPrivacy] = useState(false);
   const [consentError, setConsentError] = useState<string | null>(null);
-  
+
   const { register, isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
 

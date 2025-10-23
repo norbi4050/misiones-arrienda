@@ -81,7 +81,7 @@ export function AllUsersSection() {
                   <span>Hasta 10 fotos por propiedad</span>
                 </li>
               </ul>
-              <Link href="/dueno-directo/register" prefetch={false}>
+              <Link href="/register?type=dueno_directo" prefetch={false}>
                 <Button className="w-full bg-green-600 hover:bg-green-700">
                   Registrarme como Dueño
                 </Button>
@@ -122,7 +122,7 @@ export function AllUsersSection() {
                   <span>Analytics y tracking en tiempo real</span>
                 </li>
               </ul>
-              <Link href="/inmobiliaria/register" prefetch={false}>
+              <Link href="/register?type=inmobiliaria" prefetch={false}>
                 <Button className="w-full bg-purple-600 hover:bg-purple-700">
                   Registrar mi Inmobiliaria
                 </Button>
