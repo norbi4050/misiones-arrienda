@@ -151,6 +151,37 @@ export async function middleware(req: NextRequest) {
   }
 
   // ========================================
+  // ADMIN ROUTES PROTECTION
+  // ========================================
+  // Proteger TODAS las rutas /admin/* y /api/admin/*
+  const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
+
+  if (isAdminRoute) {
+    // Si no hay usuario, redirigir a login
+    if (authError || !user) {
+      console.log(`[MIDDLEWARE] Admin route without auth, redirecting to login: ${pathname}`);
+      const redirectUrl = new URL('/login', req.url);
+      redirectUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Verificar si el usuario es admin
+    const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+    const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL?.toLowerCase() || '';
+    const userEmail = user.email?.toLowerCase() || '';
+
+    const isAdmin = userEmail === SUPER_ADMIN_EMAIL || ADMIN_EMAILS.includes(userEmail);
+
+    if (!isAdmin) {
+      console.warn(`[SECURITY] Non-admin user attempted to access admin route: ${userEmail} -> ${pathname}`);
+      // Redirigir a home sin revelar que la ruta existe
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+
+    console.log(`[MIDDLEWARE] Admin access granted: ${userEmail} -> ${pathname}`);
+  }
+
+  // ========================================
   // PROTECTED ROUTES CHECK
   // ========================================
   const protectedRoutes = ['/profile', '/publicar', '/favorites', '/messages', '/mi-cuenta'];
