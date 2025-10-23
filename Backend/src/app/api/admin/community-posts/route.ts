@@ -13,14 +13,19 @@ export const dynamic = 'force-dynamic'
 // GET /api/admin/community-posts - Listar todas las publicaciones de comunidad (admin)
 export async function GET(request: NextRequest) {
   try {
+    console.log('[API /admin/community-posts GET] Request started')
+
     // Verificar permisos de admin
     const isAdmin = await isCurrentUserAdmin()
     if (!isAdmin) {
+      console.log('[API /admin/community-posts GET] Unauthorized access attempt')
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       )
     }
+
+    console.log('[API /admin/community-posts GET] Admin verified')
 
     const { searchParams } = new URL(request.url)
 
@@ -36,10 +41,17 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit
 
+    console.log('[API /admin/community-posts GET] Params:', {
+      page, limit, search, roleFilter, cityFilter, statusFilter, sortBy, sortOrder
+    })
+
     // Construir query base usando supabaseAdmin para bypassear RLS
+    // Usar SELECT * para obtener todas las columnas disponibles
     let query = supabaseAdmin
       .from('community_post')
       .select(`*`, { count: 'exact' })
+
+    console.log('[API /admin/community-posts GET] Query initialized')
 
     // Aplicar filtros
     if (search) {
@@ -98,22 +110,35 @@ export async function GET(request: NextRequest) {
     // Obtener conteo de reportes y datos de usuario para cada post
     const postsWithReports = await Promise.all(
       (posts || []).map(async (post) => {
-        const { count: reportsCount } = await supabaseAdmin
-          .from('community_post_report')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', post.id)
+        // Intentar obtener reportes, pero no fallar si la tabla no existe
+        let reportsCount = 0
+        try {
+          const { count } = await supabaseAdmin
+            .from('community_post_report')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', post.id)
+          reportsCount = count || 0
+        } catch (err) {
+          console.warn('[API /admin/community-posts GET] Could not fetch reports for post:', post.id, err)
+        }
 
         // Obtener datos del usuario
-        const { data: user } = await supabaseAdmin
-          .from('User')
-          .select('name, email')
-          .eq('id', post.user_id)
-          .maybeSingle()
+        let user = null
+        try {
+          const { data } = await supabaseAdmin
+            .from('User')
+            .select('name, email')
+            .eq('id', post.user_id)
+            .maybeSingle()
+          user = data
+        } catch (err) {
+          console.warn('[API /admin/community-posts GET] Could not fetch user for post:', post.id, err)
+        }
 
         return {
           ...post,
           user,
-          reportsCount: reportsCount || 0
+          reportsCount
         }
       })
     )
