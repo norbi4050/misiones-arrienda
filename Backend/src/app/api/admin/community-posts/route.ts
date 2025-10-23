@@ -234,24 +234,9 @@ export async function PATCH(request: NextRequest) {
       case 'delete':
         console.log('[API /admin/community-posts PATCH] Deleting post:', postId)
 
-        // Primero eliminar dependencias relacionadas para evitar errores de FK
-        // Eliminar likes de posts (community_post_likes)
-        try {
-          const { error: likesError } = await supabaseAdmin
-            .from('community_post_likes')
-            .delete()
-            .eq('post_id', postId)
-
-          if (likesError) {
-            console.warn('[API /admin/community-posts PATCH] Error deleting post likes:', likesError)
-          } else {
-            console.log('[API /admin/community-posts PATCH] Post likes deleted successfully')
-          }
-        } catch (err) {
-          console.warn('[API /admin/community-posts PATCH] Exception deleting post likes:', err)
-        }
-
-        // Ahora eliminar la publicación
+        // Eliminar la publicación directamente
+        // Nota: La tabla community_post_likes no existe aún en la base de datos
+        // Si se crea en el futuro, agregar aquí la lógica para eliminar likes relacionados
         const { error: deleteError } = await supabaseAdmin
           .from('community_posts')
           .delete()
