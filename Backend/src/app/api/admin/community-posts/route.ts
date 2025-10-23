@@ -198,9 +198,12 @@ export async function GET(request: NextRequest) {
 // PATCH /api/admin/community-posts - Acciones sobre publicaciones (suspender, activar, eliminar)
 export async function PATCH(request: NextRequest) {
   try {
+    console.log('[API /admin/community-posts PATCH] Request started')
+
     // Verificar permisos de admin
     const isAdmin = await isCurrentUserAdmin()
     if (!isAdmin) {
+      console.log('[API /admin/community-posts PATCH] Unauthorized access attempt')
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -209,6 +212,8 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json()
     const { postId, action } = body
+
+    console.log('[API /admin/community-posts PATCH] Action:', { postId, action })
 
     if (!postId || !action) {
       return NextResponse.json(
@@ -227,6 +232,7 @@ export async function PATCH(request: NextRequest) {
         updateData = { is_active: true, updated_at: new Date().toISOString() }
         break
       case 'delete':
+        console.log('[API /admin/community-posts PATCH] Deleting post:', postId)
         // Eliminar permanentemente
         const { error: deleteError } = await supabaseAdmin
           .from('community_posts')
@@ -241,6 +247,7 @@ export async function PATCH(request: NextRequest) {
           )
         }
 
+        console.log('[API /admin/community-posts PATCH] Post deleted successfully:', postId)
         return NextResponse.json({
           success: true,
           message: 'Publicación eliminada exitosamente'
