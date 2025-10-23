@@ -322,26 +322,43 @@ export function useSupabaseAuth() {
       })
 
       if (error) {
+        console.error('Register error details:', {
+          message: error.message,
+          code: (error as any).code,
+          status: (error as any).status
+        })
+
         // Manejar errores específicos de Supabase
-        if (error.message.includes('User already registered')) {
+        // ERROR: Usuario ya registrado
+        if (error.message.includes('User already registered') ||
+            error.message.includes('already been registered') ||
+            error.message.includes('email address is already registered')) {
           throw new Error('Ya existe una cuenta con este email. Intenta iniciar sesión.')
         }
-        if (error.message.includes('already been registered')) {
-          throw new Error('Ya existe una cuenta con este email. Intenta iniciar sesión.')
-        }
-        if (error.message.includes('email address is already registered')) {
-          throw new Error('Ya existe una cuenta con este email. Intenta iniciar sesión.')
-        }
+
+        // ERROR: Registro deshabilitado
         if (error.message.includes('signup is disabled')) {
           throw new Error('El registro está temporalmente deshabilitado. Contacta al administrador.')
         }
+
+        // ERROR: Contraseña muy corta
         if (error.message.includes('Password should be at least')) {
           throw new Error('La contraseña debe tener al menos 6 caracteres.')
         }
+
+        // ERROR: Email inválido
         if (error.message.includes('Invalid email')) {
           throw new Error('El formato del email no es válido.')
         }
-        
+
+        // ERROR CRÍTICO: Contraseña débil o comprometida (código: weak_password)
+        if ((error as any).code === 'weak_password' ||
+            error.message.includes('weak') ||
+            error.message.includes('easy to guess') ||
+            error.message.includes('pwned')) {
+          throw new Error('⚠️ Contraseña demasiado débil o comprometida\n\nEsta contraseña ha sido encontrada en bases de datos de contraseñas filtradas y no es segura.\n\nPor favor usa una contraseña más segura con:\n• Mínimo 8 caracteres\n• Mayúsculas y minúsculas\n• Números y símbolos especiales\n• Que NO sea una contraseña común\n\nEjemplo: MiPassword2025!@#')
+        }
+
         throw error
       }
 
