@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Home, Flag, Users, Building2, MessageSquare, BarChart3 } from 'lucide-react'
+import { Shield, Home, Flag, Users, Building2, MessageSquare, BarChart3, UserCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useEffect, useState } from 'react'
@@ -52,6 +52,11 @@ export function AdminNavbar() {
       href: '/admin/properties',
       label: 'Propiedades',
       icon: <Building2 className="h-4 w-4" />,
+    },
+    {
+      href: '/admin/community',
+      label: 'Comunidad',
+      icon: <UserCircle className="h-4 w-4" />,
     },
     {
       href: '/admin/support',
