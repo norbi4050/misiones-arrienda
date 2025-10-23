@@ -66,12 +66,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('city', cityFilter)
     }
 
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'active') {
-        query = query.eq('is_active', true)
-      } else if (statusFilter === 'suspended') {
-        query = query.eq('is_active', false)
-      }
+    // Filtro de estado: 'all' muestra solo activos, 'suspended' muestra inactivos
+    // Los posts eliminados (soft delete con is_active=false) no deberían aparecer en 'all'
+    if (statusFilter === 'active' || statusFilter === 'all') {
+      query = query.eq('is_active', true)
+    } else if (statusFilter === 'suspended') {
+      query = query.eq('is_active', false)
     }
 
     // Ordenamiento
