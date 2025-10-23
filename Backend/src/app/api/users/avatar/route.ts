@@ -50,37 +50,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Usuario no especificado' }, { status: 400 })
     }
 
-    // Obtener datos de user_profiles y users para construir avatar_url único
-    // NOTA: user_profiles usa 'userId' como FK, no 'id'
-    const [{ data: userData }, { data: profile }] = await Promise.all([
-      supabase.from('users').select('id,name,profile_image,avatar,logo_url,updated_at').eq('id', userId).maybeSingle(),
-      supabase.from('user_profiles').select('avatar_url,updatedAt').eq('userId', userId).maybeSingle(),
-    ])
+    // Obtener datos de User table (note: table name is capitalized in Supabase)
+    const { data: userData } = await supabase
+      .from('User')
+      .select('id,name,avatar,updatedAt')
+      .eq('id', userId)
+      .maybeSingle()
 
     if (!userData) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    const primaryUrl = profile?.avatar_url ?? null;
-    const deprecatedUrl = userData?.profile_image ?? userData?.avatar ?? userData?.logo_url ?? null; // fallback temporal
-    const displayName = userData?.name ?? 'User';
+    const displayName = userData.name ?? 'User';
+    const avatarUrl = userData.avatar ?? null;
 
-    const url =
-      primaryUrl ??
-      deprecatedUrl ??
+    const url = avatarUrl ??
       `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff&size=200`;
 
-    // FIX: Calcular versión usando updatedAt de user_profiles (Prisma) o updated_at de users (Supabase)
-    // Esto fuerza al navegador a recargar la imagen cuando cambia
-    const v = profile?.updatedAt
-      ? Math.floor(new Date(profile.updatedAt).getTime() / 1000)
-      : (userData?.updated_at ? Math.floor(new Date(userData.updated_at).getTime() / 1000) : 0);
+    // Calculate version using updatedAt timestamp
+    const v = userData.updatedAt
+      ? Math.floor(new Date(userData.updatedAt).getTime() / 1000)
+      : 0;
 
     // Devolver URL cruda sin ?v= - el frontend se encarga del cache-busting
     return NextResponse.json({
       url: url,  // URL cruda sin ?v=
       v: v,
-      source: primaryUrl ? 'user_profiles.avatar_url' : (deprecatedUrl ? 'users_deprecated' : 'fallback'),
+      source: avatarUrl ? 'User.avatar' : 'fallback',
       user_id: userId,
       full_name: displayName
     }, {
@@ -138,49 +134,22 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Avatar POST] Guardando avatar para user ${user.id}: ${url}`)
 
-    // 6) FIX: Guardar avatar en ambas tablas para máxima compatibilidad
-    // Esto maneja 3 casos:
-    // - Inquilinos: tienen user_profiles ✅
-    // - Inmobiliarias nuevas: NO tienen user_profiles, usan users.avatar ✅
-    // - Inmobiliarias migradas: tienen user_profiles, actualizar ambas ✅
-
-    // 6a) Intentar actualizar user_profiles.avatar_url (si existe)
-    // NOTA: NO actualizar updated_at manualmente - esa columna no existe en Supabase REST API
-    const { data: profileData, error: profileUpdateErr } = await supabaseAdmin
-      .from('user_profiles')
-      .update({ avatar_url: url })
-      .eq('userId', user.id)
-      .select()
-
-    if (profileUpdateErr) {
-      console.log(`[Avatar POST] user_profiles update: ${profileUpdateErr.message} (code: ${profileUpdateErr.code})`)
-    } else {
-      console.log(`[Avatar POST] user_profiles updated: ${profileData ? profileData.length : 0} rows`)
-    }
-
-    // 6b) SIEMPRE actualizar users.avatar como fallback
-    // Esto garantiza que el avatar esté disponible para todos los usuarios
+    // Update User table with new avatar
     const { data: userData, error: userUpdateErr } = await supabaseAdmin
-      .from('users')
-      .update({ avatar: url, updated_at: new Date().toISOString() })
+      .from('User')
+      .update({ avatar: url, updatedAt: new Date().toISOString() })
       .eq('id', user.id)
       .select()
 
     if (userUpdateErr) {
-      console.error('[Avatar POST] Error updating users.avatar:', userUpdateErr)
-      console.error('[Avatar POST] CRITICAL: Failed to save avatar to database')
-      // Si ambas tablas fallan, es un error crítico
-      if (profileUpdateErr) {
-        return NextResponse.json({
-          error: 'failed to save avatar',
-          details: userUpdateErr.message
-        }, { status: 500 })
-      }
-    } else {
-      console.log(`[Avatar POST] users.avatar updated: ${userData ? userData.length : 0} rows`)
+      console.error('[Avatar POST] Error updating User.avatar:', userUpdateErr)
+      return NextResponse.json({
+        error: 'failed to save avatar',
+        details: userUpdateErr.message
+      }, { status: 500 })
     }
 
-    console.log(`[Avatar POST] Final: user_profiles=${!profileUpdateErr}, users=${!userUpdateErr}`)
+    console.log(`[Avatar POST] User.avatar updated: ${userData ? userData.length : 0} rows`)
 
     return NextResponse.json({ url: `${url}?v=${v}`, v, success: true })
   } catch (e) {
@@ -201,38 +170,26 @@ export async function DELETE(request: NextRequest) {
 
     const userId = authHeader.replace('Bearer ', '')
 
-    // FIX: Remover avatar de AMBAS tablas para máxima compatibilidad
     const now = new Date()
 
-    // Remover de user_profiles (si existe)
-    const { error: profileRemoveError } = await supabase
-      .from('user_profiles')
-      .update({
-        avatar_url: null,
-        updated_at: now.toISOString()
-      })
-      .eq('userId', userId)
-
-    // Remover de users.avatar
+    // Remove avatar from User table
     const { data: userRemoveResult, error: userRemoveError } = await supabase
-      .from('users')
+      .from('User')
       .update({
         avatar: null,
-        updated_at: now.toISOString()
+        updatedAt: now.toISOString()
       })
       .eq('id', userId)
-      .select('updated_at')
+      .select('updatedAt')
       .single()
 
     if (userRemoveError) {
-      console.error('Error removing avatar from users:', userRemoveError)
-      // No fallar si solo falla users, puede que user_profiles haya funcionado
+      console.error('[Avatar DELETE] Error removing avatar from User:', userRemoveError)
+      return NextResponse.json({ error: userRemoveError.message }, { status: 500 })
     }
 
-    console.log(`[Avatar DELETE] Removed from user_profiles: ${!profileRemoveError}, users: ${!userRemoveError}`)
-
-    const updatedAtEpoch = userRemoveResult?.updated_at
-      ? Math.floor(new Date(userRemoveResult.updated_at).getTime() / 1000)
+    const updatedAtEpoch = userRemoveResult?.updatedAt
+      ? Math.floor(new Date(userRemoveResult.updatedAt).getTime() / 1000)
       : Math.floor(now.getTime() / 1000)
 
     return NextResponse.json({
