@@ -121,6 +121,13 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
     // Fetch real posts for public view
     const publicData = await getCommunityPosts(searchParams)
 
+    // Debug: Log para verificar qué datos llegan
+    console.log('[COMUNIDAD PUBLIC] Posts fetched:', {
+      total: publicData.total,
+      postsCount: publicData.posts.length,
+      posts: publicData.posts
+    })
+
     return (
       <main className="min-h-screen bg-gray-50" data-testid="public-landing">
         <PageTracker eventName="visit_comunidad_public" />

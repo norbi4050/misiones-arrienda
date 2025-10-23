@@ -32,8 +32,8 @@ export function CommunityFiltersPublic() {
     const params = new URLSearchParams()
     if (city) params.append('city', city)
     if (role) params.append('role', role)
-    if (budgetMin) params.append('budgetMin', budgetMin)
-    if (budgetMax) params.append('budgetMax', budgetMax)
+    if (budgetMin) params.append('min', budgetMin)  // API espera 'min', no 'budgetMin'
+    if (budgetMax) params.append('max', budgetMax)  // API espera 'max', no 'budgetMax'
 
     router.push(`/comunidad?${params.toString()}`)
   }
@@ -60,7 +60,7 @@ export function CommunityFiltersPublic() {
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               <option value="">Todas las ciudades</option>
               {cities.map((c) => (
@@ -79,7 +79,7 @@ export function CommunityFiltersPublic() {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               <option value="">Todos</option>
               <option value="BUSCO">Busco habitación</option>
@@ -97,7 +97,7 @@ export function CommunityFiltersPublic() {
               placeholder="Ej: 100000"
               value={budgetMin}
               onChange={(e) => setBudgetMin(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500"
             />
           </div>
 
@@ -111,7 +111,7 @@ export function CommunityFiltersPublic() {
               placeholder="Ej: 200000"
               value={budgetMax}
               onChange={(e) => setBudgetMax(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-500"
             />
           </div>
         </div>
