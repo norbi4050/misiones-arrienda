@@ -128,6 +128,104 @@ export class EmailService {
       errors,
     };
   }
+
+  /**
+   * Send property suspension notification to owner
+   * @param data - Property and owner information
+   */
+  static async sendPropertySuspensionEmail(data: {
+    ownerEmail: string
+    ownerName: string
+    propertyTitle: string
+    propertyId: string
+    reportCount: number
+    suspensionReason: string
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('📧 Sending property suspension notification...');
+
+      // Por ahora, solo loguear (puede implementarse con Resend, SendGrid, etc.)
+      console.log(`
+        ⚠️ PROPIEDAD SUSPENDIDA AUTOMÁTICAMENTE
+
+        Destinatario: ${data.ownerName} <${data.ownerEmail}>
+        Propiedad: ${data.propertyTitle}
+        ID: ${data.propertyId}
+        Reportes recibidos: ${data.reportCount}
+        Razón: ${data.suspensionReason}
+
+        Mensaje:
+        Estimado/a ${data.ownerName},
+
+        Le informamos que su publicación "${data.propertyTitle}" ha sido suspendida
+        temporalmente debido a que recibió ${data.reportCount} reportes de usuarios.
+
+        Motivo: ${data.suspensionReason}
+
+        Nuestro equipo de moderación revisará los reportes en las próximas 24-48 horas.
+        Si la publicación cumple con nuestras políticas, será reactivada automáticamente.
+
+        Si tiene alguna pregunta, puede responder a este email.
+
+        Saludos,
+        Equipo de Misiones Arrienda
+      `);
+
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error sending suspension email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Send notification to admins about auto-suspended property
+   * @param data - Property information
+   */
+  static async sendAdminSuspensionNotification(data: {
+    propertyTitle: string
+    propertyId: string
+    reportCount: number
+    ownerEmail: string
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('📧 Sending admin notification about suspended property...');
+
+      // Email a admin (configurar en variables de entorno)
+      const adminEmail = getEnvVar('ADMIN_EMAIL') || 'misionesarrienda@gmail.com';
+
+      console.log(`
+        🚨 NUEVA PROPIEDAD AUTO-SUSPENDIDA
+
+        Destinatario: Admin <${adminEmail}>
+
+        Una propiedad ha sido suspendida automáticamente por múltiples reportes:
+
+        Propiedad: ${data.propertyTitle}
+        ID: ${data.propertyId}
+        Dueño: ${data.ownerEmail}
+        Reportes: ${data.reportCount}
+
+        Acciones requeridas:
+        - Revisar los reportes en el panel de administración
+        - Verificar si la propiedad cumple con las políticas
+        - Reactivar o eliminar según corresponda
+
+        Link: https://www.misionesarrienda.com.ar/admin/reports
+      `);
+
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error sending admin notification:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
 }
 
 // Export for use in other modules

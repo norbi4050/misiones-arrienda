@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { z } from 'zod'
+import { EmailService } from '@/lib/email-service'
 
 // Cliente admin con Service Role Key para operaciones administrativas
 const supabaseAdmin = createServiceClient(
@@ -172,6 +173,33 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       if (!suspendError) {
         autoSuspended = true
         console.log(`[PropertyReport] Auto-suspended property ${propertyId} (${totalReports} reports)`)
+
+        // Obtener información del dueño de la propiedad
+        const { data: ownerData } = await supabaseAdmin
+          .from('User')
+          .select('name, email')
+          .eq('id', property.userId)
+          .maybeSingle()
+
+        // Enviar notificación al dueño
+        if (ownerData?.email) {
+          await EmailService.sendPropertySuspensionEmail({
+            ownerEmail: ownerData.email,
+            ownerName: ownerData.name || 'Usuario',
+            propertyTitle: property.title,
+            propertyId: propertyId,
+            reportCount: totalReports,
+            suspensionReason: `Múltiples reportes recibidos (${totalReports})`
+          })
+        }
+
+        // Enviar notificación a administradores
+        await EmailService.sendAdminSuspensionNotification({
+          propertyTitle: property.title,
+          propertyId: propertyId,
+          reportCount: totalReports,
+          ownerEmail: ownerData?.email || 'Email no disponible'
+        })
       } else {
         console.error('[PropertyReport] Error auto-suspending property:', suspendError)
       }
