@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,14 +36,36 @@ interface KPIData {
 }
 
 export default function AdminAnalyticsPage() {
-  const { user, isLoading } = useSupabaseAuth();
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
 
-  // Verificar si es admin (simplificado - en producción usar roles)
-  const isAdmin = user?.email?.includes('admin') || user?.email?.includes('norbe');
+  // Verificar autenticación y permisos de admin
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const supabase = getBrowserSupabase();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          setUser(user);
+          // Verificar si es admin usando el mismo método que en otros componentes
+          const adminEmails = ['misionesarrienda@gmail.com'];
+          setIsAdmin(adminEmails.includes(user.email || ''));
+        }
+      } catch (err) {
+        console.error('Error checking auth:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const fetchAnalyticsData = useCallback(async () => {
     setLoading(true);
