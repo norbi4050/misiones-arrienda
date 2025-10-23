@@ -73,9 +73,9 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Obtener datos de tabla users (fuente de verdad para user_type)
+  // Obtener datos de tabla User (fuente de verdad para user_type)
   const { data: userData, error: userError } = await supabase
-    .from('users')
+    .from('User')
     .select('*')
     .eq('id', user.id)
     .single();
@@ -95,13 +95,13 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Si el usuario es BUSCO/INQUILINO, obtener datos adicionales de user_profiles
+  // Si el usuario es BUSCO/INQUILINO, obtener datos adicionales de community_profiles
   let profileData = userData;
   if (userData.user_type === 'inquilino' || userData.user_type === 'busco') {
     const { data: communityData } = await supabase
-      .from('user_profiles')
+      .from('community_profiles')
       .select('*')
-      .eq('userId', user.id)
+      .eq('user_id', user.id)
       .maybeSingle();
 
     if (communityData) {
@@ -200,11 +200,11 @@ export async function PUT(req: NextRequest) {
   // FIX: Actualizar AMBAS tablas para máxima compatibilidad
   // Esto maneja todos los casos: inquilinos, inmobiliarias nuevas, inmobiliarias migradas
 
-  // Actualizar user_profiles (si existe)
+  // Actualizar community_profiles (si existe)
   const { data: profileData, error: profileError } = await supabaseAdmin
-    .from('user_profiles')
+    .from('community_profiles')
     .update(userProfilesUpdate)
-    .eq('userId', user.id)
+    .eq('user_id', user.id)
     .select()
     .maybeSingle();
 
@@ -214,9 +214,9 @@ export async function PUT(req: NextRequest) {
     console.log(`[API /users/profile PUT] user_profiles updated: ${profileData ? '1 row' : '0 rows'}`);
   }
 
-  // Actualizar users (SIEMPRE)
+  // Actualizar User (SIEMPRE)
   const { data: userData, error: userError } = await supabaseAdmin
-    .from('users')
+    .from('User')
     .update(usersUpdate)
     .eq('id', user.id)
     .select()
