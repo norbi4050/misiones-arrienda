@@ -12,6 +12,13 @@ export const revalidate = 0
 import { NextRequest, NextResponse } from 'next/server'
 import { isCurrentUserAdmin } from '@/lib/admin-auth'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
+
+// Cliente admin con Service Role Key para bypassear RLS
+const supabaseAdmin = createServiceClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 const ADMIN_ACCESS_DENIED = {
   error: 'Access denied',
@@ -30,7 +37,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(ADMIN_ACCESS_DENIED, { status: 403 })
     }
 
-    const supabase = createClient()
     const { searchParams } = new URL(request.url)
 
     // Parámetros de filtrado y paginación
@@ -44,8 +50,8 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit
 
-    // Construir query base - versión minimalista para debugging
-    let query = supabase
+    // Construir query base usando supabaseAdmin para bypassear RLS
+    let query = supabaseAdmin
       .from('Property')
       .select(`
         id,
@@ -84,6 +90,13 @@ export async function GET(request: NextRequest) {
 
     const { data: properties, error, count } = await query
 
+    // Log para debugging
+    console.log('[API /admin/properties GET] Query result:', {
+      propertiesCount: properties?.length || 0,
+      totalCount: count,
+      hasError: !!error
+    })
+
     if (error) {
       console.error('[API /admin/properties GET] Error fetching properties:', {
         error,
@@ -101,13 +114,13 @@ export async function GET(request: NextRequest) {
     // Obtener conteo de reportes y datos de usuario para cada propiedad
     const propertiesWithReports = await Promise.all(
       (properties || []).map(async (property) => {
-        const { count: reportsCount } = await supabase
+        const { count: reportsCount } = await supabaseAdmin
           .from('property_reports')
           .select('*', { count: 'exact', head: true })
           .eq('property_id', property.id)
 
         // Obtener datos del usuario
-        const { data: user } = await supabase
+        const { data: user } = await supabaseAdmin
           .from('User')
           .select('name, email')
           .eq('id', property.userId)
@@ -122,26 +135,26 @@ export async function GET(request: NextRequest) {
     )
 
     // Estadísticas generales
-    const { count: totalProperties } = await supabase
+    const { count: totalProperties } = await supabaseAdmin
       .from('Property')
       .select('*', { count: 'exact', head: true })
 
-    const { count: availableProperties } = await supabase
+    const { count: availableProperties } = await supabaseAdmin
       .from('Property')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'AVAILABLE')
 
-    const { count: rentedProperties } = await supabase
+    const { count: rentedProperties } = await supabaseAdmin
       .from('Property')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'RENTED')
 
-    const { count: suspendedProperties } = await supabase
+    const { count: suspendedProperties } = await supabaseAdmin
       .from('Property')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'SUSPENDED')
 
-    const { count: pendingProperties } = await supabase
+    const { count: pendingProperties } = await supabaseAdmin
       .from('Property')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'PENDING')
