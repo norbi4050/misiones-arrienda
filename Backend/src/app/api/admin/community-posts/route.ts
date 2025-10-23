@@ -253,7 +253,6 @@ export async function PATCH(request: NextRequest) {
               .from('community_posts')
               .update({
                 is_active: false,
-                deleted_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               })
               .eq('id', postId)
