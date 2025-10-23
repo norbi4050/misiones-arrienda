@@ -57,7 +57,7 @@ export function useSupabaseAuth() {
         .from('User')
         .select(`
           id, name, email, phone, avatar, bio, occupation, age, userType,
-          companyName, licenseNumber, propertyCount, location,
+          companyName, licenseNumber, propertyCount,
           searchType, budgetRange, preferredAreas, familySize,
           petFriendly, moveInDate, employmentStatus, monthlyIncome,
           verified, emailVerified, rating, reviewCount, createdAt, updatedAt
