@@ -133,6 +133,11 @@ export async function GET(request: NextRequest) {
     try {
       // Construir query de Supabase SIN JOIN para evitar errores
       const nowIso = new Date().toISOString();
+
+      console.log('[API /properties] Building query with filters:', {
+        city, type, operationType, featured, limit, page
+      });
+
       let query = supabase
         .from('properties')
         .select('*', { count: 'exact' })
@@ -206,6 +211,12 @@ export async function GET(request: NextRequest) {
       query = query.range(startIndex, startIndex + limit - 1);
 
       const { data: supabaseProperties, error, count } = await query;
+
+      console.log('[API /properties] Query result:', {
+        count,
+        propertiesLength: supabaseProperties?.length,
+        hasError: !!error
+      });
 
       if (error) {
         console.warn('Supabase error, falling back to mock data:', error);
