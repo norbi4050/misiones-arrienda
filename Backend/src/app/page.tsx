@@ -1,14 +1,24 @@
-import { HeroSection } from '@/components/hero-section'
-import { PropertyGridServer } from '@/components/property-grid-server'
 import { fetchRealProperties } from '@/lib/api'
 import { PageTracker } from '@/components/analytics/page-tracker'
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { MessageCircle, Search, Sparkles, Home, MapPin, Users, Crown, Check } from 'lucide-react'
+import { Crown, Check } from 'lucide-react'
+import { isFounderOfferActive, getFounderSpotsRemaining } from '@/lib/founder-offer-config'
+
+// Import new home components
+import {
+  HeroSectionNew,
+  MissionBanner,
+  ValuePropositionSection,
+  AllUsersSection,
+  CommunityShowcase,
+  AgencyWebsiteShowcase,
+  ComingSoonSection,
+  PropertyGridAdaptive,
+  FAQSection
+} from '@/components/home'
 
 // Configuración para páginas dinámicas con searchParams
 export const dynamic = 'force-dynamic'
@@ -89,115 +99,39 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     return (
       <main className="min-h-screen" data-testid="public-landing">
         <PageTracker eventName="visit_home_public" />
-        
-        {/* Hero Section */}
-        <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-5xl font-bold mb-4">
-              Encontrá tu hogar ideal en Misiones
-            </h1>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
-              La plataforma más completa para alquilar, comprar y compartir vivienda en toda la provincia
-            </p>
-            <Link href="/register">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6">
-                Crear cuenta gratis
-              </Button>
-            </Link>
-          </div>
-        </section>
 
-        {/* Highlights */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">¿Por qué elegir Misiones Arrienda?</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Búsqueda Local Optimizada</h3>
-                  <p className="text-gray-600">
-                    Filtrá por ciudad, barrio, precio y características. Encontrá exactamente lo que buscás en Posadas, Oberá, Eldorado y más.
-                  </p>
-                </CardContent>
-              </Card>
+        {/* Hero Section with Dual Search */}
+        <HeroSectionNew />
 
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MessageCircle className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Mensajería Interna Segura</h3>
-                  <p className="text-gray-600">
-                    Contactá directamente con dueños e inquilinos. Sin intermediarios, sin comisiones ocultas.
-                  </p>
-                </CardContent>
-              </Card>
+        {/* Mission Banner */}
+        <MissionBanner />
 
-              <Card>
-                <CardContent className="pt-6 text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-8 h-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Asistente IA</h3>
-                  <p className="text-gray-600">
-                    Nuestro asistente inteligente te ayuda a encontrar la propiedad perfecta según tus necesidades.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
+        {/* Value Proposition */}
+        <ValuePropositionSection />
 
-        {/* Demo Properties */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold mb-8">Propiedades Destacadas</h2>
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {initialProperties.slice(0, 6).map((property) => (
-                <Card key={property.id} className="overflow-hidden">
-                  <div className="aspect-video bg-gray-200 relative">
-                    {property.images?.[0] && (
-                      <Image
-                        src={property.images[0]}
-                        alt={property.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover"
-                        loading="lazy"
-                      />
-                    )}
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">{property.title}</h3>
-                    <div className="flex items-center text-gray-600 text-sm mb-2">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {property.city}
-                    </div>
-                    <p className="text-2xl font-bold text-blue-600">
-                      ${property.price?.toLocaleString('es-AR')}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="text-center">
-              <Link href="/register">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                  Ver todas las propiedades
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* All Users Section */}
+        <AllUsersSection />
+
+        {/* Community Showcase */}
+        <CommunityShowcase />
+
+        {/* Agency Website Showcase */}
+        <AgencyWebsiteShowcase />
+
+        {/* Properties Adaptive Grid */}
+        <PropertyGridAdaptive properties={initialProperties} />
+
+        {/* Coming Soon Roadmap */}
+        <ComingSoonSection />
+
+        {/* FAQ Section */}
+        <FAQSection />
 
         {/* CTA Final */}
         <section className="py-16 bg-blue-600 text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-4xl font-bold mb-4">¿Listo para encontrar tu próximo hogar?</h2>
-            <p className="text-xl mb-8">Creá tu cuenta gratis y accedé a miles de propiedades</p>
+            <p className="text-xl mb-8">Creá tu cuenta gratis y accedé a todas las funcionalidades</p>
             <Link href="/register">
               <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6">
                 Comenzar ahora
@@ -212,14 +146,20 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // Feed real (usuario logueado)
   const isAgency = userData?.user_type?.toUpperCase() === 'INMOBILIARIA' || userData?.user_type?.toUpperCase() === 'AGENCY'
   const isFounder = userData?.is_founder === true
+  const showFounderBanner = isAgency && !isFounder && isFounderOfferActive()
 
   return (
     <main className="min-h-screen">
       <PageTracker eventName="visit_home" />
-      <HeroSection />
 
-      {/* Banner Oferta Fundadores - Solo para inmobiliarias NO fundadoras */}
-      {isAgency && !isFounder && (
+      {/* Hero Section with Dual Search */}
+      <HeroSectionNew />
+
+      {/* Mission Banner */}
+      <MissionBanner />
+
+      {/* Banner Oferta Fundadores - Solo para inmobiliarias NO fundadoras Y si la oferta está activa */}
+      {showFounderBanner && (
         <section className="py-8 bg-gradient-to-r from-amber-50 to-yellow-50">
           <div className="container mx-auto px-4">
             <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 rounded-2xl p-8 text-white shadow-2xl relative overflow-hidden">
@@ -263,7 +203,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 <div className="flex items-center gap-4 justify-between flex-wrap">
                   <div>
                     <p className="text-sm text-blue-100">
-                      ⏰ Solo quedan <span className="font-bold text-white text-xl">12 lugares</span> disponibles
+                      ⏰ Solo quedan <span className="font-bold text-white text-xl">{getFounderSpotsRemaining()}</span> lugares disponibles
                     </p>
                   </div>
                   <Link href="/mi-empresa/planes">
@@ -278,12 +218,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </section>
       )}
 
-      <section id="propiedades">
-        <PropertyGridServer
-          initialProperties={initialProperties}
-          searchParams={searchParams}
-        />
-      </section>
+      {/* Properties with search filters */}
+      <PropertyGridAdaptive properties={initialProperties} />
       
       {/* JSON-LD para SEO */}
       <script
