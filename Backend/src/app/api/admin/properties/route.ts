@@ -201,12 +201,10 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const supabase = createClient()
-
     // Acciones permitidas: suspend, activate, delete
     if (action === 'delete') {
-      // Eliminar propiedad
-      const { error } = await supabase
+      // Eliminar propiedad usando supabaseAdmin
+      const { error } = await supabaseAdmin
         .from('Property')
         .delete()
         .eq('id', propertyId)
@@ -229,10 +227,10 @@ export async function PATCH(request: NextRequest) {
 
     switch (action) {
       case 'suspend':
-        updateData = { status: 'SUSPENDED' }
+        updateData = { status: 'suspended' }
         break
       case 'activate':
-        updateData = { status: 'AVAILABLE' }
+        updateData = { status: 'published' }
         break
       default:
         return NextResponse.json(
@@ -241,7 +239,7 @@ export async function PATCH(request: NextRequest) {
         )
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('Property')
       .update(updateData)
       .eq('id', propertyId)
