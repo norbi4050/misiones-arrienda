@@ -44,30 +44,18 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit
 
-    // Construir query base - usando solo columnas que sabemos que existen
+    // Construir query base - versión minimalista para debugging
     let query = supabase
       .from('Property')
       .select(`
         id,
         title,
-        description,
         price,
         currency,
         status,
-        rooms,
-        bathrooms,
-        area,
-        address,
         city,
-        province,
-        images,
         userId,
-        createdAt,
-        updatedAt,
-        User:userId (
-          name,
-          email
-        )
+        createdAt
       `, { count: 'exact' })
 
     // Aplicar filtros
@@ -110,7 +98,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Obtener conteo de reportes para cada propiedad
+    // Obtener conteo de reportes y datos de usuario para cada propiedad
     const propertiesWithReports = await Promise.all(
       (properties || []).map(async (property) => {
         const { count: reportsCount } = await supabase
@@ -118,9 +106,16 @@ export async function GET(request: NextRequest) {
           .select('*', { count: 'exact', head: true })
           .eq('property_id', property.id)
 
+        // Obtener datos del usuario
+        const { data: user } = await supabase
+          .from('User')
+          .select('name, email')
+          .eq('id', property.userId)
+          .maybeSingle()
+
         return {
           ...property,
-          user: property.User,
+          user,
           reportsCount: reportsCount || 0
         }
       })
