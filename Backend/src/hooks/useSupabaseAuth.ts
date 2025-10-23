@@ -58,8 +58,6 @@ export function useSupabaseAuth() {
         .select(`
           id, name, email, phone, avatar, bio, occupation, age, userType,
           companyName, licenseNumber, propertyCount,
-          budgetRange, preferredAreas, familySize,
-          petFriendly, moveInDate, employmentStatus, monthlyIncome,
           verified, emailVerified, rating, reviewCount, createdAt, updatedAt
         `)
         .eq('id', userId)
@@ -80,15 +78,8 @@ export function useSupabaseAuth() {
         name: data.name || 'Usuario',
         email: data.email,
         phone: data.phone,
-        budgetRange: data.budgetRange,
         bio: data.bio,
         profileImage: data.avatar,
-        preferredAreas: data.preferredAreas,
-        familySize: data.familySize?.toString(),
-        petFriendly: data.petFriendly?.toString(),
-        moveInDate: data.moveInDate,
-        employmentStatus: data.employmentStatus,
-        monthlyIncome: data.monthlyIncome?.toString(),
         userType: data.userType,
         companyName: data.companyName,
         licenseNumber: data.licenseNumber,
