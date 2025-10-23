@@ -411,14 +411,14 @@ export function PropertiesListClient() {
               </div>
 
               <div className="flex gap-2 pt-2 border-t">
-                <Link href={`/propiedades/${property.id}`} target="_blank" className="flex-1">
+                <Link href={`/propiedad/${property.id}`} target="_blank" className="flex-1">
                   <Button variant="outline" size="sm" className="w-full">
                     <Eye className="h-4 w-4 mr-1" />
                     Ver
                   </Button>
                 </Link>
 
-                {property.status === 'AVAILABLE' ? (
+                {(property.status === 'AVAILABLE' || property.status === 'published') ? (
                   <Button
                     variant="outline"
                     size="sm"
@@ -429,7 +429,7 @@ export function PropertiesListClient() {
                     <Ban className="h-4 w-4 mr-1" />
                     Suspender
                   </Button>
-                ) : property.status === 'SUSPENDED' ? (
+                ) : (property.status === 'SUSPENDED' || property.status === 'suspended') ? (
                   <Button
                     variant="outline"
                     size="sm"
