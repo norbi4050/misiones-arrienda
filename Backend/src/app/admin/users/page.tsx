@@ -441,7 +441,7 @@ export default function AdminUsersPage() {
       {/* Modal de detalles del usuario */}
       {selectedUser && !showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md bg-white">
             <CardHeader>
               <CardTitle>Detalles del Usuario</CardTitle>
             </CardHeader>
@@ -495,7 +495,7 @@ export default function AdminUsersPage() {
       {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md bg-white">
             <CardHeader>
               <CardTitle className="text-red-600">Confirmar Eliminación</CardTitle>
               <CardDescription>

@@ -1,21 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
+import { isCurrentUserAdmin, getCurrentAdminUser, ADMIN_ACCESS_DENIED, logAdminAccess } from '@/lib/admin-auth';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 
 // Cliente admin con Service Role Key
-const supabaseAdmin = createClient(
+const supabaseAdmin = createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Cliente regular para verificar permisos
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export async function DELETE(request: NextRequest) {
   try {
+    // Verificar permisos de admin usando el sistema estándar
+    const isAdmin = await isCurrentUserAdmin();
+    if (!isAdmin) {
+      return NextResponse.json(ADMIN_ACCESS_DENIED, { status: 403 });
+    }
+
+    const adminUser = await getCurrentAdminUser();
+    if (!adminUser) {
+      return NextResponse.json({ error: 'No se pudo obtener información del admin' }, { status: 500 });
+    }
+
     // Obtener el ID del usuario a eliminar
     const { searchParams } = new URL(request.url);
     const userIdToDelete = searchParams.get('userId');
@@ -27,48 +33,13 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verificar autenticación del usuario actual
-    const cookieStore = cookies();
-    const token = cookieStore.get('sb-access-token')?.value;
+    // SELF DELETE PREVENTION - Verificaciones de seguridad
 
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      );
-    }
-
-    // Verificar que el usuario actual es admin
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Token inválido' },
-        { status: 401 }
-      );
-    }
-
-    // Verificar permisos de admin en la base de datos
-    const { data: userProfile, error: profileError } = await supabaseAdmin
-      .from('User')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || userProfile?.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Permisos insuficientes. Solo administradores pueden eliminar usuarios.' },
-        { status: 403 }
-      );
-    }
-
-    // SELF DELETE PREVENTION MARKER - Verificaciones de seguridad mejoradas
-    
     // 1. Verificación ID usuario - Prevenir auto-eliminación por ID
-    if (user.id === userIdToDelete) {
-      console.error(`CRITICAL ERROR: Self-deletion attempt by user ID ${user.id}`);
+    if (adminUser.id === userIdToDelete) {
+      console.error(`CRITICAL ERROR: Self-deletion attempt by user ID ${adminUser.id}`);
       return NextResponse.json(
-        { error: 'CRÍTICO: No puedes eliminar tu propia cuenta por ID' },
+        { error: 'CRÍTICO: No puedes eliminar tu propia cuenta' },
         { status: 400 }
       );
     }
@@ -76,7 +47,7 @@ export async function DELETE(request: NextRequest) {
     // Obtener información del usuario antes de eliminarlo (para logging y verificaciones)
     const { data: userToDelete, error: getUserError } = await supabaseAdmin
       .from('User')
-      .select('email, name, role')
+      .select('email, name, userType')
       .eq('id', userIdToDelete)
       .single();
 
@@ -88,35 +59,10 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 2. Verificación email - Prevenir auto-eliminación por email
-    if (user.email === userToDelete.email) {
-      console.error(`CRITICAL ERROR: Self-deletion attempt by email ${user.email}`);
+    if (adminUser.email === userToDelete.email) {
+      console.error(`CRITICAL ERROR: Self-deletion attempt by email ${adminUser.email}`);
       return NextResponse.json(
-        { error: 'CRÍTICO: No puedes eliminar tu propia cuenta por email' },
-        { status: 400 }
-      );
-    }
-
-    // 3. Verificación último admin - Prevenir eliminación del último administrador
-    if (userToDelete.role === 'ADMIN') {
-      const { count: adminCount } = await supabaseAdmin
-        .from('User')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'ADMIN');
-
-      if (adminCount && adminCount <= 1) {
-        console.error(`CRITICAL ERROR: Attempt to delete last admin by ${user.email}`);
-        return NextResponse.json(
-          { error: 'CRÍTICO: No se puede eliminar el último administrador del sistema' },
-          { status: 400 }
-        );
-      }
-    }
-
-    // 4. Final Safety Check - Verificación final de seguridad
-    if (user.id === userIdToDelete || user.email === userToDelete.email) {
-      console.error(`CRITICAL ERROR: Final safety check failed - self deletion attempt`);
-      return NextResponse.json(
-        { error: 'CRÍTICO: Verificación final de seguridad falló' },
+        { error: 'CRÍTICO: No puedes eliminar tu propia cuenta' },
         { status: 400 }
       );
     }
@@ -180,28 +126,35 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Log de auditoría
+    await logAdminAccess('delete_user', {
+      deletedUserId: userIdToDelete,
+      deletedUserEmail: userToDelete.email,
+      deletedUserName: userToDelete.name,
+      deletedUserType: userToDelete.userType
+    });
+
     console.log(`Usuario eliminado exitosamente:`, {
       deletedUserId: userIdToDelete,
       deletedUserEmail: userToDelete.email,
       deletedUserName: userToDelete.name,
-      deletedUserRole: userToDelete.role,
-      deletedBy: user.id,
-      deletedByEmail: user.email,
+      deletedUserType: userToDelete.userType,
+      deletedBy: adminUser.id,
+      deletedByEmail: adminUser.email,
       timestamp: new Date().toISOString()
     });
 
-    // Opcional: Guardar log en base de datos
+    // Opcional: Guardar log en base de datos (si existe la tabla AuditLog)
     try {
       await supabaseAdmin
         .from('AuditLog')
         .insert({
           action: 'DELETE_USER',
-          performedBy: user.id,
+          performedBy: adminUser.id,
           targetUserId: userIdToDelete,
           details: {
             deletedUserEmail: userToDelete.email,
             deletedUserName: userToDelete.name,
-            deletedUserRole: userToDelete.role
+            deletedUserType: userToDelete.userType
           },
           timestamp: new Date().toISOString()
         });
@@ -232,6 +185,12 @@ export async function DELETE(request: NextRequest) {
 // Método GET para obtener información del usuario (opcional)
 export async function GET(request: NextRequest) {
   try {
+    // Verificar permisos de admin usando el sistema estándar
+    const isAdmin = await isCurrentUserAdmin();
+    if (!isAdmin) {
+      return NextResponse.json(ADMIN_ACCESS_DENIED, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -242,44 +201,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verificar autenticación
-    const cookieStore = cookies();
-    const token = cookieStore.get('sb-access-token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      );
-    }
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Token inválido' },
-        { status: 401 }
-      );
-    }
-
-    // Verificar permisos de admin
-    const { data: userProfile, error: profileError } = await supabaseAdmin
-      .from('User')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || userProfile?.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Permisos insuficientes' },
-        { status: 403 }
-      );
-    }
-
     // Obtener información del usuario
     const { data: targetUser, error: getUserError } = await supabaseAdmin
       .from('User')
-      .select('id, email, name, role, created_at, updated_at')
+      .select('id, email, name, userType, createdAt, updatedAt')
       .eq('id', userId)
       .single();
 
