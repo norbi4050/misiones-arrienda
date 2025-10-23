@@ -1,55 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-
-// Cliente admin con Service Role Key
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// Cliente regular para verificar permisos
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { createClient } from '@/lib/supabase/server';
+import { isCurrentUserAdmin, ADMIN_ACCESS_DENIED, logAdminAccess } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autenticación del usuario actual
-    const cookieStore = cookies();
-    const token = cookieStore.get('sb-access-token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      );
+    // Verificar permisos de admin usando el sistema estándar
+    const isAdmin = await isCurrentUserAdmin();
+    if (!isAdmin) {
+      return NextResponse.json(ADMIN_ACCESS_DENIED, { status: 403 });
     }
 
-    // Verificar que el usuario actual es admin
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    // Log admin access
+    await logAdminAccess('view_users');
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Token inválido' },
-        { status: 401 }
-      );
-    }
-
-    // Verificar permisos de admin en la base de datos
-    const { data: userProfile, error: profileError } = await supabaseAdmin
-      .from('User')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || userProfile?.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Permisos insuficientes. Solo administradores pueden ver usuarios.' },
-        { status: 403 }
-      );
-    }
+    const supabase = createClient();
 
     // Obtener parámetros de consulta
     const { searchParams } = new URL(request.url);
@@ -62,9 +26,9 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Construir query base
-    let query = supabaseAdmin
+    let query = supabase
       .from('User')
-      .select('id, email, name, role, created_at, updated_at', { count: 'exact' });
+      .select('id, email, name, userType, createdAt, updatedAt', { count: 'exact' });
 
     // Aplicar filtros
     if (search) {
@@ -72,45 +36,39 @@ export async function GET(request: NextRequest) {
     }
 
     if (role) {
-      query = query.eq('role', role);
+      query = query.eq('userType', role);
     }
 
     // Aplicar paginación y ordenamiento
     query = query
-      .order('created_at', { ascending: false })
+      .order('createdAt', { ascending: false })
       .range(offset, offset + limit - 1);
 
     const { data: users, error: usersError, count } = await query;
 
     if (usersError) {
-      console.error('Error obteniendo usuarios:', usersError);
+      console.error('[AdminUsers] Error fetching users:', {
+        error: usersError,
+        message: usersError.message,
+        details: usersError.details,
+        hint: usersError.hint,
+        code: usersError.code
+      });
       return NextResponse.json(
-        { error: 'Error obteniendo usuarios' },
+        { error: 'Error obteniendo usuarios', details: usersError.message },
         { status: 500 }
       );
     }
 
     // Obtener estadísticas generales
-    const { data: stats } = await supabaseAdmin
+    const { data: allUsers } = await supabase
       .from('User')
-      .select('role')
-      .then(({ data }) => {
-        if (!data) return { data: null };
-        
-        const totalUsers = data.length;
-        const adminCount = data.filter(u => u.role === 'ADMIN').length;
-        const moderatorCount = data.filter(u => u.role === 'MODERATOR').length;
-        const userCount = data.filter(u => u.role === 'USER').length;
+      .select('userType');
 
-        return {
-          data: {
-            totalUsers,
-            adminCount,
-            moderatorCount,
-            userCount
-          }
-        };
-      });
+    const totalUsers = allUsers?.length || 0;
+    const inquilinoCount = allUsers?.filter(u => u.userType === 'inquilino').length || 0;
+    const duenoCount = allUsers?.filter(u => u.userType === 'dueno').length || 0;
+    const inmobiliariaCount = allUsers?.filter(u => u.userType === 'inmobiliaria').length || 0;
 
     return NextResponse.json({
       users: users || [],
@@ -120,11 +78,11 @@ export async function GET(request: NextRequest) {
         total: count || 0,
         totalPages: Math.ceil((count || 0) / limit)
       },
-      stats: stats || {
-        totalUsers: 0,
-        adminCount: 0,
-        moderatorCount: 0,
-        userCount: 0
+      stats: {
+        totalUsers,
+        inquilinoCount,
+        duenoCount,
+        inmobiliariaCount
       }
     });
 
@@ -140,42 +98,16 @@ export async function GET(request: NextRequest) {
 // Método POST para crear usuarios (opcional)
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticación del usuario actual
-    const cookieStore = cookies();
-    const token = cookieStore.get('sb-access-token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      );
+    // Verificar permisos de admin usando el sistema estándar
+    const isAdmin = await isCurrentUserAdmin();
+    if (!isAdmin) {
+      return NextResponse.json(ADMIN_ACCESS_DENIED, { status: 403 });
     }
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Token inválido' },
-        { status: 401 }
-      );
-    }
-
-    // Verificar permisos de admin
-    const { data: userProfile, error: profileError } = await supabaseAdmin
-      .from('User')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || userProfile?.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Permisos insuficientes' },
-        { status: 403 }
-      );
-    }
+    const supabase = createClient();
 
     const body = await request.json();
-    const { email, password, name, role = 'USER' } = body;
+    const { email, password, name, userType = 'inquilino' } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -184,65 +116,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear usuario en Supabase Auth
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        name: name || ''
-      }
-    });
+    // Log admin action
+    await logAdminAccess('create_user', { email, userType });
 
-    if (createError) {
-      return NextResponse.json(
-        { error: createError.message },
-        { status: 400 }
-      );
-    }
-
-    // Crear perfil en la base de datos
-    const { data: profile, error: profileCreateError } = await supabaseAdmin
-      .from('User')
-      .insert({
-        id: newUser.user.id,
-        email,
-        name: name || '',
-        role
-      })
-      .select()
-      .single();
-
-    if (profileCreateError) {
-      // Si falla la creación del perfil, eliminar el usuario de Auth
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
-      
-      return NextResponse.json(
-        { error: 'Error creando perfil de usuario' },
-        { status: 500 }
-      );
-    }
-
-    // Log de auditoría
-    console.log(`Usuario creado por admin:`, {
-      createdUserId: newUser.user.id,
-      createdUserEmail: email,
-      createdUserRole: role,
-      createdBy: user.id,
-      createdByEmail: user.email,
-      timestamp: new Date().toISOString()
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Usuario creado exitosamente',
-      user: {
-        id: newUser.user.id,
-        email,
-        name: name || '',
-        role
-      }
-    });
+    // Note: Creating users via admin requires service role key
+    // This endpoint is a placeholder - actual implementation would need service role key
+    return NextResponse.json(
+      {
+        error: 'Funcionalidad de creación de usuarios no disponible',
+        message: 'Usa el flujo de registro normal para crear usuarios'
+      },
+      { status: 501 }
+    );
 
   } catch (error) {
     console.error('Error creando usuario:', error);
