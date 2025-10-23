@@ -527,62 +527,96 @@ export function PropertiesListClient() {
 
       {/* Modal de confirmación */}
       {showModal && selectedProperty && modalAction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle className="text-red-600">
-                Confirmar{' '}
-                {modalAction === 'delete' ? 'Eliminación' :
-                 modalAction === 'suspend' ? 'Suspensión' : 'Reactivación'}
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-lg shadow-2xl border-2">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                {modalAction === 'delete' ? (
+                  <>
+                    <Trash2 className="h-6 w-6 text-red-600" />
+                    <span className="text-red-600">Confirmar Eliminación</span>
+                  </>
+                ) : modalAction === 'suspend' ? (
+                  <>
+                    <Ban className="h-6 w-6 text-orange-600" />
+                    <span className="text-orange-600">Confirmar Suspensión</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                    <span className="text-green-600">Confirmar Reactivación</span>
+                  </>
+                )}
               </CardTitle>
-              <CardDescription>
-                Esta acción {modalAction === 'delete' ? 'no se puede deshacer' : 'afectará la visibilidad de la propiedad'}
+              <CardDescription className="text-base mt-2">
+                {modalAction === 'delete'
+                  ? '⚠️ Esta acción NO se puede deshacer. La propiedad y todos sus datos serán eliminados permanentemente.'
+                  : modalAction === 'suspend'
+                  ? 'La propiedad dejará de ser visible para los usuarios hasta que sea reactivada.'
+                  : 'La propiedad volverá a ser visible para todos los usuarios.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                  <div className="ml-3">
-                    <p className="text-sm text-gray-900">
-                      <strong>{selectedProperty.title}</strong>
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {selectedProperty.city}, {selectedProperty.province} - {formatPrice(selectedProperty.price)}
-                    </p>
-                    {modalAction === 'delete' && (
-                      <p className="text-sm text-red-600 mt-2">
-                        ⚠️ Se eliminará permanentemente esta propiedad y todos sus datos
-                      </p>
-                    )}
+              <div className={`${
+                modalAction === 'delete'
+                  ? 'bg-red-50 border-red-300'
+                  : modalAction === 'suspend'
+                  ? 'bg-orange-50 border-orange-300'
+                  : 'bg-green-50 border-green-300'
+              } border-2 rounded-lg p-4`}>
+                <div className="space-y-2">
+                  <p className="text-base font-bold text-gray-900">
+                    {selectedProperty.title}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <MapPin className="h-4 w-4" />
+                    <span>{selectedProperty.city}, {selectedProperty.province}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <DollarSign className="h-4 w-4" />
+                    <span>{formatPrice(selectedProperty.price)}/mes</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <Button
                   variant="outline"
+                  size="lg"
                   onClick={() => {
                     setShowModal(false)
                     setSelectedProperty(null)
                     setModalAction(null)
                   }}
                   disabled={actionLoading === selectedProperty.id}
+                  className="min-w-[120px] text-base font-semibold"
                 >
                   Cancelar
                 </Button>
                 <Button
-                  variant="destructive"
+                  size="lg"
                   onClick={() => handlePropertyAction(selectedProperty.id, modalAction)}
                   disabled={actionLoading === selectedProperty.id}
+                  className={`min-w-[200px] text-base font-bold ${
+                    modalAction === 'delete'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : modalAction === 'suspend'
+                      ? 'bg-orange-600 hover:bg-orange-700'
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
                 >
                   {actionLoading === selectedProperty.id ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                       Procesando...
                     </>
                   ) : (
-                    `Confirmar ${modalAction === 'delete' ? 'Eliminación' : modalAction === 'suspend' ? 'Suspensión' : 'Reactivación'}`
+                    <>
+                      {modalAction === 'delete' && <Trash2 className="h-5 w-5 mr-2" />}
+                      {modalAction === 'suspend' && <Ban className="h-5 w-5 mr-2" />}
+                      {modalAction === 'activate' && <CheckCircle className="h-5 w-5 mr-2" />}
+                      {`Confirmar ${modalAction === 'delete' ? 'Eliminación' : modalAction === 'suspend' ? 'Suspensión' : 'Reactivación'}`}
+                    </>
                   )}
                 </Button>
               </div>
