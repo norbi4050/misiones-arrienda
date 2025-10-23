@@ -107,6 +107,15 @@ export function PropertiesListClient() {
 
       const data = await response.json()
 
+      // Debug: Log para ver estructura de imágenes
+      if (data.properties && data.properties.length > 0) {
+        console.log('[PropertiesListClient] Sample property images:', {
+          firstPropertyImages: data.properties[0]?.images,
+          imagesType: typeof data.properties[0]?.images,
+          isArray: Array.isArray(data.properties[0]?.images)
+        })
+      }
+
       setProperties(data.properties || [])
       setStats(data.stats || stats)
       setTotalPages(data.pagination?.totalPages || 1)
@@ -352,14 +361,38 @@ export function PropertiesListClient() {
 
       {/* Lista de propiedades */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {properties.map((property) => (
+        {properties.map((property) => {
+          // Parse images si vienen como string
+          let imageUrl = null
+          try {
+            if (property.images) {
+              if (typeof property.images === 'string') {
+                const parsed = JSON.parse(property.images)
+                imageUrl = Array.isArray(parsed) ? parsed[0] : null
+              } else if (Array.isArray(property.images)) {
+                imageUrl = property.images[0]
+              }
+            }
+          } catch (e) {
+            console.warn('[PropertiesListClient] Error parsing images for property:', property.id, e)
+          }
+
+          return (
           <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <div className="aspect-video bg-gray-200 relative">
-              {property.images && property.images[0] ? (
+              {imageUrl ? (
                 <img
-                  src={property.images[0]}
+                  src={imageUrl}
                   alt={property.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Si la imagen falla al cargar, mostrar el placeholder
+                    e.currentTarget.style.display = 'none'
+                    const parent = e.currentTarget.parentElement
+                    if (parent) {
+                      parent.innerHTML = '<div class="flex items-center justify-center h-full"><svg class="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>' + parent.innerHTML
+                    }
+                  }}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -454,7 +487,8 @@ export function PropertiesListClient() {
               </div>
             </CardContent>
           </Card>
-        ))}
+          )
+        })}
       </div>
 
       {properties.length === 0 && !loading && (
