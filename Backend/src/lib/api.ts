@@ -87,8 +87,15 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
     const data = await response.json();
     console.log('[getProperties] Got data:', {
       propertiesLength: data.properties?.length,
-      paginationTotal: data.pagination?.total
+      paginationTotal: data.pagination?.total,
+      dataSource: data.meta?.dataSource,
+      hasError: !!data.error
     });
+
+    // DEBUG: Si está vacío, mostrar la respuesta completa
+    if (data.properties?.length === 0) {
+      console.log('[getProperties] EMPTY RESULT - Full response:', JSON.stringify(data, null, 2));
+    }
 
     return {
       properties: data.properties || [],
