@@ -43,9 +43,9 @@ export const metadata: Metadata = {
 
 async function getPublicProperties() {
   try {
-    // Traer TODAS las propiedades disponibles, no solo destacadas
+    // Traer TODAS las propiedades disponibles (NO filtrar por featured)
     console.log('[getPublicProperties] Fetching properties...')
-    const properties = await fetchRealProperties({ limit: 50 })
+    const properties = await fetchRealProperties({ limit: 50 }) // SIN featured: true
     console.log('[getPublicProperties] Got properties:', properties.length)
     return properties
   } catch (error) {
