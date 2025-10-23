@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
           city,
           province,
           status,
-          user_id
+          userId
         ),
         reporter:User(
           id,
