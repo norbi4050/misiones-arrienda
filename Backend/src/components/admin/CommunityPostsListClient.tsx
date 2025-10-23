@@ -146,7 +146,19 @@ export function CommunityPostsListClient() {
 
       alert(`✅ ${action === 'suspend' ? 'Publicación suspendida' : action === 'activate' ? 'Publicación reactivada' : 'Publicación eliminada'}`)
 
-      await loadPosts()
+      // Si es delete, remover del estado local inmediatamente para mejor UX
+      if (action === 'delete') {
+        setPosts(prevPosts => prevPosts.filter(p => p.id !== postId))
+        // También actualizar stats
+        setStats(prevStats => ({
+          ...prevStats,
+          total: prevStats.total - 1
+        }))
+      } else {
+        // Para suspend/activate, recargar la lista
+        await loadPosts()
+      }
+
       setShowModal(false)
       setSelectedPost(null)
       setModalAction(null)
