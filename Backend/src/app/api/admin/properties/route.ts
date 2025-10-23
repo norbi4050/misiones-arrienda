@@ -51,25 +51,11 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     // Construir query base usando supabaseAdmin para bypassear RLS
+    // Usando solo columnas que confirmamos que existen
     let query = supabaseAdmin
       .from('Property')
       .select(`
-        id,
-        title,
-        description,
-        price,
-        currency,
-        status,
-        rooms,
-        bathrooms,
-        area,
-        address,
-        city,
-        province,
-        images,
-        userId,
-        createdAt,
-        updatedAt
+        *
       `, { count: 'exact' })
 
     // Aplicar filtros
