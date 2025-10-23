@@ -154,7 +154,9 @@ export async function middleware(req: NextRequest) {
   // ADMIN ROUTES PROTECTION
   // ========================================
   // Proteger TODAS las rutas /admin/* y /api/admin/*
-  const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
+  // EXCEPTO /api/admin/check que es público (devuelve true/false)
+  const isAdminCheckEndpoint = pathname === '/api/admin/check';
+  const isAdminRoute = (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) && !isAdminCheckEndpoint;
 
   if (isAdminRoute) {
     // Si no hay usuario, redirigir a login
