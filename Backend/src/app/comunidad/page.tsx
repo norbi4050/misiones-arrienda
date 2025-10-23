@@ -13,7 +13,6 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { FEATURE_COMMUNITY_SOFT_GUARD } from '@/utils/env'
 import { CommunityPostCardPublic } from '@/components/comunidad/CommunityPostCardPublic'
 import { CommunityFiltersPublic } from '@/components/comunidad/CommunityFiltersPublic'
-import { CommunityDebugInfo } from '@/components/comunidad/CommunityDebugInfo'
 
 interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -42,20 +41,15 @@ async function getCommunityPosts(searchParams: PageProps['searchParams']): Promi
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const fullUrl = `${baseUrl}/api/comunidad/posts?${params}`
 
-    console.log('[getCommunityPosts] Fetching from URL:', fullUrl)
-
     const response = await fetch(fullUrl, {
       cache: 'no-store'
     })
 
     if (!response.ok) {
-      console.error('[getCommunityPosts] Response not OK:', response.status, response.statusText)
       throw new Error('Error al obtener posts de comunidad')
     }
 
     const data = await response.json()
-    console.log('[getCommunityPosts] Response data:', data)
-
     return data
   } catch (error) {
     console.error('Error fetching community posts:', error)
@@ -135,21 +129,9 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
     // Fetch real posts for public view
     const publicData = await getCommunityPosts(searchParams)
 
-    // Debug: Log para verificar qué datos llegan
-    console.log('[COMUNIDAD PUBLIC] Posts fetched:', {
-      total: publicData.total,
-      postsCount: publicData.posts.length,
-      posts: publicData.posts
-    })
-
     return (
       <main className="min-h-screen bg-gray-50" data-testid="public-landing">
         <PageTracker eventName="visit_comunidad_public" />
-        <CommunityDebugInfo
-          postsCount={publicData.posts.length}
-          total={publicData.total}
-          searchParams={searchParams}
-        />
 
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-20">
