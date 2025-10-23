@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     // Construir query base usando supabaseAdmin para bypassear RLS
     // Usar SELECT * para obtener todas las columnas disponibles
     let query = supabaseAdmin
-      .from('community_post')
+      .from('community_posts')
       .select(`*`, { count: 'exact' })
 
     console.log('[API /admin/community-posts GET] Query initialized')
@@ -145,27 +145,27 @@ export async function GET(request: NextRequest) {
 
     // Estadísticas generales
     const { count: totalPosts } = await supabaseAdmin
-      .from('community_post')
+      .from('community_posts')
       .select('*', { count: 'exact', head: true })
 
     const { count: activePosts } = await supabaseAdmin
-      .from('community_post')
+      .from('community_posts')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true)
 
     const { count: suspendedPosts } = await supabaseAdmin
-      .from('community_post')
+      .from('community_posts')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', false)
 
     const { count: offerPosts } = await supabaseAdmin
-      .from('community_post')
+      .from('community_posts')
       .select('*', { count: 'exact', head: true })
       .eq('role', 'OFREZCO')
       .eq('is_active', true)
 
     const { count: seekPosts } = await supabaseAdmin
-      .from('community_post')
+      .from('community_posts')
       .select('*', { count: 'exact', head: true })
       .eq('role', 'BUSCO')
       .eq('is_active', true)
@@ -229,7 +229,7 @@ export async function PATCH(request: NextRequest) {
       case 'delete':
         // Eliminar permanentemente
         const { error: deleteError } = await supabaseAdmin
-          .from('community_post')
+          .from('community_posts')
           .delete()
           .eq('id', postId)
 
@@ -254,7 +254,7 @@ export async function PATCH(request: NextRequest) {
 
     // Actualizar publicación
     const { data, error } = await supabaseAdmin
-      .from('community_post')
+      .from('community_posts')
       .update(updateData)
       .eq('id', postId)
       .select()
