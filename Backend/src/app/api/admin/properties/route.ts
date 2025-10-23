@@ -103,7 +103,13 @@ export async function GET(request: NextRequest) {
     const { data: properties, error, count } = await query
 
     if (error) {
-      console.error('[API /admin/properties GET] Error fetching properties:', error)
+      console.error('[API /admin/properties GET] Error fetching properties:', {
+        error,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
       return NextResponse.json(
         { error: 'Error fetching properties', details: error.message },
         { status: 500 }
