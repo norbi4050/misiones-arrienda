@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
       }
       
       if (type) {
-        query = query.eq('propertyType', type);
+        query = query.eq('property_type', type);
       }
       
       // Filtro por tipo de operación (alquiler, venta, ambos)
