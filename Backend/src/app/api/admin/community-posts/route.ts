@@ -71,13 +71,8 @@ export async function GET(request: NextRequest) {
       query = query.eq('is_active', true)
     } else if (statusFilter === 'suspended') {
       query = query.eq('is_active', false)
-      // Excluir posts eliminados (marcados con [DELETED])
-      query = query.not('title', 'like', '[DELETED]%')
-    } else if (statusFilter === 'all') {
-      // 'all' muestra activos Y suspendidos, pero NO eliminados
-      // Excluir posts con [DELETED] en el título
-      query = query.not('title', 'like', '[DELETED]%')
     }
+    // Si statusFilter === 'all', no aplicamos filtro de is_active (muestra todos)
 
     // Ordenamiento
     const orderColumn = sortBy === 'created_at' ? 'created_at' :
@@ -239,53 +234,25 @@ export async function PATCH(request: NextRequest) {
       case 'delete':
         console.log('[API /admin/community-posts PATCH] Deleting post:', postId)
 
-        // El esquema de la base de datos tiene foreign key constraints problemáticos
-        // que referencian tablas que no existen. Usamos RPC para ejecutar SQL directo
-        // con constraints deshabilitados temporalmente.
+        // HARD DELETE - Eliminar el post completamente de la base de datos
+        // El Service Role Client tiene permisos completos y puede eliminar
+        // incluso con FK constraints problemáticos
         try {
-          // Ejecutar DELETE directo usando SQL raw a través de RPC
-          // Primero intentamos un delete simple
+          // Simplemente eliminar el post - Service Role bypasea RLS y constraints
           const { error: deleteError } = await supabaseAdmin
             .from('community_posts')
             .delete()
             .eq('id', postId)
 
           if (deleteError) {
-            // Si falla por FK constraints, hacemos soft delete
-            console.warn('[API /admin/community-posts PATCH] Hard delete failed, trying soft delete:', deleteError)
-
-            // Obtener el post actual para modificar su título
-            const { data: currentPost } = await supabaseAdmin
-              .from('community_posts')
-              .select('title')
-              .eq('id', postId)
-              .single()
-
-            const { error: softDeleteError } = await supabaseAdmin
-              .from('community_posts')
-              .update({
-                is_active: false,
-                title: `[DELETED] ${currentPost?.title || 'Post eliminado'}`,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', postId)
-
-            if (softDeleteError) {
-              console.error('[API /admin/community-posts PATCH] Soft delete also failed:', softDeleteError)
-              return NextResponse.json(
-                { error: 'Error eliminando publicación', details: softDeleteError.message },
-                { status: 500 }
-              )
-            }
-
-            console.log('[API /admin/community-posts PATCH] Post soft-deleted successfully:', postId)
-            return NextResponse.json({
-              success: true,
-              message: 'Publicación eliminada exitosamente'
-            })
+            console.error('[API /admin/community-posts PATCH] Error deleting post:', deleteError)
+            return NextResponse.json(
+              { error: 'Error eliminando publicación', details: deleteError.message },
+              { status: 500 }
+            )
           }
 
-          console.log('[API /admin/community-posts PATCH] Post hard-deleted successfully:', postId)
+          console.log('[API /admin/community-posts PATCH] Post deleted successfully:', postId)
           return NextResponse.json({
             success: true,
             message: 'Publicación eliminada exitosamente'
