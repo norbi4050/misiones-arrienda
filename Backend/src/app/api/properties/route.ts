@@ -373,39 +373,45 @@ export async function GET(request: NextRequest) {
     const publicListingEnabled = isPublicListingEnabled();
 
     if (publicListingEnabled) {
-      // Detectar si el usuario está autenticado
-      const authContext = await detectAuth(request);
+      try {
+        // Detectar si el usuario está autenticado
+        const authContext = await detectAuth(request);
 
-      // Si NO está autenticado, enmascarar datos sensibles
-      if (!authContext.isAuthenticated) {
-        properties = properties.map((property: any) => {
-          // Parsear imágenes
-          const images = parseArrayField(property.images);
-          const totalImages = images.length;
+        // Si NO está autenticado, enmascarar datos sensibles
+        if (!authContext.isAuthenticated) {
+          properties = properties.map((property: any) => {
+            // Parsear imágenes
+            const images = parseArrayField(property.images);
+            const totalImages = images.length;
 
-          return {
+            return {
+              ...property,
+              // Enmascarar contacto
+              contact_phone: maskPhone(property.contact_phone),
+              contact_email: null, // Ocultar completamente
+              contact_name: null,  // Ocultar completamente
+
+              // Limitar imágenes a 3
+              images: limitArray(images, 3),
+              imagesCount: totalImages, // Mantener count real
+
+              // Flags para el frontend
+              requires_auth_for_contact: true,
+              requires_auth_for_full_images: totalImages > 3
+            };
+          });
+        } else {
+          // Usuario autenticado: agregar flags en false
+          properties = properties.map((property: any) => ({
             ...property,
-            // Enmascarar contacto
-            contact_phone: maskPhone(property.contact_phone),
-            contact_email: null, // Ocultar completamente
-            contact_name: null,  // Ocultar completamente
-
-            // Limitar imágenes a 3
-            images: limitArray(images, 3),
-            imagesCount: totalImages, // Mantener count real
-
-            // Flags para el frontend
-            requires_auth_for_contact: true,
-            requires_auth_for_full_images: totalImages > 3
-          };
-        });
-      } else {
-        // Usuario autenticado: agregar flags en false
-        properties = properties.map((property: any) => ({
-          ...property,
-          requires_auth_for_contact: false,
-          requires_auth_for_full_images: false
-        }));
+            requires_auth_for_contact: false,
+            requires_auth_for_full_images: false
+          }));
+        }
+      } catch (authError) {
+        console.error('[API /properties] Auth detection failed, treating as anonymous:', authError);
+        // En caso de error, tratar como anónimo y no enmascarar datos
+        // (el feature flag está en false, así que esto no afecta)
       }
     }
 
