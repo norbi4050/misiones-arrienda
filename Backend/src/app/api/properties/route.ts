@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { propertySchema } from '@/lib/validations/property';
 import { detectAuth, isPublicListingEnabled } from '@/lib/auth-detector';
 import { maskPhone, limitArray, parseArrayField } from '@/lib/data-masking';
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
 
       // Test simple primero: ¿Puede leer ALGUNA propiedad?
       const { data: testData, error: testError, count: testCount } = await supabase
-        .from('properties')
+        .from('Property')
         .select('*', { count: 'exact' });
 
       console.log('[API /properties] TEST - Raw count without filters:', {
@@ -150,11 +151,10 @@ export async function GET(request: NextRequest) {
       });
 
       let query = supabase
-        .from('properties')
+        .from('Property')
         .select('*', { count: 'exact' })
-        .eq('status', 'PUBLISHED')
-        .eq('is_active', true)
-        .or(`expires_at.is.null,expires_at.gte.${nowIso}`);
+        .eq('status', 'AVAILABLE')
+        .or(`expiresAt.is.null,expiresAt.gte.${nowIso}`);
 
       // Aplicar filtros avanzados
       if (city) {
@@ -162,17 +162,12 @@ export async function GET(request: NextRequest) {
       }
       
       if (type) {
-        query = query.eq('property_type', type);
+        query = query.eq('propertyType', type);
       }
-      
-      // Filtro por tipo de operación (alquiler, venta, ambos)
-      // SAFE-FIX: Soporta valores en español e inglés para compatibilidad
-      if (operationType && operationType !== 'BOTH' && operationType !== 'ambos') {
-        // Normalizar valores en inglés a español si es necesario
-        const normalizedOp = operationType === 'RENT' ? 'alquiler' 
-                           : operationType === 'SALE' ? 'venta'
-                           : operationType; // ya está en español
-        query = query.eq('operation_type', normalizedOp);
+
+      // Filtro por tipo de operación (RENT, SALE, BOTH - en inglés según schema)
+      if (operationType && operationType !== 'BOTH') {
+        query = query.eq('operationType', operationType);
       }
       
       if (minPrice) {
@@ -212,8 +207,8 @@ export async function GET(request: NextRequest) {
           .lte('lat', bboxCoords.maxLat);
       }
 
-      // Orden por fecha de creación (usar created_at que siempre existe)
-      query = query.order('created_at', { ascending: false });
+      // Orden por fecha de creación (usar createdAt que siempre existe)
+      query = query.order('createdAt', { ascending: false });
 
       // Aplicar paginación
       const startIndex = (page - 1) * limit;
