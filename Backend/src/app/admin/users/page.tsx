@@ -18,9 +18,9 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'USER' | 'ADMIN' | 'MODERATOR';
-  created_at: string;
-  updated_at: string;
+  userType: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface UserStats {
@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
 
   // Estados para búsqueda y paginación
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('created_at');
+  const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [filterRole, setFilterRole] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,7 +51,7 @@ export default function AdminUsersPage() {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    const matchesRole = filterRole === 'all' || user.userType === filterRole;
     return matchesSearch && matchesRole;
   }).sort((a, b) => {
     const aValue = a[sortBy as keyof User] || '';
@@ -156,12 +156,14 @@ export default function AdminUsersPage() {
     loadUsers();
   }, []);
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'ADMIN':
+  const getRoleBadgeColor = (userType: string) => {
+    switch (userType) {
+      case 'inmobiliaria':
         return 'bg-red-100 text-red-800 border-red-200';
-      case 'MODERATOR':
+      case 'dueno':
         return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'inquilino':
+        return 'bg-green-100 text-green-800 border-green-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -220,7 +222,7 @@ export default function AdminUsersPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Usuarios Activos</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.role === 'USER').length}
+                  {users.filter(u => u.userType === 'inquilino').length}
                 </p>
               </div>
             </div>
@@ -234,7 +236,7 @@ export default function AdminUsersPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Administradores</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.role === 'ADMIN').length}
+                  {users.filter(u => u.userType === 'inmobiliaria').length}
                 </p>
               </div>
             </div>
@@ -248,7 +250,7 @@ export default function AdminUsersPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Moderadores</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.role === 'MODERATOR').length}
+                  {users.filter(u => u.userType === 'dueno').length}
                 </p>
               </div>
             </div>
@@ -274,9 +276,9 @@ export default function AdminUsersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los roles</SelectItem>
-              <SelectItem value="ADMIN">Administradores</SelectItem>
-              <SelectItem value="USER">Usuarios</SelectItem>
-              <SelectItem value="MODERATOR">Moderadores</SelectItem>
+              <SelectItem value="inmobiliaria">Inmobiliarias</SelectItem>
+              <SelectItem value="inquilino">Inquilinos</SelectItem>
+              <SelectItem value="dueno">Dueños</SelectItem>
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={setSortBy}>
@@ -284,10 +286,10 @@ export default function AdminUsersPage() {
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="created_at">Fecha de registro</SelectItem>
+              <SelectItem value="createdAt">Fecha de registro</SelectItem>
               <SelectItem value="email">Email</SelectItem>
               <SelectItem value="name">Nombre</SelectItem>
-              <SelectItem value="updated_at">Último acceso</SelectItem>
+              <SelectItem value="updatedAt">Último acceso</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -341,13 +343,13 @@ export default function AdminUsersPage() {
                       <p className="text-gray-900">{user.email}</p>
                     </td>
                     <td className="p-4">
-                      <Badge className={getRoleBadgeColor(user.role)}>
-                        {user.role}
+                      <Badge className={getRoleBadgeColor(user.userType)}>
+                        {user.userType}
                       </Badge>
                     </td>
                     <td className="p-4">
                       <p className="text-sm text-gray-600">
-                        {formatDate(user.created_at)}
+                        {formatDate(user.createdAt)}
                       </p>
                     </td>
                     <td className="p-4">
@@ -359,7 +361,7 @@ export default function AdminUsersPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {user.role !== 'ADMIN' && (
+                        {user.userType !== 'inmobiliaria' && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -454,13 +456,13 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Rol</p>
-                <Badge className={getRoleBadgeColor(selectedUser.role)}>
-                  {selectedUser.role}
+                <Badge className={getRoleBadgeColor(selectedUser.userType)}>
+                  {selectedUser.userType}
                 </Badge>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Registro</p>
-                <p className="text-gray-900">{formatDate(selectedUser.created_at)}</p>
+                <p className="text-gray-900">{formatDate(selectedUser.createdAt)}</p>
               </div>
               {selectedUser.stats && (
                 <div className="border-t pt-4">
