@@ -48,7 +48,28 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('Property')
       .select(`
-        *,
+        id,
+        title,
+        description,
+        price,
+        currency,
+        propertyType,
+        transactionType,
+        status,
+        rooms,
+        bathrooms,
+        area,
+        address,
+        city,
+        province,
+        country,
+        latitude,
+        longitude,
+        features,
+        images,
+        userId,
+        createdAt,
+        updatedAt,
         User:userId (
           name,
           email
