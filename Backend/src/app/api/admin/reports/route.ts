@@ -88,23 +88,47 @@ export async function GET(request: NextRequest) {
     const { data: reports, error, count } = await query
 
     if (error) {
-      console.error('[AdminReports] Error fetching reports:', error)
+      console.error('[AdminReports] Error fetching reports:', {
+        error,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        status,
+        limit,
+        offset
+      })
       return NextResponse.json(
-        { error: 'Error al obtener reportes' },
+        {
+          error: 'Error al obtener reportes',
+          details: error.message,
+          code: error.code
+        },
         { status: 500 }
       )
     }
 
     // Enriquecer reportes con labels
-    const enrichedReports = reports?.map(report => ({
-      ...report,
-      reasonLabel: REASON_LABELS[report.reason] || report.reason,
-      // Calcular días desde el reporte
-      daysOld: Math.floor(
-        (new Date().getTime() - new Date(report.created_at).getTime()) /
-        (1000 * 60 * 60 * 24)
-      )
-    }))
+    const enrichedReports = reports?.map(report => {
+      try {
+        return {
+          ...report,
+          reasonLabel: REASON_LABELS[report.reason] || report.reason,
+          // Calcular días desde el reporte
+          daysOld: Math.floor(
+            (new Date().getTime() - new Date(report.created_at).getTime()) /
+            (1000 * 60 * 60 * 24)
+          )
+        }
+      } catch (err) {
+        console.error('[AdminReports] Error enriching report:', { reportId: report.id, err })
+        return {
+          ...report,
+          reasonLabel: report.reason,
+          daysOld: 0
+        }
+      }
+    })
 
     // Obtener estadísticas
     const { data: stats } = await supabase
@@ -135,10 +159,18 @@ export async function GET(request: NextRequest) {
       },
       stats: statusCounts
     })
-  } catch (error) {
-    console.error('[AdminReports] Error:', error)
+  } catch (error: any) {
+    console.error('[AdminReports] Unexpected error in GET:', {
+      error,
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name
+    })
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      {
+        error: 'Error interno del servidor',
+        details: error?.message || 'Unknown error'
+      },
       { status: 500 }
     )
   }
