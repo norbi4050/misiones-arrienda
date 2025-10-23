@@ -56,12 +56,20 @@ export async function GET(request: NextRequest) {
       .select(`
         id,
         title,
+        description,
         price,
         currency,
         status,
+        rooms,
+        bathrooms,
+        area,
+        address,
         city,
+        province,
+        images,
         userId,
-        createdAt
+        createdAt,
+        updatedAt
       `, { count: 'exact' })
 
     // Aplicar filtros
