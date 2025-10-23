@@ -22,7 +22,12 @@ async function getCommunityPosts(searchParams: PageProps['searchParams']): Promi
   try {
     // Construir URL con parámetros
     const params = new URLSearchParams()
-    
+
+    // Agregar sort=recent por defecto si no está especificado
+    if (!searchParams.sort) {
+      params.append('sort', 'recent')
+    }
+
     Object.entries(searchParams).forEach(([key, value]) => {
       if (value) {
         if (Array.isArray(value)) {
@@ -34,15 +39,23 @@ async function getCommunityPosts(searchParams: PageProps['searchParams']): Promi
     })
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/comunidad/posts?${params}`, {
+    const fullUrl = `${baseUrl}/api/comunidad/posts?${params}`
+
+    console.log('[getCommunityPosts] Fetching from URL:', fullUrl)
+
+    const response = await fetch(fullUrl, {
       cache: 'no-store'
     })
 
     if (!response.ok) {
+      console.error('[getCommunityPosts] Response not OK:', response.status, response.statusText)
       throw new Error('Error al obtener posts de comunidad')
     }
 
-    return await response.json()
+    const data = await response.json()
+    console.log('[getCommunityPosts] Response data:', data)
+
+    return data
   } catch (error) {
     console.error('Error fetching community posts:', error)
     return {
