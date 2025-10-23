@@ -11,6 +11,8 @@ import { Users, MessageCircle, Shield, Heart, MapPin, Building2 } from 'lucide-r
 import { PageTracker } from '@/components/analytics/page-tracker'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { FEATURE_COMMUNITY_SOFT_GUARD } from '@/utils/env'
+import { CommunityPostCardPublic } from '@/components/comunidad/CommunityPostCardPublic'
+import { CommunityFiltersPublic } from '@/components/comunidad/CommunityFiltersPublic'
 
 interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -52,36 +54,6 @@ async function getCommunityPosts(searchParams: PageProps['searchParams']): Promi
     }
   }
 }
-
-// Mock data para demo
-const demoPosts = [
-  {
-    id: 'demo-1',
-    role: 'BUSCO',
-    title: 'Estudiante busca habitación en Posadas',
-    city: 'Posadas',
-    budgetMin: 120000,
-    budgetMax: 180000,
-    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop']
-  },
-  {
-    id: 'demo-2',
-    role: 'OFREZCO',
-    title: 'Habitación disponible en Oberá',
-    city: 'Oberá',
-    price: 150000,
-    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop']
-  },
-  {
-    id: 'demo-3',
-    role: 'BUSCO',
-    title: 'Profesional busca compañero de depto',
-    city: 'Posadas',
-    budgetMin: 100000,
-    budgetMax: 150000,
-    images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop']
-  }
-]
 
 export default async function ComunidadPage({ searchParams }: PageProps) {
   // Detectar sesión
@@ -144,12 +116,15 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
     }
   }
 
-  // Landing pública (sin sesión)
+  // Landing pública (sin sesión) - Mostrar posts reales con auth wall
   if (!user) {
+    // Fetch real posts for public view
+    const publicData = await getCommunityPosts(searchParams)
+
     return (
       <main className="min-h-screen bg-gray-50" data-testid="public-landing">
         <PageTracker eventName="visit_comunidad_public" />
-        
+
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-20">
           <div className="container mx-auto px-4 text-center">
@@ -159,7 +134,7 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Conectá con personas que buscan compartir vivienda en Misiones. Perfiles verificados y chat seguro.
             </p>
-            <Link href="/register">
+            <Link href="/register" prefetch={false}>
               <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-100 text-lg px-8 py-6">
                 Unirme a la comunidad
               </Button>
@@ -211,52 +186,53 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
           </div>
         </section>
 
-        {/* Demo Posts */}
+        {/* Real Posts with Filters - Flatmates Style */}
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold mb-8">Anuncios Destacados</h2>
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {demoPosts.map((post) => (
-                <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="aspect-video bg-gray-200 relative">
-                    {post.images?.[0] && (
-                      <img 
-                        src={post.images[0]} 
-                        alt={post.title}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="mb-2">
-                      <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                        post.role === 'BUSCO' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                      }`}>
-                        {post.role === 'BUSCO' ? 'Busco' : 'Ofrezco'}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-1">{post.title}</h3>
-                    <div className="flex items-center text-gray-600 text-sm mb-2">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {post.city}
-                    </div>
-                    <p className="text-xl font-bold text-purple-600">
-                      {post.role === 'BUSCO' 
-                        ? `$${post.budgetMin?.toLocaleString('es-AR')} - $${post.budgetMax?.toLocaleString('es-AR')}`
-                        : `$${post.price?.toLocaleString('es-AR')}`
-                      }
+            <h2 className="text-3xl font-bold mb-8">Anuncios Disponibles</h2>
+
+            {/* Public Filters */}
+            <CommunityFiltersPublic />
+
+            {/* Posts Grid */}
+            {publicData.posts.length > 0 ? (
+              <>
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                  {publicData.posts.slice(0, 9).map((post) => (
+                    <CommunityPostCardPublic key={post.id} post={post} />
+                  ))}
+                </div>
+
+                {/* CTA to see more */}
+                {publicData.total > 9 && (
+                  <div className="text-center">
+                    <p className="text-gray-600 mb-4">
+                      {publicData.total - 9} anuncios más disponibles
                     </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="text-center">
-              <Link href="/register">
-                <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
-                  Ver todos los anuncios
-                </Button>
-              </Link>
-            </div>
+                    <Link href="/register" prefetch={false}>
+                      <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+                        Registrate para ver todos ({publicData.total} anuncios)
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                  Todavía no hay anuncios publicados
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  Sé de los primeros en publicar y obtené máxima visibilidad
+                </p>
+                <Link href="/register" prefetch={false}>
+                  <Button size="lg" className="bg-purple-600 hover:bg-purple-700">
+                    Publicar mi anuncio gratis
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </section>
       </main>
