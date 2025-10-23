@@ -93,7 +93,8 @@ export const LEGAL_ROUTES = {
   TERMS: '/legal/terms',
   PRIVACY: '/legal/privacy',
   SECURITY: '/legal/security',
-  QUALITY: '/legal/quality'
+  QUALITY: '/legal/quality',
+  COOKIES: '/legal/cookies'
 } as const
 
 // Rutas legacy que deben redirigir
@@ -105,7 +106,9 @@ export const LEGACY_ROUTES = {
   '/politica-privacidad': LEGAL_ROUTES.PRIVACY,
   '/terminos-condiciones': LEGAL_ROUTES.TERMS,
   '/seguridad': LEGAL_ROUTES.SECURITY,
-  '/calidad': LEGAL_ROUTES.QUALITY
+  '/calidad': LEGAL_ROUTES.QUALITY,
+  '/cookies': LEGAL_ROUTES.COOKIES,
+  '/politica-cookies': LEGAL_ROUTES.COOKIES
 } as const
 
 // Helper para formatear fecha

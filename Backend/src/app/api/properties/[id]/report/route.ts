@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { z } from 'zod'
-import { EmailService } from '@/lib/email-service'
+import { sendNotification } from '@/lib/notification-service'
 
 // Cliente admin con Service Role Key para operaciones administrativas
 const supabaseAdmin = createServiceClient(
@@ -177,29 +177,56 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         // Obtener información del dueño de la propiedad
         const { data: ownerData } = await supabaseAdmin
           .from('User')
-          .select('name, email')
+          .select('id, name, email')
           .eq('id', property.userId)
           .maybeSingle()
 
-        // Enviar notificación al dueño
-        if (ownerData?.email) {
-          await EmailService.sendPropertySuspensionEmail({
-            ownerEmail: ownerData.email,
-            ownerName: ownerData.name || 'Usuario',
-            propertyTitle: property.title,
-            propertyId: propertyId,
-            reportCount: totalReports,
-            suspensionReason: `Múltiples reportes recibidos (${totalReports})`
+        // Enviar notificación al dueño de la propiedad
+        if (ownerData) {
+          await sendNotification({
+            userId: ownerData.id,
+            type: 'PROPERTY_STATUS_CHANGED',
+            title: '⚠️ Propiedad suspendida temporalmente',
+            message: `Su publicación "${property.title}" ha sido suspendida automáticamente debido a que recibió ${totalReports} reportes. Nuestro equipo revisará la situación en las próximas 24-48 horas.`,
+            channels: ['email', 'in_app'],
+            metadata: {
+              propertyId: propertyId,
+              propertyTitle: property.title,
+              reportCount: totalReports,
+              suspensionReason: 'Múltiples reportes de usuarios',
+              action: 'auto_suspended'
+            },
+            relatedId: propertyId,
+            relatedType: 'property'
           })
         }
 
-        // Enviar notificación a administradores
-        await EmailService.sendAdminSuspensionNotification({
-          propertyTitle: property.title,
-          propertyId: propertyId,
-          reportCount: totalReports,
-          ownerEmail: ownerData?.email || 'Email no disponible'
-        })
+        // Notificar a administradores (buscar usuarios admin)
+        const adminEmail = 'misionesarrienda@gmail.com'
+        const { data: adminUser } = await supabaseAdmin
+          .from('User')
+          .select('id')
+          .eq('email', adminEmail)
+          .maybeSingle()
+
+        if (adminUser) {
+          await sendNotification({
+            userId: adminUser.id,
+            type: 'SYSTEM_ANNOUNCEMENT',
+            title: '🚨 Propiedad auto-suspendida',
+            message: `La propiedad "${property.title}" fue suspendida automáticamente por ${totalReports} reportes. Revisa los reportes en el panel de administración.`,
+            channels: ['email', 'in_app'],
+            metadata: {
+              propertyId: propertyId,
+              propertyTitle: property.title,
+              reportCount: totalReports,
+              ownerEmail: ownerData?.email || 'No disponible',
+              actionUrl: `https://www.misionesarrienda.com.ar/admin/reports`
+            },
+            relatedId: propertyId,
+            relatedType: 'property'
+          })
+        }
       } else {
         console.error('[PropertyReport] Error auto-suspending property:', suspendError)
       }
