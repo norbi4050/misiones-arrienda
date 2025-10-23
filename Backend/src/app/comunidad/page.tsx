@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { FEATURE_COMMUNITY_SOFT_GUARD } from '@/utils/env'
 import { CommunityPostCardPublic } from '@/components/comunidad/CommunityPostCardPublic'
 import { CommunityFiltersPublic } from '@/components/comunidad/CommunityFiltersPublic'
+import { CommunityDebugInfo } from '@/components/comunidad/CommunityDebugInfo'
 
 interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -144,6 +145,11 @@ export default async function ComunidadPage({ searchParams }: PageProps) {
     return (
       <main className="min-h-screen bg-gray-50" data-testid="public-landing">
         <PageTracker eventName="visit_comunidad_public" />
+        <CommunityDebugInfo
+          postsCount={publicData.posts.length}
+          total={publicData.total}
+          searchParams={searchParams}
+        />
 
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-20">
