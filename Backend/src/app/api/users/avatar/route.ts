@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener datos de User table (note: table name is capitalized in Supabase)
     const { data: userData } = await supabase
-      .from('User')
+      .from('users')
       .select('id,name,avatar,updatedAt')
       .eq('id', userId)
       .maybeSingle()
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
 
     // Update User table with new avatar
     const { data: userData, error: userUpdateErr } = await supabaseAdmin
-      .from('User')
+      .from('users')
       .update({ avatar: url, updatedAt: new Date().toISOString() })
       .eq('id', user.id)
       .select()
@@ -174,7 +174,7 @@ export async function DELETE(request: NextRequest) {
 
     // Remove avatar from User table
     const { data: userRemoveResult, error: userRemoveError } = await supabase
-      .from('User')
+      .from('users')
       .update({
         avatar: null,
         updatedAt: now.toISOString()

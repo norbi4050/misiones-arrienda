@@ -48,7 +48,7 @@ export async function updateUserActivity(userId: string): Promise<void> {
 
     // Actualizar en tabla User
     const { error: userError } = await supabase
-      .from('User')
+      .from('users')
       .update({
         is_online: true,
         last_activity: now,
@@ -110,7 +110,7 @@ export async function markUserOffline(userId: string): Promise<void> {
 
     // Actualizar en tabla User
     const { error: userError } = await supabase
-      .from('User')
+      .from('users')
       .update({
         is_online: false,
         last_seen: now
@@ -247,7 +247,7 @@ export async function getBulkUserPresence(userIds: string[]): Promise<Map<string
     const supabase = createClient()
 
     const { data, error } = await supabase
-      .from('User')
+      .from('users')
       .select('id, is_online, last_seen, last_activity')
       .in('id', userIds)
 

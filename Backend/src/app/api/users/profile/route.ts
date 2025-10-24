@@ -73,9 +73,9 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Obtener datos de tabla User (fuente de verdad para user_type)
+  // Obtener datos de tabla users (fuente de verdad para user_type)
   const { data: userData, error: userError } = await supabase
-    .from('User')
+    .from('users')
     .select('*')
     .eq('id', user.id)
     .single();
@@ -214,9 +214,9 @@ export async function PUT(req: NextRequest) {
     console.log(`[API /users/profile PUT] user_profiles updated: ${profileData ? '1 row' : '0 rows'}`);
   }
 
-  // Actualizar User (SIEMPRE)
+  // Actualizar users (SIEMPRE)
   const { data: userData, error: userError } = await supabaseAdmin
-    .from('User')
+    .from('users')
     .update(usersUpdate)
     .eq('id', user.id)
     .select()

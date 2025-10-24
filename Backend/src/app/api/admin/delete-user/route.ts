@@ -46,7 +46,7 @@ export async function DELETE(request: NextRequest) {
 
     // Obtener información del usuario antes de eliminarlo (para logging y verificaciones)
     const { data: userToDelete, error: getUserError } = await supabaseAdmin
-      .from('User')
+      .from('users')
       .select('email, name, userType')
       .eq('id', userIdToDelete)
       .single();
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
 
     // 4. Eliminar el usuario de la tabla User
     const { error: deleteUserError } = await supabaseAdmin
-      .from('User')
+      .from('users')
       .delete()
       .eq('id', userIdToDelete);
 
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener información del usuario
     const { data: targetUser, error: getUserError } = await supabaseAdmin
-      .from('User')
+      .from('users')
       .select('id, email, name, userType, createdAt, updatedAt')
       .eq('id', userId)
       .single();

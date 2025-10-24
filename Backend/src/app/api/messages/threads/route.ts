@@ -386,7 +386,7 @@ export async function GET(request: NextRequest) {
         let otherUserData: any = null
         try {
           const { data: userData } = await supabase
-            .from('User')
+            .from('users')
             .select('id, name, email, avatar, companyName')  // ✅ AGREGADO companyName
             .eq('id', otherUserId)
             .single()

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     // Construir query base
     let query = supabase
-      .from('User')
+      .from('users')
       .select('id, email, name, userType, createdAt, updatedAt', { count: 'exact' });
 
     // Aplicar filtros
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener estadísticas generales
     const { data: allUsers } = await supabase
-      .from('User')
+      .from('users')
       .select('userType');
 
     const totalUsers = allUsers?.length || 0;

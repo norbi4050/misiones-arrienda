@@ -5,6 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { ShareEntityType } from './types';
 import { getPlanInfo } from '@/lib/plan-guards';
+import { getSiteUrl } from '@/lib/config';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -123,7 +124,7 @@ export async function createShortLink(
     }
     
     // 4. Construir short URL
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const siteUrl = getSiteUrl();
     const shortUrl = `${siteUrl}/go/${slug}`;
     
     return {

@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getShortLinkMapping, incrementShortLinkClicks } from '@/lib/share/shortlinks';
+import { getSiteUrl } from '@/lib/config';
 
 // NOTA: Cambiado de 'edge' a 'nodejs' porque Supabase no es compatible con Edge Runtime
 // export const runtime = 'edge';
@@ -22,8 +23,8 @@ async function trackShortLinkResolveEdge(payload: {
     }
     
     // Enviar a endpoint de analytics
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    
+    const baseUrl = getSiteUrl();
+
     await fetch(`${baseUrl}/api/analytics/ingest`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -57,7 +58,7 @@ export async function GET(
       console.warn(`[ShortLink] Slug not found: ${slug}`);
       
       // Redirigir a 404
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const baseUrl = getSiteUrl();
       return NextResponse.redirect(`${baseUrl}/404`, { status: 302 });
     }
     
@@ -104,7 +105,7 @@ export async function GET(
     console.error('[ShortLink] Error resolving slug:', error);
     
     // En caso de error, redirigir a home
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getSiteUrl();
     return NextResponse.redirect(baseUrl, { status: 302 });
   }
 }

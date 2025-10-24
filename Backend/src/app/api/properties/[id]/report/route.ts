@@ -176,7 +176,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
         // Obtener información del dueño de la propiedad
         const { data: ownerData } = await supabaseAdmin
-          .from('User')
+          .from('users')
           .select('id, name, email')
           .eq('id', property.userId)
           .maybeSingle()
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         // Notificar a administradores (buscar usuarios admin)
         const adminEmail = 'misionesarrienda@gmail.com'
         const { data: adminUser } = await supabaseAdmin
-          .from('User')
+          .from('users')
           .select('id')
           .eq('email', adminEmail)
           .maybeSingle()
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // 9. Obtener información del usuario para el log
     const { data: reporterProfile } = await supabase
-      .from('User')
+      .from('users')
       .select('name, email')
       .eq('id', user.id)
       .single()

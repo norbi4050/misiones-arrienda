@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
         let user = null
         try {
           const { data } = await supabaseAdmin
-            .from('User')
+            .from('users')
             .select('name, email')
             .eq('id', post.user_id)
             .maybeSingle()

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { getSiteUrl } from './config'
 
 // Configuración del transportador de email
 const transporter = nodemailer.createTransport({
@@ -12,7 +13,7 @@ const transporter = nodemailer.createTransport({
 })
 
 export async function sendVerificationEmail(email: string, name: string, token: string) {
-  const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/auth/verify?token=${token}`
+  const verificationUrl = `${getSiteUrl()}/api/auth/verify?token=${token}`
 
   const mailOptions = {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,

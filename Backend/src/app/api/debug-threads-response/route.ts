@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getSiteUrl } from '@/lib/config'
 
 // Marcar esta ruta como dinámica para evitar errores de build
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,7 @@ export async function GET() {
     }
 
     // Llamar al endpoint real de threads
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/messages/threads`, {
+    const response = await fetch(`${getSiteUrl()}/api/messages/threads`, {
       headers: {
         'Cookie': `sb-access-token=${(await supabase.auth.getSession()).data.session?.access_token}`
       }

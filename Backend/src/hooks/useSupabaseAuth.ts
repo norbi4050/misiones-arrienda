@@ -54,7 +54,7 @@ export function useSupabaseAuth() {
   const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     try {
       const { data, error } = await supabase
-        .from('User')
+        .from('users')
         .select(`
           id, name, email, phone, avatar, bio, occupation, age, userType,
           companyName, licenseNumber, propertyCount,

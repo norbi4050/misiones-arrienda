@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
 
         // Obtener datos del usuario
         const { data: user } = await supabaseAdmin
-          .from('User')
+          .from('users')
           .select('name, email')
           .eq('id', property.userId)
           .maybeSingle()

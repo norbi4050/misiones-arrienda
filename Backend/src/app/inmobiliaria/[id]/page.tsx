@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateAgencyShareMetaTags } from '@/lib/share/metatags';
 import { getPropertyCoverImage } from '@/lib/property-images.server';
+import { getAgencyStats } from '@/lib/stats/agency-stats';
+import { getSiteUrl } from '@/lib/config';
 import InmobiliariaProfileClient from './inmobiliaria-profile-client';
 
 // Tipos
@@ -115,7 +117,7 @@ export async function generateMetadata({
       .eq('is_active', true);
 
     // B5: Usar nuevo helper con canonical URLs y OG images
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = getSiteUrl();
     
     // Preparar datos de la agencia para B5
     const agencyData = {
@@ -301,29 +303,8 @@ export default async function InmobiliariaPublicPage({
     .order('display_order', { ascending: true })
     .limit(2);
 
-  // FASE 5: Fetch stats (con error handling mejorado)
-  let stats: AgencyStats | null = null;
-  try {
-    const statsResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/inmobiliarias/${id}/stats`,
-      { 
-        next: { revalidate: 300 }
-        // Removido cache: 'no-store' para evitar warning de Next.js
-      }
-    );
-    
-    if (statsResponse.ok) {
-      const statsData = await statsResponse.json();
-      stats = statsData.stats || null;
-      console.log('[Stats] Loaded successfully for agency:', id);
-    } else {
-      console.warn(`[Stats] Failed with status ${statsResponse.status} for agency:`, id);
-      // Continuar sin stats - no bloquear la página
-    }
-  } catch (error) {
-    console.error('[Stats] Error fetching for agency:', id, error);
-    // Continuar sin stats - degradación elegante
-  }
+  // FASE 5: Fetch stats (llamada directa sin HTTP fetch)
+  const stats = await getAgencyStats(id);
 
   // Preparar datos para el componente cliente
   const profileData = {

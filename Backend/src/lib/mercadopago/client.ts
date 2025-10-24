@@ -1,4 +1,5 @@
 import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
+import { getSiteUrl } from '@/lib/config';
 
 // Configuración del cliente MercadoPago
 const client = new MercadoPagoConfig({
@@ -14,18 +15,20 @@ export const preference = new Preference(client);
 export const payment = new Payment(client);
 
 // Configuración de la aplicación
+const siteUrl = getSiteUrl();
+
 export const MP_CONFIG = {
   accessToken: process.env.MP_ACCESS_TOKEN || '',
   webhookSecret: process.env.MP_WEBHOOK_SECRET || '',
-  baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
-  
+  baseUrl: siteUrl,
+
   // URLs de retorno
-  successUrl: (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000') + '/dashboard/billing?status=success',
-  failureUrl: (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000') + '/dashboard/billing?status=failure',
-  pendingUrl: (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000') + '/dashboard/billing?status=pending',
-  
+  successUrl: `${siteUrl}/dashboard/billing?status=success`,
+  failureUrl: `${siteUrl}/dashboard/billing?status=failure`,
+  pendingUrl: `${siteUrl}/dashboard/billing?status=pending`,
+
   // Configuración de notificaciones
-  notificationUrl: (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000') + '/api/payments/webhook'
+  notificationUrl: `${siteUrl}/api/payments/webhook`
 };
 
 // Validar configuración
