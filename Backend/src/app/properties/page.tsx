@@ -96,22 +96,19 @@ export default async function PropertiesPage() {
   // ========================================
   const publicListingEnabled = process.env.NEXT_PUBLIC_ENABLE_PUBLIC_LISTING === 'true'
 
-  // Detectar sesión SOLO si es necesario
+  // SIEMPRE detectar sesión para determinar qué vista mostrar
   let user = null
-  if (publicListingEnabled) {
-    // Si el feature flag está activado, necesitamos checkear auth
-    try {
-      const supabase = createClient()
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      user = authUser
-    } catch (error) {
-      console.error('[PropertiesPage] Auth check failed:', error)
-      // En caso de error, asumir usuario anónimo
-      user = null
-    }
+  try {
+    const supabase = createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    user = authUser
+  } catch (error) {
+    console.error('[PropertiesPage] Auth check failed:', error)
+    // En caso de error, asumir usuario anónimo
+    user = null
   }
 
-  // Landing pública (sin sesión) - SOLO SI FEATURE FLAG ESTÁ OFF
+  // Landing pública (sin sesión) - Mostrar cuando NO hay usuario Y feature flag está OFF
   if (!user && !publicListingEnabled) {
     const publicProperties = await getPublicProperties()
 
