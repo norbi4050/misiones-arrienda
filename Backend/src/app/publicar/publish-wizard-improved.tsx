@@ -371,7 +371,29 @@ export default function PublishWizardImproved() {
           {currentStep === 1 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-6">Información de la Propiedad</h2>
-              
+
+              {/* Banner informativo de IA - NUEVO */}
+              {process.env.NEXT_PUBLIC_FEATURE_AI_DESCRIPTION === 'true' && (
+                <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600 rounded-r-lg p-4 shadow-sm">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                        <Sparkles className="h-5 w-5 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">
+                        💡 ¡Tenés un Asistente de Escritura!
+                      </h3>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        Completá los datos básicos (tipo, precio, dormitorios) y más abajo te ayudamos
+                        a escribir el título y descripción automáticamente. <strong>Es gratis</strong> y te ahorra tiempo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
