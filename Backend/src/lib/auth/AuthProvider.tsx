@@ -148,7 +148,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         console.log('[AuthProvider] Initializing auth (singleton)')
 
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // Add timeout to getSession call
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('getSession timeout')), 8000)
+        )
+
+        const { data: { session }, error } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]).catch((err) => {
+          console.error('[AuthProvider] getSession failed or timed out:', err)
+          return { data: { session: null }, error: err }
+        })
 
         if (error) {
           console.error('[AuthProvider] Error getting session:', error)
