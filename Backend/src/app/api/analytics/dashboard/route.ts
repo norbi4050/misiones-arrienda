@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
       .from('analytics_events')
       .select('event_name')
       .in('target_id', propertyIds)
-      .gte('created_at', startDate.toISOString());
+      .gte('event_time', startDate.toISOString());
 
     if (summaryError) {
       console.error('Error fetching summary:', summaryError);
@@ -151,8 +151,8 @@ export async function GET(request: NextRequest) {
       .from('analytics_events')
       .select('event_name')
       .in('target_id', propertyIds)
-      .gte('created_at', previousStartDate.toISOString())
-      .lt('created_at', startDate.toISOString());
+      .gte('event_time', previousStartDate.toISOString())
+      .lt('event_time', startDate.toISOString());
 
     let previousViews = 0;
     let previousContacts = 0;
@@ -178,10 +178,10 @@ export async function GET(request: NextRequest) {
     // Obtener eventos agrupados por día
     const { data: dailyEvents, error: dailyError } = await supabase
       .from('analytics_events')
-      .select('created_at, event_name')
+      .select('event_time, event_name')
       .in('target_id', propertyIds)
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: true });
+      .gte('event_time', startDate.toISOString())
+      .order('event_time', { ascending: true });
 
     if (dailyError) {
       console.error('Error fetching daily events:', dailyError);
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
     const dailyMap: Record<string, { views: number; contacts: number }> = {};
 
     dailyEvents?.forEach(event => {
-      const date = new Date(event.created_at).toISOString().split('T')[0];
+      const date = new Date(event.event_time).toISOString().split('T')[0];
 
       if (!dailyMap[date]) {
         dailyMap[date] = { views: 0, contacts: 0 };
@@ -223,7 +223,7 @@ export async function GET(request: NextRequest) {
       .from('analytics_events')
       .select('event_name, target_id')
       .in('target_id', propertyIds)
-      .gte('created_at', startDate.toISOString());
+      .gte('event_time', startDate.toISOString());
 
     if (propEventsError) {
       console.error('Error fetching property events:', propEventsError);
