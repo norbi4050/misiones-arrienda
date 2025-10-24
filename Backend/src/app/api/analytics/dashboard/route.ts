@@ -162,9 +162,17 @@ export async function GET(request: NextRequest) {
       else if (event.event_name === 'property_favorite') totalFavorites++;
     });
 
+    console.log('[Analytics API] Processed current period:', {
+      totalViews,
+      totalContacts,
+      totalFavorites
+    });
+
     const conversionRate = totalViews > 0
       ? Math.round((totalContacts / totalViews) * 100)
       : 0;
+
+    console.log('[Analytics API] Conversion rate:', conversionRate + '%');
 
     // === OPTIMIZACIÓN 2: QUERY PARA PERIODO ANTERIOR (COMPARACIÓN) ===
     const { data: previousSummaryData, error: prevSummaryError } = await supabase
