@@ -58,7 +58,7 @@ export function MyCommunityPostsClient() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <Link href="/comunidad">
+              <Link href="/comunidad" prefetch={false}>
                 <Button variant="ghost" size="sm">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Volver
