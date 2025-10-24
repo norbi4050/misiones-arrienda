@@ -193,40 +193,42 @@ export default async function PropertiesPage() {
               <>
                 <div className="grid md:grid-cols-3 gap-6 mb-8">
                   {publicProperties.slice(0, 12).map((property) => (
-                    <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="aspect-video bg-gray-200 relative">
-                        {property.images?.[0] && (
-                          <Image
-                            src={property.images[0]}
-                            alt={property.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            className="object-cover"
-                            loading="lazy"
-                          />
-                        )}
-                        {property.featured && (
-                          <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                            Destacada
-                          </div>
-                        )}
-                      </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-semibold text-lg mb-2 line-clamp-1">{property.title}</h3>
-                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {property.city}
+                    <Link key={property.id} href={`/properties/${property.id}`} prefetch={false}>
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                        <div className="aspect-video bg-gray-200 relative">
+                          {property.images?.[0] && (
+                            <Image
+                              src={property.images[0]}
+                              alt={property.title}
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              className="object-cover"
+                              loading="lazy"
+                            />
+                          )}
+                          {property.featured && (
+                            <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-semibold">
+                              Destacada
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-2xl font-bold text-blue-600">
-                            ${property.price?.toLocaleString('es-AR')}
-                          </p>
-                          <div className="text-xs text-gray-500">
-                            {property.bedrooms} hab • {property.bathrooms} baños
+                        <CardContent className="p-4">
+                          <h3 className="font-semibold text-lg mb-2 line-clamp-1">{property.title}</h3>
+                          <div className="flex items-center text-gray-600 text-sm mb-2">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            {property.city}
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                          <div className="flex items-center justify-between">
+                            <p className="text-2xl font-bold text-blue-600">
+                              ${property.price?.toLocaleString('es-AR')}
+                            </p>
+                            <div className="text-xs text-gray-500">
+                              {property.bedrooms} hab • {property.bathrooms} baños
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
 
