@@ -23,6 +23,9 @@ import BusinessHours from '@/components/inmobiliarias/BusinessHours';
 import TeamMemberCard from '@/components/inmobiliarias/TeamMemberCard';
 import AgencyLocationMap from '@/components/inmobiliarias/AgencyLocationMap';
 import HeroSection from '@/components/inmobiliarias/hero/HeroSection';
+import PropertyTabs from '@/components/inmobiliarias/filters/PropertyTabs';
+import PropertyFilters, { SortOption } from '@/components/inmobiliarias/filters/PropertyFilters';
+import { NewBadge } from '@/components/inmobiliarias/filters/PropertyBadges';
 import { parseBusinessHours, InmobiliariaProfile as InmobiliariaProfileType } from '@/types/inmobiliaria';
 import { normalizeFacebookUrl, normalizeInstagramUrl, normalizeTikTokUrl } from '@/lib/social-urls';
 
@@ -40,6 +43,7 @@ interface Property {
   bedrooms?: number;
   bathrooms?: number;
   area?: number;
+  created_at?: string;
 }
 
 interface TeamMember {
@@ -80,10 +84,22 @@ export default function InmobiliariaProfileClient({
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  
+
+  // Filter states
+  const [activeTab, setActiveTab] = useState<'all' | 'venta' | 'alquiler'>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>(initialProperties || []);
+
   const pageSize = 12;
   const totalPages = Math.ceil(totalProperties / pageSize);
   const hasMore = page < totalPages;
+
+  // Calculate counts for tabs
+  const tabCounts = {
+    all: properties.length,
+    venta: properties.filter(p => p.operation_type === 'venta').length,
+    alquiler: properties.filter(p => p.operation_type === 'alquiler').length,
+  };
 
   // B7: Track profile view on mount
   useEffect(() => {
@@ -94,6 +110,31 @@ export default function InmobiliariaProfileClient({
       console.debug('Analytics tracking failed:', error);
     }
   }, [profile?.id, profile?.company_name]);
+
+  // Apply filters and sorting
+  useEffect(() => {
+    let filtered = [...properties];
+
+    // Filter by operation type
+    if (activeTab !== 'all') {
+      filtered = filtered.filter(p => p.operation_type === activeTab);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'price_asc':
+          return a.price - b.price;
+        case 'price_desc':
+          return b.price - a.price;
+        case 'recent':
+        default:
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      }
+    });
+
+    setFilteredProperties(filtered);
+  }, [properties, activeTab, sortBy]);
 
   // ✅ VALIDACIÓN: Después de los hooks
   if (!profile || !profile.id || !profile.company_name) {
@@ -334,15 +375,35 @@ export default function InmobiliariaProfileClient({
           {/* Columna derecha - Propiedades */}
           <div className="lg:col-span-2" id="properties-section">
             <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-2">
+              <h2 className="text-2xl font-semibold mb-4">
                 Propiedades publicadas
               </h2>
-              <p className="text-gray-600">
-                {totalProperties} {totalProperties === 1 ? 'propiedad' : 'propiedades'} disponibles
-              </p>
+
+              {/* Tabs de filtro */}
+              {properties.length > 0 && (
+                <div className="mb-4">
+                  <PropertyTabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    counts={tabCounts}
+                  />
+                </div>
+              )}
+
+              {/* Filtros y contadores */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <p className="text-gray-600">
+                  {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad' : 'propiedades'}
+                  {activeTab !== 'all' && ` en ${activeTab}`}
+                </p>
+
+                {properties.length > 1 && (
+                  <PropertyFilters sortBy={sortBy} onSortChange={setSortBy} />
+                )}
+              </div>
             </div>
 
-            {properties.length === 0 ? (
+            {filteredProperties.length === 0 ? (
               <Card>
                 <CardContent className="p-12 text-center">
                   <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -361,7 +422,7 @@ export default function InmobiliariaProfileClient({
               <>
                 {/* Grid de propiedades */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {properties.map((property) => (
+                  {filteredProperties.map((property) => (
                     <Link
                       key={property.id}
                       href={`/properties/${property.id}`}
@@ -383,7 +444,9 @@ export default function InmobiliariaProfileClient({
                               <Building2 className="w-12 h-12 text-gray-400" />
                             </div>
                           )}
-                          <div className="absolute top-3 right-3">
+                          {/* Badges de tipo y nuevo */}
+                          <div className="absolute top-3 right-3 flex gap-2">
+                            {property.created_at && <NewBadge createdAt={property.created_at} />}
                             <Badge variant="secondary" className="bg-white/90">
                               {property.operation_type === 'venta' ? 'Venta' : 'Alquiler'}
                             </Badge>
