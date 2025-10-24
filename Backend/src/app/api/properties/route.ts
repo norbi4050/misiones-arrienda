@@ -150,12 +150,16 @@ export async function GET(request: NextRequest) {
         testError: testError?.message
       });
 
+      // Construir query base
       let query = supabase
         .from('Property')
         .select('*', { count: 'exact' })
         .eq('status', 'published')
-        .eq('is_active', true)
-        .or(`expires_at.is.null,expires_at.gte.${nowIso}`);
+        .eq('is_active', true);
+
+      // TEMPORAL: Comentar filtro de expires_at para debug
+      // TODO: Descomentar cuando funcione
+      // query = query.or(`expires_at.is.null,expires_at.gte.${nowIso}`);
 
       // Aplicar filtros avanzados
       if (city) {
