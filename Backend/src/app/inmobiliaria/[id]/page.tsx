@@ -205,7 +205,13 @@ export default async function InmobiliariaPublicPage({
       show_phone_public,
       show_address_public,
       is_founder,
-      created_at
+      created_at,
+      header_image_url,
+      tagline,
+      primary_color,
+      secondary_color,
+      founded_year,
+      values
     `)
     .eq('id', id)
     .eq('user_type', 'inmobiliaria')
@@ -242,6 +248,12 @@ export default async function InmobiliariaPublicPage({
     show_stats_public: inmobiliariaData.show_stats_public || false,
     is_founder: inmobiliariaData.is_founder || false,
     created_at: inmobiliariaData.created_at,
+    header_image_url: inmobiliariaData.header_image_url,
+    tagline: inmobiliariaData.tagline,
+    primary_color: inmobiliariaData.primary_color,
+    secondary_color: inmobiliariaData.secondary_color,
+    founded_year: inmobiliariaData.founded_year,
+    values: inmobiliariaData.values,
   };
 
   const supabase = createClient();
@@ -330,6 +342,13 @@ export default async function InmobiliariaPublicPage({
     show_stats_public: inmobiliaria.show_stats_public || false,
     is_founder: inmobiliaria.is_founder || false,
     created_at: inmobiliaria.created_at,
+    header_image_url: inmobiliaria.header_image_url,
+    tagline: inmobiliaria.tagline,
+    primary_color: inmobiliaria.primary_color,
+    secondary_color: inmobiliaria.secondary_color,
+    founded_year: inmobiliaria.founded_year,
+    values: inmobiliaria.values,
+    email: '', // Will be populated from user context if needed
   };
 
   // Structured Data para SEO (JSON-LD)

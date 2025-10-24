@@ -10,11 +10,8 @@ import {
   Globe,
   Facebook,
   Instagram,
-  CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Mail,
-  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,40 +19,15 @@ import { Badge } from '@/components/ui/badge';
 import { AgencyShareBar } from '@/components/share';
 import { analytics } from '@/lib/analytics/track';
 import AgencyStats from '@/components/inmobiliarias/AgencyStats';
-import SendMessageButton from '@/components/inmobiliarias/SendMessageButton';
 import BusinessHours from '@/components/inmobiliarias/BusinessHours';
 import TeamMemberCard from '@/components/inmobiliarias/TeamMemberCard';
 import AgencyLocationMap from '@/components/inmobiliarias/AgencyLocationMap';
-import { parseBusinessHours } from '@/types/inmobiliaria';
+import HeroSection from '@/components/inmobiliarias/hero/HeroSection';
+import { parseBusinessHours, InmobiliariaProfile as InmobiliariaProfileType } from '@/types/inmobiliaria';
 import { normalizeFacebookUrl, normalizeInstagramUrl, normalizeTikTokUrl } from '@/lib/social-urls';
 
-// Tipos
-interface InmobiliariaProfile {
-  id: string;
-  company_name: string;
-  logo_url: string | null;
-  verified: boolean;
-  phone: string | null;
-  commercial_phone: string | null;
-  address: string | null;
-  website: string | null;
-  facebook: string | null;
-  instagram: string | null;
-  tiktok: string | null;
-  description: string | null;
-  business_hours: any | null;
-  timezone: string;
-  latitude: number | null;
-  longitude: number | null;
-  show_phone_public: boolean;
-  show_address_public: boolean;
-  show_team_public: boolean;
-  show_hours_public: boolean;
-  show_map_public: boolean;
-  show_stats_public: boolean;
-  is_founder: boolean;
-  created_at: string;
-}
+// Usar el tipo de inmobiliaria importado
+type InmobiliariaProfile = InmobiliariaProfileType;
 
 interface Property {
   id: string;
@@ -179,120 +151,62 @@ export default function InmobiliariaProfileClient({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              {profile.logo_url ? (
-                <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden border-2 border-gray-200">
-                  <Image
-                    src={profile.logo_url}
-                    alt={`Logo de ${profile.company_name}`}
-                    fill
-                    sizes="(max-width: 768px) 96px, 128px"
-                    priority
-                    className="object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-lg bg-gray-200 flex items-center justify-center">
-                  <Building2 className="w-12 h-12 text-gray-400" />
+      {/* Hero Section */}
+      <HeroSection
+        profile={profile}
+        stats={stats}
+        totalProperties={totalProperties}
+      />
+
+      {/* Contact Info Bar */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Contacto */}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+              {profile.phone && (
+                <a
+                  href={`tel:${profile.phone}`}
+                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span className="text-sm font-medium">{profile.phone}</span>
+                </a>
+              )}
+
+              {profile.commercial_phone && profile.commercial_phone !== profile.phone && (
+                <a
+                  href={`tel:${profile.commercial_phone}`}
+                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span className="text-sm font-medium">{profile.commercial_phone}</span>
+                  <span className="text-xs text-gray-500">(Comercial)</span>
+                </a>
+              )}
+
+              {profile.address && (
+                <div className="flex items-center gap-2 text-gray-600">
+                  <MapPin className="w-4 h-4" />
+                  <span className="text-sm">{profile.address}</span>
                 </div>
               )}
-            </div>
 
-            {/* Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                  {profile.company_name}
-                </h1>
-                {profile.verified && (
-                  <Badge variant="default" className="flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Verificado
-                  </Badge>
-                )}
-                {profile.is_founder && (
-                  <Badge className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0">
-                    <Crown className="w-4 h-4" />
-                    Miembro Fundador
-                  </Badge>
-                )}
-              </div>
-
-              {/* Botón de contacto */}
-              <div className="mt-4 mb-4">
-                <SendMessageButton
-                  agencyId={profile.id}
-                  agencyName={profile.company_name}
-                />
-              </div>
-
-              {/* B5: ShareBar para inmobiliaria */}
-              <div className="mt-4">
-                <AgencyShareBar
-                  agencyId={profile.id}
-                  agencyData={{
-                    id: profile.id,
-                    title: profile.company_name,
-                    description: profile.description || undefined,
-                    imageUrl: profile.logo_url || undefined,
-                  }}
-                  context="profile"
-                  className="justify-start"
-                />
-              </div>
-
-              {/* Contacto */}
-              <div className="flex flex-wrap gap-4 mt-4">
-                {profile.phone && (
-                  <a
-                    href={`tel:${profile.phone}`}
-                    className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>{profile.phone}</span>
-                  </a>
-                )}
-
-                {/* FASE 5: Teléfono comercial - Solo mostrar si es diferente del teléfono principal */}
-                {profile.commercial_phone && profile.commercial_phone !== profile.phone && (
-                  <a
-                    href={`tel:${profile.commercial_phone}`}
-                    className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>{profile.commercial_phone}</span>
-                    <span className="text-xs text-gray-500">(Comercial)</span>
-                  </a>
-                )}
-                
-                {profile.address && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <MapPin className="w-4 h-4" />
-                    <span>{profile.address}</span>
-                  </div>
-                )}
-
-                {profile.website && (
-                  <a
-                    href={profile.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition"
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span>Sitio web</span>
-                  </a>
-                )}
-              </div>
+              {profile.website && (
+                <a
+                  href={profile.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span className="text-sm font-medium">Sitio web</span>
+                </a>
+              )}
 
               {/* Redes sociales */}
-              {(profile.facebook || profile.instagram || profile.tiktok) && (
-                <div className="flex gap-3 mt-4">
+              {(profile.facebook || profile.instagram) && (
+                <div className="flex gap-3 ml-2">
                   {profile.facebook && normalizeFacebookUrl(profile.facebook) && (
                     <a
                       href={normalizeFacebookUrl(profile.facebook)!}
@@ -317,6 +231,21 @@ export default function InmobiliariaProfileClient({
                   )}
                 </div>
               )}
+            </div>
+
+            {/* ShareBar */}
+            <div className="flex-shrink-0">
+              <AgencyShareBar
+                agencyId={profile.id}
+                agencyData={{
+                  id: profile.id,
+                  title: profile.company_name,
+                  description: profile.description || undefined,
+                  imageUrl: profile.logo_url || undefined,
+                }}
+                context="profile"
+                className="justify-center md:justify-end"
+              />
             </div>
           </div>
         </div>
@@ -403,7 +332,7 @@ export default function InmobiliariaProfileClient({
           </div>
 
           {/* Columna derecha - Propiedades */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2" id="properties-section">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold mb-2">
                 Propiedades publicadas

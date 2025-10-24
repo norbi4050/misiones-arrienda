@@ -93,27 +93,40 @@ export interface InmobiliariaProfile {
   verified: boolean;
   description: string | null;
   created_at: string;
-  
+
   // Contacto
   commercial_phone: string | null;
   phone: string | null;
   email: string;
   address: string | null;
   website: string | null;
-  
+
   // Redes sociales
   facebook: string | null;
   instagram: string | null;
   tiktok: string | null;
-  
+
   // Horarios de atención
   business_hours: BusinessHours | null;
   timezone: string;
-  
+
   // Ubicación
   latitude: number | null;
   longitude: number | null;
-  
+
+  // Personalización visual (Hero Section)
+  header_image_url: string | null;
+  tagline: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+
+  // Información adicional
+  founded_year: number | null;
+  values: string[] | null;
+
+  // Badges especiales
+  is_founder: boolean;
+
   // Configuración de privacidad
   show_team_public: boolean;
   show_hours_public: boolean;
@@ -162,6 +175,12 @@ export interface UpdateInmobiliariaProfileData {
   timezone?: string;
   latitude?: number;
   longitude?: number;
+  header_image_url?: string;
+  tagline?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  founded_year?: number;
+  values?: string[];
   show_team_public?: boolean;
   show_hours_public?: boolean;
   show_map_public?: boolean;
@@ -341,7 +360,24 @@ export const AGENCY_LIMITS = {
   MAX_DESCRIPTION_LENGTH: 1000,
   MAX_COMPANY_NAME_LENGTH: 100,
   MIN_COMPANY_NAME_LENGTH: 3,
+  MAX_TAGLINE_LENGTH: 100,
+  MAX_VALUES: 5,
+  MAX_VALUE_LENGTH: 30,
+  MIN_FOUNDED_YEAR: 1900,
 } as const;
+
+/**
+ * Colores por defecto de la plataforma
+ */
+export const DEFAULT_COLORS = {
+  PRIMARY: '#2563EB',
+  SECONDARY: '#F59E0B',
+} as const;
+
+/**
+ * Expresión regular para validar colores hex
+ */
+export const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 
 // ============================================================================
 // TYPE GUARDS
