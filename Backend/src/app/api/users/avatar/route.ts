@@ -50,10 +50,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Usuario no especificado' }, { status: 400 })
     }
 
-    // Obtener datos de User table (note: table name is capitalized in Supabase)
+    // Obtener datos de users table con snake_case
     const { data: userData } = await supabase
       .from('users')
-      .select('id,name,avatar,updatedAt')
+      .select('id,name,avatar,updated_at')
       .eq('id', userId)
       .maybeSingle()
 
@@ -67,9 +67,9 @@ export async function GET(request: NextRequest) {
     const url = avatarUrl ??
       `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff&size=200`;
 
-    // Calculate version using updatedAt timestamp
-    const v = userData.updatedAt
-      ? Math.floor(new Date(userData.updatedAt).getTime() / 1000)
+    // Calculate version using updated_at timestamp
+    const v = userData.updated_at
+      ? Math.floor(new Date(userData.updated_at).getTime() / 1000)
       : 0;
 
     // Devolver URL cruda sin ?v= - el frontend se encarga del cache-busting
