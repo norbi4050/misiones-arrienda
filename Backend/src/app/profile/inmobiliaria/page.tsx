@@ -10,13 +10,14 @@ import { Building2, User, Mail, Phone, MapPin, Home, Users, Award, Camera, Save,
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
+import HeroCustomization from "@/components/inmobiliarias/admin/HeroCustomization"
 
 export default function InmobiliariaProfilePage() {
   const { user, isAuthenticated, isLoading } = useSupabaseAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  
+
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -36,6 +37,15 @@ export default function InmobiliariaProfilePage() {
     businessHours: "",
     emergencyContact: "",
     socialMedia: ""
+  })
+
+  const [heroCustomization, setHeroCustomization] = useState({
+    header_image_url: null,
+    tagline: null,
+    primary_color: null,
+    secondary_color: null,
+    founded_year: null,
+    values: null,
   })
 
   useEffect(() => {
@@ -70,6 +80,16 @@ export default function InmobiliariaProfilePage() {
         emergencyContact: (user as any).emergencyContact || "",
         socialMedia: (user as any).socialMedia || ""
       })
+
+      // Fetch hero customization data
+      fetch(`/api/inmobiliarias/${user.id}/customization`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setHeroCustomization(data.data)
+          }
+        })
+        .catch(err => console.error('Error loading customization:', err))
     }
   }, [user, isAuthenticated, isLoading, router])
 
@@ -495,6 +515,24 @@ export default function InmobiliariaProfilePage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Personalización Visual del Hero */}
+            {user && (
+              <HeroCustomization
+                userId={user.id}
+                initialData={heroCustomization}
+                onSave={() => {
+                  // Reload customization data after save
+                  fetch(`/api/inmobiliarias/${user.id}/customization`)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.success && data.data) {
+                        setHeroCustomization(data.data)
+                      }
+                    })
+                }}
+              />
+            )}
           </div>
 
           {/* Sidebar */}
