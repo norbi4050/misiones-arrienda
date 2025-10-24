@@ -267,8 +267,9 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
       {/* Navigation */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link 
-            href="/properties" 
+          <Link
+            href="/properties"
+            prefetch={false}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

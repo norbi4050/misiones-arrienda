@@ -148,12 +148,13 @@ export default function InmobiliariaProfileClient({
           <p className="text-gray-600 mb-4">
             No se pudo cargar el perfil de la inmobiliaria.
           </p>
-          <a
+          <Link
             href="/properties"
+            prefetch={false}
             className="text-blue-600 hover:text-blue-700 underline"
           >
             Ver todas las propiedades
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -434,7 +435,7 @@ export default function InmobiliariaProfileClient({
                     }
                   </p>
                   {activeTab === 'all' ? (
-                    <Link href="/properties">
+                    <Link href="/properties" prefetch={false}>
                       <Button size="lg" className="shadow-md hover:shadow-lg transition-shadow">
                         Ver todas las propiedades
                       </Button>

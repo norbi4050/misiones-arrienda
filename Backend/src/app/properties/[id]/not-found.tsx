@@ -20,14 +20,14 @@ export default function PropertyNotFound() {
 
         <div className="space-y-3">
           <Button asChild className="w-full">
-            <Link href="/properties">
+            <Link href="/properties" prefetch={false}>
               <Search className="h-4 w-4 mr-2" />
               Ver todas las propiedades
             </Link>
           </Button>
-          
+
           <Button variant="outline" asChild className="w-full">
-            <Link href="/">
+            <Link href="/" prefetch={false}>
               <Home className="h-4 w-4 mr-2" />
               Ir al inicio
             </Link>

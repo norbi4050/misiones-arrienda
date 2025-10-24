@@ -260,12 +260,13 @@ export default function DashboardPage() {
                   >
                     Ir al inicio
                   </a>
-                  <a
+                  <Link
                     href="/properties"
+                    prefetch={false}
                     className="block w-full text-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
                   >
                     Ver propiedades
-                  </a>
+                  </Link>
                   <a
                     href="/publicar"
                     className="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"

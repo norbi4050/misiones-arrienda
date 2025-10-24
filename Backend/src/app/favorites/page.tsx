@@ -147,12 +147,13 @@ export default async function FavoritesPage() {
             <p className="text-gray-600 mb-6">
               Explorá propiedades y guardá las que más te gusten
             </p>
-            <a
+            <Link
               href="/properties"
+              prefetch={false}
               className="inline-block bg-rose-500 text-white px-6 py-3 rounded-lg hover:bg-rose-600 transition-colors font-medium"
             >
               Explorar Propiedades
-            </a>
+            </Link>
           </div>
         ) : (
           <FavoritesClient initialFavorites={favorites} />
