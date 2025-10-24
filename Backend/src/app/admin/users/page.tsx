@@ -18,9 +18,9 @@ interface User {
   id: string;
   email: string;
   name: string;
-  userType: string;
-  createdAt: string;
-  updatedAt: string;
+  user_type: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface UserStats {
@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
 
   // Estados para búsqueda y paginación
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
   const [filterRole, setFilterRole] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,7 +51,7 @@ export default function AdminUsersPage() {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.userType === filterRole;
+    const matchesRole = filterRole === 'all' || user.user_type === filterRole;
     return matchesSearch && matchesRole;
   }).sort((a, b) => {
     const aValue = a[sortBy as keyof User] || '';
@@ -222,7 +222,7 @@ export default function AdminUsersPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Usuarios Activos</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.userType === 'inquilino').length}
+                  {users.filter(u => u.user_type === 'inquilino').length}
                 </p>
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function AdminUsersPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Administradores</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.userType === 'inmobiliaria').length}
+                  {users.filter(u => u.user_type === 'inmobiliaria').length}
                 </p>
               </div>
             </div>
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Moderadores</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.userType === 'dueno').length}
+                  {users.filter(u => u.user_type === 'dueno').length}
                 </p>
               </div>
             </div>
@@ -343,13 +343,13 @@ export default function AdminUsersPage() {
                       <p className="text-gray-900">{user.email}</p>
                     </td>
                     <td className="p-4">
-                      <Badge className={getRoleBadgeColor(user.userType)}>
-                        {user.userType}
+                      <Badge className={getRoleBadgeColor(user.user_type)}>
+                        {user.user_type}
                       </Badge>
                     </td>
                     <td className="p-4">
                       <p className="text-sm text-gray-600">
-                        {formatDate(user.createdAt)}
+                        {formatDate(user.created_at)}
                       </p>
                     </td>
                     <td className="p-4">
@@ -361,7 +361,7 @@ export default function AdminUsersPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {user.userType !== 'inmobiliaria' && (
+                        {user.user_type !== 'inmobiliaria' && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -456,13 +456,13 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Rol</p>
-                <Badge className={getRoleBadgeColor(selectedUser.userType)}>
-                  {selectedUser.userType}
+                <Badge className={getRoleBadgeColor(selectedUser.user_type)}>
+                  {selectedUser.user_type}
                 </Badge>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Registro</p>
-                <p className="text-gray-900">{formatDate(selectedUser.createdAt)}</p>
+                <p className="text-gray-900">{formatDate(selectedUser.created_at)}</p>
               </div>
               {selectedUser.stats && (
                 <div className="border-t pt-4">

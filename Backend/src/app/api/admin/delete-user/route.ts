@@ -47,7 +47,7 @@ export async function DELETE(request: NextRequest) {
     // Obtener información del usuario antes de eliminarlo (para logging y verificaciones)
     const { data: userToDelete, error: getUserError } = await supabaseAdmin
       .from('users')
-      .select('email, name, userType')
+      .select('email, name, user_type')
       .eq('id', userIdToDelete)
       .single();
 
@@ -130,14 +130,14 @@ export async function DELETE(request: NextRequest) {
       deletedUserId: userIdToDelete,
       deletedUserEmail: userToDelete.email,
       deletedUserName: userToDelete.name,
-      deletedUserType: userToDelete.userType
+      deletedUserType: userToDelete.user_type
     });
 
     console.log(`Usuario eliminado exitosamente:`, {
       deletedUserId: userIdToDelete,
       deletedUserEmail: userToDelete.email,
       deletedUserName: userToDelete.name,
-      deletedUserType: userToDelete.userType,
+      deletedUserType: userToDelete.user_type,
       deletedBy: adminUser.id,
       deletedByEmail: adminUser.email,
       timestamp: new Date().toISOString()
@@ -154,7 +154,7 @@ export async function DELETE(request: NextRequest) {
           details: {
             deletedUserEmail: userToDelete.email,
             deletedUserName: userToDelete.name,
-            deletedUserType: userToDelete.userType
+            deletedUserType: userToDelete.user_type
           },
           timestamp: new Date().toISOString()
         });
@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
     // Obtener información del usuario
     const { data: targetUser, error: getUserError } = await supabaseAdmin
       .from('users')
-      .select('id, email, name, userType, createdAt, updatedAt')
+      .select('id, email, name, user_type, created_at, updatedAt')
       .eq('id', userId)
       .single();
 

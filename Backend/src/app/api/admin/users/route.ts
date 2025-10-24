@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     // Construir query base
     let query = supabase
       .from('users')
-      .select('id, email, name, userType, createdAt, updatedAt', { count: 'exact' });
+      .select('id, email, name, user_type, created_at, updatedAt', { count: 'exact' });
 
     // Aplicar filtros
     if (search) {
@@ -63,12 +63,12 @@ export async function GET(request: NextRequest) {
     // Obtener estadísticas generales
     const { data: allUsers } = await supabase
       .from('users')
-      .select('userType');
+      .select('user_type');
 
     const totalUsers = allUsers?.length || 0;
-    const inquilinoCount = allUsers?.filter(u => u.userType === 'inquilino').length || 0;
-    const duenoCount = allUsers?.filter(u => u.userType === 'dueno').length || 0;
-    const inmobiliariaCount = allUsers?.filter(u => u.userType === 'inmobiliaria').length || 0;
+    const inquilinoCount = allUsers?.filter(u => u.user_type === 'inquilino').length || 0;
+    const duenoCount = allUsers?.filter(u => u.user_type === 'dueno').length || 0;
+    const inmobiliariaCount = allUsers?.filter(u => u.user_type === 'inmobiliaria').length || 0;
 
     return NextResponse.json({
       users: users || [],
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const supabase = createClient();
 
     const body = await request.json();
-    const { email, password, name, userType = 'inquilino' } = body;
+    const { email, password, name, user_type = 'inquilino' } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log admin action
-    await logAdminAccess('create_user', { email, userType });
+    await logAdminAccess('create_user', { email, user_type });
 
     // Note: Creating users via admin requires service role key
     // This endpoint is a placeholder - actual implementation would need service role key

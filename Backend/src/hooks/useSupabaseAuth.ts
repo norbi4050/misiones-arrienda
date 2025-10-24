@@ -56,9 +56,9 @@ export function useSupabaseAuth() {
       const { data, error } = await supabase
         .from('users')
         .select(`
-          id, name, email, phone, avatar, bio, occupation, age, userType,
-          companyName, licenseNumber, propertyCount,
-          verified, emailVerified, rating, reviewCount, createdAt, updatedAt
+          id, name, email, phone, avatar, bio, occupation, age, user_type,
+          company_name, license_number, property_count,
+          verified, email_verified, rating, review_count, created_at, updated_at
         `)
         .eq('id', userId)
         .maybeSingle()
@@ -72,7 +72,7 @@ export function useSupabaseAuth() {
         return null
       }
 
-      // Mapear campos de la tabla User
+      // Mapear campos de la tabla users (snake_case -> camelCase)
       const userProfile: AuthUser = {
         id: data.id,
         name: data.name || 'Usuario',
@@ -80,17 +80,17 @@ export function useSupabaseAuth() {
         phone: data.phone,
         bio: data.bio,
         profileImage: data.avatar,
-        userType: data.userType,
-        companyName: data.companyName,
-        licenseNumber: data.licenseNumber,
+        userType: data.user_type,
+        companyName: data.company_name,
+        licenseNumber: data.license_number,
         avatar: data.avatar,
         occupation: data.occupation,
         age: data.age,
         verified: data.verified,
         rating: data.rating,
-        reviewCount: data.reviewCount,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt
+        reviewCount: data.review_count,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
       }
 
       return userProfile

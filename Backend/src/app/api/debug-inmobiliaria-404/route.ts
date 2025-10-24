@@ -85,7 +85,7 @@ export async function GET() {
     // 3. Buscar usuarios con company_name (probable indicador de inmobiliaria)
     const { data: companiesData, error: companiesError } = await supabase
       .from('users')
-      .select('id, email, company_name, role, user_type, userType, type, is_company, created_at')
+      .select('id, email, company_name, role, user_type, user_type, type, is_company, created_at')
       .not('company_name', 'is', null)
       .limit(10);
 

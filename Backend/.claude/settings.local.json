@@ -10,7 +10,8 @@
       "Bash(npm run build:*)",
       "Bash(git push:*)",
       "Bash(Select-String \"EmptyState\")",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(node fix-column-names.js:*)"
     ],
     "deny": [],
     "ask": []

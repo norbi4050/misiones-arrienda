@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       if (otherProfile?.userId) {
         const { data: userData, error: userError } = await supabase
           .from('User')
-          .select('id, name, email, avatar, companyName, userType')
+          .select('id, name, email, avatar, company_name, userType')
           .eq('id', otherProfile.userId)
           .single()
         otherUserData = userData
@@ -85,8 +85,8 @@ export async function GET(request: NextRequest) {
           id: otherUserData?.id,
           name: otherUserData?.name,
           email: otherUserData?.email,
-          companyName: otherUserData?.companyName,
-          userType: otherUserData?.userType,
+          companyName: otherUserData?.company_name,
+          userType: otherUserData?.user_type,
           avatar: otherUserData?.avatar
         },
         userDataError: userDataError ? {
@@ -96,9 +96,9 @@ export async function GET(request: NextRequest) {
         } : null,
         analysis: {
           hasName: !!otherUserData?.name,
-          hasCompanyName: !!otherUserData?.companyName,
-          userType: otherUserData?.userType,
-          whatWouldBeDisplayed: otherUserData?.name || otherUserData?.companyName || otherUserData?.email?.split('@')[0] || 'Usuario'
+          hasCompanyName: !!otherUserData?.company_name,
+          userType: otherUserData?.user_type,
+          whatWouldBeDisplayed: otherUserData?.name || otherUserData?.company_name || otherUserData?.email?.split('@')[0] || 'Usuario'
         }
       })
     }
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       conversations: conversationsDebug,
       diagnosis: {
         message: 'Revisa el campo "whatWouldBeDisplayed" para ver qué se mostraría según la lógica actual',
-        priority: 'name > companyName > emailLocal > fallback'
+        priority: 'name > company_name > emailLocal > fallback'
       }
     })
 
