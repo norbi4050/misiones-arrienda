@@ -22,17 +22,16 @@ export function Navbar() {
 
   // [DEBUG] Log temporal para investigar
   React.useEffect(() => {
-    if (user) {
-      console.log('[Navbar DEBUG] User data:', {
-        id: user.id,
-        email: user.email,
-        userType: user.userType,
-        isCompany: user.isCompany,
-        isAgency: isAgency,
-        should_hide_comunidad: isAgency
-      })
-    }
-  }, [user, isAgency])
+    console.log('[Navbar DEBUG] Auth state:', {
+      loading,
+      isAuthenticated,
+      hasUser: !!user,
+      userId: user?.id,
+      email: user?.email,
+      userType: user?.userType,
+      isAgency,
+    })
+  }, [loading, isAuthenticated, user, isAgency])
 
   // Navegación dinámica según userType
   const navigation = React.useMemo(() => {
@@ -90,59 +89,63 @@ export function Navbar() {
 
           {/* Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Authentication Section - FIX: Removido !loading para siempre mostrar */}
-            <>
-              {isAuthenticated && user ? (
-                  <>
-                    {/* Quick Actions for authenticated users */}
-                    <Link href="/favorites">
-                      <Button variant="ghost" size="sm" title="Mis Favoritos">
-                        <Heart className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Link href={isAgency ? "/messages" : "/comunidad/mensajes"}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        title="Mensajes"
-                        className="relative"
-                        aria-label={unreadCount > 0 ? `Tienes ${unreadCount} mensajes sin leer` : 'Mensajes'}
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        {unreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                            {unreadCount > 9 ? '9+' : unreadCount}
-                          </span>
-                        )}
-                      </Button>
-                    </Link>
+            {loading ? (
+              /* Loading skeleton */
+              <div className="flex items-center space-x-2">
+                <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
+                <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
+                <div className="h-8 w-24 bg-gray-200 rounded-md animate-pulse" />
+              </div>
+            ) : isAuthenticated && user ? (
+              <>
+                {/* Quick Actions for authenticated users */}
+                <Link href="/favorites">
+                  <Button variant="ghost" size="sm" title="Mis Favoritos">
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href={isAgency ? "/messages" : "/comunidad/mensajes"}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    title="Mensajes"
+                    className="relative"
+                    aria-label={unreadCount > 0 ? `Tienes ${unreadCount} mensajes sin leer` : 'Mensajes'}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
 
-                    {/* Notification Dropdown */}
-                    <NotificationDropdown />
+                {/* Notification Dropdown */}
+                <NotificationDropdown />
 
-                    {/* Profile Dropdown */}
-                    <ProfileDropdown user={user} onSignOut={signOut} />
-                  </>
-                ) : (
-                  <>
-                    {/* Login/Register buttons for non-authenticated users */}
-                    <Link href="/login" prefetch={false}>
-                      <Button variant="ghost" size="sm">
-                        Iniciar Sesión
-                      </Button>
-                    </Link>
-                    <Link href="/register" prefetch={false}>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md"
-                      >
-                        Crear Cuenta
-                      </Button>
-                    </Link>
-                  </>
-                )}
-            </>
+                {/* Profile Dropdown */}
+                <ProfileDropdown user={user} onSignOut={signOut} />
+              </>
+            ) : (
+              <>
+                {/* Login/Register buttons for non-authenticated users */}
+                <Link href="/login" prefetch={false}>
+                  <Button variant="ghost" size="sm">
+                    Iniciar Sesión
+                  </Button>
+                </Link>
+                <Link href="/register" prefetch={false}>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md"
+                  >
+                    Crear Cuenta
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -183,9 +186,16 @@ export function Navbar() {
               </Link>
             ))}
 
-            {/* Mobile Authentication Section - FIX: Removido !loading para siempre mostrar */}
+            {/* Mobile Authentication Section */}
             <div className="px-3 py-2 border-t border-gray-200">
-                {isAuthenticated && user ? (
+                {loading ? (
+                  /* Loading skeleton for mobile */
+                  <div className="space-y-2">
+                    <div className="h-12 bg-gray-200 rounded-md animate-pulse" />
+                    <div className="h-8 bg-gray-200 rounded-md animate-pulse" />
+                    <div className="h-8 bg-gray-200 rounded-md animate-pulse" />
+                  </div>
+                ) : isAuthenticated && user ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 py-2">
                       <AvatarUniversal
