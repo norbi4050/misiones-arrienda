@@ -100,8 +100,8 @@ function LayoutContent({
         <Footer />
       </div>
 
-      {/* WhatsApp Button Global - Siempre visible */}
-      <WhatsAppButton type="fixed" />
+      {/* WhatsApp Button Global - SUSPENDIDO temporalmente */}
+      {/* <WhatsAppButton type="fixed" /> */}
 
       {/* PERF: Lazy load AIChatbot (~25 KB) - condicional por ruta */}
       {/* TEMPORAL: Deshabilitado mientras desarrollamos AIPropertyAssistant */}
