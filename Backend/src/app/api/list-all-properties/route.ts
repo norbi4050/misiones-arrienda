@@ -14,8 +14,8 @@ export async function GET() {
     // Obtener TODAS las propiedades (sin filtros)
     const { data: properties, error } = await supabase
       .from('properties')
-      .select('id, title, images, status, is_active, userId, createdAt, city, price')
-      .order('createdAt', { ascending: false });
+      .select('id, title, images, status, is_active, user_id, created_at, city, price')
+      .order('created_at', { ascending: false });
 
     if (error) {
       return NextResponse.json({
@@ -55,8 +55,8 @@ export async function GET() {
         price: prop.price,
         status: prop.status,
         is_active: prop.is_active,
-        userId: prop.userId,
-        createdAt: prop.createdAt,
+        userId: prop.user_id,
+        createdAt: prop.created_at,
         imageCount: imgs.length,
         firstImage,
         imageType,
