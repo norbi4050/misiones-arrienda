@@ -75,7 +75,7 @@ export default function AgencyStats({ stats, loading = false, className = '' }: 
         return (
           <div
             key={index}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-0 hover:-translate-y-0.5"
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:-translate-y-0.5"
           >
             <div className="flex items-center gap-4">
               <div className={`p-3.5 rounded-xl ${stat.bgColor} shadow-sm`}>

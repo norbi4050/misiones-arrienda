@@ -53,14 +53,14 @@ export default function BusinessHours({ hours, timezone, className = '' }: Busin
   ];
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-0 ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 ${className}`}>
       {/* Header con estado actual */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-blue-50">
             <Clock className="w-5 h-5 text-blue-600" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             Horarios de Atención
           </h3>
         </div>
@@ -92,17 +92,17 @@ export default function BusinessHours({ hours, timezone, className = '' }: Busin
           return (
             <div
               key={day}
-              className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0"
             >
-              <span className="text-sm font-semibold text-gray-700">
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {dayName}
               </span>
               {dayHours.closed ? (
-                <span className="text-sm text-gray-500 font-medium">
+                <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
                   Cerrado
                 </span>
               ) : (
-                <span className="text-sm text-gray-900 font-semibold">
+                <span className="text-sm text-gray-900 dark:text-white font-semibold">
                   {dayHours.open} - {dayHours.close}
                 </span>
               )}
@@ -112,8 +112,8 @@ export default function BusinessHours({ hours, timezone, className = '' }: Busin
       </div>
 
       {/* Zona horaria */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <p className="text-xs text-gray-500 font-medium">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
           Zona horaria: {timezone}
         </p>
       </div>
