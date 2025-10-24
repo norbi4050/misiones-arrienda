@@ -137,6 +137,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true
 
     const initializeAuth = async () => {
+      // Safety timeout: force loading to false after 12 seconds
+      const safetyTimeout = setTimeout(() => {
+        if (mounted) {
+          console.warn('[AuthProvider] Safety timeout reached, forcing loading to false')
+          setLoading(false)
+        }
+      }, 12000)
+
       try {
         console.log('[AuthProvider] Initializing auth (singleton)')
 
@@ -147,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (mounted) {
             setLoading(false)
           }
+          clearTimeout(safetyTimeout)
           return
         }
 
@@ -154,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('[AuthProvider] Session found, fetching profile')
           const profile = await fetchUserProfile(session.user.id)
           if (mounted) {
+            console.log('[AuthProvider] Setting user:', profile ? 'success' : 'null')
             setUser(profile)
           }
         } else if (mounted) {
@@ -163,7 +173,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('[AuthProvider] Error initializing auth:', error)
       } finally {
+        clearTimeout(safetyTimeout)
         if (mounted) {
+          console.log('[AuthProvider] Setting loading to false')
           setLoading(false)
         }
       }
