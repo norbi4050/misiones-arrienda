@@ -10,7 +10,7 @@
 
 import useSWR from 'swr'
 import { useCallback } from 'react'
-import { useCurrentUser } from '@/lib/auth/useCurrentUser'
+import { useCurrentUser } from '@/lib/auth/AuthProvider'
 
 // Tipos
 export interface Notification {

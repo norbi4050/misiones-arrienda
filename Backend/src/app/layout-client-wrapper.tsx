@@ -7,7 +7,7 @@ import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import WhatsAppButton from '@/components/whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
-import { AuthProvider } from '@/components/auth-provider'
+import { AuthProvider } from '@/lib/auth/AuthProvider'
 import ToasterProvider from '@/components/toaster-provider'
 import dynamic from 'next/dynamic'
 

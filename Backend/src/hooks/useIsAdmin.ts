@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useCurrentUser } from '@/lib/auth/useCurrentUser'
+import { useCurrentUser } from '@/lib/auth/AuthProvider'
 
 /**
  * Hook para verificar si el usuario actual es administrador

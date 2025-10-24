@@ -10,7 +10,7 @@ import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox"
 import { MapPin, Check, Loader2, Lock, AlertCircle, Sparkles } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
-import { useCurrentUser } from "@/lib/auth/useCurrentUser"
+import { useCurrentUser } from "@/lib/auth/AuthProvider"
 import { useRouter } from "next/navigation"
 import { propertyFormSchema } from "@/lib/validations/property"
 import { logConsentClient } from "@/lib/consent/logConsent.client"
