@@ -68,6 +68,22 @@ const MapPickerClient = dynamic(
   }
 )
 
+const HeroCustomization = dynamic(
+  () => import('@/components/inmobiliarias/admin/HeroCustomization'),
+  {
+    loading: () => (
+      <div className="animate-pulse bg-gray-100 rounded-lg p-6 h-48">
+        <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-3 bg-gray-200 rounded"></div>
+          <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+        </div>
+      </div>
+    ),
+    ssr: false
+  }
+)
+
 import AvatarUniversal from "@/components/ui/avatar-universal"
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete"
 import { Building2, MapPin, Phone, Globe, FileText, CheckCircle, AlertCircle, Facebook, Instagram, Music2, Save, X, ExternalLink, Eye, User, Shield, Crown } from "lucide-react"
@@ -802,6 +818,28 @@ export default function MiEmpresaClient({
             <TeamEditor
               initialTeam={initialTeam}
               onSave={handleSaveTeam}
+            />
+          </div>
+        )}
+
+        {/* Personalización Visual del Hero - Nueva sección */}
+        {!isEditing && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <HeroCustomization
+              userId={profile.id}
+              initialData={{
+                header_image_url: (profile as any).header_image_url || null,
+                tagline: (profile as any).tagline || null,
+                primary_color: (profile as any).primary_color || null,
+                secondary_color: (profile as any).secondary_color || null,
+                founded_year: (profile as any).founded_year || null,
+                values: (profile as any).values || null,
+              }}
+              onSave={() => {
+                toast.success('Personalización guardada correctamente')
+                // Opcional: recargar la página para refrescar los datos
+                window.location.reload()
+              }}
             />
           </div>
         )}

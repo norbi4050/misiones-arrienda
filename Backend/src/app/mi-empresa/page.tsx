@@ -17,10 +17,18 @@ async function getInmobiliariaProfile(userId: string) {
   const supabase = createClient()
 
   try {
-    // Fetch perfil de inmobiliaria desde tabla users
+    // Fetch perfil de inmobiliaria desde tabla users (incluyendo campos de personalización visual)
     const { data: profile, error: profileError } = await supabase
       .from('users')
-      .select('*')
+      .select(`
+        *,
+        header_image_url,
+        tagline,
+        primary_color,
+        secondary_color,
+        founded_year,
+        values
+      `)
       .eq('id', userId)
       .single()
 
@@ -76,7 +84,14 @@ async function getInmobiliariaProfile(userId: string) {
       show_team_public: profile.show_team_public ?? true,
       show_hours_public: profile.show_hours_public ?? true,
       show_map_public: profile.show_map_public ?? true,
-      show_stats_public: profile.show_stats_public ?? true
+      show_stats_public: profile.show_stats_public ?? true,
+      // Campos de personalización visual
+      header_image_url: (profile as any).header_image_url || null,
+      tagline: (profile as any).tagline || null,
+      primary_color: (profile as any).primary_color || null,
+      secondary_color: (profile as any).secondary_color || null,
+      founded_year: (profile as any).founded_year || null,
+      values: (profile as any).values || null,
     }
 
     return {
