@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
 
       // Test simple primero: ¿Puede leer ALGUNA propiedad?
       const { data: testData, error: testError, count: testCount } = await supabase
-        .from('Property')
+        .from('properties')
         .select('*', { count: 'exact' });
 
       console.log('[API /properties] TEST - Raw count without filters:', {
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
       // DEBUG: Probar query simple primero
       console.log('[API /properties] Testing simple query...');
       const simpleTest = await supabase
-        .from('Property')
+        .from('properties')
         .select('*', { count: 'exact' })
         .eq('status', 'published');
 
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
       });
 
       const withActiveTest = await supabase
-        .from('Property')
+        .from('properties')
         .select('*', { count: 'exact' })
         .eq('status', 'published')
         .eq('is_active', true);
@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
       // DEBUG: Intentar sin filtros primero
       console.log('[API /properties] ATTEMPTING QUERY WITHOUT ANY FILTERS...');
       let query = supabase
-        .from('Property')
+        .from('properties')
         .select('*', { count: 'exact' });
 
       // NO aplicar filtros por ahora para ver si devuelve las 4 propiedades

@@ -13,7 +13,7 @@ export async function GET() {
 
     // Obtener TODAS las propiedades (sin filtros)
     const { data: properties, error } = await supabase
-      .from('Property')
+      .from('properties')
       .select('id, title, images, status, is_active, userId, createdAt, city, price')
       .order('createdAt', { ascending: false });
 

@@ -9,7 +9,7 @@ export async function GET() {
 
     // Obtener todas las propiedades publicadas
     const { data: properties, error } = await supabase
-      .from('Property')
+      .from('properties')
       .select('id, title, cover_path, images, status, is_active')
       .eq('status', 'published')
       .eq('is_active', true)
