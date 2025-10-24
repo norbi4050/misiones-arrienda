@@ -40,7 +40,7 @@ export async function ensureProfile(): Promise<void> {
   const { data: existing } = await supabase
     .from('user_profiles')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('userId', user.id)  // Columna es userId, no user_id
     .maybeSingle()
 
   if (existing) {
