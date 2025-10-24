@@ -46,7 +46,7 @@ export default function HeroSection({ profile, stats, totalProperties }: HeroSec
   };
 
   return (
-    <section className="relative h-[500px] md:h-[520px] overflow-hidden">
+    <section className="relative h-[540px] md:h-[560px] overflow-hidden">
       {/* Background con imagen o gradiente */}
       <HeroBackground imageUrl={header_image_url} primaryColor={primary_color} />
 
@@ -54,7 +54,7 @@ export default function HeroSection({ profile, stats, totalProperties }: HeroSec
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/80 z-10" />
 
       {/* Contenido del Hero */}
-      <div className="relative z-20 h-full flex items-center justify-center px-4">
+      <div className="relative z-20 h-full flex items-center justify-center px-4 py-8">
         <div className="max-w-4xl w-full text-center">
           {/* Logo */}
           <div className="flex justify-center mb-6">
@@ -90,7 +90,7 @@ export default function HeroSection({ profile, stats, totalProperties }: HeroSec
 
           {/* Tagline */}
           {tagline && (
-            <p className="text-lg md:text-xl lg:text-2xl text-white/90 font-light mb-8 max-w-2xl mx-auto drop-shadow-md">
+            <p className="text-lg md:text-xl lg:text-2xl text-white font-light mb-8 max-w-2xl mx-auto drop-shadow-lg px-4 leading-relaxed">
               {tagline}
             </p>
           )}
