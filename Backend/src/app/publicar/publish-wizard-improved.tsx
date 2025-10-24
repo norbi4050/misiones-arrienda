@@ -615,7 +615,7 @@ export default function PublishWizardImproved() {
                       setValue('latitude', coords.lat);
                       setValue('longitude', coords.lng);
                     }}
-                    className="h-72 rounded-lg border"
+                    className="h-72 rounded-lg border mb-4"
                   />
                   {watchedValues.latitude && watchedValues.longitude && (
                     <p className="text-xs text-green-600 mt-2 flex items-center">
@@ -626,7 +626,7 @@ export default function PublishWizardImproved() {
                 </div>
               </div>
 
-              <div className="flex justify-end mt-6">
+              <div className="flex justify-end mt-8">
                 <Button 
                   onClick={handleContinueFromStep1}
                   disabled={creatingDraft || !canContinueStep1}
