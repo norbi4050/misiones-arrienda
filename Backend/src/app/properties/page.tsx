@@ -43,15 +43,27 @@ export const metadata: Metadata = {
 
 async function getPublicProperties() {
   try {
-    // Traer TODAS las propiedades disponibles (NO filtrar por featured)
-    console.log('[getPublicProperties] START - Fetching properties...')
-    const properties = await fetchRealProperties({ limit: 50 }) // SIN featured: true
-    console.log('[getPublicProperties] RESULT - Got properties:', properties.length)
-    console.log('[getPublicProperties] RESULT - Properties data:', JSON.stringify(properties.slice(0, 1), null, 2))
-    return properties
+    console.log('[getPublicProperties] START - Fetching properties directly from Supabase...')
+
+    // Llamar directamente a Supabase en lugar de hacer HTTP fetch
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('Property')
+      .select('*')
+      .eq('status', 'published')
+      .eq('is_active', true)
+      .order('createdAt', { ascending: false })
+      .limit(50)
+
+    if (error) {
+      console.error('[getPublicProperties] Supabase error:', error)
+      return []
+    }
+
+    console.log('[getPublicProperties] RESULT - Got properties:', data?.length || 0)
+    return data || []
   } catch (error) {
     console.error('[getPublicProperties] CATCH - Error:', error)
-    console.error('[getPublicProperties] CATCH - Error stack:', error instanceof Error ? error.stack : 'No stack')
     return []
   }
 }
