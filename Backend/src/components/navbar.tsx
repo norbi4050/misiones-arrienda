@@ -86,7 +86,7 @@ export function Navbar() {
             ) : isAuthenticated && user ? (
               <>
                 {/* Quick Actions for authenticated users */}
-                <Link href="/favorites">
+                <Link href="/favorites" prefetch={false}>
                   <Button variant="ghost" size="sm" title="Mis Favoritos">
                     <Heart className="h-4 w-4" />
                   </Button>
@@ -210,6 +210,7 @@ export function Navbar() {
                     </Link>
                     <Link
                       href="/favorites"
+                      prefetch={false}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
