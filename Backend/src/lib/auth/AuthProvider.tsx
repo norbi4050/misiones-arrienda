@@ -12,6 +12,7 @@ import { createSupabaseBrowser } from 'lib/supabase/browser'
 import { useRouter } from 'next/navigation'
 import { mapUserProfile, type CurrentUser, isAgency } from './mapUserProfile'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import { ProfilePersistence } from '@/lib/profile-persistence'
 
 export interface AuthContextValue {
   user: CurrentUser | null
@@ -34,11 +35,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createSupabaseBrowser()
 
   /**
-   * Obtiene el perfil del usuario desde la API
+   * Obtiene el perfil del usuario desde la API con caching
    */
-  const fetchUserProfile = useCallback(async (userId: string): Promise<CurrentUser | null> => {
+  const fetchUserProfile = useCallback(async (userId: string, useCache: boolean = true): Promise<CurrentUser | null> => {
     try {
       console.log('[AuthProvider] Fetching profile for user:', userId)
+
+      // Try cache first if enabled
+      if (useCache) {
+        const cachedProfile = ProfilePersistence.getCachedProfile()
+        if (cachedProfile && ProfilePersistence.isCacheValid()) {
+          console.log('[AuthProvider] Using cached profile:', cachedProfile.id)
+          return cachedProfile as CurrentUser
+        }
+      }
 
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
@@ -56,6 +66,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         console.error('[AuthProvider] Profile fetch failed:', response.status, errorData)
+
+        // Fallback to cache on error
+        if (useCache) {
+          const cachedProfile = ProfilePersistence.getCachedProfile()
+          if (cachedProfile) {
+            console.log('[AuthProvider] Using cached profile as fallback:', cachedProfile.id)
+            return cachedProfile as CurrentUser
+          }
+        }
+
         return null
       }
 
@@ -74,6 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAgency: isAgency(profile),
       })
 
+      // Save to cache
+      ProfilePersistence.saveProfile(profile)
+
       return profile as CurrentUser
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
@@ -81,6 +104,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         console.error('[AuthProvider] Error fetching profile:', error)
       }
+
+      // Fallback to cache on error
+      if (useCache) {
+        const cachedProfile = ProfilePersistence.getCachedProfile()
+        if (cachedProfile) {
+          console.log('[AuthProvider] Using cached profile as fallback:', cachedProfile.id)
+          return cachedProfile as CurrentUser
+        }
+      }
+
       return null
     }
   }, [])
@@ -96,10 +129,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession()
 
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id)
+        // Force fresh fetch (bypass cache)
+        const profile = await fetchUserProfile(session.user.id, false)
         setUser(profile)
       } else {
         setUser(null)
+        ProfilePersistence.clearProfile()
       }
     } catch (error) {
       console.error('[AuthProvider] Error refreshing profile:', error)
@@ -115,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('[AuthProvider] Signing out')
       await supabase.auth.signOut()
+      ProfilePersistence.clearProfile()
       setUser(null)
       router.push('/')
       router.refresh()
@@ -204,18 +240,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === 'SIGNED_IN' && session?.user) {
           setLoading(true)
-          const profile = await fetchUserProfile(session.user.id)
+          // Force fresh fetch on sign in
+          const profile = await fetchUserProfile(session.user.id, false)
           if (mounted) {
             setUser(profile)
             setLoading(false)
           }
         } else if (event === 'SIGNED_OUT') {
+          ProfilePersistence.clearProfile()
           if (mounted) {
             setUser(null)
             setLoading(false)
           }
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          const profile = await fetchUserProfile(session.user.id)
+          // Use cache on token refresh (most common case)
+          const profile = await fetchUserProfile(session.user.id, true)
           if (mounted) {
             setUser(profile)
           }
@@ -229,7 +268,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[AuthProvider] Profile update event received, refreshing...')
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id)
+        // Force fresh fetch when profile is explicitly updated
+        const profile = await fetchUserProfile(session.user.id, false)
         if (mounted) {
           setUser(profile)
         }

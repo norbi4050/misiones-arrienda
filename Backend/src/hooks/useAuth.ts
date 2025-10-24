@@ -1,17 +1,23 @@
 'use client';
 
-import { getBrowserSupabase } from '@/lib/supabase/browser';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { ProfilePersistence } from '@/lib/profile-persistence';
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
+/**
+ * @deprecated This hook is deprecated. Use `useCurrentUser` from '@/lib/auth/AuthProvider' instead.
+ * This wrapper is kept for backwards compatibility but will be removed in a future version.
+ *
+ * Migration guide:
+ * - Replace `useAuth()` with `useCurrentUser()`
+ * - The new hook provides the same functionality with unified auth state
+ */
+
+import { useCurrentUser } from '@/lib/auth/AuthProvider'
+import { useMemo } from 'react'
 
 export interface User {
   id: string;
   email: string;
   name?: string;
   phone?: string;
-  
+
   // User type and company fields (from users table)
   userType?: string;
   isCompany?: boolean;
@@ -20,7 +26,7 @@ export interface User {
   propertyCount?: number;
   isVerified?: boolean;
   emailVerified?: boolean;
-  
+
   // Profile fields (from user_profiles table)
   bio?: string;
   role?: string;
@@ -35,224 +41,89 @@ export interface User {
   updated_at: string;
 }
 
+/**
+ * Legacy auth hook - wraps the new useCurrentUser for backwards compatibility
+ */
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const { user: currentUser, loading, isAuthenticated, refresh, signOut: signOutFromProvider } = useCurrentUser()
 
-  // Get singleton Supabase client (prevents "Multiple GoTrueClient instances" warning)
-  const supabase = getBrowserSupabase();
+  // Map CurrentUser to User format for backwards compatibility
+  const user: User | null = useMemo(() => {
+    if (!currentUser) return null
 
-  const fetchUserProfile = async (userId: string, useCache: boolean = true): Promise<User | null> => {
-    try {
-      setError(null);
-      
-      // Try to get profile using persistence utility with fallback strategy
-      if (useCache) {
-        const profile = await ProfilePersistence.getProfile(userId);
-        if (profile) {
-          console.log('Profile loaded from persistence utility:', profile.id);
-          return profile;
-        }
-      }
-
-      // Fallback to direct API call
-      const response = await fetch('/api/users/profile', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error obteniendo perfil');
-      }
-
-      const { profile } = await response.json();
-      
-      // Save to cache for future use
-      if (profile) {
-        ProfilePersistence.saveProfile(profile);
-      }
-      
-      return profile;
-    } catch (error) {
-      console.error('Error en fetchUserProfile:', error);
-      setError(error instanceof Error ? error.message : 'Error obteniendo perfil');
-      
-      // Try to get cached profile as last resort
-      if (useCache) {
-        const cachedProfile = ProfilePersistence.getCachedProfile();
-        if (cachedProfile) {
-          console.log('Using cached profile as fallback:', cachedProfile.id);
-          return cachedProfile;
-        }
-      }
-      
-      return null;
+    return {
+      id: currentUser.id,
+      email: currentUser.email,
+      name: currentUser.name,
+      phone: currentUser.phone,
+      userType: currentUser.userType,
+      isCompany: currentUser.userType === 'inmobiliaria',
+      companyName: currentUser.companyName,
+      licenseNumber: currentUser.licenseNumber,
+      propertyCount: 0, // Not available in CurrentUser
+      isVerified: currentUser.isVerified,
+      emailVerified: currentUser.email_verified,
+      bio: currentUser.bio,
+      role: currentUser.role,
+      city: currentUser.city,
+      neighborhood: currentUser.neighborhood,
+      budgetMin: currentUser.budget_min,
+      budgetMax: currentUser.budget_max,
+      avatar_url: currentUser.avatar_url,
+      created_at: currentUser.created_at,
+      updated_at: currentUser.updated_at,
     }
-  };
-
-  const refreshProfile = async (userId: string): Promise<User | null> => {
-    try {
-      setLoading(true);
-      const profile = await fetchUserProfile(userId, false); // Force fresh fetch
-      if (profile) {
-        setUser(profile);
-        return profile;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error refreshing profile:', error);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    // Obtener sesión inicial
-    const getInitialSession = async () => {
-      try {
-        // Try to load cached profile first for immediate UI update
-        const cachedProfile = ProfilePersistence.getCachedProfile();
-        if (cachedProfile && ProfilePersistence.isCacheValid() && mounted) {
-          setUser(cachedProfile);
-          setLoading(false);
-          console.log('Loaded cached profile on initialization:', cachedProfile.id);
-        }
-
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error obteniendo sesión:', error);
-          setError(error.message);
-          ProfilePersistence.handleSessionExpired();
-          if (mounted) setLoading(false);
-          return;
-        }
-
-        setSession(session);
-        
-        if (session?.user && mounted) {
-          // Fetch fresh profile data if we don't have cached data
-          const shouldUseCache = cachedProfile ? false : true;
-          const profile = await fetchUserProfile(session.user.id, shouldUseCache);
-          if (profile && mounted) {
-            setUser(profile);
-          }
-        } else if (!session && mounted) {
-          // No session, clear cached data
-          ProfilePersistence.clearProfile();
-          setUser(null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error en getInitialSession:', error);
-        if (mounted) {
-          setError(error instanceof Error ? error.message : 'Error de autenticación');
-          setLoading(false);
-        }
-      } finally {
-        if (mounted) {
-          const cachedProfile = ProfilePersistence.getCachedProfile();
-          if (!cachedProfile) {
-            setLoading(false);
-          }
-        }
-      }
-    };
-
-    getInitialSession();
-
-    // Escuchar cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        if (!mounted) return;
-
-        console.log('Auth state changed:', event, session?.user?.id);
-        setSession(session);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          setLoading(true);
-          const profile = await fetchUserProfile(session.user.id, false); // Fresh fetch on sign in
-          if (profile && mounted) {
-            setUser(profile);
-          }
-          setLoading(false);
-        } else if (event === 'SIGNED_OUT') {
-          ProfilePersistence.clearProfile();
-          setUser(null);
-          setError(null);
-          setLoading(false);
-        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          // Sync profile on token refresh to ensure data is current
-          const profile = await ProfilePersistence.syncProfile(session.user.id);
-          if (profile && mounted) {
-            setUser(profile);
-          }
-        }
-      }
-    );
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [supabase.auth]);
+  }, [currentUser])
 
   const updateProfile = async (profileData: Partial<User>) => {
-    if (!session?.user) {
+    if (!user) {
       throw new Error('Usuario no autenticado');
     }
 
     try {
-      setError(null);
-      
-      // Use ProfilePersistence utility for updating
-      const updatedProfile = await ProfilePersistence.updateProfile(profileData);
-      if (updatedProfile) {
-        setUser(updatedProfile);
-        return updatedProfile;
+      // Call API to update profile
+      const response = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error updating profile');
       }
-      
-      throw new Error('Error actualizando perfil');
+
+      const { profile } = await response.json();
+
+      // Refresh auth state
+      await refresh()
+
+      return profile;
     } catch (error) {
-      console.error('Error actualizando perfil:', error);
-      setError(error instanceof Error ? error.message : 'Error actualizando perfil');
+      console.error('Error updating profile:', error);
       throw error;
     }
   };
 
   const signOut = async () => {
-    try {
-      setError(null);
-      await supabase.auth.signOut();
-      
-      // Clear cached profile data
-      ProfilePersistence.clearProfile();
-      setUser(null);
-      setSession(null);
-      router.push('/login');
-    } catch (error) {
-      console.error('Error cerrando sesión:', error);
-      setError(error instanceof Error ? error.message : 'Error cerrando sesión');
-    }
+    await signOutFromProvider()
   };
+
+  const refreshProfile = user ? async () => {
+    await refresh()
+    return user
+  } : null;
 
   return {
     user,
-    session,
+    session: null, // Session is managed internally by AuthProvider
     loading,
-    error,
+    error: null,
     updateProfile,
     signOut,
-    refreshProfile: user ? () => refreshProfile(user.id) : null,
-    isAuthenticated: !!session?.user
+    refreshProfile,
+    isAuthenticated
   };
 }
