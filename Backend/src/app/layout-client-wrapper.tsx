@@ -1,13 +1,12 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useCurrentUser, AuthProvider } from '@/lib/auth/AuthProvider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import WhatsAppButton from '@/components/whatsapp-button'
 import BuildBadge from '@/components/BuildBadge'
-import { AuthProvider } from '@/lib/auth/AuthProvider'
 import ToasterProvider from '@/components/toaster-provider'
 import dynamic from 'next/dynamic'
 
@@ -45,21 +44,29 @@ const CookieBanner = dynamic(
 )
 
 export function LayoutClientWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <LayoutClientWrapperInner>{children}</LayoutClientWrapperInner>
+    </AuthProvider>
+  )
+}
+
+function LayoutClientWrapperInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { user } = useSupabaseAuth()
-  
+  const { user } = useCurrentUser()
+
   // PERF: Detectar si necesita MessagesProvider (solo en rutas de mensajes)
-  const needsMessages = pathname?.startsWith('/messages') || 
+  const needsMessages = pathname?.startsWith('/messages') ||
                         pathname?.startsWith('/comunidad/mensajes')
-  
+
   // PERF: Detectar si debe mostrar AIChatbot (excluir rutas específicas)
   const shouldShowChatbot = !!(pathname &&
     !pathname.startsWith('/publicar') &&
     !pathname.startsWith('/login') &&
     !pathname.startsWith('/register'))
-  
+
   return (
-    <AuthProvider>
+    <>
       {/* PERF: Condicional por pathname - MessagesProvider (~18 KB) */}
       {needsMessages ? (
         <MessagesProvider>
@@ -72,7 +79,7 @@ export function LayoutClientWrapper({ children }: { children: React.ReactNode })
           {children}
         </LayoutContent>
       )}
-    </AuthProvider>
+    </>
   )
 }
 
