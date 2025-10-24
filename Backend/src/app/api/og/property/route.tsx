@@ -7,6 +7,9 @@ import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
 
+// Force dynamic rendering for OG images
+export const dynamic = 'force-dynamic';
+
 // NOTA: Cambiado de 'edge' a 'nodejs' porque Supabase no es compatible con Edge Runtime
 // export const runtime = 'edge';
 export const runtime = 'nodejs';
