@@ -18,6 +18,7 @@ import { analytics } from "@/lib/analytics/track"
 import MapPicker from "@/components/property/MapPicker"
 import { UpsellModal } from "@/components/plan/UpsellModal"
 import type { PlanLimitError } from "@/types/plan-limits"
+import { AIPropertyAssistant } from "@/components/properties/AIPropertyAssistant"
 
 export default function PublishWizardImproved() {
   console.debug('[Wizard NUEVO] montado')
@@ -515,10 +516,48 @@ export default function PublishWizardImproved() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Descripción
                   </label>
+
+                  {/* AI Property Assistant - Solo si feature está habilitado */}
+                  {process.env.NEXT_PUBLIC_FEATURE_AI_DESCRIPTION === 'true' && (
+                    <div className="mb-4">
+                      <AIPropertyAssistant
+                        propertyData={{
+                          propertyType: watchedValues.propertyType || 'HOUSE',
+                          bedrooms: watchedValues.bedrooms,
+                          bathrooms: watchedValues.bathrooms,
+                          garages: watchedValues.garages,
+                          area: watchedValues.area,
+                          price: watchedValues.price || 0,
+                          currency: watchedValues.currency || 'ARS',
+                          city: watchedValues.city || 'Misiones',
+                          operationType: watchedValues.operationType || 'RENT',
+                        }}
+                        onSuccess={(data) => {
+                          // Llenar formulario con datos generados por IA
+                          setValue('title', data.title);
+                          setValue('description', data.description);
+
+                          // Amenities y features son arrays de strings
+                          if (data.amenities && Array.isArray(data.amenities)) {
+                            setValue('amenities', data.amenities);
+                          }
+
+                          if (data.features && Array.isArray(data.features)) {
+                            setValue('features', data.features);
+                          }
+
+                          // Mostrar notificación de éxito
+                          toast.success('¡Descripción generada con IA! Podés editarla antes de publicar.');
+                        }}
+                        disabled={!watchedValues.propertyType || !watchedValues.price}
+                      />
+                    </div>
+                  )}
+
                   <textarea
                     className="w-full p-3 border border-gray-300 rounded-md resize-none bg-white"
                     rows={4}
-                    placeholder="Describe tu propiedad..."
+                    placeholder="Describe tu propiedad... (o usá el generador automático arriba)"
                     {...register("description")}
                   />
                 </div>

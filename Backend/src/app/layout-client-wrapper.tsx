@@ -104,7 +104,8 @@ function LayoutContent({
       <WhatsAppButton type="fixed" />
 
       {/* PERF: Lazy load AIChatbot (~25 KB) - condicional por ruta */}
-      {shouldShowChatbot && <AIChatbot />}
+      {/* TEMPORAL: Deshabilitado mientras desarrollamos AIPropertyAssistant */}
+      {/* {shouldShowChatbot && <AIChatbot />} */}
 
       {/* Build Badge para debugging */}
       <BuildBadge />
