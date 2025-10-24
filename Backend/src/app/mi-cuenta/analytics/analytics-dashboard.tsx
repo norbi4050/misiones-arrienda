@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { BarChart3, TrendingUp, Eye, MessageSquare, Heart, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, Minus, Eye, MessageSquare, Heart, Calendar } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface AnalyticsData {
   summary: {
@@ -9,6 +10,15 @@ interface AnalyticsData {
     totalContacts: number;
     totalFavorites: number;
     conversionRate: number;
+    // Comparativas
+    viewsChange: number;
+    contactsChange: number;
+    favoritesChange: number;
+    previousPeriod?: {
+      views: number;
+      contacts: number;
+      favorites: number;
+    };
   };
   viewsByDay: Array<{
     date: string;
@@ -31,6 +41,29 @@ interface AnalyticsData {
 
 interface AnalyticsDashboardProps {
   userId: string;
+}
+
+// Componente para mostrar cambio porcentual con icono
+function ChangeIndicator({ change }: { change: number }) {
+  if (change === 0) {
+    return (
+      <div className="flex items-center gap-1 text-gray-500 text-sm font-medium">
+        <Minus className="w-4 h-4" />
+        <span>Sin cambios</span>
+      </div>
+    );
+  }
+
+  const isPositive = change > 0;
+  const Icon = isPositive ? TrendingUp : TrendingDown;
+  const colorClass = isPositive ? 'text-green-600' : 'text-red-600';
+
+  return (
+    <div className={`flex items-center gap-1 ${colorClass} text-sm font-medium`}>
+      <Icon className="w-4 h-4" />
+      <span>{isPositive ? '+' : ''}{change}%</span>
+    </div>
+  );
 }
 
 export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
@@ -99,6 +132,13 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
 
   const { summary, viewsByDay, topProperties, eventBreakdown } = data;
 
+  // Preparar datos para el gráfico de línea
+  const chartData = viewsByDay.map(day => ({
+    date: new Date(day.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }),
+    Visitas: day.views,
+    Contactos: day.contacts,
+  }));
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -143,7 +183,7 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
         </div>
       </div>
 
-      {/* Tarjetas de resumen */}
+      {/* Tarjetas de resumen CON COMPARATIVAS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Visitas */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -151,8 +191,11 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
             <h3 className="text-sm font-medium text-gray-600">Total Visitas</h3>
             <Eye className="w-5 h-5 text-blue-600" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">{summary.totalViews.toLocaleString()}</p>
-          <p className="text-xs text-gray-500 mt-1">Vistas a tus propiedades</p>
+          <p className="text-3xl font-bold text-gray-900 mb-2">{summary.totalViews.toLocaleString()}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500">Vistas a tus propiedades</p>
+            <ChangeIndicator change={summary.viewsChange} />
+          </div>
         </div>
 
         {/* Total Contactos */}
@@ -161,8 +204,11 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
             <h3 className="text-sm font-medium text-gray-600">Contactos</h3>
             <MessageSquare className="w-5 h-5 text-green-600" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">{summary.totalContacts.toLocaleString()}</p>
-          <p className="text-xs text-gray-500 mt-1">Clicks en contacto</p>
+          <p className="text-3xl font-bold text-gray-900 mb-2">{summary.totalContacts.toLocaleString()}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500">Clicks en contacto</p>
+            <ChangeIndicator change={summary.contactsChange} />
+          </div>
         </div>
 
         {/* Total Favoritos */}
@@ -171,8 +217,11 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
             <h3 className="text-sm font-medium text-gray-600">Favoritos</h3>
             <Heart className="w-5 h-5 text-red-600" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">{summary.totalFavorites.toLocaleString()}</p>
-          <p className="text-xs text-gray-500 mt-1">Agregadas a favoritos</p>
+          <p className="text-3xl font-bold text-gray-900 mb-2">{summary.totalFavorites.toLocaleString()}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500">Agregadas a favoritos</p>
+            <ChangeIndicator change={summary.favoritesChange} />
+          </div>
         </div>
 
         {/* Tasa de Conversión */}
@@ -181,83 +230,73 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
             <h3 className="text-sm font-medium text-gray-600">Conversión</h3>
             <TrendingUp className="w-5 h-5 text-purple-600" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">{summary.conversionRate}%</p>
-          <p className="text-xs text-gray-500 mt-1">Visitas → Contactos</p>
+          <p className="text-3xl font-bold text-gray-900 mb-2">{summary.conversionRate}%</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500">Visitas → Contactos</p>
+            {summary.conversionRate >= 5 ? (
+              <span className="text-xs font-medium text-green-600">🎯 Excelente</span>
+            ) : summary.conversionRate >= 2 ? (
+              <span className="text-xs font-medium text-yellow-600">📊 Promedio</span>
+            ) : (
+              <span className="text-xs font-medium text-gray-500">📉 Bajo</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Gráfico de visitas por día */}
+      {/* Gráfico de línea de visitas por día */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center gap-2 mb-6">
           <BarChart3 className="w-5 h-5 text-gray-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Visitas por Día</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Tendencia de Visitas y Contactos</h2>
         </div>
 
-        <div className="space-y-3">
-          {viewsByDay.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No hay datos para este período</p>
-          ) : (
-            viewsByDay.slice().reverse().map((day, index) => {
-              const maxViews = Math.max(...viewsByDay.map(d => d.views));
-              const viewsPercent = maxViews > 0 ? (day.views / maxViews) * 100 : 0;
-              const contactsPercent = day.views > 0 ? (day.contacts / day.views) * 100 : 0;
-
-              return (
-                <div key={index} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 font-medium w-24">
-                      {new Date(day.date).toLocaleDateString('es-AR', {
-                        day: '2-digit',
-                        month: 'short'
-                      })}
-                    </span>
-                    <div className="flex-1 mx-4">
-                      <div className="flex gap-1">
-                        {/* Barra de visitas */}
-                        <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
-                          <div
-                            className="bg-blue-600 h-full rounded-full transition-all duration-300 flex items-center justify-end pr-2"
-                            style={{ width: `${viewsPercent}%` }}
-                          >
-                            {day.views > 0 && (
-                              <span className="text-xs font-medium text-white">
-                                {day.views}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {/* Mini barra de contactos */}
-                        {day.contacts > 0 && (
-                          <div
-                            className="w-12 bg-green-600 rounded-full h-6 flex items-center justify-center"
-                            title={`${day.contacts} contactos`}
-                          >
-                            <span className="text-xs font-medium text-white">{day.contacts}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right w-20">
-                      <span className="text-gray-900 font-semibold">{day.views}</span>
-                      <span className="text-gray-500 text-xs ml-1">visitas</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        <div className="mt-4 flex items-center gap-4 text-xs text-gray-600 border-t pt-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-600 rounded"></div>
-            <span>Visitas</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-600 rounded"></div>
-            <span>Contactos</span>
-          </div>
-        </div>
+        {viewsByDay.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">No hay datos para este período</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 12 }}
+                stroke="#9ca3af"
+              />
+              <YAxis
+                tick={{ fontSize: 12 }}
+                stroke="#9ca3af"
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}
+              />
+              <Legend
+                wrapperStyle={{ paddingTop: '20px' }}
+                iconType="circle"
+              />
+              <Line
+                type="monotone"
+                dataKey="Visitas"
+                stroke="#2563eb"
+                strokeWidth={2}
+                dot={{ fill: '#2563eb', r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="Contactos"
+                stroke="#16a34a"
+                strokeWidth={2}
+                dot={{ fill: '#16a34a', r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Top Propiedades */}
@@ -280,7 +319,7 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
               </thead>
               <tbody>
                 {topProperties.map((property, index) => (
-                  <tr key={property.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={property.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <span className="text-gray-400 font-medium">#{index + 1}</span>
@@ -318,9 +357,10 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
                       </span>
                     </td>
                     <td className="text-center py-3 px-4">
-                      <span className={`font-semibold ${
+                      <span className={`font-semibold text-sm ${
                         property.conversionRate >= 10 ? 'text-green-600' :
                         property.conversionRate >= 5 ? 'text-yellow-600' :
+                        property.conversionRate >= 2 ? 'text-orange-600' :
                         'text-gray-600'
                       }`}>
                         {property.conversionRate}%
@@ -334,29 +374,23 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
         )}
       </div>
 
-      {/* Breakdown de eventos */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Desglose de Eventos</h2>
-
-        {eventBreakdown.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No hay eventos registrados</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {eventBreakdown.map((event) => (
-              <div
-                key={event.event_name}
-                className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 capitalize">
-                    {event.event_name.replace(/_/g, ' ')}
-                  </span>
-                  <span className="text-lg font-bold text-gray-900">{event.count}</span>
-                </div>
-              </div>
-            ))}
+      {/* Benchmark information */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm">💡</span>
+            </div>
           </div>
-        )}
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-blue-900 mb-1">Benchmarks de la Industria</h3>
+            <p className="text-sm text-blue-800">
+              <strong>Tasa de conversión promedio:</strong> 2-2.4% |
+              <strong className="ml-2">Top performers:</strong> 5%+ |
+              <strong className="ml-2">Leads mensuales objetivo:</strong> 100-200+
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,31 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+// Cache simple en memoria (1 hora)
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 60 * 60 * 1000; // 1 hora
+
+function getCacheKey(userId: string, range: string): string {
+  return `analytics:${userId}:${range}`;
+}
+
+function getFromCache(key: string): any | null {
+  const cached = cache.get(key);
+  if (!cached) return null;
+
+  const now = Date.now();
+  if (now - cached.timestamp > CACHE_TTL) {
+    cache.delete(key);
+    return null;
+  }
+
+  return cached.data;
+}
+
+function setCache(key: string, data: any): void {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient();
@@ -24,6 +49,16 @@ export async function GET(request: NextRequest) {
     if (user.id !== userId) {
       return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
     }
+
+    // Verificar cache primero
+    const cacheKey = getCacheKey(userId, range);
+    const cachedData = getFromCache(cacheKey);
+    if (cachedData) {
+      console.log('[Analytics] Cache HIT:', cacheKey);
+      return NextResponse.json(cachedData);
+    }
+
+    console.log('[Analytics] Cache MISS:', cacheKey);
 
     // Verificar plan
     const { data: planLimits } = await supabase
@@ -46,6 +81,10 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(now);
     startDate.setDate(startDate.getDate() - daysAgo);
 
+    // Calcular fecha del periodo anterior para comparación
+    const previousStartDate = new Date(startDate);
+    previousStartDate.setDate(previousStartDate.getDate() - daysAgo);
+
     // Obtener IDs de propiedades del usuario
     const { data: properties, error: propsError } = await supabase
       .from('properties')
@@ -61,52 +100,85 @@ export async function GET(request: NextRequest) {
 
     if (propertyIds.length === 0) {
       // Usuario sin propiedades, devolver data vacía
-      return NextResponse.json({
+      const emptyData = {
         summary: {
           totalViews: 0,
           totalContacts: 0,
           totalFavorites: 0,
-          conversionRate: 0
+          conversionRate: 0,
+          // Comparativas
+          viewsChange: 0,
+          contactsChange: 0,
+          favoritesChange: 0,
         },
         viewsByDay: [],
         topProperties: [],
         eventBreakdown: []
-      });
+      };
+      setCache(cacheKey, emptyData);
+      return NextResponse.json(emptyData);
     }
 
-    // === 1. RESUMEN GENERAL ===
-    // Contar total de vistas
-    const { count: totalViews } = await supabase
+    // === OPTIMIZACIÓN 1: UN SOLO QUERY PARA RESUMEN ACTUAL ===
+    const { data: currentSummaryData, error: summaryError } = await supabase
       .from('analytics_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_name', 'view_property')
+      .select('event_name')
       .in('target_id', propertyIds)
       .gte('created_at', startDate.toISOString());
 
-    // Contar total de contactos (contact_click + contact_submit)
-    const { count: totalContacts } = await supabase
-      .from('analytics_events')
-      .select('*', { count: 'exact', head: true })
-      .in('event_name', ['contact_click', 'contact_submit'])
-      .in('target_id', propertyIds)
-      .gte('created_at', startDate.toISOString());
+    if (summaryError) {
+      console.error('Error fetching summary:', summaryError);
+      return NextResponse.json({ error: 'Error al obtener resumen' }, { status: 500 });
+    }
 
-    // Contar total de favoritos
-    const { count: totalFavorites } = await supabase
-      .from('analytics_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_name', 'property_favorite')
-      .in('target_id', propertyIds)
-      .gte('created_at', startDate.toISOString());
+    // Procesar en memoria (es más rápido que múltiples queries)
+    let totalViews = 0;
+    let totalContacts = 0;
+    let totalFavorites = 0;
 
-    const conversionRate = totalViews && totalViews > 0
-      ? Math.round(((totalContacts || 0) / totalViews) * 100)
+    currentSummaryData?.forEach(event => {
+      if (event.event_name === 'view_property') totalViews++;
+      else if (event.event_name === 'contact_click' || event.event_name === 'contact_submit') totalContacts++;
+      else if (event.event_name === 'property_favorite') totalFavorites++;
+    });
+
+    const conversionRate = totalViews > 0
+      ? Math.round((totalContacts / totalViews) * 100)
       : 0;
 
-    // === 2. VISITAS POR DÍA ===
+    // === OPTIMIZACIÓN 2: QUERY PARA PERIODO ANTERIOR (COMPARACIÓN) ===
+    const { data: previousSummaryData, error: prevSummaryError } = await supabase
+      .from('analytics_events')
+      .select('event_name')
+      .in('target_id', propertyIds)
+      .gte('created_at', previousStartDate.toISOString())
+      .lt('created_at', startDate.toISOString());
+
+    let previousViews = 0;
+    let previousContacts = 0;
+    let previousFavorites = 0;
+
+    previousSummaryData?.forEach(event => {
+      if (event.event_name === 'view_property') previousViews++;
+      else if (event.event_name === 'contact_click' || event.event_name === 'contact_submit') previousContacts++;
+      else if (event.event_name === 'property_favorite') previousFavorites++;
+    });
+
+    // Calcular cambios porcentuales
+    const calculateChange = (current: number, previous: number): number => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    const viewsChange = calculateChange(totalViews, previousViews);
+    const contactsChange = calculateChange(totalContacts, previousContacts);
+    const favoritesChange = calculateChange(totalFavorites, previousFavorites);
+
+    // === OPTIMIZACIÓN 3: QUERY CON DATE GROUPING ===
+    // Obtener eventos agrupados por día
     const { data: dailyEvents, error: dailyError } = await supabase
       .from('analytics_events')
-      .select('created_at, event_name, target_id')
+      .select('created_at, event_name')
       .in('target_id', propertyIds)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: true });
@@ -115,7 +187,7 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching daily events:', dailyError);
     }
 
-    // Agrupar por día
+    // Agrupar por día en memoria
     const dailyMap: Record<string, { views: number; contacts: number }> = {};
 
     dailyEvents?.forEach(event => {
@@ -132,7 +204,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Llenar días vacíos
+    // Crear array completo con todos los días (incluyendo días sin datos)
     const viewsByDay = [];
     for (let i = 0; i < daysAgo; i++) {
       const date = new Date(startDate);
@@ -146,7 +218,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // === 3. TOP PROPIEDADES ===
+    // === OPTIMIZACIÓN 4: AGRUPAR POR PROPIEDAD EN UN SOLO QUERY ===
     const { data: propertyEvents, error: propEventsError } = await supabase
       .from('analytics_events')
       .select('event_name, target_id')
@@ -201,20 +273,10 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.views - a.views)
       .slice(0, 10); // Top 10
 
-    // === 4. BREAKDOWN DE EVENTOS ===
-    const { data: allEvents, error: allEventsError } = await supabase
-      .from('analytics_events')
-      .select('event_name')
-      .or(`target_id.in.(${propertyIds.join(',')}),user_id.eq.${userId}`)
-      .gte('created_at', startDate.toISOString());
-
-    if (allEventsError) {
-      console.error('Error fetching all events:', allEventsError);
-    }
-
+    // === 5. BREAKDOWN DE EVENTOS ===
     const eventCountMap: Record<string, number> = {};
 
-    allEvents?.forEach(event => {
+    currentSummaryData?.forEach(event => {
       if (!eventCountMap[event.event_name]) {
         eventCountMap[event.event_name] = 0;
       }
@@ -226,17 +288,31 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count);
 
     // === RESPUESTA FINAL ===
-    return NextResponse.json({
+    const responseData = {
       summary: {
-        totalViews: totalViews || 0,
-        totalContacts: totalContacts || 0,
-        totalFavorites: totalFavorites || 0,
-        conversionRate
+        totalViews,
+        totalContacts,
+        totalFavorites,
+        conversionRate,
+        // Comparativas con periodo anterior
+        viewsChange,
+        contactsChange,
+        favoritesChange,
+        previousPeriod: {
+          views: previousViews,
+          contacts: previousContacts,
+          favorites: previousFavorites
+        }
       },
       viewsByDay,
       topProperties,
       eventBreakdown
-    });
+    };
+
+    // Guardar en cache
+    setCache(cacheKey, responseData);
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
     console.error('Error in analytics dashboard API:', error);
