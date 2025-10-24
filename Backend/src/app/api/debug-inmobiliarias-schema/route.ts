@@ -48,7 +48,7 @@ export async function GET() {
         tiktok: columnsData?.some((c: any) => c.column_name === 'tiktok') || false,
         description: columnsData?.some((c: any) => c.column_name === 'description') || false,
         company_name: columnsData?.some((c: any) => c.column_name === 'company_name') || false,
-        is_verified: columnsData?.some((c: any) => c.column_name === 'is_verified') || false,
+        verified: columnsData?.some((c: any) => c.column_name === 'verified') || false,
         user_type: columnsData?.some((c: any) => c.column_name === 'user_type') || false,
       }
     }
@@ -85,7 +85,7 @@ export async function GET() {
     console.log('[DEBUG] Verificando inmobiliarias registradas...')
     const { data: inmobiliarias, error: inmobiliariasError } = await supabase
       .from('users')
-      .select('id, email, company_name, user_type, is_verified, logo_url, cuit')
+      .select('id, email, company_name, user_type, verified, logo_url, cuit')
       .eq('user_type', 'inmobiliaria')
       .limit(5)
 
