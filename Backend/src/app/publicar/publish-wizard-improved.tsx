@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import PropertyImageUpload from "@/components/ui/property-image-upload"
 import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox"
-import { MapPin, Check, Loader2, Lock, AlertCircle } from "lucide-react"
+import { MapPin, Check, Loader2, Lock, AlertCircle, Sparkles } from "lucide-react"
 import Link from "next/link"
 import toast from 'react-hot-toast'
 import { useCurrentUser } from "@/lib/auth/useCurrentUser"
