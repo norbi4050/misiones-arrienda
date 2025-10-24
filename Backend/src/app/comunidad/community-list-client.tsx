@@ -137,7 +137,7 @@ export default function CommunityListClient({ initialData }: CommunityListClient
               <Filter className="w-4 h-4 mr-2" />
               Filtros
             </Button>
-            <Link href="/comunidad/publicar">
+            <Link href="/comunidad/publicar" prefetch={false}>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />
                 Publicar
@@ -387,7 +387,7 @@ export default function CommunityListClient({ initialData }: CommunityListClient
 
                 {/* Acciones */}
                 <div className="flex gap-2 pt-2">
-                  <Link href={`/comunidad/${post.id}`} className="flex-1">
+                  <Link href={`/comunidad/${post.id}`} className="flex-1" prefetch={false}>
                     <Button className="w-full bg-blue-600 hover:bg-blue-700">
                       Ver detalle
                     </Button>
@@ -410,7 +410,7 @@ export default function CommunityListClient({ initialData }: CommunityListClient
           <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron posts</h3>
           <p className="text-gray-600 mb-6">Intenta ajustar tus filtros de búsqueda</p>
-          <Link href="/comunidad/publicar">
+          <Link href="/comunidad/publicar" prefetch={false}>
             <Button>Crear tu post</Button>
           </Link>
         </div>

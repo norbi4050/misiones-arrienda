@@ -138,7 +138,7 @@ export function MyCommunityPostCard({ post, onStatusChange }: MyCommunityPostCar
 
             {/* Acciones */}
             <div className="flex gap-2 flex-wrap">
-              <Link href={`/comunidad/editar/${post.id}`}>
+              <Link href={`/comunidad/editar/${post.id}`} prefetch={false}>
                 <Button size="sm" variant="outline" disabled={loading}>
                   <Edit className="w-4 h-4 mr-1" />
                   Editar
@@ -175,7 +175,7 @@ export function MyCommunityPostCard({ post, onStatusChange }: MyCommunityPostCar
                 Borrar
               </Button>
 
-              <Link href={`/comunidad/${post.id}`}>
+              <Link href={`/comunidad/${post.id}`} prefetch={false}>
                 <Button size="sm" variant="ghost">
                   <Eye className="w-4 h-4 mr-1" />
                   Ver
