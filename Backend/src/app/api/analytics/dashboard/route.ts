@@ -31,18 +31,14 @@ function setCache(key: string, data: any): void {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('[Analytics API] Request received');
     const supabase = createClient();
 
     // Verificar autenticación
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error('[Analytics API] Auth error:', authError?.message);
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
-
-    console.log('[Analytics API] User authenticated:', user.id);
 
     // Obtener parámetros
     const searchParams = request.nextUrl.searchParams;
@@ -58,14 +54,10 @@ export async function GET(request: NextRequest) {
     const cacheKey = getCacheKey(userId, range);
     const cachedData = getFromCache(cacheKey);
     if (cachedData) {
-      console.log('[Analytics] Cache HIT:', cacheKey);
       return NextResponse.json(cachedData);
     }
 
-    console.log('[Analytics] Cache MISS:', cacheKey);
-
     // Verificar plan
-    console.log('[Analytics API] Checking plan limits...');
     const { data: planLimits, error: planError } = await supabase
       .rpc('get_user_plan_limits', { user_uuid: user.id });
 
@@ -75,8 +67,6 @@ export async function GET(request: NextRequest) {
         error: 'Error al verificar permisos del plan'
       }, { status: 500 });
     }
-
-    console.log('[Analytics API] Plan limits:', planLimits?.[0]);
 
     if (!planLimits?.[0]?.allow_analytics) {
       return NextResponse.json({
@@ -100,7 +90,6 @@ export async function GET(request: NextRequest) {
     previousStartDate.setDate(previousStartDate.getDate() - daysAgo);
 
     // Obtener IDs de propiedades del usuario
-    console.log('[Analytics API] Fetching properties for user:', userId);
     const { data: properties, error: propsError } = await supabase
       .from('properties')
       .select('id, title')
@@ -110,8 +99,6 @@ export async function GET(request: NextRequest) {
       console.error('[Analytics API] Error fetching properties:', propsError);
       return NextResponse.json({ error: 'Error al obtener propiedades' }, { status: 500 });
     }
-
-    console.log('[Analytics API] Found', properties?.length || 0, 'properties');
 
     const propertyIds = properties?.map(p => p.id) || [];
 
@@ -137,7 +124,6 @@ export async function GET(request: NextRequest) {
     }
 
     // === OPTIMIZACIÓN 1: UN SOLO QUERY PARA RESUMEN ACTUAL ===
-    console.log('[Analytics API] Fetching current period summary...');
     const { data: currentSummaryData, error: summaryError } = await supabase
       .from('analytics_events')
       .select('event_name')
@@ -148,8 +134,6 @@ export async function GET(request: NextRequest) {
       console.error('[Analytics API] Error fetching summary:', summaryError);
       return NextResponse.json({ error: 'Error al obtener resumen' }, { status: 500 });
     }
-
-    console.log('[Analytics API] Current period events:', currentSummaryData?.length || 0);
 
     // Procesar en memoria (es más rápido que múltiples queries)
     let totalViews = 0;
@@ -162,17 +146,9 @@ export async function GET(request: NextRequest) {
       else if (event.event_name === 'property_favorite') totalFavorites++;
     });
 
-    console.log('[Analytics API] Processed current period:', {
-      totalViews,
-      totalContacts,
-      totalFavorites
-    });
-
     const conversionRate = totalViews > 0
       ? Math.round((totalContacts / totalViews) * 100)
       : 0;
-
-    console.log('[Analytics API] Conversion rate:', conversionRate + '%');
 
     // === OPTIMIZACIÓN 2: QUERY PARA PERIODO ANTERIOR (COMPARACIÓN) ===
     const { data: previousSummaryData, error: prevSummaryError } = await supabase
@@ -340,14 +316,12 @@ export async function GET(request: NextRequest) {
     // Guardar en cache
     setCache(cacheKey, responseData);
 
-    console.log('[Analytics API] Response ready, sending data');
     return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error('[Analytics API] FATAL ERROR:', error);
-    console.error('[Analytics API] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('[Analytics API] Error:', error);
     return NextResponse.json(
-      { error: 'Error interno del servidor', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }

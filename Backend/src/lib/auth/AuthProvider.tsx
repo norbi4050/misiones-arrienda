@@ -39,13 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const fetchUserProfile = useCallback(async (userId: string, useCache: boolean = true): Promise<CurrentUser | null> => {
     try {
-      console.log('[AuthProvider] Fetching profile for user:', userId)
-
       // Try cache first if enabled
       if (useCache) {
         const cachedProfile = ProfilePersistence.getCachedProfile()
         if (cachedProfile && ProfilePersistence.isCacheValid()) {
-          console.log('[AuthProvider] Using cached profile:', cachedProfile.id)
           return cachedProfile as CurrentUser
         }
       }
@@ -71,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (useCache) {
           const cachedProfile = ProfilePersistence.getCachedProfile()
           if (cachedProfile) {
-            console.log('[AuthProvider] Using cached profile as fallback:', cachedProfile.id)
             return cachedProfile as CurrentUser
           }
         }
@@ -82,17 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { profile } = await response.json()
 
       if (!profile) {
-        console.warn('[AuthProvider] No profile data returned from API')
         return null
       }
-
-      console.log('[AuthProvider] Profile received:', {
-        id: profile.id,
-        email: profile.email,
-        userType: profile.userType,
-        isCompany: profile.isCompany,
-        isAgency: isAgency(profile),
-      })
 
       // Save to cache
       ProfilePersistence.saveProfile(profile)
@@ -109,7 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (useCache) {
         const cachedProfile = ProfilePersistence.getCachedProfile()
         if (cachedProfile) {
-          console.log('[AuthProvider] Using cached profile as fallback:', cachedProfile.id)
           return cachedProfile as CurrentUser
         }
       }
@@ -122,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Refresca el perfil del usuario
    */
   const refresh = useCallback(async () => {
-    console.log('[AuthProvider] Refreshing user profile')
     setLoading(true)
 
     try {
@@ -148,7 +133,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const signOut = useCallback(async () => {
     try {
-      console.log('[AuthProvider] Signing out')
       await supabase.auth.signOut()
       ProfilePersistence.clearProfile()
       setUser(null)
@@ -165,7 +149,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Prevent multiple initializations
     if (isInitialized) {
-      console.log('[AuthProvider] Already initialized, skipping')
       return
     }
 
@@ -176,13 +159,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Safety timeout: force loading to false after 12 seconds
       const safetyTimeout = setTimeout(() => {
         if (mounted) {
-          console.warn('[AuthProvider] Safety timeout reached, forcing loading to false')
           setLoading(false)
         }
       }, 12000)
 
       try {
-        console.log('[AuthProvider] Initializing auth (singleton)')
 
         // Add timeout to getSession call
         const sessionPromise = supabase.auth.getSession()
@@ -208,14 +189,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (session?.user && mounted) {
-          console.log('[AuthProvider] Session found, fetching profile')
           const profile = await fetchUserProfile(session.user.id)
           if (mounted) {
-            console.log('[AuthProvider] Setting user:', profile ? 'success' : 'null')
             setUser(profile)
           }
         } else if (mounted) {
-          console.log('[AuthProvider] No session found')
           setUser(null)
         }
       } catch (error) {
@@ -223,7 +201,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         clearTimeout(safetyTimeout)
         if (mounted) {
-          console.log('[AuthProvider] Setting loading to false')
           setLoading(false)
         }
       }
@@ -235,8 +212,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
         if (!mounted) return
-
-        console.log('[AuthProvider] Auth state changed:', event)
 
         if (event === 'SIGNED_IN' && session?.user) {
           setLoading(true)

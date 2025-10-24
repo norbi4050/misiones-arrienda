@@ -16,22 +16,9 @@ export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, isAuthenticated, isAgency, loading, signOut } = useCurrentUser()
-  const { count: unreadCount } = useMessagesUnread({ 
+  const { count: unreadCount } = useMessagesUnread({
     enabled: isAuthenticated && !isAgency // Solo para usuarios no-inmobiliarias
   })
-
-  // [DEBUG] Log temporal para investigar
-  React.useEffect(() => {
-    console.log('[Navbar DEBUG] Auth state:', {
-      loading,
-      isAuthenticated,
-      hasUser: !!user,
-      userId: user?.id,
-      email: user?.email,
-      userType: user?.userType,
-      isAgency,
-    })
-  }, [loading, isAuthenticated, user, isAgency])
 
   // Navegación dinámica según userType
   const navigation = React.useMemo(() => {
