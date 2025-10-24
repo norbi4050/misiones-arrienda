@@ -44,12 +44,14 @@ export const metadata: Metadata = {
 async function getPublicProperties() {
   try {
     // Traer TODAS las propiedades disponibles (NO filtrar por featured)
-    console.log('[getPublicProperties] Fetching properties...')
+    console.log('[getPublicProperties] START - Fetching properties...')
     const properties = await fetchRealProperties({ limit: 50 }) // SIN featured: true
-    console.log('[getPublicProperties] Got properties:', properties.length)
+    console.log('[getPublicProperties] RESULT - Got properties:', properties.length)
+    console.log('[getPublicProperties] RESULT - Properties data:', JSON.stringify(properties.slice(0, 1), null, 2))
     return properties
   } catch (error) {
-    console.error('[getPublicProperties] Error:', error)
+    console.error('[getPublicProperties] CATCH - Error:', error)
+    console.error('[getPublicProperties] CATCH - Error stack:', error instanceof Error ? error.stack : 'No stack')
     return []
   }
 }

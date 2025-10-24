@@ -107,10 +107,11 @@ export async function getProperties(filters: PropertyFilters & { page?: number; 
       }
     };
   } catch (error) {
-    // Solo loguear si NO es un error de 401 que ya manejamos
-    if (!(error instanceof Error && error.message.includes('401'))) {
-      console.error('Error fetching properties:', error);
-    }
+    // Loguear TODOS los errores para debug
+    console.error('[getProperties] CATCH - Error occurred:', error);
+    console.error('[getProperties] CATCH - Error type:', error instanceof Error ? error.constructor.name : typeof error);
+    console.error('[getProperties] CATCH - Error message:', error instanceof Error ? error.message : String(error));
+
     // Fallback en caso de error
     return {
       properties: [],
