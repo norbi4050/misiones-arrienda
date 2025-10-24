@@ -37,15 +37,15 @@ export default function HeroStats({
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-8 text-white/90">
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-8 text-white">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <div key={index} className="flex items-center gap-2">
-            <Icon className="w-5 h-5 md:w-6 md:h-6" />
+          <div key={index} className="flex items-center gap-2 drop-shadow-lg">
+            <Icon className="w-5 h-5 md:w-6 md:h-6 drop-shadow-md" />
             <div className="text-left">
-              <div className="text-xl md:text-2xl font-bold">{stat.value}</div>
-              <div className="text-xs md:text-sm text-white/70">{stat.label}</div>
+              <div className="text-xl md:text-2xl font-bold drop-shadow-md">{stat.value}</div>
+              <div className="text-xs md:text-sm text-white/90 drop-shadow-md">{stat.label}</div>
             </div>
           </div>
         );

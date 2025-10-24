@@ -50,8 +50,8 @@ export default function HeroSection({ profile, stats, totalProperties }: HeroSec
       {/* Background con imagen o gradiente */}
       <HeroBackground imageUrl={header_image_url} primaryColor={primary_color} />
 
-      {/* Overlay oscuro para legibilidad */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-black/70 z-10" />
+      {/* Overlay oscuro para legibilidad - más oscuro para mejor contraste */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/80 z-10" />
 
       {/* Contenido del Hero */}
       <div className="relative z-20 h-full flex items-center justify-center px-4">

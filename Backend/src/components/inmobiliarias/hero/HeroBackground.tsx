@@ -11,7 +11,10 @@ interface HeroBackgroundProps {
 export default function HeroBackground({ imageUrl, primaryColor }: HeroBackgroundProps) {
   const color = primaryColor || DEFAULT_COLORS.PRIMARY;
 
-  if (imageUrl) {
+  // Validar que imageUrl sea una URL válida
+  const isValidUrl = imageUrl && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/'));
+
+  if (isValidUrl) {
     return (
       <div className="absolute inset-0 z-0">
         <Image
@@ -27,7 +30,7 @@ export default function HeroBackground({ imageUrl, primaryColor }: HeroBackgroun
     );
   }
 
-  // Gradiente elegante si no hay imagen
+  // Gradiente elegante si no hay imagen o URL inválida
   return (
     <div
       className="absolute inset-0 z-0"

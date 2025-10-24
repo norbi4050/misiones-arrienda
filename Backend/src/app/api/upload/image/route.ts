@@ -1,6 +1,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * Image Upload Endpoint
+ *
+ * Requisitos de Supabase Storage:
+ * 1. Crear bucket "images" en Supabase Storage
+ * 2. Configurar permisos públicos para lectura (read)
+ * 3. Configurar política de escritura (write) para usuarios autenticados
+ *
+ * Políticas requeridas:
+ * - SELECT (read): PUBLIC access
+ * - INSERT (write): authenticated users (user.id = folder name)
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient();
@@ -50,6 +62,8 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload to Supabase Storage
+    console.log('[Upload] Attempting to upload file:', { filePath, type: file.type, size: file.size });
+
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('images')
       .upload(filePath, buffer, {
@@ -58,9 +72,32 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('[Upload] Error uploading file:', uploadError);
-      return NextResponse.json({ error: 'Error al subir la imagen' }, { status: 500 });
+      console.error('[Upload] Error uploading file:', {
+        error: uploadError,
+        message: uploadError.message,
+        status: (uploadError as any).status,
+        statusCode: (uploadError as any).statusCode,
+      });
+
+      // Provide more specific error messages
+      if (uploadError.message?.includes('Bucket not found')) {
+        return NextResponse.json({
+          error: 'Error de configuración: Bucket de almacenamiento no encontrado'
+        }, { status: 500 });
+      }
+
+      if (uploadError.message?.includes('Policy')) {
+        return NextResponse.json({
+          error: 'Error de configuración: Permisos de almacenamiento insuficientes'
+        }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        error: `Error al subir la imagen: ${uploadError.message}`
+      }, { status: 500 });
     }
+
+    console.log('[Upload] File uploaded successfully:', { path: uploadData.path });
 
     // Get public URL
     const {

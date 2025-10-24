@@ -188,9 +188,9 @@ export default function HeroCustomization({ userId, initialData, onSave }: HeroC
           <div className="flex items-center gap-2">
             <Palette className="h-5 w-5 text-blue-600" />
             <div>
-              <CardTitle>Personalización Visual</CardTitle>
+              <CardTitle>Personaliza tu Portada</CardTitle>
               <CardDescription>
-                Personaliza cómo se ve tu página pública con tu propia identidad de marca
+                Cambia el aspecto de la portada de tu página pública: imagen de fondo, colores y mensajes que aparecen al inicio
               </CardDescription>
             </div>
           </div>
@@ -221,10 +221,10 @@ export default function HeroCustomization({ userId, initialData, onSave }: HeroC
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <ImageIcon className="h-4 w-4 text-gray-600" />
-            <Label className="text-sm font-medium">Imagen de Fondo del Hero</Label>
+            <Label className="text-sm font-medium">Imagen de Fondo de Portada</Label>
           </div>
           <p className="text-xs text-gray-500">
-            Imagen que aparecerá de fondo en la sección principal de tu perfil público. Recomendado: 1920x500px
+            Imagen grande que aparecerá de fondo en la parte superior de tu perfil público. Recomendado: 1920x500px (máximo 5MB)
           </p>
 
           {formData.header_image_url ? (
@@ -304,20 +304,26 @@ export default function HeroCustomization({ userId, initialData, onSave }: HeroC
         </div>
 
         {/* Colors */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ColorPicker
-            label="Color Principal"
-            value={formData.primary_color || DEFAULT_COLORS.PRIMARY}
-            onChange={(color) => setFormData((prev) => ({ ...prev, primary_color: color }))}
-            disabled={!isEditing}
-          />
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Colores de tu Marca</Label>
+          <p className="text-xs text-gray-500">
+            Estos colores se usan en el fondo degradado de tu portada (cuando no tienes imagen de fondo). El color principal también se usa en algunos badges y elementos visuales de tu página.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ColorPicker
+              label="Color Principal"
+              value={formData.primary_color || DEFAULT_COLORS.PRIMARY}
+              onChange={(color) => setFormData((prev) => ({ ...prev, primary_color: color }))}
+              disabled={!isEditing}
+            />
 
-          <ColorPicker
-            label="Color Secundario"
-            value={formData.secondary_color || DEFAULT_COLORS.SECONDARY}
-            onChange={(color) => setFormData((prev) => ({ ...prev, secondary_color: color }))}
-            disabled={!isEditing}
-          />
+            <ColorPicker
+              label="Color Secundario"
+              value={formData.secondary_color || DEFAULT_COLORS.SECONDARY}
+              onChange={(color) => setFormData((prev) => ({ ...prev, secondary_color: color }))}
+              disabled={!isEditing}
+            />
+          </div>
         </div>
 
         {isEditing && (
@@ -329,8 +335,11 @@ export default function HeroCustomization({ userId, initialData, onSave }: HeroC
         {/* Founded Year */}
         <div className="space-y-3">
           <Label htmlFor="founded-year" className="text-sm font-medium">
-            Año de Fundación
+            Año de Fundación de tu Inmobiliaria
           </Label>
+          <p className="text-xs text-gray-500">
+            El año en que se fundó tu empresa. Se mostrará como "X años de experiencia" en tu portada pública.
+          </p>
           <Input
             id="founded-year"
             type="number"
@@ -342,7 +351,7 @@ export default function HeroCustomization({ userId, initialData, onSave }: HeroC
               }))
             }
             disabled={!isEditing}
-            placeholder={`${AGENCY_LIMITS.MIN_FOUNDED_YEAR} - ${currentYear}`}
+            placeholder={`Ej: 2010, 2015, ${currentYear}...`}
             min={AGENCY_LIMITS.MIN_FOUNDED_YEAR}
             max={currentYear}
           />
@@ -380,11 +389,23 @@ export default function HeroCustomization({ userId, initialData, onSave }: HeroC
               <Input
                 value={valueInput}
                 onChange={(e) => setValueInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddValue()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddValue();
+                  }
+                }}
                 placeholder="Ej: Transparencia, Profesionalismo..."
                 maxLength={AGENCY_LIMITS.MAX_VALUE_LENGTH}
               />
-              <Button type="button" onClick={handleAddValue} variant="outline">
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleAddValue();
+                }}
+                variant="outline"
+              >
                 Agregar
               </Button>
             </div>
