@@ -15,26 +15,26 @@ import { useMemo } from 'react'
 export interface User {
   id: string;
   email: string;
-  name?: string;
-  phone?: string;
+  name?: string | null;
+  phone?: string | null;
 
   // User type and company fields (from users table)
-  userType?: string;
+  userType?: string | null;
   isCompany?: boolean;
-  companyName?: string;
-  licenseNumber?: string;
+  companyName?: string | null;
+  licenseNumber?: string | null;
   propertyCount?: number;
   isVerified?: boolean;
   emailVerified?: boolean;
 
   // Profile fields (from user_profiles table)
-  bio?: string;
-  role?: string;
-  city?: string;
-  neighborhood?: string;
+  bio?: string | null;
+  role?: string | null;
+  city?: string | null;
+  neighborhood?: string | null;
   budgetMin?: number;
   budgetMax?: number;
-  avatar_url?: string;
+  avatar_url?: string | null;
 
   // Timestamps
   created_at: string;
@@ -53,7 +53,7 @@ export function useAuth() {
 
     return {
       id: currentUser.id,
-      email: currentUser.email,
+      email: currentUser.email || '',
       name: currentUser.name,
       phone: currentUser.phone,
       userType: currentUser.userType,
@@ -61,17 +61,17 @@ export function useAuth() {
       companyName: currentUser.companyName,
       licenseNumber: currentUser.licenseNumber,
       propertyCount: 0, // Not available in CurrentUser
-      isVerified: currentUser.isVerified,
-      emailVerified: currentUser.email_verified,
+      isVerified: currentUser.verified || false,
+      emailVerified: currentUser.emailVerified || false,
       bio: currentUser.bio,
-      role: currentUser.role,
-      city: currentUser.city,
-      neighborhood: currentUser.neighborhood,
-      budgetMin: currentUser.budget_min,
-      budgetMax: currentUser.budget_max,
-      avatar_url: currentUser.avatar_url,
-      created_at: currentUser.created_at,
-      updated_at: currentUser.updated_at,
+      role: undefined, // Not available in CurrentUser
+      city: undefined, // Not available in CurrentUser
+      neighborhood: undefined, // Not available in CurrentUser
+      budgetMin: undefined, // Not available in CurrentUser
+      budgetMax: undefined, // Not available in CurrentUser
+      avatar_url: currentUser.avatar,
+      created_at: currentUser.createdAt || '',
+      updated_at: currentUser.updatedAt || '',
     }
   }, [currentUser])
 

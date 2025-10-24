@@ -19,31 +19,31 @@ interface AuthUser {
   id: string
   name: string
   email: string
-  phone?: string
-  location?: string
-  searchType?: string
-  budgetRange?: string
-  bio?: string
-  profileImage?: string
-  preferredAreas?: string
-  familySize?: string
-  petFriendly?: string
-  moveInDate?: string
-  employmentStatus?: string
-  monthlyIncome?: string
-  userType?: string
-  companyName?: string
-  licenseNumber?: string
+  phone?: string | null
+  location?: string | null
+  searchType?: string | null
+  budgetRange?: string | null
+  bio?: string | null
+  profileImage?: string | null
+  preferredAreas?: string | null
+  familySize?: string | null
+  petFriendly?: string | null
+  moveInDate?: string | null
+  employmentStatus?: string | null
+  monthlyIncome?: string | null
+  userType?: string | null
+  companyName?: string | null
+  licenseNumber?: string | null
   // Campos adicionales de la tabla users
-  avatar?: string
-  occupation?: string
-  age?: number
+  avatar?: string | null
+  occupation?: string | null
+  age?: number | null
   verified?: boolean
-  rating?: number
-  reviewCount?: number
-  fullName?: string
-  createdAt?: string
-  updatedAt?: string
+  rating?: number | null
+  reviewCount?: number | null
+  fullName?: string | null
+  createdAt?: string | null
+  updatedAt?: string | null
 }
 
 /**
@@ -61,17 +61,17 @@ export function useSupabaseAuth() {
     return {
       id: currentUser.id,
       name: currentUser.name || 'Usuario',
-      email: currentUser.email,
+      email: currentUser.email || '',
       phone: currentUser.phone,
       bio: currentUser.bio,
-      profileImage: currentUser.avatar_url,
+      profileImage: currentUser.avatar,
       userType: currentUser.userType,
       companyName: currentUser.companyName,
       licenseNumber: currentUser.licenseNumber,
-      avatar: currentUser.avatar_url,
-      verified: currentUser.isVerified,
-      createdAt: currentUser.created_at,
-      updatedAt: currentUser.updated_at,
+      avatar: currentUser.avatar,
+      verified: currentUser.verified || false,
+      createdAt: currentUser.createdAt,
+      updatedAt: currentUser.updatedAt,
     }
   }, [currentUser])
 
