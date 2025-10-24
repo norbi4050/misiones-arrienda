@@ -135,7 +135,7 @@ export default function PlanesClient({ userPlanInfo }: PlanesClientProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/mi-empresa" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
+          <Link href="/mi-empresa" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4" prefetch={false}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver a Mi Empresa
           </Link>

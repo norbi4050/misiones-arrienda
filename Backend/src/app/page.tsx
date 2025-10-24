@@ -206,7 +206,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                       ⏰ Solo quedan <span className="font-bold text-white text-xl">{getFounderSpotsRemaining()}</span> lugares disponibles
                     </p>
                   </div>
-                  <Link href="/mi-empresa/planes">
+                  <Link href="/mi-empresa/planes" prefetch={false}>
                     <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 font-bold shadow-xl">
                       Ver Planes y Beneficios
                     </Button>

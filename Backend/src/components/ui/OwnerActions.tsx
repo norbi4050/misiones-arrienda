@@ -95,7 +95,7 @@ export default function OwnerActions({
             ) : (
               // Usuario Free - Mostrar upgrade
               <div className="space-y-2">
-                <Link href="/mi-empresa/planes">
+                <Link href="/mi-empresa/planes" prefetch={false}>
                   <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
                     <Crown className="h-4 w-4 mr-2" />
                     Mejorar a Professional
