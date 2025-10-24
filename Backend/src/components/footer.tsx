@@ -40,6 +40,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/legal/terms"
+                  prefetch={false}
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <FileText className="w-4 h-4 mr-2" />
@@ -49,6 +50,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/legal/privacy"
+                  prefetch={false}
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <Lock className="w-4 h-4 mr-2" />
@@ -58,6 +60,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/legal/cookies"
+                  prefetch={false}
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <Cookie className="w-4 h-4 mr-2" />
@@ -74,6 +77,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/legal/security"
+                  prefetch={false}
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <Shield className="w-4 h-4 mr-2" />
@@ -83,6 +87,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/legal/quality"
+                  prefetch={false}
                   className="flex items-center text-gray-300 hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
                 >
                   <FileText className="w-4 h-4 mr-2" />
