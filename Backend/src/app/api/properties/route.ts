@@ -180,12 +180,15 @@ export async function GET(request: NextRequest) {
         error: withActiveTest.error?.message
       });
 
-      // Construir query base
+      // DEBUG: Intentar sin filtros primero
+      console.log('[API /properties] ATTEMPTING QUERY WITHOUT ANY FILTERS...');
       let query = supabase
         .from('Property')
-        .select('*', { count: 'exact' })
-        .eq('status', 'published')
-        .eq('is_active', true);
+        .select('*', { count: 'exact' });
+
+      // NO aplicar filtros por ahora para ver si devuelve las 4 propiedades
+      // .eq('status', 'published')
+      // .eq('is_active', true);
 
       // Aplicar filtros avanzados
       if (city) {
