@@ -61,7 +61,28 @@ async function getPublicProperties() {
     }
 
     console.log('[getPublicProperties] RESULT - Got properties:', data?.length || 0)
-    return data || []
+
+    // Parsear el campo images que viene como JSON string
+    const processedData = data?.map(property => {
+      let images = [];
+      try {
+        if (typeof property.images === 'string') {
+          images = JSON.parse(property.images);
+        } else if (Array.isArray(property.images)) {
+          images = property.images;
+        }
+      } catch (e) {
+        console.error('[getPublicProperties] Error parsing images:', e);
+        images = [];
+      }
+
+      return {
+        ...property,
+        images
+      };
+    }) || [];
+
+    return processedData
   } catch (error) {
     console.error('[getPublicProperties] CATCH - Error:', error)
     return []
