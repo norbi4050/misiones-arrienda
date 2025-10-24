@@ -484,7 +484,7 @@ export function CommunityPostsListClient() {
               </div>
 
               <div className="flex gap-2 pt-2 border-t">
-                <Link href={`/comunidad/${post.id}`} target="_blank" className="flex-1">
+                <Link href={`/comunidad/${post.id}`} target="_blank" className="flex-1" prefetch={false}>
                   <Button variant="outline" size="sm" className="w-full">
                     <Eye className="h-4 w-4 mr-1" />
                     Ver
