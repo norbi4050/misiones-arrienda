@@ -104,7 +104,7 @@ export function Navbar() {
                     <Heart className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href={isAgency ? "/messages" : "/comunidad/mensajes"}>
+                <Link href={isAgency ? "/messages" : "/comunidad/mensajes"} prefetch={false}>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -215,6 +215,7 @@ export function Navbar() {
                     {/* [AuthBridge] href y label dinámicos según isAgency */}
                     <Link
                       href={isAgency ? '/mi-empresa' : '/profile/inquilino'}
+                      prefetch={false}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md"
                       onClick={() => setIsOpen(false)}
                     >
@@ -229,6 +230,7 @@ export function Navbar() {
                     </Link>
                     <Link
                       href={isAgency ? "/messages" : "/comunidad/mensajes"}
+                      prefetch={false}
                       className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md relative"
                       onClick={() => setIsOpen(false)}
                     >

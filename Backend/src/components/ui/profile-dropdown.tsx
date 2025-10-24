@@ -128,6 +128,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Mi Empresa - Solo para Inmobiliaria y Empresa (dueno_directo) */}
                 <Link
                   href="/mi-empresa"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -138,6 +139,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Planes - Solo para Inmobiliarias */}
                 <Link
                   href="/mi-empresa/planes"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -148,6 +150,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Mis Publicaciones */}
                 <Link
                   href="/mi-cuenta/publicaciones"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -158,6 +161,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Analytics */}
                 <Link
                   href="/mi-cuenta/analytics"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -168,6 +172,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Favoritos */}
                 <Link
                   href="/favorites"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -178,6 +183,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Mensajes */}
                 <Link
                   href="/messages"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -200,6 +206,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Mi Perfil */}
                 <Link
                   href="/profile/inquilino"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -210,6 +217,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Mis Publicaciones */}
                 <Link
                   href="/mi-cuenta/publicaciones"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -220,6 +228,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Favoritos */}
                 <Link
                   href="/favorites"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -230,6 +239,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Mensajes */}
                 <Link
                   href="/comunidad/mensajes"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
