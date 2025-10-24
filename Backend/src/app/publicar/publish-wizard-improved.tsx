@@ -615,10 +615,10 @@ export default function PublishWizardImproved() {
                       setValue('latitude', coords.lat);
                       setValue('longitude', coords.lng);
                     }}
-                    className="h-72 rounded-lg border mb-4"
+                    className="h-72 rounded-lg border"
                   />
                   {watchedValues.latitude && watchedValues.longitude && (
-                    <p className="text-xs text-green-600 mt-2 flex items-center">
+                    <p className="text-xs text-green-600 mt-2 mb-6 flex items-center">
                       <Check className="h-3 w-3 mr-1" />
                       Coordenadas: {watchedValues.latitude.toFixed(4)}, {watchedValues.longitude.toFixed(4)}
                     </p>
@@ -626,7 +626,7 @@ export default function PublishWizardImproved() {
                 </div>
               </div>
 
-              <div className="flex justify-end mt-8">
+              <div className="flex justify-end mt-10">
                 <Button 
                   onClick={handleContinueFromStep1}
                   disabled={creatingDraft || !canContinueStep1}
