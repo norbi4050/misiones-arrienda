@@ -264,16 +264,7 @@ export async function GET(request: NextRequest) {
         totalCount = count || 0;
         
         // Paso 3: Incluir cover_url en las respuestas de APIs de listado
-        const BUCKET = process.env.NEXT_PUBLIC_PROPERTY_IMAGES_BUCKET || 'property-images';
         const PLACEHOLDER = '/placeholder-apartment-1.jpg';
-
-        const toCoverUrl = (coverPath?: string) => {
-          if (!coverPath) return PLACEHOLDER;
-          // URL pública del objeto (bucket público)
-          const supabaseAdmin = createClient();
-          const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(coverPath);
-          return data.publicUrl || PLACEHOLDER;
-        };
 
         // Agregar cover_url e imagesCount
         properties = properties.map((property: any) => {
@@ -288,10 +279,15 @@ export async function GET(request: NextRequest) {
           } catch {
             imgs = [];
           }
-          
+
+          // Usar la primera imagen del array como cover_url
+          // Las imágenes ya vienen como URLs completas de Supabase Storage
+          const coverUrl = imgs.length > 0 ? imgs[0] : PLACEHOLDER;
+
           return {
             ...property,
-            cover_url: toCoverUrl(property.cover_path),
+            images: imgs, // Array parseado
+            cover_url: coverUrl,
             imagesCount: imgs.length,
             // Owner info básico desde la propiedad misma
             owner_id: property.user_id || null,
