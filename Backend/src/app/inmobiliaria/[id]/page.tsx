@@ -32,6 +32,15 @@ interface InmobiliariaProfile {
   show_stats_public: boolean;
   is_founder: boolean;
   created_at: string;
+
+  // Hero customization fields
+  header_image_url: string | null;
+  tagline: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  founded_year: number | null;
+  values: string[] | null;
+  email: string;
 }
 
 interface TeamMember {
@@ -248,12 +257,12 @@ export default async function InmobiliariaPublicPage({
     show_stats_public: inmobiliariaData.show_stats_public || false,
     is_founder: inmobiliariaData.is_founder || false,
     created_at: inmobiliariaData.created_at,
-    header_image_url: inmobiliariaData.header_image_url,
-    tagline: inmobiliariaData.tagline,
-    primary_color: inmobiliariaData.primary_color,
-    secondary_color: inmobiliariaData.secondary_color,
-    founded_year: inmobiliariaData.founded_year,
-    values: inmobiliariaData.values,
+    header_image_url: (inmobiliariaData as any).header_image_url,
+    tagline: (inmobiliariaData as any).tagline,
+    primary_color: (inmobiliariaData as any).primary_color,
+    secondary_color: (inmobiliariaData as any).secondary_color,
+    founded_year: (inmobiliariaData as any).founded_year,
+    values: (inmobiliariaData as any).values,
   };
 
   const supabase = createClient();
@@ -317,7 +326,7 @@ export default async function InmobiliariaPublicPage({
   }
 
   // Preparar datos para el componente cliente
-  const profileData: InmobiliariaProfile = {
+  const profileData = {
     id: inmobiliaria.id,
     company_name: inmobiliaria.company_name,
     logo_url: inmobiliaria.logo_url,
@@ -349,7 +358,7 @@ export default async function InmobiliariaPublicPage({
     founded_year: inmobiliaria.founded_year,
     values: inmobiliaria.values,
     email: '', // Will be populated from user context if needed
-  };
+  } as InmobiliariaProfile;
 
   // Structured Data para SEO (JSON-LD)
   const structuredData = {

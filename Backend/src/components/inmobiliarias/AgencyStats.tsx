@@ -75,17 +75,17 @@ export default function AgencyStats({ stats, loading = false, className = '' }: 
         return (
           <div
             key={index}
-            className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-0 hover:-translate-y-0.5"
           >
             <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+              <div className={`p-3.5 rounded-xl ${stat.bgColor} shadow-sm`}>
                 <Icon className={`w-6 h-6 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">
                   {stat.label}
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1.5">
                   {stat.value}
                 </p>
               </div>

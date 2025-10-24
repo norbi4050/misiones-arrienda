@@ -114,8 +114,6 @@ export default function HeroSection({ profile, stats, totalProperties }: HeroSec
             <SendMessageButton
               agencyId={id}
               agencyName={company_name}
-              variant="secondary"
-              size="lg"
               className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 bg-white/10 backdrop-blur-sm border-2 border-white/50 text-white hover:bg-white/20 shadow-xl"
             />
           </div>

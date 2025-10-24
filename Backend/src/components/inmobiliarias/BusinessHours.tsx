@@ -53,28 +53,30 @@ export default function BusinessHours({ hours, timezone, className = '' }: Busin
   ];
 
   return (
-    <div className={`bg-gray-50 dark:bg-gray-50 rounded-lg p-4 border border-gray-200 ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-0 ${className}`}>
       {/* Header con estado actual */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-gray-600" />
-          <h3 className="text-base font-semibold text-gray-900">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-blue-50">
+            <Clock className="w-5 h-5 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">
             Horarios de Atención
           </h3>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${open ? 'bg-green-50' : 'bg-gray-100'}`}>
           {open ? (
             <>
               <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <span className="text-xs font-medium text-green-600">
+              <span className="text-xs font-bold text-green-600">
                 Abierto ahora
               </span>
             </>
           ) : (
             <>
-              <XCircle className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-600">
-                Cerrado ahora
+              <XCircle className="w-4 h-4 text-gray-500" />
+              <span className="text-xs font-bold text-gray-600">
+                Cerrado
               </span>
             </>
           )}
@@ -82,7 +84,7 @@ export default function BusinessHours({ hours, timezone, className = '' }: Busin
       </div>
 
       {/* Lista de horarios */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {daysOrder.map((day) => {
           const dayHours = hours[day];
           const dayName = DAY_NAMES_ES[day];
@@ -90,17 +92,17 @@ export default function BusinessHours({ hours, timezone, className = '' }: Busin
           return (
             <div
               key={day}
-              className="flex items-center justify-between py-1.5 border-b border-gray-200 last:border-0"
+              className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
             >
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-semibold text-gray-700">
                 {dayName}
               </span>
               {dayHours.closed ? (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 font-medium">
                   Cerrado
                 </span>
               ) : (
-                <span className="text-sm text-gray-900">
+                <span className="text-sm text-gray-900 font-semibold">
                   {dayHours.open} - {dayHours.close}
                 </span>
               )}
@@ -110,8 +112,8 @@ export default function BusinessHours({ hours, timezone, className = '' }: Busin
       </div>
 
       {/* Zona horaria */}
-      <div className="mt-3 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <p className="text-xs text-gray-500 font-medium">
           Zona horaria: {timezone}
         </p>
       </div>

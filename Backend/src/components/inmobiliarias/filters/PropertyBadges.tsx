@@ -21,7 +21,7 @@ export function NewBadge({ createdAt }: NewBadgeProps) {
   if (!isNewProperty(createdAt)) return null;
 
   return (
-    <Badge className="bg-green-500 hover:bg-green-600 text-white border-0 shadow-lg">
+    <Badge className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-lg font-bold text-xs px-2.5 py-1 animate-pulse">
       <Sparkles className="h-3 w-3 mr-1" />
       NUEVO
     </Badge>

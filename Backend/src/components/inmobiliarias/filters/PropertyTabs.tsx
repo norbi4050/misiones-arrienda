@@ -18,28 +18,28 @@ export default function PropertyTabs({ activeTab, onTabChange, counts }: Propert
   ];
 
   return (
-    <div className="flex gap-2 border-b border-gray-200">
+    <div className="flex gap-2 border-b-2 border-gray-200 bg-white rounded-t-xl px-2 pt-2">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={`
-            px-4 py-3 font-medium text-sm transition-colors relative
+            px-5 py-3 font-semibold text-sm transition-all duration-200 relative rounded-t-lg
             ${
               activeTab === tab.id
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'text-blue-600 bg-blue-50 border-b-3 border-blue-600 -mb-0.5 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }
           `}
         >
           {tab.label}
           <span
             className={`
-              ml-2 px-2 py-0.5 rounded-full text-xs
+              ml-2 px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm
               ${
                 activeTab === tab.id
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 text-gray-600'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-600'
               }
             `}
           >

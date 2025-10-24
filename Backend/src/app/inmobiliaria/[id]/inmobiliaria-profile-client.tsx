@@ -191,7 +191,7 @@ export default function InmobiliariaProfileClient({
   const shouldShowExpandButton = profile.description && profile.description.length > 300;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Hero Section */}
       <HeroSection
         profile={profile}
@@ -199,18 +199,20 @@ export default function InmobiliariaProfileClient({
         totalProperties={totalProperties}
       />
 
-      {/* Contact Info Bar */}
-      <div className="bg-white border-b shadow-sm">
+      {/* Contact Info Bar - Enhanced design */}
+      <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40 backdrop-blur-sm bg-white/95">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Contacto */}
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+            {/* Contacto - Better spacing and hover effects */}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-5">
               {profile.phone && (
                 <a
                   href={`tel:${profile.phone}`}
-                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition"
+                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors duration-200 group"
                 >
-                  <Phone className="w-4 h-4" />
+                  <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-blue-50 transition-colors">
+                    <Phone className="w-4 h-4" />
+                  </div>
                   <span className="text-sm font-medium">{profile.phone}</span>
                 </a>
               )}
@@ -218,17 +220,21 @@ export default function InmobiliariaProfileClient({
               {profile.commercial_phone && profile.commercial_phone !== profile.phone && (
                 <a
                   href={`tel:${profile.commercial_phone}`}
-                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition"
+                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors duration-200 group"
                 >
-                  <Phone className="w-4 h-4" />
+                  <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-blue-50 transition-colors">
+                    <Phone className="w-4 h-4" />
+                  </div>
                   <span className="text-sm font-medium">{profile.commercial_phone}</span>
-                  <span className="text-xs text-gray-500">(Comercial)</span>
+                  <span className="text-xs text-gray-500 ml-1">(Comercial)</span>
                 </a>
               )}
 
               {profile.address && (
                 <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin className="w-4 h-4" />
+                  <div className="p-1.5 rounded-lg bg-gray-100">
+                    <MapPin className="w-4 h-4" />
+                  </div>
                   <span className="text-sm">{profile.address}</span>
                 </div>
               )}
@@ -238,22 +244,24 @@ export default function InmobiliariaProfileClient({
                   href={profile.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition"
+                  className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors duration-200 group"
                 >
-                  <Globe className="w-4 h-4" />
+                  <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-blue-50 transition-colors">
+                    <Globe className="w-4 h-4" />
+                  </div>
                   <span className="text-sm font-medium">Sitio web</span>
                 </a>
               )}
 
-              {/* Redes sociales */}
+              {/* Redes sociales - Enhanced with better hover states */}
               {(profile.facebook || profile.instagram) && (
-                <div className="flex gap-3 ml-2">
+                <div className="flex gap-2 ml-2">
                   {profile.facebook && normalizeFacebookUrl(profile.facebook) && (
                     <a
                       href={normalizeFacebookUrl(profile.facebook)!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-blue-600 transition"
+                      className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 hover:scale-105"
                       aria-label="Facebook"
                     >
                       <Facebook className="w-5 h-5" />
@@ -264,7 +272,7 @@ export default function InmobiliariaProfileClient({
                       href={normalizeInstagramUrl(profile.instagram)!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-pink-600 transition"
+                      className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-pink-50 hover:text-pink-600 transition-all duration-200 hover:scale-105"
                       aria-label="Instagram"
                     >
                       <Instagram className="w-5 h-5" />
@@ -293,16 +301,19 @@ export default function InmobiliariaProfileClient({
       </div>
 
       {/* Contenido principal */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Columna izquierda - Información de la inmobiliaria */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Sobre nosotros */}
+            {/* Sobre nosotros - Enhanced card design */}
             {profile.description && (
-              <Card>
+              <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 border-0">
                 <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Sobre nosotros</h2>
-                  <div className="text-gray-600 whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                  <h2 className="text-xl font-bold mb-4 text-gray-900 flex items-center gap-2">
+                    <div className="w-1 h-6 bg-blue-600 rounded-full" />
+                    Sobre nosotros
+                  </h2>
+                  <div className="text-gray-600 text-[15px] leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                     {showFullDescription || !shouldShowExpandButton
                       ? profile.description
                       : truncatedDescription}
@@ -312,7 +323,7 @@ export default function InmobiliariaProfileClient({
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowFullDescription(!showFullDescription)}
-                      className="mt-3 w-full"
+                      className="mt-4 w-full hover:bg-gray-100 transition-colors"
                     >
                       {showFullDescription ? (
                         <>
@@ -345,11 +356,14 @@ export default function InmobiliariaProfileClient({
               />
             )}
 
-            {/* FASE 5: Equipo */}
+            {/* FASE 5: Equipo - Enhanced card */}
             {profile.show_team_public && teamMembers.length > 0 && (
-              <Card>
+              <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 border-0">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Nuestro Equipo</h3>
+                  <h3 className="text-xl font-bold mb-4 text-gray-900 flex items-center gap-2">
+                    <div className="w-1 h-6 bg-blue-600 rounded-full" />
+                    Nuestro Equipo
+                  </h3>
                   <div className="grid grid-cols-2 gap-4">
                     {teamMembers.map((member) => (
                       <TeamMemberCard key={member.id} member={member} />
@@ -374,14 +388,15 @@ export default function InmobiliariaProfileClient({
 
           {/* Columna derecha - Propiedades */}
           <div className="lg:col-span-2" id="properties-section">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-4">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                <div className="w-1.5 h-8 bg-blue-600 rounded-full" />
                 Propiedades publicadas
               </h2>
 
               {/* Tabs de filtro */}
               {properties.length > 0 && (
-                <div className="mb-4">
+                <div className="mb-6">
                   <PropertyTabs
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
@@ -391,8 +406,8 @@ export default function InmobiliariaProfileClient({
               )}
 
               {/* Filtros y contadores */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                <p className="text-gray-600">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+                <p className="text-gray-700 font-medium">
                   {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad' : 'propiedades'}
                   {activeTab !== 'all' && ` en ${activeTab}`}
                 </p>
@@ -404,23 +419,41 @@ export default function InmobiliariaProfileClient({
             </div>
 
             {filteredProperties.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <Card className="shadow-lg border-0">
+                <CardContent className="p-16 text-center">
+                  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center">
+                    <Building2 className="w-12 h-12 text-blue-600" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
                     Sin propiedades disponibles
                   </h3>
-                  <p className="text-gray-600 mb-6">
-                    Esta inmobiliaria aún no tiene propiedades publicadas.
+                  <p className="text-gray-600 mb-8 text-lg max-w-md mx-auto">
+                    {activeTab === 'all'
+                      ? 'Esta inmobiliaria aún no tiene propiedades publicadas.'
+                      : `No hay propiedades de ${activeTab} disponibles en este momento.`
+                    }
                   </p>
-                  <Link href="/properties">
-                    <Button>Ver todas las propiedades</Button>
-                  </Link>
+                  {activeTab === 'all' ? (
+                    <Link href="/properties">
+                      <Button size="lg" className="shadow-md hover:shadow-lg transition-shadow">
+                        Ver todas las propiedades
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={() => setActiveTab('all')}
+                      className="shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      Ver todas las propiedades
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ) : (
               <>
-                {/* Grid de propiedades */}
+                {/* Grid de propiedades - Enhanced cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {filteredProperties.map((property) => (
                     <Link
@@ -428,53 +461,60 @@ export default function InmobiliariaProfileClient({
                       href={`/properties/${property.id}`}
                       className="group"
                     >
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md hover:-translate-y-1">
                         {/* Imagen */}
-                        <div className="relative h-48 bg-gray-200">
+                        <div className="relative h-56 bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden">
                           {property.cover_url ? (
                             <Image
                               src={property.cover_url}
                               alt={property.title}
                               fill
                               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Building2 className="w-12 h-12 text-gray-400" />
+                              <Building2 className="w-16 h-16 text-gray-400" />
                             </div>
                           )}
+                          {/* Overlay gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
                           {/* Badges de tipo y nuevo */}
                           <div className="absolute top-3 right-3 flex gap-2">
                             {property.created_at && <NewBadge createdAt={property.created_at} />}
-                            <Badge variant="secondary" className="bg-white/90">
+                            <Badge variant="secondary" className="bg-white/95 backdrop-blur-sm shadow-md">
                               {property.operation_type === 'venta' ? 'Venta' : 'Alquiler'}
                             </Badge>
                           </div>
                         </div>
 
                         {/* Contenido */}
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition">
+                        <CardContent className="p-5">
+                          <h3 className="font-bold text-lg mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors min-h-[3.5rem]">
                             {property.title}
                           </h3>
-                          
-                          <div className="flex items-center text-gray-600 text-sm mb-3">
-                            <MapPin className="w-4 h-4 mr-1" />
+
+                          <div className="flex items-center text-gray-600 text-sm mb-4">
+                            <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0 text-gray-500" />
                             <span className="line-clamp-1">{property.location}</span>
                           </div>
 
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                             <div className="text-2xl font-bold text-blue-600">
                               ${property.price.toLocaleString()}
                             </div>
                             {(property.bedrooms || property.bathrooms) && (
-                              <div className="flex gap-3 text-sm text-gray-600">
+                              <div className="flex gap-3 text-sm text-gray-600 font-medium">
                                 {property.bedrooms && (
-                                  <span>{property.bedrooms} dorm</span>
+                                  <span className="flex items-center gap-1">
+                                    {property.bedrooms} dorm
+                                  </span>
                                 )}
                                 {property.bathrooms && (
-                                  <span>{property.bathrooms} baños</span>
+                                  <span className="flex items-center gap-1">
+                                    {property.bathrooms} baños
+                                  </span>
                                 )}
                               </div>
                             )}
@@ -485,16 +525,24 @@ export default function InmobiliariaProfileClient({
                   ))}
                 </div>
 
-                {/* Botón cargar más */}
+                {/* Botón cargar más - Enhanced */}
                 {hasMore && (
-                  <div className="mt-8 text-center">
+                  <div className="mt-10 text-center">
                     <Button
                       onClick={loadMore}
                       disabled={loading}
                       size="lg"
                       variant="outline"
+                      className="shadow-md hover:shadow-lg transition-all hover:scale-105 px-8"
                     >
-                      {loading ? 'Cargando...' : 'Cargar más propiedades'}
+                      {loading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-2" />
+                          Cargando...
+                        </>
+                      ) : (
+                        'Cargar más propiedades'
+                      )}
                     </Button>
                   </div>
                 )}
