@@ -88,10 +88,13 @@ export default function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) 
       }
 
       const result = await response.json();
+      console.log('[Analytics Dashboard] Received data:', result);
+      console.log('[Analytics Dashboard] Summary:', result.summary);
+      console.log('[Analytics Dashboard] ViewsByDay:', result.viewsByDay?.length, 'days');
       setData(result);
     } catch (err: any) {
       setError(err.message || 'Error desconocido');
-      console.error('Error loading analytics:', err);
+      console.error('[Analytics Dashboard] Error loading analytics:', err);
     } finally {
       setLoading(false);
     }
