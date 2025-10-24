@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
       const simpleTest = await supabase
         .from('properties')
         .select('*', { count: 'exact' })
-        .eq('status', 'published');
+        .eq('status', 'PUBLISHED');
 
       console.log('[API /properties] Simple test (only status):', {
         count: simpleTest.count,
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
       const withActiveTest = await supabase
         .from('properties')
         .select('*', { count: 'exact' })
-        .eq('status', 'published')
+        .eq('status', 'PUBLISHED')
         .eq('is_active', true);
 
       console.log('[API /properties] With is_active test:', {
@@ -180,15 +180,13 @@ export async function GET(request: NextRequest) {
         error: withActiveTest.error?.message
       });
 
-      // DEBUG: Intentar sin filtros primero
-      console.log('[API /properties] ATTEMPTING QUERY WITHOUT ANY FILTERS...');
+      // Construir query base con filtros
+      console.log('[API /properties] Building query with status filters...');
       let query = supabase
         .from('properties')
-        .select('*', { count: 'exact' });
-
-      // NO aplicar filtros por ahora para ver si devuelve las 4 propiedades
-      // .eq('status', 'published')
-      // .eq('is_active', true);
+        .select('*', { count: 'exact' })
+        .eq('status', 'PUBLISHED')
+        .eq('is_active', true);
 
       // Aplicar filtros avanzados
       if (city) {
@@ -280,13 +278,17 @@ export async function GET(request: NextRequest) {
             imgs = [];
           }
 
+          // Si no hay imágenes, usar placeholder
+          if (imgs.length === 0) {
+            imgs = [PLACEHOLDER];
+          }
+
           // Usar la primera imagen del array como cover_url
-          // Las imágenes ya vienen como URLs completas de Supabase Storage
-          const coverUrl = imgs.length > 0 ? imgs[0] : PLACEHOLDER;
+          const coverUrl = imgs[0];
 
           return {
             ...property,
-            images: imgs, // Array parseado
+            images: imgs, // Array parseado (con placeholder si estaba vacío)
             cover_url: coverUrl,
             imagesCount: imgs.length,
             // Owner info básico desde la propiedad misma
