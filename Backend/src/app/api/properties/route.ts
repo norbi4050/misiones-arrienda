@@ -90,9 +90,12 @@ const mockProperties = [
 ];
 
 export async function GET(request: NextRequest) {
+  console.log('[API /properties] ===== REQUEST STARTED =====');
+  console.log('[API /properties] URL:', request.url);
+
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Parámetros de búsqueda mejorados + BBOX + operation_type
     const city = searchParams.get('city');
     const type = searchParams.get('type');
@@ -110,6 +113,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '12');
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
+
+    console.log('[API /properties] Parsed params:', { city, type, operationType, featured, limit, page });
 
     // Parsear BBOX si existe
     let bboxCoords = null;
