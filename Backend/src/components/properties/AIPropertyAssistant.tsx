@@ -87,19 +87,37 @@ export function AIPropertyAssistant({
   };
 
   return (
-    <div className="space-y-3 border border-blue-200 rounded-lg p-4 bg-blue-50/30">
-      {/* Header */}
-      <div className="flex items-center space-x-2">
-        <Sparkles className="h-5 w-5 text-blue-600" />
-        <h3 className="font-semibold text-blue-900">Generador Automático con IA</h3>
+    <div className="space-y-3 border border-blue-200 rounded-lg p-4 bg-blue-50/50">
+      {/* Header simple y claro */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Sparkles className="h-5 w-5 text-blue-600" />
+          <h3 className="font-semibold text-gray-900">Asistente de Escritura</h3>
+        </div>
+        <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded">
+          GRATIS
+        </span>
       </div>
 
-      {/* Description */}
-      <p className="text-sm text-gray-600">
-        {hasGenerated
-          ? '¿No te gustó? Podés regenerar para obtener una versión diferente.'
-          : 'Generá automáticamente el título, descripción y características en segundos.'}
-      </p>
+      {/* Explicación simple - solo antes de generar */}
+      {!hasGenerated && !loading && (
+        <div className="bg-white rounded p-3 text-sm text-gray-700 border border-gray-200">
+          <p className="mb-2">
+            <strong>Te ayudamos a escribir:</strong> Completá tipo y precio arriba,
+            hacé click en "Generar" y en 10 segundos escribimos el título y descripción por vos.
+          </p>
+          <p className="text-xs text-gray-600">
+            💡 Después podés editar todo lo que quieras
+          </p>
+        </div>
+      )}
+
+      {/* Mensaje después de generar - simple */}
+      {hasGenerated && !loading && !success && (
+        <div className="bg-green-50 rounded p-3 text-sm text-green-800 border border-green-200">
+          ✅ <strong>Listo!</strong> Revisá los campos de arriba. Si no te gusta, podés regenerar.
+        </div>
+      )}
 
       {/* Buttons */}
       <div className="flex items-center space-x-2">
@@ -183,20 +201,11 @@ export function AIPropertyAssistant({
         </div>
       )}
 
-      {/* Info footer */}
-      {!loading && !error && !success && (
-        <div className="text-xs text-gray-500 space-y-1">
-          <p className="flex items-center space-x-1">
-            <span>✨</span>
-            <span>Completá los campos básicos arriba para mejores resultados</span>
-          </p>
-          <p className="flex items-center space-x-1">
-            <span>🎯</span>
-            <span>
-              Podés editar todo lo que genere la IA antes de publicar
-            </span>
-          </p>
-        </div>
+      {/* Info footer - solo si no hubo interacción */}
+      {!loading && !error && !success && !hasGenerated && (
+        <p className="text-xs text-gray-500 text-center">
+          Es 100% gratis y podés usarlo cuantas veces quieras
+        </p>
       )}
     </div>
   );
