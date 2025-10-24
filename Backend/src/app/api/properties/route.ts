@@ -150,16 +150,37 @@ export async function GET(request: NextRequest) {
         testError: testError?.message
       });
 
+      // DEBUG: Probar query simple primero
+      console.log('[API /properties] Testing simple query...');
+      const simpleTest = await supabase
+        .from('Property')
+        .select('*', { count: 'exact' })
+        .eq('status', 'published');
+
+      console.log('[API /properties] Simple test (only status):', {
+        count: simpleTest.count,
+        length: simpleTest.data?.length,
+        error: simpleTest.error?.message
+      });
+
+      const withActiveTest = await supabase
+        .from('Property')
+        .select('*', { count: 'exact' })
+        .eq('status', 'published')
+        .eq('is_active', true);
+
+      console.log('[API /properties] With is_active test:', {
+        count: withActiveTest.count,
+        length: withActiveTest.data?.length,
+        error: withActiveTest.error?.message
+      });
+
       // Construir query base
       let query = supabase
         .from('Property')
         .select('*', { count: 'exact' })
         .eq('status', 'published')
         .eq('is_active', true);
-
-      // TEMPORAL: Comentar filtro de expires_at para debug
-      // TODO: Descomentar cuando funcione
-      // query = query.or(`expires_at.is.null,expires_at.gte.${nowIso}`);
 
       // Aplicar filtros avanzados
       if (city) {
