@@ -152,18 +152,46 @@ export async function DELETE(
 
     // 5. Eliminar mensajes (probar ambas tablas/columnas)
     console.debug('[DELETE/thread] QUERY', { step: 'delete_messages', threadId });
-    
-    await supabase.from('Message').delete().eq('conversationId', threadId);
-    await supabase.from('messages').delete().eq('conversation_id', threadId);
+
+    const { error: msgError1 } = await supabase.from('Message').delete().eq('conversationId', threadId);
+    if (msgError1) {
+      console.debug('[DELETE/thread] Message delete error (can be ignored if table empty):', msgError1.message);
+    }
+
+    const { error: msgError2 } = await supabase.from('messages').delete().eq('conversation_id', threadId);
+    if (msgError2) {
+      console.debug('[DELETE/thread] messages delete error (can be ignored if table empty):', msgError2.message);
+    }
 
     // 6. Eliminar conversación (ambas tablas)
     console.debug('[DELETE/thread] QUERY', { step: 'delete_conversation', threadId });
-    
-    await supabase.from('Conversation').delete().eq('id', threadId);
-    await supabase.from('conversations').delete().eq('id', threadId);
+
+    const { data: delData1, error: convError1 } = await supabase.from('Conversation').delete().eq('id', threadId).select();
+    if (convError1) {
+      console.debug('[DELETE/thread] Conversation delete error:', convError1.message);
+    } else {
+      console.debug('[DELETE/thread] Conversation deleted rows:', delData1?.length || 0);
+    }
+
+    const { data: delData2, error: convError2 } = await supabase.from('conversations').delete().eq('id', threadId).select();
+    if (convError2) {
+      console.debug('[DELETE/thread] conversations delete error:', convError2.message);
+    } else {
+      console.debug('[DELETE/thread] conversations deleted rows:', delData2?.length || 0);
+    }
+
+    // Verificar que al menos una eliminación fue exitosa
+    const totalDeleted = (delData1?.length || 0) + (delData2?.length || 0);
+    if (totalDeleted === 0) {
+      console.warn('[DELETE/thread] WARNING: No rows were deleted from any table');
+      return NextResponse.json(
+        { ok: false, reason: 'delete-failed', details: 'No rows affected' },
+        { status: 200 }
+      );
+    }
 
     const duration = Date.now() - startTime;
-    console.debug('[DELETE/thread] deleted', { threadId, duration_ms: duration });
+    console.debug('[DELETE/thread] deleted', { threadId, totalDeleted, duration_ms: duration });
 
     // 7. Respuesta exitosa
     return NextResponse.json(
