@@ -286,10 +286,32 @@ export async function GET(request: NextRequest) {
           // Usar la primera imagen del array como cover_url
           const coverUrl = imgs[0];
 
+          // Transformar snake_case a camelCase para compatibilidad con frontend
           return {
             ...property,
+            // Campos transformados a camelCase
+            propertyType: property.property_type,
+            operationType: property.operation_type,
+            userId: property.user_id,
+            createdAt: property.created_at,
+            updatedAt: property.updated_at,
+            oldPrice: property.old_price,
+            lotArea: property.lot_area,
+            postalCode: property.postal_code,
+            virtualTourUrl: property.virtual_tour_url,
+            yearBuilt: property.year_built,
+            totalFloors: property.total_floors,
+            contactName: property.contact_name,
+            contactPhone: property.contact_phone,
+            contactEmail: property.contact_email,
+            expiresAt: property.expires_at,
+            highlightedUntil: property.highlighted_until,
+            isPaid: property.is_paid,
+            isActive: property.is_active,
+            // Campos procesados
             images: imgs, // Array parseado (con placeholder si estaba vacío)
             cover_url: coverUrl,
+            coverUrl: coverUrl, // Alias para compatibilidad
             imagesCount: imgs.length,
             // Owner info básico desde la propiedad misma
             owner_id: property.user_id || null,
