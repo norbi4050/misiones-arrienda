@@ -330,6 +330,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
             {property.owner_type === 'inmobiliaria' && property.owner_id && !isOwner && (
               <Link
                 href={`/inmobiliaria/${property.owner_id}`}
+                prefetch={false}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"

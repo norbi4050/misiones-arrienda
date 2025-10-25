@@ -146,6 +146,7 @@ export function PropertyCard({
           {showAgencyLink && (
             <Link
               href={`/inmobiliaria/${owner_id}`}
+              prefetch={false}
               className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 transition-colors mb-3"
               onClick={(e) => e.stopPropagation()}
             >
