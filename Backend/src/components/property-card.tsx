@@ -64,7 +64,7 @@ export function PropertyCard({
   console.debug('[Card] src=', src, 'id=', id, 'cover_url=', cover_url);
   
   return (
-    <Link href={`/properties/${id}`} className="block">
+    <Link href={`/properties/${id}`} prefetch={false} className="block">
       <div className="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer">
         <div className="aspect-[4/3] overflow-hidden relative">
           <PropertyImage

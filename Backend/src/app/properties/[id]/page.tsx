@@ -711,6 +711,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                         <Link
                           key={similar.id}
                           href={`/properties/${similar.id}`}
+                          prefetch={false}
                           className="block group"
                         >
                           <div className="flex space-x-3">

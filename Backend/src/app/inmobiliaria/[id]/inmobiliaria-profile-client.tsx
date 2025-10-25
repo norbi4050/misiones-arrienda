@@ -460,6 +460,7 @@ export default function InmobiliariaProfileClient({
                     <Link
                       key={property.id}
                       href={`/properties/${property.id}`}
+                      prefetch={false}
                       className="group"
                     >
                       <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md hover:-translate-y-1">
