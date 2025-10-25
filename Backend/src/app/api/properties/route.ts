@@ -360,7 +360,7 @@ export async function GET(request: NextRequest) {
             owner_type: null,
             owner_company_name: null
           };
-        });
+        }));
       }
 
     } catch (supabaseError) {
