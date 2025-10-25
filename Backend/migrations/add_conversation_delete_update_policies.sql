@@ -12,21 +12,22 @@ DROP POLICY IF EXISTS conversation_delete ON public."Conversation";
 CREATE POLICY conversation_delete ON public."Conversation"
 FOR DELETE
 USING (
-    "aId" IN (SELECT id FROM public."UserProfile" WHERE "userId" = auth.uid()::text) OR
-    "bId" IN (SELECT id FROM public."UserProfile" WHERE "userId" = auth.uid()::text)
+    "aId" IN (SELECT id FROM public.user_profiles WHERE "userId" = auth.uid()::text) OR
+    "bId" IN (SELECT id FROM public.user_profiles WHERE "userId" = auth.uid()::text)
 );
 
 -- 2. Add UPDATE policy for Conversation table
 -- Users can update conversations where they are a participant
-DROP POLICY IF EXISTS conversation_update ON public."Conversation"
+DROP POLICY IF EXISTS conversation_update ON public."Conversation";
+CREATE POLICY conversation_update ON public."Conversation"
 FOR UPDATE
 USING (
-    "aId" IN (SELECT id FROM public."UserProfile" WHERE "userId" = auth.uid()::text) OR
-    "bId" IN (SELECT id FROM public."UserProfile" WHERE "userId" = auth.uid()::text)
+    "aId" IN (SELECT id FROM public.user_profiles WHERE "userId" = auth.uid()::text) OR
+    "bId" IN (SELECT id FROM public.user_profiles WHERE "userId" = auth.uid()::text)
 )
 WITH CHECK (
-    "aId" IN (SELECT id FROM public."UserProfile" WHERE "userId" = auth.uid()::text) OR
-    "bId" IN (SELECT id FROM public."UserProfile" WHERE "userId" = auth.uid()::text)
+    "aId" IN (SELECT id FROM public.user_profiles WHERE "userId" = auth.uid()::text) OR
+    "bId" IN (SELECT id FROM public.user_profiles WHERE "userId" = auth.uid()::text)
 );
 
 -- 3. Add DELETE policy for Message table (cascade deletes)
@@ -37,8 +38,8 @@ FOR DELETE
 USING (
     "conversationId" IN (
         SELECT id FROM public."Conversation"
-        WHERE "aId" IN (SELECT id FROM public."UserProfile" WHERE "userId" = auth.uid()::text)
-           OR "bId" IN (SELECT id FROM public."UserProfile" WHERE "userId" = auth.uid()::text)
+        WHERE "aId" IN (SELECT id FROM public.user_profiles WHERE "userId" = auth.uid()::text)
+           OR "bId" IN (SELECT id FROM public.user_profiles WHERE "userId" = auth.uid()::text)
     )
 );
 
