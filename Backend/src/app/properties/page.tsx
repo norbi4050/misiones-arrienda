@@ -48,11 +48,11 @@ async function getPublicProperties() {
     // Llamar directamente a Supabase en lugar de hacer HTTP fetch
     const supabase = createClient()
     const { data, error } = await supabase
-      .from('Property')
+      .from('properties')
       .select('*')
-      .eq('status', 'published')
+      .eq('status', 'PUBLISHED')
       .eq('is_active', true)
-      .order('createdAt', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(50)
 
     if (error) {
@@ -62,7 +62,7 @@ async function getPublicProperties() {
 
     console.log('[getPublicProperties] RESULT - Got properties:', data?.length || 0)
 
-    // Parsear el campo images que viene como JSON string
+    // Transform snake_case to camelCase for frontend
     const processedData = data?.map(property => {
       let images = [];
       try {
@@ -77,8 +77,18 @@ async function getPublicProperties() {
       }
 
       return {
-        ...property,
-        images
+        id: property.id,
+        title: property.title,
+        description: property.description,
+        price: property.price,
+        currency: property.currency,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        city: property.city,
+        images: images,
+        featured: property.featured,
+        propertyType: property.property_type,
+        operationType: property.operation_type,
       };
     }) || [];
 
