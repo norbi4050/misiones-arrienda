@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { propertySchema } from '@/lib/validations/property';
 import { detectAuth, isPublicListingEnabled } from '@/lib/auth-detector';
 import { maskPhone, limitArray, parseArrayField } from '@/lib/data-masking';
+import { getPropertyImages } from '@/lib/property-images.server';
 
 // Marcar esta ruta como dinámica para evitar errores de build
 export const dynamic = 'force-dynamic'
@@ -264,27 +265,30 @@ export async function GET(request: NextRequest) {
         // Paso 3: Incluir cover_url en las respuestas de APIs de listado
         const PLACEHOLDER = '/placeholder-apartment-1.jpg';
 
-        // Agregar cover_url e imagesCount
-        properties = properties.map((property: any) => {
-          // Parsear images si viene como string JSON
-          let imgs: string[] = [];
+        // Agregar cover_url e imagesCount (async para obtener imágenes del bucket)
+        properties = await Promise.all(properties.map(async (property: any) => {
+          // Parsear images si viene como string JSON (fallback)
+          let fallbackImages: string[] = [];
           try {
             if (typeof property.images === 'string') {
-              imgs = JSON.parse(property.images);
+              fallbackImages = JSON.parse(property.images);
             } else if (Array.isArray(property.images)) {
-              imgs = property.images;
+              fallbackImages = property.images;
             }
           } catch {
-            imgs = [];
+            fallbackImages = [];
           }
 
-          // Si no hay imágenes, usar placeholder
-          if (imgs.length === 0) {
-            imgs = [PLACEHOLDER];
-          }
+          // IMPORTANTE: Buscar primero en bucket de Storage, luego fallback a campo images
+          const imgs = await getPropertyImages({
+            propertyId: property.id,
+            userId: property.user_id,
+            fallbackImages,
+            maxImages: 10
+          });
 
           // Usar la primera imagen del array como cover_url
-          const coverUrl = imgs[0];
+          const coverUrl = imgs[0] || PLACEHOLDER;
 
           // Transformar snake_case a camelCase para compatibilidad con frontend
           return {
