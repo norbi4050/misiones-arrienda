@@ -288,34 +288,72 @@ export async function GET(request: NextRequest) {
 
           // Transformar snake_case a camelCase para compatibilidad con frontend
           return {
-            ...property,
-            // Campos transformados a camelCase
+            // IDs
+            id: property.id,
+            userId: property.user_id,
+
+            // Información básica
+            title: property.title,
+            description: property.description,
+            price: property.price,
+            currency: property.currency,
+            oldPrice: property.old_price,
+
+            // Características de la propiedad
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            garages: property.garages,
+            area: property.area,
+            lotArea: property.lot_area,
+
+            // Ubicación
+            address: property.address,
+            city: property.city,
+            province: property.province,
+            postalCode: property.postal_code,
+            latitude: property.latitude,
+            longitude: property.longitude,
+
+            // Tipo y operación
             propertyType: property.property_type,
             operationType: property.operation_type,
-            userId: property.user_id,
-            createdAt: property.created_at,
-            updatedAt: property.updated_at,
-            oldPrice: property.old_price,
-            lotArea: property.lot_area,
-            postalCode: property.postal_code,
+            status: property.status,
+
+            // Medios y descripción
             virtualTourUrl: property.virtual_tour_url,
+            amenities: property.amenities,
+            features: property.features,
+
+            // Detalles de construcción
             yearBuilt: property.year_built,
+            floor: property.floor,
             totalFloors: property.total_floors,
-            contactName: property.contact_name,
-            contactPhone: property.contact_phone,
-            contactEmail: property.contact_email,
+
+            // Destacado y pago
+            featured: property.featured,
             expiresAt: property.expires_at,
             highlightedUntil: property.highlighted_until,
             isPaid: property.is_paid,
             isActive: property.is_active,
-            // Campos procesados
+
+            // Contacto
+            contactName: property.contact_name,
+            contactPhone: property.contact_phone,
+            contactEmail: property.contact_email,
+
+            // Fechas
+            createdAt: property.created_at,
+            updatedAt: property.updated_at,
+
+            // Imágenes procesadas
             images: imgs, // Array parseado (con placeholder si estaba vacío)
             cover_url: coverUrl,
             coverUrl: coverUrl, // Alias para compatibilidad
             imagesCount: imgs.length,
-            // Owner info básico desde la propiedad misma
+
+            // Owner info básico
             owner_id: property.user_id || null,
-            owner_type: null, // Se puede agregar después si es necesario
+            owner_type: null,
             owner_company_name: null
           };
         });
