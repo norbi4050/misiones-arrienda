@@ -93,7 +93,15 @@ export function PropertiesPageClient({
       }
       
       const data = await response.json()
-      
+
+      // DEBUG: Log para verificar qué datos recibimos
+      console.log('[PropertiesClient] API Response:', {
+        count: data.properties?.length,
+        source: data.meta?.dataSource,
+        firstProperty: data.properties?.[0],
+        images: data.properties?.[0]?.images
+      })
+
       // ✅ FIX: Append o replace según el caso
       if (append) {
         setProperties(prev => [...prev, ...(data.properties || [])])
