@@ -626,10 +626,18 @@ export default function PublishWizardImproved() {
                 </div>
               </div>
 
-              <div className="flex justify-end mt-10">
-                <Button 
+              <div className="flex flex-col items-end gap-3 mt-12 pt-6 border-t border-gray-200">
+                {!canContinueStep1 && !creatingDraft && (
+                  <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-md border border-red-200">
+                    {!watchedValues.latitude || !watchedValues.longitude
+                      ? "Seleccioná una ubicación en el mapa"
+                      : "Completá todos los campos obligatorios"}
+                  </p>
+                )}
+                <Button
                   onClick={handleContinueFromStep1}
                   disabled={creatingDraft || !canContinueStep1}
+                  className="min-w-[200px] shadow-md"
                 >
                   {creatingDraft ? (
                     <>
@@ -640,13 +648,6 @@ export default function PublishWizardImproved() {
                     "Continuar"
                   )}
                 </Button>
-                {!canContinueStep1 && !creatingDraft && (
-                  <p className="text-sm text-red-600 mt-2 ml-4">
-                    {!watchedValues.latitude || !watchedValues.longitude 
-                      ? "Seleccioná una ubicación en el mapa" 
-                      : "Completá todos los campos obligatorios"}
-                  </p>
-                )}
               </div>
             </div>
           )}
