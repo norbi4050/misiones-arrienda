@@ -1,4 +1,5 @@
 // src/app/mi-cuenta/publicaciones/page.tsx
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import MisPublicacionesClient from './mis-publicaciones-client'
@@ -95,12 +96,13 @@ export default async function Page() {
               <p className="mt-1 text-sm text-purple-700">
                 Los anuncios de búsqueda de compañeros de casa se gestionan en una sección separada.
               </p>
-              <a 
-                href="/comunidad/mis-publicaciones" 
+              <Link
+                href="/comunidad/mis-publicaciones"
+                prefetch={false}
                 className="mt-2 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-800 underline"
               >
                 Ver mis anuncios de comunidad →
-              </a>
+              </Link>
             </div>
           </div>
         </div>

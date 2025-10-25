@@ -72,7 +72,7 @@ export function MyCommunityPostsClient() {
               </div>
             </div>
 
-            <Link href="/comunidad/publicar">
+            <Link href="/comunidad/publicar" prefetch={false}>
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
                 Nueva Publicación
@@ -121,7 +121,7 @@ export function MyCommunityPostsClient() {
                     ? 'No tienes publicaciones aún' 
                     : `No tienes publicaciones ${statusFilter === 'active' ? 'activas' : 'archivadas'}`}
                 </p>
-                <Link href="/comunidad/publicar">
+                <Link href="/comunidad/publicar" prefetch={false}>
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
                     Crear Primera Publicación

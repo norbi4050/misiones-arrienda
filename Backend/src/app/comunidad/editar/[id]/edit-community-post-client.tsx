@@ -285,7 +285,7 @@ export function EditCommunityPostClient({ post }: EditCommunityPostClientProps) 
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
-            <Link href="/comunidad/mis-publicaciones">
+            <Link href="/comunidad/mis-publicaciones" prefetch={false}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
@@ -664,7 +664,7 @@ export function EditCommunityPostClient({ post }: EditCommunityPostClientProps) 
 
           {/* Botones */}
           <div className="flex gap-4 justify-end">
-            <Link href="/comunidad/mis-publicaciones">
+            <Link href="/comunidad/mis-publicaciones" prefetch={false}>
               <Button type="button" variant="outline">
                 Cancelar
               </Button>
