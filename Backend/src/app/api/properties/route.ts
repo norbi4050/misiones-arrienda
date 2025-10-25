@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     const bbox = searchParams.get('bbox'); // formato: minLng,minLat,maxLng,maxLat
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
-    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortBy = searchParams.get('sortBy') || 'created_at';
     const sortOrder = searchParams.get('sortOrder') || 'desc';
 
     console.log('[API /properties] Parsed params:', { city, type, operationType, featured, limit, page });
@@ -194,12 +194,12 @@ export async function GET(request: NextRequest) {
       }
 
       if (type) {
-        query = query.eq('propertyType', type); // camelCase en DB
+        query = query.eq('property_type', type); // snake_case en DB
       }
 
       // Filtro por tipo de operación (RENT, SALE, BOTH)
       if (operationType && operationType !== 'BOTH') {
-        query = query.eq('operationType', operationType); // camelCase en DB
+        query = query.eq('operation_type', operationType); // snake_case en DB
       }
       
       if (minPrice) {
@@ -233,14 +233,14 @@ export async function GET(request: NextRequest) {
       // Filtro por BBOX (coordenadas geográficas)
       if (bboxCoords) {
         query = query
-          .gte('lng', bboxCoords.minLng)
-          .lte('lng', bboxCoords.maxLng)
-          .gte('lat', bboxCoords.minLat)
-          .lte('lat', bboxCoords.maxLat);
+          .gte('longitude', bboxCoords.minLng)
+          .lte('longitude', bboxCoords.maxLng)
+          .gte('latitude', bboxCoords.minLat)
+          .lte('latitude', bboxCoords.maxLat);
       }
 
-      // Orden por fecha de creación (usar createdAt que siempre existe)
-      query = query.order('createdAt', { ascending: false });
+      // Orden por fecha de creación (usar created_at que siempre existe)
+      query = query.order('created_at', { ascending: false });
 
       // Aplicar paginación
       const startIndex = (page - 1) * limit;

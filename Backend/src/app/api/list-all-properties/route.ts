@@ -73,12 +73,12 @@ export async function GET() {
       unknown: analysis.filter(p => p.imageType === 'unknown')
     };
 
-    // Agrupar por estado
+    // Agrupar por estado (UPPERCASE según constraint de DB)
     const byStatus = {
-      published: analysis.filter(p => p.status === 'published'),
-      draft: analysis.filter(p => p.status === 'draft'),
-      archived: analysis.filter(p => p.status === 'archived'),
-      other: analysis.filter(p => !['published', 'draft', 'archived'].includes(p.status))
+      published: analysis.filter(p => p.status === 'PUBLISHED'),
+      draft: analysis.filter(p => p.status === 'DRAFT'),
+      archived: analysis.filter(p => p.status === 'ARCHIVED'),
+      other: analysis.filter(p => !['PUBLISHED', 'DRAFT', 'ARCHIVED'].includes(p.status))
     };
 
     const summary = {
