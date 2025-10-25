@@ -194,6 +194,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Notificaciones */}
                 <Link
                   href="/notificaciones"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -250,6 +251,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                 {/* Notificaciones */}
                 <Link
                   href="/notificaciones"
+                  prefetch={false}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150"
                 >
@@ -266,6 +268,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
             {isAdmin && (
               <Link
                 href="/admin/dashboard"
+                prefetch={false}
                 onClick={() => setIsOpen(false)}
                 className="flex items-center px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 transition-colors duration-150"
               >
