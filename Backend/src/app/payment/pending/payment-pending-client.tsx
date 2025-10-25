@@ -114,7 +114,7 @@ export default function PaymentPendingClient() {
 
         <div className="flex space-x-4">
           <Button asChild className="flex-1">
-            <Link href="/">
+            <Link href="/" prefetch={false}>
               Volver al Inicio
             </Link>
           </Button>

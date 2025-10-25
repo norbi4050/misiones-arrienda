@@ -322,7 +322,7 @@ export default function PublishWizardImproved() {
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-blue-600 hover:text-blue-500">
+          <Link href="/" prefetch={false} className="text-blue-600 hover:text-blue-500">
             ← Volver al inicio
           </Link>
           <div className="flex items-center space-x-4">

@@ -110,7 +110,7 @@ export function AdminNavbar() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Link href="/">
+            <Link href="/" prefetch={false}>
               <Button variant="outline" size="sm">
                 Volver al sitio
               </Button>

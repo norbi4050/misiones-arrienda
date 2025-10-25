@@ -171,7 +171,7 @@ export default function PaymentSuccessClient() {
                 Ver Dashboard
               </Button>
             </Link>
-            <Link href="/">
+            <Link href="/" prefetch={false}>
               <Button variant="outline" className="w-full sm:w-auto">
                 Volver al Inicio
               </Button>

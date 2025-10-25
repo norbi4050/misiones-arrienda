@@ -97,7 +97,7 @@ export function PropertyDetailClient({ property }: PropertyDetailClientProps) {
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-blue-600 hover:text-blue-500 flex items-center">
+            <Link href="/" prefetch={false} className="text-blue-600 hover:text-blue-500 flex items-center">
               ← Volver a propiedades
             </Link>
             <div className="flex items-center gap-2 text-sm text-gray-500">

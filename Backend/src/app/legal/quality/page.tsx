@@ -19,7 +19,7 @@ export default function QualityPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="mb-8 text-sm">
           <ol className="flex items-center space-x-2 text-gray-600">
-            <li><Link href="/">Inicio</Link></li>
+            <li><Link href="/" prefetch={false}>Inicio</Link></li>
             <li>/</li>
             <li><Link href="/legal/quality">Legal</Link></li>
             <li>/</li>

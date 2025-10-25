@@ -20,7 +20,7 @@ export default function AboutPage() {
         {/* Breadcrumbs */}
         <nav className="mb-8 text-sm" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2 text-gray-600">
-            <li><Link href="/" className="hover:text-cyan-600">Inicio</Link></li>
+            <li><Link href="/" prefetch={false} className="hover:text-cyan-600">Inicio</Link></li>
             <li>/</li>
             <li className="text-gray-900 font-medium">Acerca de</li>
           </ol>

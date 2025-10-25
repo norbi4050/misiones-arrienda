@@ -97,7 +97,7 @@ export default function PaymentFailureClient() {
           </Button>
           
           <Button variant="outline" asChild className="flex-1">
-            <Link href="/">
+            <Link href="/" prefetch={false}>
               Volver al Inicio
             </Link>
           </Button>
